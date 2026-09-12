@@ -1,0 +1,504 @@
+CREATE TABLE hibernate_sequences (
+    sequence_name VARCHAR(255) NOT NULL,
+    next_val BIGINT,
+    CONSTRAINT pk_hibernate_sequences PRIMARY KEY (sequence_name)
+);
+
+CREATE TABLE empresa (
+    id BIGINT PRIMARY KEY,
+    ruc VARCHAR(13) NOT NULL,
+    razon_social VARCHAR(300) NOT NULL,
+    nombre_comercial VARCHAR(300),
+    direccion_matriz VARCHAR(500) NOT NULL,
+    obligado_contabilidad BOOLEAN NOT NULL DEFAULT FALSE,
+    contribuyente_rimpe BOOLEAN NOT NULL DEFAULT FALSE,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT uk_empresa_ruc UNIQUE (ruc)
+);
+
+CREATE TABLE establecimiento (
+    id BIGINT PRIMARY KEY,
+    empresa_id BIGINT NOT NULL,
+    codigo VARCHAR(3) NOT NULL,
+    nombre VARCHAR(300),
+    direccion VARCHAR(500) NOT NULL,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_establecimiento_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    CONSTRAINT uk_establecimiento_empresa_codigo
+        UNIQUE (empresa_id, codigo)
+);
+
+CREATE TABLE punto_emision (
+    id BIGINT PRIMARY KEY,
+    establecimiento_id BIGINT NOT NULL,
+    codigo VARCHAR(3) NOT NULL,
+    nombre VARCHAR(300),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_punto_emision_establecimiento
+        FOREIGN KEY (establecimiento_id) REFERENCES establecimiento(id),
+    CONSTRAINT uk_punto_emision_establecimiento_codigo
+        UNIQUE (establecimiento_id, codigo)
+);
+
+CREATE TABLE secuencial (
+    id BIGINT PRIMARY KEY,
+    punto_emision_id BIGINT NOT NULL,
+    codigo_documento VARCHAR(2) NOT NULL,
+    ultimo_secuencial BIGINT NOT NULL DEFAULT 0,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_secuencial_punto_emision
+        FOREIGN KEY (punto_emision_id) REFERENCES punto_emision(id),
+    CONSTRAINT uk_secuencial_punto_emision_documento
+        UNIQUE (punto_emision_id, codigo_documento),
+    CONSTRAINT ck_secuencial_ultimo
+        CHECK (ultimo_secuencial >= 0)
+);
+
+CREATE TABLE certificado_firma (
+    id BIGINT PRIMARY KEY,
+    empresa_id BIGINT NOT NULL,
+    nombre_archivo VARCHAR(300),
+    ruta_certificado VARCHAR(1000) NOT NULL,
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_certificado_firma_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id)
+);
+
+CREATE TABLE configuracion_empresa (
+    id BIGINT PRIMARY KEY,
+    empresa_id BIGINT NOT NULL,
+    clave VARCHAR(100) NOT NULL,
+    valor VARCHAR(2000),
+    tipo_dato VARCHAR(30) NOT NULL DEFAULT 'STRING',
+    fecha_vigencia_desde TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_vigencia_hasta TIMESTAMP,
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+    CONSTRAINT fk_configuracion_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    CONSTRAINT uk_configuracion_empresa
+        UNIQUE (empresa_id, clave, fecha_vigencia_desde),
+    CONSTRAINT ck_configuracion_vigencia
+        CHECK (
+            fecha_vigencia_hasta IS NULL
+            OR fecha_vigencia_hasta > fecha_vigencia_desde
+        )
+);
+
+CREATE TABLE catalogo (
+    id BIGINT PRIMARY KEY,
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    descripcion VARCHAR(500),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT uk_catalogo_codigo UNIQUE (codigo)
+);
+
+CREATE TABLE catalogo_item (
+    id BIGINT PRIMARY KEY,
+    catalogo_id BIGINT NOT NULL,
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    descripcion VARCHAR(500),
+    orden INTEGER,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_catalogo_item_catalogo
+        FOREIGN KEY (catalogo_id) REFERENCES catalogo(id),
+    CONSTRAINT uk_catalogo_item_catalogo_codigo
+        UNIQUE (catalogo_id, codigo)
+);
+
+CREATE TABLE documento_xsd (
+    id BIGINT PRIMARY KEY,
+    codigo VARCHAR(50) NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    descripcion VARCHAR(500),
+    tipo_documento VARCHAR(50) NOT NULL,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT uk_documento_xsd_codigo UNIQUE (codigo)
+);
+
+CREATE TABLE version_documento_xsd (
+    id BIGINT PRIMARY KEY,
+    documento_xsd_id BIGINT NOT NULL,
+    version VARCHAR(20) NOT NULL,
+    nombre_archivo VARCHAR(300),
+    ruta_xsd VARCHAR(1000),
+    namespace_xml VARCHAR(1000),
+    elemento_raiz VARCHAR(300),
+    plantilla_json TEXT,
+	esquema_json TEXT,
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_version_documento_xsd_documento
+        FOREIGN KEY (documento_xsd_id) REFERENCES documento_xsd(id),
+    CONSTRAINT uk_version_documento_xsd_version
+        UNIQUE (documento_xsd_id, version)
+);
+
+CREATE TABLE elemento_xsd (
+    id BIGINT PRIMARY KEY,
+    version_documento_xsd_id BIGINT NOT NULL,
+    elemento_padre_id BIGINT,
+    nombre VARCHAR(300) NOT NULL,
+    tipo_dato VARCHAR(100),
+    orden INTEGER,
+    obligatorio BOOLEAN NOT NULL DEFAULT FALSE,
+    repetible BOOLEAN NOT NULL DEFAULT FALSE,
+    min_ocurrencias INTEGER,
+    max_ocurrencias INTEGER,
+    longitud_minima INTEGER,
+    longitud_maxima INTEGER,
+    digitos_totales INTEGER,
+    decimales INTEGER,
+    valor_minimo NUMERIC(30,10),
+    valor_maximo NUMERIC(30,10),
+    patron VARCHAR(2000),
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_elemento_xsd_version
+        FOREIGN KEY (version_documento_xsd_id)
+        REFERENCES version_documento_xsd(id),
+    CONSTRAINT fk_elemento_xsd_padre
+        FOREIGN KEY (elemento_padre_id)
+        REFERENCES elemento_xsd(id),
+    CONSTRAINT ck_elemento_xsd_ocurrencias
+        CHECK (
+            min_ocurrencias IS NULL
+            OR min_ocurrencias >= 0
+        ),
+    CONSTRAINT ck_elemento_xsd_max_ocurrencias
+        CHECK (
+            max_ocurrencias IS NULL
+            OR max_ocurrencias >= 0
+        )
+);
+
+CREATE TABLE atributo_xsd (
+    id BIGINT PRIMARY KEY,
+    elemento_xsd_id BIGINT NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    tipo_dato VARCHAR(100),
+    obligatorio BOOLEAN NOT NULL DEFAULT FALSE,
+    valor_predeterminado VARCHAR(1000),
+    patron VARCHAR(2000),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_atributo_xsd_elemento
+        FOREIGN KEY (elemento_xsd_id) REFERENCES elemento_xsd(id),
+    CONSTRAINT uk_atributo_xsd_elemento_nombre
+        UNIQUE (elemento_xsd_id, nombre)
+);
+
+CREATE TABLE enumeracion_xsd (
+    id BIGINT PRIMARY KEY,
+    elemento_xsd_id BIGINT NOT NULL,
+    valor VARCHAR(1000) NOT NULL,
+    descripcion VARCHAR(500),
+    orden INTEGER,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_enumeracion_xsd_elemento
+        FOREIGN KEY (elemento_xsd_id) REFERENCES elemento_xsd(id),
+    CONSTRAINT uk_enumeracion_xsd_elemento_valor
+        UNIQUE (elemento_xsd_id, valor)
+);
+
+CREATE TABLE comprobante (
+    id BIGINT PRIMARY KEY,
+    empresa_id BIGINT NOT NULL,
+    establecimiento_id BIGINT NOT NULL,
+    punto_emision_id BIGINT NOT NULL,
+    documento_xsd_id BIGINT NOT NULL,
+    version_documento_xsd_id BIGINT NOT NULL,
+    ambiente VARCHAR(1) NOT NULL,
+    tipo_emision VARCHAR(1) NOT NULL,
+    codigo_documento VARCHAR(2) NOT NULL,
+    secuencial VARCHAR(9) NOT NULL,
+    clave_acceso VARCHAR(49) NOT NULL,
+    fecha_emision DATE NOT NULL,
+    razon_social_emisor VARCHAR(300) NOT NULL,
+    nombre_comercial_emisor VARCHAR(300),
+    ruc_emisor VARCHAR(13) NOT NULL,
+    direccion_matriz_emisor VARCHAR(500) NOT NULL,
+    direccion_establecimiento_emisor VARCHAR(500),
+    identificacion_receptor VARCHAR(50),
+    tipo_identificacion_receptor VARCHAR(10),
+    razon_social_receptor VARCHAR(300),
+    direccion_receptor VARCHAR(500),
+    estado_proceso VARCHAR(50) NOT NULL,
+    codigo_error VARCHAR(100),
+    mensaje_error VARCHAR(2000),
+    numero_autorizacion VARCHAR(100),
+    fecha_autorizacion TIMESTAMP,
+    ruta_xml_firmado VARCHAR(1000),
+    ruta_respuesta_sri VARCHAR(1000),
+    ruta_ride VARCHAR(1000),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_comprobante_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    CONSTRAINT fk_comprobante_establecimiento
+        FOREIGN KEY (establecimiento_id) REFERENCES establecimiento(id),
+    CONSTRAINT fk_comprobante_punto_emision
+        FOREIGN KEY (punto_emision_id) REFERENCES punto_emision(id),
+    CONSTRAINT fk_comprobante_documento_xsd
+        FOREIGN KEY (documento_xsd_id) REFERENCES documento_xsd(id),
+    CONSTRAINT fk_comprobante_version_documento_xsd
+        FOREIGN KEY (version_documento_xsd_id)
+        REFERENCES version_documento_xsd(id),
+    CONSTRAINT uk_comprobante_clave_acceso
+        UNIQUE (clave_acceso)
+);
+
+CREATE TABLE comprobante_detalle (
+    id BIGINT PRIMARY KEY,
+    comprobante_id BIGINT NOT NULL,
+    numero_linea INTEGER NOT NULL,
+    codigo_principal VARCHAR(100),
+    codigo_auxiliar VARCHAR(100),
+    descripcion VARCHAR(500),
+    cantidad NUMERIC(18,6),
+    precio_unitario NUMERIC(18,6),
+    descuento NUMERIC(18,6),
+    precio_total_sin_impuesto NUMERIC(18,6),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_comprobante_detalle_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+    CONSTRAINT uk_comprobante_detalle_linea
+        UNIQUE (comprobante_id, numero_linea)
+);
+
+CREATE TABLE comprobante_detalle_impuesto (
+    id BIGINT PRIMARY KEY,
+    comprobante_detalle_id BIGINT NOT NULL,
+    codigo_impuesto VARCHAR(20) NOT NULL,
+    codigo_porcentaje VARCHAR(20) NOT NULL,
+    tarifa NUMERIC(10,4),
+    base_imponible NUMERIC(14,2) NOT NULL,
+    valor NUMERIC(14,2) NOT NULL,
+    valor_devolucion_iva NUMERIC(14,2),
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+    CONSTRAINT fk_detalle_impuesto_detalle
+        FOREIGN KEY (comprobante_detalle_id)
+        REFERENCES comprobante_detalle(id)
+);
+
+CREATE TABLE comprobante_retencion (
+    id BIGINT PRIMARY KEY,
+    comprobante_id BIGINT NOT NULL,
+    codigo_impuesto VARCHAR(20),
+    codigo_retencion VARCHAR(20),
+    porcentaje_retener NUMERIC(18,6),
+    base_imponible NUMERIC(18,6),
+    valor_retenido NUMERIC(18,6),
+    numero_documento_sustento VARCHAR(50),
+    fecha_emision_documento_sustento DATE,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_comprobante_retencion_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+CREATE TABLE comprobante_pago (
+    id BIGINT PRIMARY KEY,
+    comprobante_id BIGINT NOT NULL,
+    codigo_forma_pago VARCHAR(20),
+    total NUMERIC(18,6),
+    plazo INTEGER,
+    unidad_tiempo VARCHAR(20),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_comprobante_pago_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+CREATE TABLE comprobante_informacion_adicional (
+    id BIGINT PRIMARY KEY,
+    comprobante_id BIGINT NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    valor VARCHAR(4000),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_comprobante_informacion_adicional_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+CREATE TABLE comprobante_auditoria (
+    id BIGINT PRIMARY KEY,
+    comprobante_id BIGINT NOT NULL,
+    estado_anterior VARCHAR(50),
+    estado_nuevo VARCHAR(50),
+    codigo_error VARCHAR(100),
+    mensaje_error VARCHAR(2000),
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_comprobante_auditoria_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+CREATE INDEX idx_establecimiento_empresa
+    ON establecimiento (empresa_id);
+
+CREATE INDEX idx_punto_emision_establecimiento
+    ON punto_emision (establecimiento_id);
+
+CREATE INDEX idx_secuencial_punto_emision
+    ON secuencial (punto_emision_id);
+
+CREATE INDEX idx_certificado_firma_empresa
+    ON certificado_firma (empresa_id);
+
+CREATE INDEX idx_catalogo_item_catalogo
+    ON catalogo_item (catalogo_id);
+
+CREATE INDEX idx_version_documento_xsd_documento
+    ON version_documento_xsd (documento_xsd_id);
+
+CREATE INDEX idx_elemento_xsd_version
+    ON elemento_xsd (version_documento_xsd_id);
+
+CREATE INDEX idx_elemento_xsd_padre
+    ON elemento_xsd (elemento_padre_id);
+
+CREATE INDEX idx_atributo_xsd_elemento
+    ON atributo_xsd (elemento_xsd_id);
+
+CREATE INDEX idx_enumeracion_xsd_elemento
+    ON enumeracion_xsd (elemento_xsd_id);
+
+CREATE INDEX idx_comprobante_empresa
+    ON comprobante (empresa_id);
+
+CREATE INDEX idx_comprobante_establecimiento
+    ON comprobante (establecimiento_id);
+
+CREATE INDEX idx_comprobante_punto_emision
+    ON comprobante (punto_emision_id);
+
+CREATE INDEX idx_comprobante_documento_xsd
+    ON comprobante (documento_xsd_id);
+
+CREATE INDEX idx_comprobante_version_documento_xsd
+    ON comprobante (version_documento_xsd_id);
+
+CREATE INDEX idx_comprobante_estado_proceso
+    ON comprobante (estado_proceso);
+
+CREATE INDEX idx_comprobante_fecha_emision
+    ON comprobante (fecha_emision);
+
+CREATE INDEX idx_comprobante_detalle_comprobante
+    ON comprobante_detalle (comprobante_id);
+
+CREATE INDEX idx_comprobante_detalle_impuesto_detalle
+    ON comprobante_detalle_impuesto (comprobante_detalle_id);
+
+CREATE INDEX idx_comprobante_retencion_comprobante
+    ON comprobante_retencion (comprobante_id);
+
+CREATE INDEX idx_comprobante_pago_comprobante
+    ON comprobante_pago (comprobante_id);
+
+CREATE INDEX idx_comprobante_informacion_adicional_comprobante
+    ON comprobante_informacion_adicional (comprobante_id);
+
+CREATE INDEX idx_comprobante_auditoria_comprobante
+    ON comprobante_auditoria (comprobante_id);

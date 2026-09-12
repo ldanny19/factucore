@@ -1,0 +1,1353 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- ============================================================
+-- EMPRESA / ESTABLECIMIENTO / PUNTO DE EMISIÓN
+-- ============================================================
+
+CREATE TABLE empresa (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ruc VARCHAR(13) NOT NULL,
+    razon_social VARCHAR(300) NOT NULL,
+    nombre_comercial VARCHAR(300),
+    direccion_matriz VARCHAR(500) NOT NULL,
+    obligado_contabilidad BOOLEAN NOT NULL DEFAULT FALSE,
+    contribuyente_especial VARCHAR(20),
+    agente_retencion VARCHAR(20),
+    rimpe VARCHAR(100),
+    ambiente SMALLINT NOT NULL DEFAULT 1,
+    tipo_emision SMALLINT NOT NULL DEFAULT 1,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT uk_empresa_ruc UNIQUE (ruc),
+    CONSTRAINT ck_empresa_ruc CHECK (ruc ~ '^[0-9]{13}$'),
+    CONSTRAINT ck_empresa_ambiente CHECK (ambiente IN (1, 2)),
+    CONSTRAINT ck_empresa_tipo_emision CHECK (tipo_emision IN (1, 2))
+);
+
+CREATE TABLE establecimiento (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_id UUID NOT NULL,
+    codigo_establecimiento VARCHAR(3) NOT NULL,
+    nombre VARCHAR(200),
+    direccion VARCHAR(500) NOT NULL,
+    direccion_establecimiento VARCHAR(500),
+    telefono VARCHAR(50),
+    correo VARCHAR(200),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_establecimiento_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+
+    CONSTRAINT uk_establecimiento_codigo
+        UNIQUE (empresa_id, codigo_establecimiento),
+
+    CONSTRAINT ck_establecimiento_codigo
+        CHECK (codigo_establecimiento ~ '^[0-9]{3}$')
+);
+
+CREATE TABLE punto_emision (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    establecimiento_id UUID NOT NULL,
+    codigo_punto_emision VARCHAR(3) NOT NULL,
+    nombre VARCHAR(200),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_punto_emision_establecimiento
+        FOREIGN KEY (establecimiento_id) REFERENCES establecimiento(id),
+
+    CONSTRAINT uk_punto_emision_codigo
+        UNIQUE (establecimiento_id, codigo_punto_emision),
+
+    CONSTRAINT ck_punto_emision_codigo
+        CHECK (codigo_punto_emision ~ '^[0-9]{3}$')
+);
+
+-- ============================================================
+-- CONFIGURACIÓN
+-- ============================================================
+
+CREATE TABLE configuracion_empresa (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_id UUID NOT NULL,
+    clave VARCHAR(100) NOT NULL,
+    valor VARCHAR(2000),
+    tipo_dato VARCHAR(30) NOT NULL DEFAULT 'STRING',
+    fecha_vigencia_desde TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_vigencia_hasta TIMESTAMP,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_configuracion_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+
+    CONSTRAINT uk_configuracion_empresa
+        UNIQUE (empresa_id, clave, fecha_vigencia_desde),
+
+    CONSTRAINT ck_configuracion_vigencia
+        CHECK (
+            fecha_vigencia_hasta IS NULL
+            OR fecha_vigencia_hasta > fecha_vigencia_desde
+        )
+);
+
+CREATE TABLE certificado_firma (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_id UUID NOT NULL,
+    nombre VARCHAR(200) NOT NULL,
+    identificador_externo VARCHAR(200),
+    huella_certificado VARCHAR(128),
+    fecha_emision DATE,
+    fecha_expiracion DATE NOT NULL,
+    proveedor_secreto VARCHAR(100),
+    referencia_secreta VARCHAR(500),
+    algoritmo_firma VARCHAR(100) NOT NULL DEFAULT 'RSA-SHA1',
+    sujeto VARCHAR(500),
+    emisor VARCHAR(500),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_certificado_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id)
+);
+
+-- ============================================================
+-- SECUENCIALES
+-- ============================================================
+
+CREATE TABLE secuencial (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_id UUID NOT NULL,
+    establecimiento_id UUID NOT NULL,
+    punto_emision_id UUID NOT NULL,
+    tipo_documento_id UUID,
+    ultimo_secuencial BIGINT NOT NULL DEFAULT 0,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_secuencial_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+
+    CONSTRAINT fk_secuencial_establecimiento
+        FOREIGN KEY (establecimiento_id) REFERENCES establecimiento(id),
+
+    CONSTRAINT fk_secuencial_punto_emision
+        FOREIGN KEY (punto_emision_id) REFERENCES punto_emision(id),
+
+    CONSTRAINT ck_secuencial_rango
+        CHECK (ultimo_secuencial BETWEEN 0 AND 999999999)
+);
+
+-- ============================================================
+-- CATÁLOGOS SRI
+-- ============================================================
+
+CREATE TABLE catalogo (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(200) NOT NULL,
+    descripcion VARCHAR(500),
+    origen VARCHAR(50) NOT NULL DEFAULT 'SRI',
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT uk_catalogo_codigo UNIQUE (codigo)
+);
+
+CREATE TABLE catalogo_item (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    catalogo_id UUID NOT NULL,
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    descripcion VARCHAR(500),
+    orden INTEGER,
+    fecha_vigencia_desde DATE,
+    fecha_vigencia_hasta DATE,
+    atributos JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_catalogo_item_catalogo
+        FOREIGN KEY (catalogo_id) REFERENCES catalogo(id),
+
+    CONSTRAINT uk_catalogo_item_codigo
+        UNIQUE (catalogo_id, codigo)
+);
+
+-- ============================================================
+-- DEFINICIONES DE DOCUMENTOS
+-- ============================================================
+
+CREATE TABLE tipo_documento (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(10) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(500),
+    codigo_sri VARCHAR(10) NOT NULL,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT uk_tipo_documento_codigo UNIQUE (codigo),
+    CONSTRAINT uk_tipo_documento_codigo_sri UNIQUE (codigo_sri)
+);
+
+CREATE TABLE definicion_documento (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tipo_documento_id UUID NOT NULL,
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(200) NOT NULL,
+    descripcion VARCHAR(1000),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_definicion_documento_tipo
+        FOREIGN KEY (tipo_documento_id) REFERENCES tipo_documento(id),
+
+    CONSTRAINT uk_definicion_documento_codigo
+        UNIQUE (tipo_documento_id, codigo)
+);
+
+CREATE TABLE version_definicion_documento (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    definicion_documento_id UUID NOT NULL,
+    version VARCHAR(30) NOT NULL,
+    version_xsd VARCHAR(30) NOT NULL,
+    namespace_xml VARCHAR(500),
+    prefijo_xml VARCHAR(50),
+    elemento_raiz VARCHAR(200) NOT NULL,
+    fecha_vigencia_desde DATE NOT NULL,
+    fecha_vigencia_hasta DATE,
+    fecha_publicacion DATE,
+    fecha_obsolescencia DATE,
+    orden_generacion JSONB,
+    configuracion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_version_definicion_documento
+        FOREIGN KEY (definicion_documento_id)
+        REFERENCES definicion_documento(id),
+
+    CONSTRAINT uk_version_definicion
+        UNIQUE (definicion_documento_id, version),
+
+    CONSTRAINT ck_version_vigencia
+        CHECK (
+            fecha_vigencia_hasta IS NULL
+            OR fecha_vigencia_hasta >= fecha_vigencia_desde
+        )
+);
+
+-- ============================================================
+-- XSD
+-- ============================================================
+
+CREATE TABLE esquema_xsd (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_definicion_documento_id UUID NOT NULL,
+    nombre_archivo VARCHAR(300) NOT NULL,
+    version VARCHAR(30) NOT NULL,
+    namespace_xml VARCHAR(500),
+    ubicacion VARCHAR(1000),
+    contenido TEXT NOT NULL,
+    hash_sha256 VARCHAR(64) NOT NULL,
+    encoding VARCHAR(50) NOT NULL DEFAULT 'UTF-8',
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_esquema_xsd_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id),
+
+    CONSTRAINT uk_esquema_xsd_hash UNIQUE (hash_sha256)
+);
+
+CREATE TABLE tipo_xsd (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    esquema_xsd_id UUID NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    nombre_xml VARCHAR(300),
+    tipo_base VARCHAR(100),
+    namespace_xml VARCHAR(500),
+    definicion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_tipo_xsd_esquema
+        FOREIGN KEY (esquema_xsd_id) REFERENCES esquema_xsd(id)
+);
+
+CREATE TABLE elemento_xsd (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    esquema_xsd_id UUID NOT NULL,
+    elemento_padre_id UUID,
+    nombre VARCHAR(300) NOT NULL,
+    nombre_xml VARCHAR(300) NOT NULL,
+    tipo VARCHAR(300),
+    tipo_xsd_id UUID,
+    namespace_xml VARCHAR(500),
+    prefijo_xml VARCHAR(50),
+    orden INTEGER NOT NULL DEFAULT 0,
+    nivel INTEGER NOT NULL DEFAULT 0,
+    min_ocurrencias INTEGER NOT NULL DEFAULT 1,
+    max_ocurrencias INTEGER,
+    nillable BOOLEAN NOT NULL DEFAULT FALSE,
+    abstracto BOOLEAN NOT NULL DEFAULT FALSE,
+    valor_fijo VARCHAR(1000),
+    valor_predeterminado VARCHAR(1000),
+    descripcion VARCHAR(2000),
+    configuracion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_elemento_xsd_esquema
+        FOREIGN KEY (esquema_xsd_id) REFERENCES esquema_xsd(id),
+
+    CONSTRAINT fk_elemento_xsd_padre
+        FOREIGN KEY (elemento_padre_id) REFERENCES elemento_xsd(id),
+
+    CONSTRAINT fk_elemento_xsd_tipo
+        FOREIGN KEY (tipo_xsd_id) REFERENCES tipo_xsd(id),
+
+    CONSTRAINT ck_elemento_xsd_min
+        CHECK (min_ocurrencias >= 0),
+
+    CONSTRAINT ck_elemento_xsd_max
+        CHECK (
+            max_ocurrencias IS NULL
+            OR max_ocurrencias >= min_ocurrencias
+        )
+);
+
+CREATE TABLE atributo_xsd (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    elemento_xsd_id UUID NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    nombre_xml VARCHAR(300) NOT NULL,
+    tipo VARCHAR(300),
+    uso VARCHAR(30) NOT NULL DEFAULT 'optional',
+    valor_fijo VARCHAR(1000),
+    valor_predeterminado VARCHAR(1000),
+    namespace_xml VARCHAR(500),
+    descripcion VARCHAR(2000),
+    configuracion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_atributo_xsd_elemento
+        FOREIGN KEY (elemento_xsd_id) REFERENCES elemento_xsd(id),
+
+    CONSTRAINT uk_atributo_xsd
+        UNIQUE (elemento_xsd_id, nombre_xml)
+);
+
+CREATE TABLE restriccion_xsd (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tipo_xsd_id UUID,
+    elemento_xsd_id UUID,
+    atributo_xsd_id UUID,
+    tipo_restriccion VARCHAR(50) NOT NULL,
+    valor VARCHAR(2000),
+    expresion VARCHAR(2000),
+    orden INTEGER NOT NULL DEFAULT 0,
+    descripcion VARCHAR(1000),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_restriccion_tipo
+        FOREIGN KEY (tipo_xsd_id) REFERENCES tipo_xsd(id),
+
+    CONSTRAINT fk_restriccion_elemento
+        FOREIGN KEY (elemento_xsd_id) REFERENCES elemento_xsd(id),
+
+    CONSTRAINT fk_restriccion_atributo
+        FOREIGN KEY (atributo_xsd_id) REFERENCES atributo_xsd(id)
+);
+
+CREATE TABLE enumeracion_xsd (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    restriccion_xsd_id UUID NOT NULL,
+    valor VARCHAR(500) NOT NULL,
+    descripcion VARCHAR(1000),
+    orden INTEGER,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_enumeracion_restriccion
+        FOREIGN KEY (restriccion_xsd_id)
+        REFERENCES restriccion_xsd(id),
+
+    CONSTRAINT uk_enumeracion_valor
+        UNIQUE (restriccion_xsd_id, valor)
+);
+
+-- ============================================================
+-- JSON SCHEMA / MAPPING
+-- ============================================================
+
+CREATE TABLE esquema_json (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_definicion_documento_id UUID NOT NULL,
+    version VARCHAR(30) NOT NULL,
+    contenido JSONB NOT NULL,
+    hash_sha256 VARCHAR(64),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_esquema_json_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id),
+
+    CONSTRAINT uk_esquema_json_version
+        UNIQUE (version_definicion_documento_id, version)
+);
+
+CREATE TABLE ejemplo_json (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_definicion_documento_id UUID NOT NULL,
+    nombre VARCHAR(200) NOT NULL,
+    contenido JSONB NOT NULL,
+    descripcion VARCHAR(1000),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_ejemplo_json_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id)
+);
+
+CREATE TABLE mapeo_json_xml (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_definicion_documento_id UUID NOT NULL,
+    elemento_xsd_id UUID,
+    ruta_json VARCHAR(1000) NOT NULL,
+    ruta_xml VARCHAR(1000) NOT NULL,
+    tipo_mapeo VARCHAR(50) NOT NULL DEFAULT 'DIRECTO',
+    expresion VARCHAR(2000),
+    valor_predeterminado VARCHAR(2000),
+    transformacion VARCHAR(2000),
+    orden INTEGER NOT NULL DEFAULT 0,
+    obligatorio BOOLEAN NOT NULL DEFAULT FALSE,
+    configuracion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_mapeo_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id),
+
+    CONSTRAINT fk_mapeo_elemento
+        FOREIGN KEY (elemento_xsd_id) REFERENCES elemento_xsd(id)
+);
+
+-- ============================================================
+-- REGLAS DE NEGOCIO
+-- ============================================================
+
+CREATE TABLE regla_validacion (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_definicion_documento_id UUID NOT NULL,
+    codigo VARCHAR(100) NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    descripcion VARCHAR(2000),
+    tipo_regla VARCHAR(50) NOT NULL,
+    expresion VARCHAR(4000),
+    ruta_json VARCHAR(1000),
+    ruta_xml VARCHAR(1000),
+    severidad VARCHAR(30) NOT NULL DEFAULT 'ERROR',
+    fase VARCHAR(50) NOT NULL DEFAULT 'PRE_XML',
+    orden INTEGER NOT NULL DEFAULT 0,
+    mensaje_codigo VARCHAR(200),
+    activa BOOLEAN NOT NULL DEFAULT TRUE,
+    configuracion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_regla_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id),
+
+    CONSTRAINT uk_regla_codigo
+        UNIQUE (version_definicion_documento_id, codigo)
+);
+
+CREATE TABLE regla_validacion_parametro (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    regla_validacion_id UUID NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    valor VARCHAR(2000),
+    tipo_dato VARCHAR(50),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_regla_parametro_regla
+        FOREIGN KEY (regla_validacion_id)
+        REFERENCES regla_validacion(id),
+
+    CONSTRAINT uk_regla_parametro
+        UNIQUE (regla_validacion_id, nombre)
+);
+
+-- ============================================================
+-- CONFIGURACIÓN DE FIRMA
+-- ============================================================
+
+CREATE TABLE configuracion_firma (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_definicion_documento_id UUID NOT NULL,
+    algoritmo VARCHAR(100) NOT NULL,
+    formato VARCHAR(100) NOT NULL,
+    referencia_xml VARCHAR(1000),
+    politica_firma VARCHAR(1000),
+    politica_hash VARCHAR(200),
+    configuracion JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_configuracion_firma_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id)
+);
+
+-- ============================================================
+-- COMPROBANTE
+-- ============================================================
+
+CREATE TABLE comprobante (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    empresa_id UUID NOT NULL,
+    establecimiento_id UUID NOT NULL,
+    punto_emision_id UUID NOT NULL,
+    tipo_documento_id UUID NOT NULL,
+    version_definicion_documento_id UUID NOT NULL,
+
+    ambiente SMALLINT NOT NULL,
+    tipo_emision SMALLINT NOT NULL,
+
+    numero_establecimiento VARCHAR(3) NOT NULL,
+    numero_punto_emision VARCHAR(3) NOT NULL,
+    secuencial VARCHAR(9) NOT NULL,
+    clave_acceso VARCHAR(49) NOT NULL,
+
+    fecha_emision DATE NOT NULL,
+
+    identificacion_receptor_tipo VARCHAR(20),
+    identificacion_receptor VARCHAR(30),
+    razon_social_receptor VARCHAR(500),
+    direccion_receptor VARCHAR(500),
+    correo_receptor VARCHAR(300),
+
+    subtotal NUMERIC(14,2),
+    descuento NUMERIC(14,2),
+    total_sin_impuestos NUMERIC(14,2),
+    total NUMERIC(14,2),
+
+    estado_proceso VARCHAR(50) NOT NULL DEFAULT 'RECIBIDO',
+
+    fecha_generacion_xml TIMESTAMP,
+    fecha_validacion_xsd TIMESTAMP,
+    fecha_firma TIMESTAMP,
+    fecha_envio_sri TIMESTAMP,
+    fecha_autorizacion TIMESTAMP,
+
+    numero_autorizacion VARCHAR(100),
+    fecha_autorizacion TIMESTAMP,
+    ambiente_autorizacion SMALLINT,
+
+    xml_generado TEXT,
+    xml_firmado TEXT,
+
+    datos_entrada JSONB NOT NULL,
+    datos_snapshot JSONB NOT NULL,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_comprobante_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+
+    CONSTRAINT fk_comprobante_establecimiento
+        FOREIGN KEY (establecimiento_id) REFERENCES establecimiento(id),
+
+    CONSTRAINT fk_comprobante_punto_emision
+        FOREIGN KEY (punto_emision_id) REFERENCES punto_emision(id),
+
+    CONSTRAINT fk_comprobante_tipo_documento
+        FOREIGN KEY (tipo_documento_id) REFERENCES tipo_documento(id),
+
+    CONSTRAINT fk_comprobante_version
+        FOREIGN KEY (version_definicion_documento_id)
+        REFERENCES version_definicion_documento(id),
+
+    CONSTRAINT uk_comprobante_clave_acceso
+        UNIQUE (clave_acceso),
+
+    CONSTRAINT uk_comprobante_secuencial
+        UNIQUE (
+            empresa_id,
+            establecimiento_id,
+            punto_emision_id,
+            tipo_documento_id,
+            secuencial
+        ),
+
+    CONSTRAINT ck_comprobante_ambiente
+        CHECK (ambiente IN (1,2)),
+
+    CONSTRAINT ck_comprobante_tipo_emision
+        CHECK (tipo_emision IN (1,2)),
+
+    CONSTRAINT ck_comprobante_secuencial
+        CHECK (secuencial ~ '^[0-9]{9}$'),
+
+    CONSTRAINT ck_comprobante_clave_acceso
+        CHECK (clave_acceso ~ '^[0-9]{49}$')
+);
+
+-- ============================================================
+-- REFERENCIAS ENTRE COMPROBANTES
+-- ============================================================
+
+CREATE TABLE comprobante_referencia (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    comprobante_referenciado_id UUID,
+    tipo_documento_referenciado_id UUID,
+    codigo_documento_referenciado VARCHAR(10),
+    numero_documento_referenciado VARCHAR(17),
+    fecha_documento_referenciado DATE,
+    clave_acceso_referenciada VARCHAR(49),
+    motivo VARCHAR(1000),
+    valor NUMERIC(14,2),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_referencia_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT fk_referencia_comprobante_referenciado
+        FOREIGN KEY (comprobante_referenciado_id) REFERENCES comprobante(id),
+
+    CONSTRAINT fk_referencia_tipo_documento
+        FOREIGN KEY (tipo_documento_referenciado_id)
+        REFERENCES tipo_documento(id)
+);
+
+-- ============================================================
+-- DETALLES
+-- ============================================================
+
+CREATE TABLE comprobante_detalle (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    numero_linea INTEGER NOT NULL,
+    codigo_principal VARCHAR(100),
+    codigo_auxiliar VARCHAR(100),
+    descripcion TEXT NOT NULL,
+    unidad_medida VARCHAR(50),
+    cantidad NUMERIC(18,6),
+    precio_unitario NUMERIC(18,6),
+    descuento NUMERIC(14,2),
+    precio_total_sin_impuesto NUMERIC(14,2),
+
+    datos_detalle JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_detalle_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT uk_detalle_linea
+        UNIQUE (comprobante_id, numero_linea)
+);
+
+CREATE TABLE comprobante_detalle_impuesto (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_detalle_id UUID NOT NULL,
+    codigo_impuesto VARCHAR(20) NOT NULL,
+    codigo_porcentaje VARCHAR(20) NOT NULL,
+    tarifa NUMERIC(10,4),
+    base_imponible NUMERIC(14,2) NOT NULL,
+    valor NUMERIC(14,2) NOT NULL,
+    valor_devolucion_iva NUMERIC(14,2),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_detalle_impuesto_detalle
+        FOREIGN KEY (comprobante_detalle_id)
+        REFERENCES comprobante_detalle(id)
+);
+
+-- ============================================================
+-- IMPUESTOS DEL COMPROBANTE
+-- ============================================================
+
+CREATE TABLE comprobante_impuesto (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    codigo_impuesto VARCHAR(20) NOT NULL,
+    codigo_porcentaje VARCHAR(20) NOT NULL,
+    tarifa NUMERIC(10,4),
+    base_imponible NUMERIC(14,2) NOT NULL,
+    valor NUMERIC(14,2) NOT NULL,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_comprobante_impuesto
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+-- ============================================================
+-- RETENCIONES
+-- ============================================================
+
+CREATE TABLE comprobante_retencion (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    codigo_retencion VARCHAR(30) NOT NULL,
+    codigo_impuesto VARCHAR(20),
+    codigo_porcentaje VARCHAR(20),
+    tarifa NUMERIC(10,4),
+    base_imponible NUMERIC(14,2),
+    valor_retenido NUMERIC(14,2),
+    ejercicio_fiscal VARCHAR(4),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_comprobante_retencion
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+-- ============================================================
+-- PAGOS
+-- ============================================================
+
+CREATE TABLE comprobante_pago (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    codigo_forma_pago VARCHAR(20) NOT NULL,
+    total NUMERIC(14,2) NOT NULL,
+    plazo NUMERIC(14,2),
+    unidad_tiempo VARCHAR(50),
+    fecha_pago DATE,
+    referencia VARCHAR(300),
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_comprobante_pago
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+-- ============================================================
+-- INFORMACIÓN ADICIONAL
+-- ============================================================
+
+CREATE TABLE comprobante_informacion_adicional (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    nombre VARCHAR(300) NOT NULL,
+    valor VARCHAR(4000) NOT NULL,
+    orden INTEGER NOT NULL DEFAULT 0,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_informacion_adicional_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+-- ============================================================
+-- SNAPSHOT HISTÓRICO
+-- ============================================================
+
+CREATE TABLE comprobante_snapshot (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    version_snapshot INTEGER NOT NULL DEFAULT 1,
+    tipo_snapshot VARCHAR(50) NOT NULL,
+    datos JSONB NOT NULL,
+    hash_sha256 VARCHAR(64) NOT NULL,
+    fecha_snapshot TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_snapshot_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT uk_snapshot_version
+        UNIQUE (comprobante_id, version_snapshot)
+);
+
+-- ============================================================
+-- WORKFLOW / PROCESAMIENTO
+-- ============================================================
+
+CREATE TABLE comprobante_proceso (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    tipo_proceso VARCHAR(50) NOT NULL,
+    estado_proceso VARCHAR(50) NOT NULL,
+    etapa_actual VARCHAR(100),
+    fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    fecha_ultimo_intento TIMESTAMP,
+    cantidad_intentos INTEGER NOT NULL DEFAULT 0,
+    reanudable BOOLEAN NOT NULL DEFAULT TRUE,
+    datos JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_proceso_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT uk_proceso_comprobante_tipo
+        UNIQUE (comprobante_id, tipo_proceso)
+);
+
+CREATE TABLE comprobante_etapa (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_proceso_id UUID NOT NULL,
+    codigo_etapa VARCHAR(100) NOT NULL,
+    orden INTEGER NOT NULL,
+    estado_proceso VARCHAR(50) NOT NULL,
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    cantidad_intentos INTEGER NOT NULL DEFAULT 0,
+    mensaje_codigo VARCHAR(200),
+    resultado JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_etapa_proceso
+        FOREIGN KEY (comprobante_proceso_id)
+        REFERENCES comprobante_proceso(id),
+
+    CONSTRAINT uk_etapa_proceso_codigo
+        UNIQUE (comprobante_proceso_id, codigo_etapa)
+);
+
+CREATE TABLE comprobante_intento (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_etapa_id UUID NOT NULL,
+    numero_intento INTEGER NOT NULL,
+    fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    estado_proceso VARCHAR(50) NOT NULL,
+    codigo_error VARCHAR(200),
+    mensaje_codigo VARCHAR(200),
+    parametros_mensaje JSONB,
+    detalle TEXT,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_intento_etapa
+        FOREIGN KEY (comprobante_etapa_id)
+        REFERENCES comprobante_etapa(id),
+
+    CONSTRAINT uk_intento_numero
+        UNIQUE (comprobante_etapa_id, numero_intento)
+);
+
+CREATE TABLE comprobante_error (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    comprobante_etapa_id UUID,
+    codigo_error VARCHAR(200) NOT NULL,
+    mensaje_codigo VARCHAR(200) NOT NULL,
+    parametros_mensaje JSONB,
+    detalle TEXT,
+    ruta_dato VARCHAR(1000),
+    severidad VARCHAR(30) NOT NULL DEFAULT 'ERROR',
+    origen VARCHAR(100),
+    fecha_error TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_error_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT fk_error_etapa
+        FOREIGN KEY (comprobante_etapa_id)
+        REFERENCES comprobante_etapa(id)
+);
+
+-- ============================================================
+-- ENVÍO Y RESPUESTAS SRI
+-- ============================================================
+
+CREATE TABLE envio_sri (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    ambiente SMALLINT NOT NULL,
+    tipo_operacion VARCHAR(50) NOT NULL,
+    fecha_envio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    numero_intento INTEGER NOT NULL DEFAULT 1,
+    estado_proceso VARCHAR(50) NOT NULL,
+    identificador_envio VARCHAR(200),
+    request_hash VARCHAR(64),
+    respuesta_codigo VARCHAR(100),
+    respuesta_mensaje VARCHAR(2000),
+    respuesta_detalle JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_envio_sri_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+CREATE TABLE respuesta_sri (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    envio_sri_id UUID NOT NULL,
+    tipo_respuesta VARCHAR(50) NOT NULL,
+    codigo VARCHAR(100),
+    mensaje VARCHAR(2000),
+    identificador VARCHAR(200),
+    estado VARCHAR(100),
+    fecha_respuesta TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    contenido TEXT,
+    datos JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_respuesta_sri_envio
+        FOREIGN KEY (envio_sri_id) REFERENCES envio_sri(id)
+);
+
+CREATE TABLE autorizacion_sri (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    respuesta_sri_id UUID,
+    numero_autorizacion VARCHAR(100) NOT NULL,
+    fecha_autorizacion TIMESTAMP,
+    ambiente SMALLINT,
+    estado VARCHAR(100) NOT NULL,
+    fecha_recepcion TIMESTAMP,
+    xml_autorizado TEXT,
+    mensaje VARCHAR(2000),
+    datos JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_autorizacion_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT fk_autorizacion_respuesta
+        FOREIGN KEY (respuesta_sri_id) REFERENCES respuesta_sri(id),
+
+    CONSTRAINT uk_autorizacion_numero
+        UNIQUE (numero_autorizacion)
+);
+
+-- ============================================================
+-- EVIDENCIAS
+-- ============================================================
+
+CREATE TABLE comprobante_evidencia (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    comprobante_etapa_id UUID,
+    tipo_evidencia VARCHAR(50) NOT NULL,
+    nombre_archivo VARCHAR(500),
+    contenido BYTEA,
+    contenido_texto TEXT,
+    tipo_contenido VARCHAR(200),
+    hash_sha256 VARCHAR(64),
+    ubicacion_externa VARCHAR(1000),
+    fecha_generacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    metadata JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_evidencia_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+
+    CONSTRAINT fk_evidencia_etapa
+        FOREIGN KEY (comprobante_etapa_id)
+        REFERENCES comprobante_etapa(id)
+);
+
+-- ============================================================
+-- RIDE / REPRESENTACIONES
+-- ============================================================
+
+CREATE TABLE representacion_documento (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    comprobante_id UUID NOT NULL,
+    tipo_representacion VARCHAR(50) NOT NULL,
+    version_plantilla VARCHAR(50),
+    nombre_archivo VARCHAR(500),
+    contenido BYTEA,
+    hash_sha256 VARCHAR(64),
+    ubicacion_externa VARCHAR(1000),
+    fecha_generacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    datos JSONB,
+
+    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+    USUARIO_CREACION VARCHAR(100) NOT NULL,
+    USUARIO_MODIFICACION VARCHAR(100),
+    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FECHA_MODIFICACION TIMESTAMP,
+    OBSERVACION VARCHAR(500),
+
+    CONSTRAINT fk_representacion_comprobante
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+);
+
+-- ============================================================
+-- ÍNDICES
+-- ============================================================
+
+CREATE INDEX idx_establecimiento_empresa
+    ON establecimiento (empresa_id);
+
+CREATE INDEX idx_punto_emision_establecimiento
+    ON punto_emision (establecimiento_id);
+
+CREATE INDEX idx_configuracion_empresa
+    ON configuracion_empresa (empresa_id, clave);
+
+CREATE INDEX idx_certificado_empresa
+    ON certificado_firma (empresa_id);
+
+CREATE INDEX idx_secuencial_empresa
+    ON secuencial (
+        empresa_id,
+        establecimiento_id,
+        punto_emision_id,
+        tipo_documento_id
+    );
+
+CREATE INDEX idx_catalogo_item_catalogo
+    ON catalogo_item (catalogo_id);
+
+CREATE INDEX idx_version_definicion_tipo
+    ON version_definicion_documento (definicion_documento_id);
+
+CREATE INDEX idx_version_definicion_vigencia
+    ON version_definicion_documento (
+        fecha_vigencia_desde,
+        fecha_vigencia_hasta
+    );
+
+CREATE INDEX idx_esquema_xsd_version
+    ON esquema_xsd (version_definicion_documento_id);
+
+CREATE INDEX idx_tipo_xsd_esquema
+    ON tipo_xsd (esquema_xsd_id);
+
+CREATE INDEX idx_elemento_xsd_esquema
+    ON elemento_xsd (esquema_xsd_id);
+
+CREATE INDEX idx_elemento_xsd_padre
+    ON elemento_xsd (elemento_padre_id);
+
+CREATE INDEX idx_atributo_xsd_elemento
+    ON atributo_xsd (elemento_xsd_id);
+
+CREATE INDEX idx_restriccion_xsd_elemento
+    ON restriccion_xsd (elemento_xsd_id);
+
+CREATE INDEX idx_restriccion_xsd_tipo
+    ON restriccion_xsd (tipo_xsd_id);
+
+CREATE INDEX idx_mapeo_version
+    ON mapeo_json_xml (version_definicion_documento_id);
+
+CREATE INDEX idx_mapeo_ruta_json
+    ON mapeo_json_xml (ruta_json);
+
+CREATE INDEX idx_regla_version
+    ON regla_validacion (version_definicion_documento_id);
+
+CREATE INDEX idx_regla_fase
+    ON regla_validacion (
+        version_definicion_documento_id,
+        fase
+    );
+
+CREATE INDEX idx_comprobante_empresa
+    ON comprobante (empresa_id);
+
+CREATE INDEX idx_comprobante_fecha
+    ON comprobante (fecha_emision);
+
+CREATE INDEX idx_comprobante_estado
+    ON comprobante (estado_proceso);
+
+CREATE INDEX idx_comprobante_tipo
+    ON comprobante (tipo_documento_id);
+
+CREATE INDEX idx_comprobante_clave
+    ON comprobante (clave_acceso);
+
+CREATE INDEX idx_comprobante_receptor
+    ON comprobante (
+        identificacion_receptor
+    );
+
+CREATE INDEX idx_referencia_comprobante
+    ON comprobante_referencia (comprobante_id);
+
+CREATE INDEX idx_referencia_clave
+    ON comprobante_referencia (clave_acceso_referenciada);
+
+CREATE INDEX idx_detalle_comprobante
+    ON comprobante_detalle (comprobante_id);
+
+CREATE INDEX idx_detalle_impuesto_detalle
+    ON comprobante_detalle_impuesto (comprobante_detalle_id);
+
+CREATE INDEX idx_impuesto_comprobante
+    ON comprobante_impuesto (comprobante_id);
+
+CREATE INDEX idx_retencion_comprobante
+    ON comprobante_retencion (comprobante_id);
+
+CREATE INDEX idx_pago_comprobante
+    ON comprobante_pago (comprobante_id);
+
+CREATE INDEX idx_adicional_comprobante
+    ON comprobante_informacion_adicional (comprobante_id);
+
+CREATE INDEX idx_snapshot_comprobante
+    ON comprobante_snapshot (comprobante_id);
+
+CREATE INDEX idx_proceso_comprobante
+    ON comprobante_proceso (comprobante_id);
+
+CREATE INDEX idx_proceso_estado
+    ON comprobante_proceso (estado_proceso);
+
+CREATE INDEX idx_etapa_proceso
+    ON comprobante_etapa (comprobante_proceso_id);
+
+CREATE INDEX idx_etapa_estado
+    ON comprobante_etapa (estado_proceso);
+
+CREATE INDEX idx_intento_etapa
+    ON comprobante_intento (comprobante_etapa_id);
+
+CREATE INDEX idx_error_comprobante
+    ON comprobante_error (comprobante_id);
+
+CREATE INDEX idx_error_codigo
+    ON comprobante_error (codigo_error);
+
+CREATE INDEX idx_envio_sri_comprobante
+    ON envio_sri (comprobante_id);
+
+CREATE INDEX idx_envio_sri_estado
+    ON envio_sri (estado_proceso);
+
+CREATE INDEX idx_respuesta_sri_envio
+    ON respuesta_sri (envio_sri_id);
+
+CREATE INDEX idx_autorizacion_comprobante
+    ON autorizacion_sri (comprobante_id);
+
+CREATE INDEX idx_evidencia_comprobante
+    ON comprobante_evidencia (comprobante_id);
+
+CREATE INDEX idx_representacion_comprobante
+    ON representacion_documento (comprobante_id);

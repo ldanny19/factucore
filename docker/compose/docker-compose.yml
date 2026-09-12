@@ -1,0 +1,100 @@
+services:
+
+  db_factucore:
+    image: postgres:17
+    container_name: factucore-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: feFactuCore
+      POSTGRES_USER: usr_factucore
+      POSTGRES_PASSWORD: usr_factucore
+    ports:
+      - "5432:5432"
+    volumes:
+      - factucore-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U usr_factucore -d feFactuCore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - factucore-network
+
+  auth-server:
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: factucore-keycloak
+    restart: unless-stopped
+    command:
+      - start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db_factucore:5432/feFactuCore
+      KC_DB_USERNAME: usr_factucore
+      KC_DB_PASSWORD: usr_factucore
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+    ports:
+      - "8082:8080"
+    depends_on:
+      db_factucore:
+        condition: service_healthy
+    volumes:
+      - factucore-keycloak-data:/opt/keycloak/data
+    networks:
+      - factucore-network
+
+  facturador:
+    build:
+      context: ../../facturador
+      dockerfile: Dockerfile
+    container_name: factucore-facturador
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+      DB_URL: jdbc:postgresql://db_factucore:5432/feFactuCore
+      DB_USERNAME: usr_factucore
+      DB_PASSWORD: usr_factucore
+    volumes:
+      - C:/factucore/facturador/config:/app/config
+      - C:/factucore/facturador/logs:/app/logs
+      - C:/factucore/facturador/certificados:/app/certificados
+      - C:/factucore/facturador/jasper:/app/jasper
+      - C:/factucore/facturador/documentos:/app/documentos
+    depends_on:
+      db_factucore:
+        condition: service_healthy
+    networks:
+      - factucore-network
+
+  notificacion:
+    build:
+      context: ../../notificacion
+      dockerfile: Dockerfile
+    container_name: factucore-notificacion
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+    volumes:
+      - C:/factucore/notificacion/config:/app/config
+    depends_on:
+      db_factucore:
+        condition: service_healthy
+    networks:
+      - factucore-network
+
+volumes:
+  factucore-postgres-data:
+    name: factucore-postgres-data
+
+  factucore-keycloak-data:
+    name: factucore-keycloak-data
+
+networks:
+  factucore-network:
+    name: factucore-network
+    driver: bridge
