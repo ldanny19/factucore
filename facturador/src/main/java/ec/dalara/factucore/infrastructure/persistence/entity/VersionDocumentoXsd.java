@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import ec.dalara.factucore.domain.shared.EstadoRegistroEntity;
+
 @Getter
 @Setter
 @Builder
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "version_documento_xsd")
-public class VersionDocumentoXsd {
+public class VersionDocumentoXsd implements EstadoRegistroEntity{
 
 	@Id
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "generador_version_documento_xsd")
