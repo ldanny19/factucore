@@ -1,8 +1,8 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
 import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
-import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +19,18 @@ public interface VersionDocumentoXsdRepository
     boolean existsByDocumentoXsdIdAndVersion(
             Long documentoXsdId,
             String version
+    );
+
+    Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+            Long documentoXsdId,
+            String estadoRegistro,
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin
+    );
+
+    Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
+            Long documentoXsdId,
+            String estadoRegistro,
+            LocalDateTime fechaInicio
     );
 }

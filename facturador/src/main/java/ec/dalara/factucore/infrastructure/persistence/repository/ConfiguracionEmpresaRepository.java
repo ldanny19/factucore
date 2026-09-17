@@ -1,8 +1,8 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
-import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +19,19 @@ public interface ConfiguracionEmpresaRepository
     boolean existsByEmpresaIdAndClave(
             Long empresaId,
             String clave
+    );
+
+    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
+            Long empresaId,
+            String clave,
+            String estadoRegistro,
+            LocalDateTime fecha
+    );
+
+    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
+            Long empresaId,
+            String clave,
+            String estadoRegistro,
+            LocalDateTime fecha
     );
 }

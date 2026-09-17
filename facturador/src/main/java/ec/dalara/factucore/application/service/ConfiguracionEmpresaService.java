@@ -7,6 +7,7 @@ import ec.dalara.factucore.infrastructure.persistence.repository.ConfiguracionEm
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,5 +60,32 @@ public class ConfiguracionEmpresaService
                         )
                 )
                 .isPresent();
+    }
+
+    public Optional<ConfiguracionEmpresa> obtenerVigente(
+            Long empresaId,
+            String clave,
+            LocalDateTime fecha
+    ) {
+        Optional<ConfiguracionEmpresa> configuracion =
+                configuracionEmpresaRepository
+                        .findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
+                                empresaId,
+                                clave,
+                                EstadoRegistro.ACTIVO,
+                                fecha
+                        );
+
+        if (configuracion.isPresent()) {
+            return configuracion;
+        }
+
+        return configuracionEmpresaRepository
+                .findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
+                        empresaId,
+                        clave,
+                        EstadoRegistro.ACTIVO,
+                        fecha
+                );
     }
 }

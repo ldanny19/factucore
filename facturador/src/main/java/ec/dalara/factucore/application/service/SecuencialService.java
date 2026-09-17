@@ -6,6 +6,7 @@ import ec.dalara.factucore.infrastructure.persistence.repository.BaseRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.SecuencialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -51,5 +52,27 @@ public class SecuencialService extends BaseService<Secuencial> {
                         )
                 )
                 .isPresent();
+    }
+
+    @Transactional
+    public Long obtenerSiguienteSecuencial(
+            Long puntoEmisionId,
+            String codigoDocumento
+    ) {
+        Secuencial secuencial = secuencialRepository
+                .findByPuntoEmisionIdAndCodigoDocumentoAndEstadoRegistro(
+                        puntoEmisionId,
+                        codigoDocumento,
+                        EstadoRegistro.ACTIVO
+                )
+                .orElseThrow();
+
+        Long siguiente = secuencial.getUltimoSecuencial() + 1;
+
+        secuencial.setUltimoSecuencial(siguiente);
+
+        secuencialRepository.save(secuencial);
+
+        return siguiente;
     }
 }

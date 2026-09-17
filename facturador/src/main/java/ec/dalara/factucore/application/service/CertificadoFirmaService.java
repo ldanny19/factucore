@@ -7,11 +7,14 @@ import ec.dalara.factucore.infrastructure.persistence.repository.CertificadoFirm
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CertificadoFirmaService extends BaseService<CertificadoFirma> {
+public class CertificadoFirmaService
+        extends BaseService<CertificadoFirma> {
 
     private final CertificadoFirmaRepository certificadoFirmaRepository;
 
@@ -30,5 +33,30 @@ public class CertificadoFirmaService extends BaseService<CertificadoFirma> {
                         )
                 )
                 .toList();
+    }
+
+    public Optional<CertificadoFirma> obtenerVigente(
+            Long empresaId,
+            LocalDateTime fecha
+    ) {
+        Optional<CertificadoFirma> certificado =
+                certificadoFirmaRepository
+                        .findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+                                empresaId,
+                                EstadoRegistro.ACTIVO,
+                                fecha,
+                                fecha
+                        );
+
+        if (certificado.isPresent()) {
+            return certificado;
+        }
+
+        return certificadoFirmaRepository
+                .findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
+                        empresaId,
+                        EstadoRegistro.ACTIVO,
+                        fecha
+                );
     }
 }

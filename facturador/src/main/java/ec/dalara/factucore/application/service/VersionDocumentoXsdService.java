@@ -7,6 +7,7 @@ import ec.dalara.factucore.infrastructure.persistence.repository.VersionDocument
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,5 +68,30 @@ public class VersionDocumentoXsdService
                         )
                 )
                 .isPresent();
+    }
+
+    public Optional<VersionDocumentoXsd> obtenerVigente(
+            Long documentoXsdId,
+            LocalDateTime fecha
+    ) {
+        Optional<VersionDocumentoXsd> version =
+                versionDocumentoXsdRepository
+                        .findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+                                documentoXsdId,
+                                EstadoRegistro.ACTIVO,
+                                fecha,
+                                fecha
+                        );
+
+        if (version.isPresent()) {
+            return version;
+        }
+
+        return versionDocumentoXsdRepository
+                .findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
+                        documentoXsdId,
+                        EstadoRegistro.ACTIVO,
+                        fecha
+                );
     }
 }
