@@ -2,6 +2,7 @@ package ec.dalara.factucore.infrastructure.mapper;
 
 import ec.dalara.factucore.application.contract.request.VersionDocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.response.VersionDocumentoXsdResponse;
+import ec.dalara.factucore.domain.documentoxsd.VersionDocumentoXsdModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 import org.mapstruct.Mapper;
@@ -22,6 +23,23 @@ public interface VersionDocumentoXsdMapper {
 
     @Mapping(target = "idDocumentoXsd", source = "documentoXsd.id")
     VersionDocumentoXsdResponse toResponse(VersionDocumentoXsd entity);
+
+    default VersionDocumentoXsdModel toModel(
+            VersionDocumentoXsd entity
+    ) {
+        if (entity == null) {
+            return null;
+        }
+
+        return new VersionDocumentoXsdModel(
+                entity.getId(),
+                entity.getDocumentoXsd().getId(),
+                entity.getVersion(),
+                entity.getVersionXsd(),
+                entity.getFechaInicio(),
+                entity.getFechaFin()
+        );
+    }
 
     default DocumentoXsd mapDocumentoXsd(Long idDocumentoXsd) {
         if (idDocumentoXsd == null) {
