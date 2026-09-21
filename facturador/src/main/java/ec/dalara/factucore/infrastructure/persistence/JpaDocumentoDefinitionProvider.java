@@ -3,8 +3,8 @@ package ec.dalara.factucore.infrastructure.persistence;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.domain.documentoxsd.VersionDocumentoXsdModel;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
-import ec.dalara.factucore.infrastructure.mapper.VersionDocumentoXsdMapper;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
+import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.repository.DocumentoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.VersionDocumentoXsdRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,45 +20,69 @@ public class JpaDocumentoDefinitionProvider
 
     private final DocumentoXsdRepository documentoXsdRepository;
     private final VersionDocumentoXsdRepository versionDocumentoXsdRepository;
-    private final VersionDocumentoXsdMapper versionDocumentoXsdMapper;
 
     @Override
     public Optional<VersionDocumentoXsdModel> obtenerVersionVigente(
             String codigoDocumento,
             LocalDateTime fechaEmision
     ) {
-        Optional<DocumentoXsd> documento = documentoXsdRepository
-                .findByCodigo(codigoDocumento)
-                .filter(documentoXsd ->
-                        EstadoRegistro.ACTIVO.equals(
-                                documentoXsd.getEstadoRegistro()
-                        )
-                );
-
-        if (documento.isEmpty()) {
+        if (codigoDocumento == null || codigoDocumento.isBlank()) {
             return Optional.empty();
         }
 
-        Long documentoXsdId = documento.get().getId();
+        if (fechaEmision == null) {
+            return Optional.empty();
+        }
 
-        Optional<ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd> version =
+        Optional<DocumentoXsd> documentoOptional =
+                documentoXsdRepository
+                        .findByCodigo(codigoDocumento)
+                        .filter(documento ->
+                                EstadoRegistro.ACTIVO.equals(
+                                        documento.getEstadoRegistro()
+                                )
+                        );
+
+        if (documentoOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        DocumentoXsd documento = documentoOptional.get();
+
+        Optional<VersionDocumentoXsd> versionOptional =
                 versionDocumentoXsdRepository
                         .findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
-                                documentoXsdId,
+                                documento.getId(),
                                 EstadoRegistro.ACTIVO,
                                 fechaEmision,
                                 fechaEmision
                         );
 
-        if (version.isEmpty()) {
-            version = versionDocumentoXsdRepository
-                    .findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
-                            documentoXsdId,
-                            EstadoRegistro.ACTIVO,
-                            fechaEmision
-                    );
+        if (versionOptional.isEmpty()) {
+            versionOptional =
+                    versionDocumentoXsdRepository
+                            .findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
+                                    documento.getId(),
+                                    EstadoRegistro.ACTIVO,
+                                    fechaEmision
+                            );
         }
 
-        return version.map(versionDocumentoXsdMapper::toModel);
+        if (versionOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        VersionDocumentoXsd version = versionOptional.get();
+
+        return Optional.of(
+                new VersionDocumentoXsdModel(
+                        version.getId(),
+                        documento.getId(),
+                        version.getVersion(),
+                        version.getVersion(),
+                        version.getFechaInicio(),
+                        version.getFechaFin()
+                )
+        );
     }
 }

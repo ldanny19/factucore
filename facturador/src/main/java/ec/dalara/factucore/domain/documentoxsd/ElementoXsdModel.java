@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public class ElementoXsdModel {
 
+    private final Long id;
     private final Long versionDocumentoXsdId;
     private final Long elementoPadreId;
     private final String nombre;
@@ -22,6 +23,7 @@ public class ElementoXsdModel {
     private final String patron;
 
     public ElementoXsdModel(
+            Long id,
             Long versionDocumentoXsdId,
             Long elementoPadreId,
             String nombre,
@@ -39,6 +41,7 @@ public class ElementoXsdModel {
             BigDecimal valorMaximo,
             String patron
     ) {
+        this.id = id;
         this.versionDocumentoXsdId = versionDocumentoXsdId;
         this.elementoPadreId = elementoPadreId;
         this.nombre = nombre;
@@ -55,6 +58,10 @@ public class ElementoXsdModel {
         this.valorMinimo = valorMinimo;
         this.valorMaximo = valorMaximo;
         this.patron = patron;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public Long getVersionDocumentoXsdId() {

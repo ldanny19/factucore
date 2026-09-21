@@ -44,7 +44,6 @@ public class CertificadoFirmaService
                         .findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
                                 empresaId,
                                 EstadoRegistro.ACTIVO,
-                                fecha,
                                 fecha
                         );
 
