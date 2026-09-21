@@ -4,6 +4,6 @@ public interface XmlValidatorPort {
 
     void validar(
             String xml,
-            String versionXsd
+            String contenidoXsd
     );
 }

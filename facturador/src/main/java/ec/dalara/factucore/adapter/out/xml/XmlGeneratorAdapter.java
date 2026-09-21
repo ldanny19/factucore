@@ -1,5 +1,6 @@
 package ec.dalara.factucore.adapter.out.xml;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
@@ -14,7 +15,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class XmlGeneratorAdapter implements XmlGeneratorPort {
@@ -24,6 +27,18 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             DocumentDefinitionModel definition,
             Map<String, Object> datos
     ) {
+        if (definition == null) {
+            throw new ApplicationException(
+                    "FACTUCORE.XML.DEFINITION.REQUERIDA"
+            );
+        }
+
+        if (datos == null) {
+            throw new ApplicationException(
+                    "FACTUCORE.XML.DATOS.REQUERIDOS"
+            );
+        }
+
         try {
             DocumentBuilderFactory factory =
                     DocumentBuilderFactory.newInstance();
@@ -33,14 +48,14 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             Document document =
                     factory.newDocumentBuilder().newDocument();
 
-            Element root =
+            Element raiz =
                     crearElementoRaiz(
                             document,
                             definition,
                             datos
                     );
 
-            document.appendChild(root);
+            document.appendChild(raiz);
 
             Transformer transformer =
                     TransformerFactory
@@ -72,10 +87,12 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
             return writer.toString();
 
+        } catch (ApplicationException exception) {
+            throw exception;
+
         } catch (Exception exception) {
-            throw new IllegalStateException(
-                    "FACTUCORE.XML.GENERACION.ERROR",
-                    exception
+            throw new ApplicationException(
+                    "FACTUCORE.XML.GENERACION.ERROR"
             );
         }
     }
@@ -93,103 +110,203 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                         )
                         .findFirst()
                         .orElseThrow(() ->
-                                new IllegalStateException(
+                                new ApplicationException(
                                         "FACTUCORE.XML.ELEMENTO_RAIZ.NO_DEFINIDO"
                                 )
                         );
 
         Element elemento =
+                crearElemento(
+                        document,
+                        raiz,
+                        datos,
+                        definition
+                );
+
+        return elemento;
+    }
+
+    private Element crearElemento(
+            Document document,
+            ElementoXsdModel definicion,
+            Map<String, Object> datos,
+            DocumentDefinitionModel definition
+    ) {
+        Element elemento =
                 document.createElement(
-                        raiz.getNombre()
+                        definicion.getNombre()
                 );
 
         Object valor =
                 obtenerValor(
                         datos,
-                        raiz.getNombre()
+                        definicion.getNombre()
                 );
 
-        if (valor != null) {
+        if (valor != null
+                && !esEstructura(valor)) {
+
             elemento.setTextContent(
                     String.valueOf(valor)
             );
         }
 
-        agregarHijos(
-                document,
-                elemento,
-                raiz,
-                definition,
-                datos
-        );
-
-        return elemento;
-    }
-
-    private void agregarHijos(
-            Document document,
-            Element padre,
-            ElementoXsdModel elementoPadre,
-            DocumentDefinitionModel definition,
-            Map<String, Object> datos
-    ) {
         definition.getElementos()
                 .stream()
-                .filter(elemento ->
-                        java.util.Objects.equals(
-                                elemento.getElementoPadreId(),
-                                elementoPadre.getId()
+                .filter(hijo ->
+                        Objects.equals(
+                                hijo.getElementoPadreId(),
+                                definicion.getId()
                         )
                 )
                 .sorted(
-                        java.util.Comparator.comparing(
+                        Comparator.comparing(
                                 ElementoXsdModel::getOrden,
-                                java.util.Comparator.nullsLast(
+                                Comparator.nullsLast(
                                         Integer::compareTo
                                 )
                         )
                 )
-                .forEach(elemento -> {
+                .forEach(hijo -> {
 
-                    Object valor =
+                    Object valorHijo =
                             obtenerValor(
                                     datos,
-                                    elemento.getNombre()
+                                    hijo.getNombre()
                             );
 
-                    if (valor == null) {
+                    if (valorHijo == null) {
                         return;
                     }
 
-                    Element hijo =
-                            document.createElement(
-                                    elemento.getNombre()
-                            );
-
-                    hijo.setTextContent(
-                            String.valueOf(valor)
-                    );
-
-                    padre.appendChild(hijo);
-
-                    agregarHijos(
+                    agregarValor(
                             document,
-                            hijo,
                             elemento,
-                            definition,
-                            datos
+                            hijo,
+                            valorHijo,
+                            definition
                     );
                 });
+
+        return elemento;
+    }
+
+    private void agregarValor(
+            Document document,
+            Element padre,
+            ElementoXsdModel definicion,
+            Object valor,
+            DocumentDefinitionModel definition
+    ) {
+        if (valor instanceof Iterable<?> iterable) {
+
+            for (Object item : iterable) {
+
+                Element elemento =
+                        crearElementoConValor(
+                                document,
+                                definicion,
+                                item,
+                                definition
+                        );
+
+                padre.appendChild(elemento);
+            }
+
+            return;
+        }
+
+        Element elemento =
+                crearElementoConValor(
+                        document,
+                        definicion,
+                        valor,
+                        definition
+                );
+
+        padre.appendChild(elemento);
+    }
+
+    private Element crearElementoConValor(
+            Document document,
+            ElementoXsdModel definicion,
+            Object valor,
+            DocumentDefinitionModel definition
+    ) {
+        Element elemento =
+                document.createElement(
+                        definicion.getNombre()
+                );
+
+        if (!esEstructura(valor)) {
+
+            elemento.setTextContent(
+                    String.valueOf(valor)
+            );
+        }
+
+        definition.getElementos()
+                .stream()
+                .filter(hijo ->
+                        Objects.equals(
+                                hijo.getElementoPadreId(),
+                                definicion.getId()
+                        )
+                )
+                .sorted(
+                        Comparator.comparing(
+                                ElementoXsdModel::getOrden,
+                                Comparator.nullsLast(
+                                        Integer::compareTo
+                                )
+                        )
+                )
+                .forEach(hijo -> {
+
+                    Object valorHijo =
+                            obtenerValor(
+                                    datosDeEstructura(valor),
+                                    hijo.getNombre()
+                            );
+
+                    if (valorHijo == null) {
+                        return;
+                    }
+
+                    agregarValor(
+                            document,
+                            elemento,
+                            hijo,
+                            valorHijo,
+                            definition
+                    );
+                });
+
+        return elemento;
     }
 
     private Object obtenerValor(
             Map<String, Object> datos,
             String nombre
     ) {
-        if (datos == null || nombre == null) {
-            return null;
+        return datos.get(nombre);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> datosDeEstructura(
+            Object valor
+    ) {
+        if (valor instanceof Map<?, ?> mapa) {
+            return (Map<String, Object>) mapa;
         }
 
-        return datos.get(nombre);
+        return Map.of();
+    }
+
+    private boolean esEstructura(
+            Object valor
+    ) {
+        return valor instanceof Map<?, ?>
+                || valor instanceof Iterable<?>;
     }
 }
