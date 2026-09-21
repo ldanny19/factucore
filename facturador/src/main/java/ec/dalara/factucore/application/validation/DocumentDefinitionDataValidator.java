@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 @Component
 @RequiredArgsConstructor
@@ -66,36 +67,54 @@ public class DocumentDefinitionDataValidator
             return;
         }
 
-        for (ElementoXsdModel elemento : definition.getElementos()) {
+        for (ElementoXsdModel elemento :
+                definition.getElementos()) {
 
-            Object valor = obtenerValor(
-                    datos,
-                    elemento.getNombre()
-            );
+            String ruta =
+                    construirRuta(
+                            elemento,
+                            definition.getElementos()
+                    );
 
-            String campo = elemento.getNombre();
+            Object valor =
+                    obtenerValor(
+                            datos,
+                            ruta,
+                            elemento.getNombre()
+                    );
 
-            int ocurrencias = calcularOcurrencias(valor);
+            int ocurrencias =
+                    calcularOcurrencias(valor);
 
-            int min = determinarMinimo(elemento);
+            int minimo =
+                    determinarMinimo(elemento);
 
-            if (ocurrencias < min) {
+            if (ocurrencias < minimo) {
+
                 resultado.agregarError(
-                        OCURRENCIAS_MINIMAS,
-                        campo,
-                        min
+                        elemento.getObligatorio() != null
+                                && elemento.getObligatorio()
+                                ? VALOR_REQUERIDO
+                                : OCURRENCIAS_MINIMAS,
+                        ruta,
+                        minimo
                 );
+
                 continue;
             }
 
-            Integer max = elemento.getMaxOcurrencias();
+            Integer maximo =
+                    elemento.getMaxOcurrencias();
 
-            if (max != null && ocurrencias > max) {
+            if (maximo != null
+                    && ocurrencias > maximo) {
+
                 resultado.agregarError(
                         OCURRENCIAS_MAXIMAS,
-                        campo,
-                        max
+                        ruta,
+                        maximo
                 );
+
                 continue;
             }
 
@@ -103,15 +122,15 @@ public class DocumentDefinitionDataValidator
                 continue;
             }
 
-            if (Boolean.TRUE.equals(elemento.getRepetible())
-                    && valor instanceof List<?> lista) {
+            if (valor instanceof List<?> lista) {
 
                 for (Object item : lista) {
+
                     validarValor(
                             elemento,
                             item,
                             definition,
-                            campo,
+                            ruta,
                             resultado
                     );
                 }
@@ -123,7 +142,7 @@ public class DocumentDefinitionDataValidator
                     elemento,
                     valor,
                     definition,
-                    campo,
+                    ruta,
                     resultado
             );
         }
@@ -140,14 +159,20 @@ public class DocumentDefinitionDataValidator
             return;
         }
 
-        validarTipo(
-                elemento,
-                valor,
-                campo,
-                resultado
-        );
+        boolean tipoValido =
+                validarTipo(
+                        elemento,
+                        valor,
+                        campo,
+                        resultado
+                );
+
+        if (!tipoValido) {
+            return;
+        }
 
         if (valor instanceof String texto) {
+
             validarTexto(
                     elemento,
                     texto,
@@ -157,6 +182,7 @@ public class DocumentDefinitionDataValidator
         }
 
         if (esNumerico(elemento.getTipoDato())) {
+
             validarNumerico(
                     elemento,
                     valor,
@@ -181,43 +207,67 @@ public class DocumentDefinitionDataValidator
         );
     }
 
-    private void validarTipo(
+    private boolean validarTipo(
             ElementoXsdModel elemento,
             Object valor,
             String campo,
             ComprobanteValidationResult resultado
     ) {
-        String tipo = normalizarTipo(elemento.getTipoDato());
+        String tipo =
+                normalizarTipo(
+                        elemento.getTipoDato()
+                );
 
-        boolean valido = switch (tipo) {
-            case "STRING", "TOKEN", "NORMALIZEDSTRING" ->
-                    valor instanceof String;
+        boolean valido =
+                switch (tipo) {
 
-            case "INTEGER", "LONG", "INT" ->
-                    valor instanceof Integer
-                            || valor instanceof Long;
+                    case "STRING",
+                         "TOKEN",
+                         "NORMALIZEDSTRING" ->
+                            valor instanceof String;
 
-            case "DECIMAL", "DOUBLE", "FLOAT" ->
-                    valor instanceof Number
-                            || valor instanceof BigDecimal;
+                    case "INTEGER",
+                         "INT",
+                         "LONG",
+                         "SHORT",
+                         "BYTE" ->
+                            valor instanceof Integer
+                                    || valor instanceof Long;
 
-            case "BOOLEAN" ->
-                    valor instanceof Boolean;
+                    case "DECIMAL" ->
+                            valor instanceof BigDecimal
+                                    || valor instanceof Number
+                                    || valor instanceof String;
 
-            case "DATE", "DATETIME", "DATE_TIME" ->
-                    valor instanceof String;
+                    case "DOUBLE",
+                         "FLOAT" ->
+                            valor instanceof Number;
 
-            default ->
-                    true;
-        };
+                    case "BOOLEAN" ->
+                            valor instanceof Boolean
+                                    || esBooleanoTexto(valor);
+
+                    case "DATE" ->
+                            valor instanceof String;
+
+                    case "DATETIME",
+                         "DATE_TIME" ->
+                            valor instanceof String;
+
+                    default ->
+                            true;
+                };
 
         if (!valido) {
+
             resultado.agregarError(
                     TIPO_INVALIDO,
                     campo,
                     elemento.getTipoDato()
             );
         }
+
+        return valido;
     }
 
     private void validarTexto(
@@ -226,9 +276,12 @@ public class DocumentDefinitionDataValidator
             String campo,
             ComprobanteValidationResult resultado
     ) {
-        Integer minimo = elemento.getLongitudMinima();
+        Integer minimo =
+                elemento.getLongitudMinima();
 
-        if (minimo != null && valor.length() < minimo) {
+        if (minimo != null
+                && valor.length() < minimo) {
+
             resultado.agregarError(
                     LONGITUD_MINIMA,
                     campo,
@@ -236,9 +289,12 @@ public class DocumentDefinitionDataValidator
             );
         }
 
-        Integer maximo = elemento.getLongitudMaxima();
+        Integer maximo =
+                elemento.getLongitudMaxima();
 
-        if (maximo != null && valor.length() > maximo) {
+        if (maximo != null
+                && valor.length() > maximo) {
+
             resultado.agregarError(
                     LONGITUD_MAXIMA,
                     campo,
@@ -256,13 +312,25 @@ public class DocumentDefinitionDataValidator
         BigDecimal numero;
 
         try {
-            numero = new BigDecimal(valor.toString());
+            numero =
+                    new BigDecimal(
+                            valor.toString()
+                    );
         } catch (NumberFormatException e) {
+
+            resultado.agregarError(
+                    TIPO_INVALIDO,
+                    campo,
+                    elemento.getTipoDato()
+            );
+
             return;
         }
 
         if (elemento.getValorMinimo() != null
-                && numero.compareTo(elemento.getValorMinimo()) < 0) {
+                && numero.compareTo(
+                        elemento.getValorMinimo()
+                ) < 0) {
 
             resultado.agregarError(
                     VALOR_MINIMO,
@@ -272,7 +340,9 @@ public class DocumentDefinitionDataValidator
         }
 
         if (elemento.getValorMaximo() != null
-                && numero.compareTo(elemento.getValorMaximo()) > 0) {
+                && numero.compareTo(
+                        elemento.getValorMaximo()
+                ) > 0) {
 
             resultado.agregarError(
                     VALOR_MAXIMO,
@@ -283,9 +353,14 @@ public class DocumentDefinitionDataValidator
 
         if (elemento.getDigitosTotales() != null) {
 
-            int digitos = contarDigitos(numero);
+            int digitos =
+                    contarDigitos(
+                            numero
+                    );
 
-            if (digitos > elemento.getDigitosTotales()) {
+            if (digitos >
+                    elemento.getDigitosTotales()) {
+
                 resultado.agregarError(
                         DIGITOS_TOTALES,
                         campo,
@@ -296,12 +371,17 @@ public class DocumentDefinitionDataValidator
 
         if (elemento.getDecimales() != null) {
 
-            int decimales = Math.max(
-                    numero.stripTrailingZeros().scale(),
-                    0
-            );
+            int decimales =
+                    Math.max(
+                            numero
+                                    .stripTrailingZeros()
+                                    .scale(),
+                            0
+                    );
 
-            if (decimales > elemento.getDecimales()) {
+            if (decimales >
+                    elemento.getDecimales()) {
+
                 resultado.agregarError(
                         DECIMALES,
                         campo,
@@ -317,9 +397,11 @@ public class DocumentDefinitionDataValidator
             String campo,
             ComprobanteValidationResult resultado
     ) {
-        String patron = elemento.getPatron();
+        String patron =
+                elemento.getPatron();
 
-        if (patron == null || patron.isBlank()) {
+        if (patron == null
+                || patron.isBlank()) {
             return;
         }
 
@@ -328,13 +410,20 @@ public class DocumentDefinitionDataValidator
         }
 
         try {
-            if (!Pattern.matches(patron, texto)) {
+
+            if (!Pattern.matches(
+                    patron,
+                    texto
+            )) {
+
                 resultado.agregarError(
                         PATRON_INVALIDO,
                         campo
                 );
             }
-        } catch (Exception e) {
+
+        } catch (PatternSyntaxException e) {
+
             resultado.agregarError(
                     PATRON_INVALIDO,
                     campo
@@ -358,7 +447,8 @@ public class DocumentDefinitionDataValidator
                         .stream()
                         .filter(enumeracion ->
                                 Objects.equals(
-                                        enumeracion.getElementoXsdId(),
+                                        enumeracion
+                                                .getElementoXsdId(),
                                         elemento.getId()
                                 )
                         )
@@ -368,17 +458,20 @@ public class DocumentDefinitionDataValidator
             return;
         }
 
-        String valorTexto = valor.toString();
+        String valorTexto =
+                valor.toString();
 
-        boolean existe = enumeraciones.stream()
-                .anyMatch(enumeracion ->
-                        Objects.equals(
-                                enumeracion.getValor(),
-                                valorTexto
-                        )
-                );
+        boolean existe =
+                enumeraciones.stream()
+                        .anyMatch(enumeracion ->
+                                Objects.equals(
+                                        enumeracion.getValor(),
+                                        valorTexto
+                                )
+                        );
 
         if (!existe) {
+
             resultado.agregarError(
                     ENUMERACION_INVALIDA,
                     campo,
@@ -389,16 +482,83 @@ public class DocumentDefinitionDataValidator
 
     private Object obtenerValor(
             Map<String, Object> datos,
+            String ruta,
             String nombre
     ) {
+        if (datos.containsKey(ruta)) {
+            return datos.get(ruta);
+        }
+
         if (datos.containsKey(nombre)) {
             return datos.get(nombre);
         }
 
-        return datos.get(nombre);
+        String sufijo =
+                "." + nombre;
+
+        Object encontrado = null;
+        boolean encontradoUnaVez = false;
+
+        for (Map.Entry<String, Object> entry :
+                datos.entrySet()) {
+
+            String clave =
+                    entry.getKey();
+
+            if (clave.equals(nombre)
+                    || clave.endsWith(sufijo)) {
+
+                if (encontradoUnaVez) {
+                    return datos.get(ruta);
+                }
+
+                encontrado =
+                        entry.getValue();
+
+                encontradoUnaVez = true;
+            }
+        }
+
+        return encontrado;
     }
 
-    private int calcularOcurrencias(Object valor) {
+    private String construirRuta(
+            ElementoXsdModel elemento,
+            List<ElementoXsdModel> elementos
+    ) {
+        if (elemento.getElementoPadreId() == null) {
+            return elemento.getNombre();
+        }
+
+        ElementoXsdModel padre =
+                elementos.stream()
+                        .filter(item ->
+                                Objects.equals(
+                                        item.getId(),
+                                        elemento.getElementoPadreId()
+                                )
+                        )
+                        .findFirst()
+                        .orElse(null);
+
+        if (padre == null) {
+            return elemento.getNombre();
+        }
+
+        String rutaPadre =
+                construirRuta(
+                        padre,
+                        elementos
+                );
+
+        return rutaPadre
+                + "."
+                + elemento.getNombre();
+    }
+
+    private int calcularOcurrencias(
+            Object valor
+    ) {
         if (valor == null) {
             return 0;
         }
@@ -417,46 +577,84 @@ public class DocumentDefinitionDataValidator
             return elemento.getMinOcurrencias();
         }
 
-        if (Boolean.TRUE.equals(elemento.getObligatorio())) {
+        if (Boolean.TRUE.equals(
+                elemento.getObligatorio()
+        )) {
             return 1;
         }
 
         return 0;
     }
 
-    private boolean esNumerico(String tipoDato) {
-        String tipo = normalizarTipo(tipoDato);
+    private boolean esNumerico(
+            String tipoDato
+    ) {
+        String tipo =
+                normalizarTipo(tipoDato);
 
         return switch (tipo) {
-            case "INTEGER", "LONG", "INT",
-                 "DECIMAL", "DOUBLE", "FLOAT" -> true;
+            case "INTEGER",
+                 "INT",
+                 "LONG",
+                 "SHORT",
+                 "BYTE",
+                 "DECIMAL",
+                 "DOUBLE",
+                 "FLOAT" -> true;
+
             default -> false;
         };
     }
 
-    private String normalizarTipo(String tipoDato) {
+    private boolean esBooleanoTexto(
+            Object valor
+    ) {
+        if (!(valor instanceof String texto)) {
+            return false;
+        }
+
+        return "true".equalsIgnoreCase(texto)
+                || "false".equalsIgnoreCase(texto);
+    }
+
+    private String normalizarTipo(
+            String tipoDato
+    ) {
         if (tipoDato == null) {
             return "";
         }
 
-        String tipo = tipoDato.trim().toUpperCase();
+        String tipo =
+                tipoDato
+                        .trim()
+                        .toUpperCase();
 
-        int separador = tipo.lastIndexOf(':');
+        int separador =
+                tipo.lastIndexOf(':');
 
         if (separador >= 0) {
-            tipo = tipo.substring(separador + 1);
+            tipo =
+                    tipo.substring(
+                            separador + 1
+                    );
         }
 
         return tipo;
     }
 
-    private int contarDigitos(BigDecimal numero) {
-        return numero
-                .abs()
-                .stripTrailingZeros()
-                .unscaledValue()
-                .abs()
-                .toString()
-                .length();
+    private int contarDigitos(
+            BigDecimal numero
+    ) {
+        BigDecimal absoluto =
+                numero.abs()
+                        .stripTrailingZeros();
+
+        String valor =
+                absoluto
+                        .unscaledValue()
+                        .abs()
+                        .toString();
+
+        return valor.length();
     }
 }

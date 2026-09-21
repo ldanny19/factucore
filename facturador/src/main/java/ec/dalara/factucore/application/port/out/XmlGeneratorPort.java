@@ -1,10 +1,13 @@
 package ec.dalara.factucore.application.port.out;
 
+import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
+
+import java.util.Map;
+
 public interface XmlGeneratorPort {
 
     String generar(
-            String codigoDocumento,
-            String versionXsd,
-            Object datos
+            DocumentDefinitionModel definition,
+            Map<String, Object> datos
     );
 }
