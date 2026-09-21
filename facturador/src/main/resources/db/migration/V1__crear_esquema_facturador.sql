@@ -170,7 +170,6 @@ CREATE TABLE version_documento_xsd (
     documento_xsd_id BIGINT NOT NULL,
     version VARCHAR(20) NOT NULL,
     nombre_archivo VARCHAR(300),
-    ruta_xsd VARCHAR(1000),
     namespace_xml VARCHAR(1000),
     elemento_raiz VARCHAR(300),
     plantilla_json TEXT,

@@ -19,10 +19,17 @@ public interface VersionDocumentoXsdMapper {
     @Mapping(target = "fechaCreacion", ignore = true)
     @Mapping(target = "fechaModificacion", ignore = true)
     @Mapping(target = "observacion", ignore = true)
-    VersionDocumentoXsd toEntity(VersionDocumentoXsdRequest request);
+    VersionDocumentoXsd toEntity(
+            VersionDocumentoXsdRequest request
+    );
 
-    @Mapping(target = "idDocumentoXsd", source = "documentoXsd.id")
-    VersionDocumentoXsdResponse toResponse(VersionDocumentoXsd entity);
+    @Mapping(
+            target = "idDocumentoXsd",
+            source = "documentoXsd.id"
+    )
+    VersionDocumentoXsdResponse toResponse(
+            VersionDocumentoXsd entity
+    );
 
     default VersionDocumentoXsdModel toModel(
             VersionDocumentoXsd entity
@@ -35,13 +42,15 @@ public interface VersionDocumentoXsdMapper {
                 entity.getId(),
                 entity.getDocumentoXsd().getId(),
                 entity.getVersion(),
-                entity.getVersion(),
+                entity.getVersionXsd(),
                 entity.getFechaInicio(),
                 entity.getFechaFin()
         );
     }
 
-    default DocumentoXsd mapDocumentoXsd(Long idDocumentoXsd) {
+    default DocumentoXsd mapDocumentoXsd(
+            Long idDocumentoXsd
+    ) {
         if (idDocumentoXsd == null) {
             return null;
         }

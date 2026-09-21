@@ -23,11 +23,12 @@ public class VersionDocumentoXsdRequest {
     @Size(max = 20)
     private String version;
 
+    @NotBlank
+    @Size(max = 20)
+    private String versionXsd;
+
     @Size(max = 300)
     private String nombreArchivo;
-
-    @Size(max = 1000)
-    private String rutaXsd;
 
     @Size(max = 1000)
     private String namespaceXml;

@@ -19,9 +19,9 @@ public class VersionDocumentoXsdResponse {
 
     private String version;
 
-    private String nombreArchivo;
+    private String versionXsd;
 
-    private String rutaXsd;
+    private String nombreArchivo;
 
     private String namespaceXml;
 

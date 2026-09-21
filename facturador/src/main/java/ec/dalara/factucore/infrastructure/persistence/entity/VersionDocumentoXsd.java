@@ -31,29 +31,54 @@ public class VersionDocumentoXsd implements EstadoRegistroEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "documento_xsd_id", nullable = false)
+    @JoinColumn(
+            name = "documento_xsd_id",
+            nullable = false
+    )
     private DocumentoXsd documentoXsd;
 
-    @Column(name = "version", nullable = false, length = 20)
+    @Column(
+            name = "version",
+            nullable = false,
+            length = 20
+    )
     private String version;
 
-    @Column(name = "nombre_archivo", length = 300)
+    @Column(
+            name = "version_xsd",
+            nullable = false,
+            length = 20
+    )
+    private String versionXsd;
+
+    @Column(
+            name = "nombre_archivo",
+            length = 300
+    )
     private String nombreArchivo;
 
-    @Lob
-    @Column(name = "contenido_xsd", nullable = false)
-    private String contenidoXsd;
-
-    @Column(name = "namespace_xml", length = 1000)
+    @Column(
+            name = "namespace_xml",
+            length = 1000
+    )
     private String namespaceXml;
 
-    @Column(name = "elemento_raiz", length = 300)
+    @Column(
+            name = "elemento_raiz",
+            length = 300
+    )
     private String elementoRaiz;
 
-    @Column(name = "plantilla_json", columnDefinition = "TEXT")
+    @Column(
+            name = "plantilla_json",
+            columnDefinition = "TEXT"
+    )
     private String plantillaJson;
 
-    @Column(name = "esquema_json", columnDefinition = "TEXT")
+    @Column(
+            name = "esquema_json",
+            columnDefinition = "TEXT"
+    )
     private String esquemaJson;
 
     @Column(name = "fecha_inicio")
@@ -62,16 +87,30 @@ public class VersionDocumentoXsd implements EstadoRegistroEntity {
     @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;
 
-    @Column(name = "estado_registro", nullable = false, length = 20)
+    @Column(
+            name = "estado_registro",
+            nullable = false,
+            length = 20
+    )
     private String estadoRegistro;
 
-    @Column(name = "usuario_creacion", nullable = false, length = 100)
+    @Column(
+            name = "usuario_creacion",
+            nullable = false,
+            length = 100
+    )
     private String usuarioCreacion;
 
-    @Column(name = "usuario_modificacion", length = 100)
+    @Column(
+            name = "usuario_modificacion",
+            length = 100
+    )
     private String usuarioModificacion;
 
-    @Column(name = "fecha_creacion", nullable = false)
+    @Column(
+            name = "fecha_creacion",
+            nullable = false
+    )
     private LocalDateTime fechaCreacion;
 
     @Column(name = "fecha_modificacion")
