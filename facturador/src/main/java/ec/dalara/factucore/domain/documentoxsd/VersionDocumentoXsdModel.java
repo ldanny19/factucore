@@ -9,7 +9,6 @@ public final class VersionDocumentoXsdModel {
     private final Long id;
     private final Long documentoXsdId;
     private final String version;
-    private final String versionXsd;
     private final LocalDateTime fechaInicio;
     private final LocalDateTime fechaFin;
 
@@ -17,7 +16,6 @@ public final class VersionDocumentoXsdModel {
             Long id,
             Long documentoXsdId,
             String version,
-            String versionXsd,
             LocalDateTime fechaInicio,
             LocalDateTime fechaFin
     ) {
@@ -30,12 +28,6 @@ public final class VersionDocumentoXsdModel {
         if (version == null || version.isBlank()) {
             throw new DomainException(
                     "FACTUCORE.VERSION_DOCUMENTO_XSD.VERSION.REQUERIDA"
-            );
-        }
-
-        if (versionXsd == null || versionXsd.isBlank()) {
-            throw new DomainException(
-                    "FACTUCORE.VERSION_DOCUMENTO_XSD.VERSION_XSD.REQUERIDA"
             );
         }
 
@@ -54,7 +46,6 @@ public final class VersionDocumentoXsdModel {
         this.id = id;
         this.documentoXsdId = documentoXsdId;
         this.version = version;
-        this.versionXsd = versionXsd;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }
@@ -77,10 +68,6 @@ public final class VersionDocumentoXsdModel {
 
     public String getVersion() {
         return version;
-    }
-
-    public String getVersionXsd() {
-        return versionXsd;
     }
 
     public LocalDateTime getFechaInicio() {
