@@ -41,23 +41,10 @@ public class JpaDocumentoDefinitionProvider
             String codigoDocumento,
             LocalDateTime fechaEmision
     ) {
-        Optional<VersionDocumentoXsd> version =
-                obtenerEntidadVersionVigente(
-                        codigoDocumento,
-                        fechaEmision
-                );
-
-        if (version.isEmpty()) {
-            return Optional.empty();
-        }
-
-        VersionDocumentoXsd entidad = version.get();
-
-        return Optional.of(
-                crearVersionModel(
-                        entidad
-                )
-        );
+        return obtenerEntidadVersionVigente(
+                codigoDocumento,
+                fechaEmision
+        ).map(this::crearVersionModel);
     }
 
     @Override
@@ -80,9 +67,7 @@ public class JpaDocumentoDefinitionProvider
 
         List<ElementoXsd> elementos =
                 elementoXsdRepository
-                        .findByVersionDocumentoXsdId(
-                                version.getId()
-                        )
+                        .findByVersionDocumentoXsdId(version.getId())
                         .stream()
                         .filter(elemento ->
                                 EstadoRegistro.ACTIVO.equals(
@@ -100,9 +85,7 @@ public class JpaDocumentoDefinitionProvider
                 elementos.stream()
                         .flatMap(elemento ->
                                 atributoXsdRepository
-                                        .findByElementoXsdId(
-                                                elemento.getId()
-                                        )
+                                        .findByElementoXsdId(elemento.getId())
                                         .stream()
                         )
                         .filter(atributo ->
@@ -117,9 +100,7 @@ public class JpaDocumentoDefinitionProvider
                 elementos.stream()
                         .flatMap(elemento ->
                                 enumeracionXsdRepository
-                                        .findByElementoXsdId(
-                                                elemento.getId()
-                                        )
+                                        .findByElementoXsdId(elemento.getId())
                                         .stream()
                         )
                         .filter(enumeracion ->
@@ -206,7 +187,6 @@ public class JpaDocumentoDefinitionProvider
         return new VersionDocumentoXsdModel(
                 version.getId(),
                 version.getDocumentoXsd().getId(),
-                version.getVersion(),
                 version.getVersion(),
                 version.getFechaInicio(),
                 version.getFechaFin()
