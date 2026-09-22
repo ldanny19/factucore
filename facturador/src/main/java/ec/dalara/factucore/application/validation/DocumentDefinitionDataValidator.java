@@ -4,10 +4,14 @@ import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
+import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,85 +71,107 @@ public class DocumentDefinitionDataValidator
             return;
         }
 
-        for (ElementoXsdModel elemento :
-                definition.getElementos()) {
+        Map<Long, ElementoXsdModel> elementosPorId =
+                indexarElementos(definition.getElementos());
 
-            String ruta =
-                    construirRuta(
-                            elemento,
-                            definition.getElementos()
-                    );
+        for (MapeoXsdModel mapeo : definition.getMapeos()) {
+
+            if (mapeo == null || !mapeo.esElemento()) {
+                continue;
+            }
+
+            ElementoXsdModel elemento =
+                    elementosPorId.get(mapeo.getElementoXsdId());
+
+            if (elemento == null) {
+                continue;
+            }
 
             Object valor =
                     obtenerValor(
                             datos,
-                            ruta,
-                            elemento.getNombre()
+                            mapeo.getRutaOrigen()
                     );
 
-            int ocurrencias =
-                    calcularOcurrencias(valor);
-
-            int minimo =
-                    determinarMinimo(elemento);
-
-            if (ocurrencias < minimo) {
-
-                resultado.agregarError(
-                        elemento.getObligatorio() != null
-                                && elemento.getObligatorio()
-                                ? VALOR_REQUERIDO
-                                : OCURRENCIAS_MINIMAS,
-                        ruta,
-                        minimo
-                );
-
-                continue;
-            }
-
-            Integer maximo =
-                    elemento.getMaxOcurrencias();
-
-            if (maximo != null
-                    && ocurrencias > maximo) {
-
-                resultado.agregarError(
-                        OCURRENCIAS_MAXIMAS,
-                        ruta,
-                        maximo
-                );
-
-                continue;
-            }
-
-            if (valor == null) {
-                continue;
-            }
-
-            if (valor instanceof List<?> lista) {
-
-                for (Object item : lista) {
-
-                    validarValor(
-                            elemento,
-                            item,
-                            definition,
-                            ruta,
-                            resultado
-                    );
-                }
-
-                continue;
-            }
-
-            validarValor(
+            validarElemento(
                     elemento,
                     valor,
+                    mapeo.getRutaOrigen(),
                     definition,
-                    ruta,
                     resultado
             );
         }
+    }
+
+    private void validarElemento(
+            ElementoXsdModel elemento,
+            Object valor,
+            String campo,
+            DocumentDefinitionModel definition,
+            ComprobanteValidationResult resultado
+    ) {
+        int ocurrencias =
+                calcularOcurrencias(valor);
+
+        int minimo =
+                determinarMinimo(elemento);
+
+        if (ocurrencias < minimo) {
+
+            resultado.agregarError(
+                    elemento.getObligatorio() != null
+                            && elemento.getObligatorio()
+                            ? VALOR_REQUERIDO
+                            : OCURRENCIAS_MINIMAS,
+                    campo,
+                    minimo
+            );
+
+            return;
+        }
+
+        Integer maximo =
+                elemento.getMaxOcurrencias();
+
+        if (maximo != null
+                && ocurrencias > maximo) {
+
+            resultado.agregarError(
+                    OCURRENCIAS_MAXIMAS,
+                    campo,
+                    maximo
+            );
+
+            return;
+        }
+
+        if (valor == null) {
+            return;
+        }
+
+        if (valor instanceof Collection<?> coleccion) {
+
+            for (Object item : coleccion) {
+
+                validarValor(
+                        elemento,
+                        item,
+                        definition,
+                        campo,
+                        resultado
+                );
+            }
+
+            return;
+        }
+
+        validarValor(
+                elemento,
+                valor,
+                definition,
+                campo,
+                resultado
+        );
     }
 
     private void validarValor(
@@ -156,6 +182,10 @@ public class DocumentDefinitionDataValidator
             ComprobanteValidationResult resultado
     ) {
         if (valor == null) {
+            return;
+        }
+
+        if (esEstructura(valor)) {
             return;
         }
 
@@ -232,7 +262,9 @@ public class DocumentDefinitionDataValidator
                          "SHORT",
                          "BYTE" ->
                             valor instanceof Integer
-                                    || valor instanceof Long;
+                                    || valor instanceof Long
+                                    || valor instanceof Short
+                                    || valor instanceof Byte;
 
                     case "DECIMAL" ->
                             valor instanceof BigDecimal
@@ -316,7 +348,7 @@ public class DocumentDefinitionDataValidator
                     new BigDecimal(
                             valor.toString()
                     );
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException exception) {
 
             resultado.agregarError(
                     TIPO_INVALIDO,
@@ -354,9 +386,7 @@ public class DocumentDefinitionDataValidator
         if (elemento.getDigitosTotales() != null) {
 
             int digitos =
-                    contarDigitos(
-                            numero
-                    );
+                    contarDigitos(numero);
 
             if (digitos >
                     elemento.getDigitosTotales()) {
@@ -422,7 +452,7 @@ public class DocumentDefinitionDataValidator
                 );
             }
 
-        } catch (PatternSyntaxException e) {
+        } catch (PatternSyntaxException exception) {
 
             resultado.agregarError(
                     PATRON_INVALIDO,
@@ -447,8 +477,7 @@ public class DocumentDefinitionDataValidator
                         .stream()
                         .filter(enumeracion ->
                                 Objects.equals(
-                                        enumeracion
-                                                .getElementoXsdId(),
+                                        enumeracion.getElementoXsdId(),
                                         elemento.getId()
                                 )
                         )
@@ -480,80 +509,59 @@ public class DocumentDefinitionDataValidator
         }
     }
 
+    private Map<Long, ElementoXsdModel> indexarElementos(
+            List<ElementoXsdModel> elementos
+    ) {
+        Map<Long, ElementoXsdModel> resultado =
+                new LinkedHashMap<>();
+
+        for (ElementoXsdModel elemento : elementos) {
+
+            if (elemento != null
+                    && elemento.getId() != null) {
+
+                resultado.put(
+                        elemento.getId(),
+                        elemento
+                );
+            }
+        }
+
+        return resultado;
+    }
+
     private Object obtenerValor(
             Map<String, Object> datos,
-            String ruta,
-            String nombre
+            String ruta
     ) {
+        if (ruta == null || ruta.isBlank()) {
+            return null;
+        }
+
         if (datos.containsKey(ruta)) {
             return datos.get(ruta);
         }
 
-        if (datos.containsKey(nombre)) {
-            return datos.get(nombre);
-        }
+        String[] partes =
+                ruta.split("\\.");
 
-        String sufijo =
-                "." + nombre;
+        Object actual = datos;
 
-        Object encontrado = null;
-        boolean encontradoUnaVez = false;
+        for (String parte : partes) {
 
-        for (Map.Entry<String, Object> entry :
-                datos.entrySet()) {
+            if (!(actual instanceof Map<?, ?> mapa)) {
+                return null;
+            }
 
-            String clave =
-                    entry.getKey();
+            actual =
+                    mapa.get(parte);
 
-            if (clave.equals(nombre)
-                    || clave.endsWith(sufijo)) {
-
-                if (encontradoUnaVez) {
-                    return datos.get(ruta);
-                }
-
-                encontrado =
-                        entry.getValue();
-
-                encontradoUnaVez = true;
+            if (actual == null) {
+                return null;
             }
         }
 
-        return encontrado;
-    }
-
-    private String construirRuta(
-            ElementoXsdModel elemento,
-            List<ElementoXsdModel> elementos
-    ) {
-        if (elemento.getElementoPadreId() == null) {
-            return elemento.getNombre();
-        }
-
-        ElementoXsdModel padre =
-                elementos.stream()
-                        .filter(item ->
-                                Objects.equals(
-                                        item.getId(),
-                                        elemento.getElementoPadreId()
-                                )
-                        )
-                        .findFirst()
-                        .orElse(null);
-
-        if (padre == null) {
-            return elemento.getNombre();
-        }
-
-        String rutaPadre =
-                construirRuta(
-                        padre,
-                        elementos
-                );
-
-        return rutaPadre
-                + "."
-                + elemento.getNombre();
+        return actual;
     }
 
     private int calcularOcurrencias(
@@ -563,8 +571,8 @@ public class DocumentDefinitionDataValidator
             return 0;
         }
 
-        if (valor instanceof List<?> lista) {
-            return lista.size();
+        if (valor instanceof Collection<?> coleccion) {
+            return coleccion.size();
         }
 
         return 1;
@@ -617,6 +625,13 @@ public class DocumentDefinitionDataValidator
                 || "false".equalsIgnoreCase(texto);
     }
 
+    private boolean esEstructura(
+            Object valor
+    ) {
+        return valor instanceof Map<?, ?>
+                || valor instanceof Collection<?>;
+    }
+
     private String normalizarTipo(
             String tipoDato
     ) {
@@ -649,12 +664,10 @@ public class DocumentDefinitionDataValidator
                 numero.abs()
                         .stripTrailingZeros();
 
-        String valor =
-                absoluto
-                        .unscaledValue()
-                        .abs()
-                        .toString();
-
-        return valor.length();
+        return absoluto
+                .unscaledValue()
+                .abs()
+                .toString()
+                .length();
     }
 }
