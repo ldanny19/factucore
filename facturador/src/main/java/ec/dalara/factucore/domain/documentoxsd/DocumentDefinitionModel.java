@@ -9,19 +9,22 @@ public final class DocumentDefinitionModel {
     private final List<ElementoXsdModel> elementos;
     private final List<AtributoXsdModel> atributos;
     private final List<EnumeracionXsdModel> enumeraciones;
+    private final List<MapeoXsdModel> mapeos;
 
     public DocumentDefinitionModel(
             DocumentoXsdModel documento,
             VersionDocumentoXsdModel version,
             List<ElementoXsdModel> elementos,
             List<AtributoXsdModel> atributos,
-            List<EnumeracionXsdModel> enumeraciones
+            List<EnumeracionXsdModel> enumeraciones,
+            List<MapeoXsdModel> mapeos
     ) {
         this.documento = documento;
         this.version = version;
         this.elementos = List.copyOf(elementos);
         this.atributos = List.copyOf(atributos);
         this.enumeraciones = List.copyOf(enumeraciones);
+        this.mapeos = List.copyOf(mapeos);
     }
 
     public DocumentoXsdModel getDocumento() {
@@ -42,5 +45,9 @@ public final class DocumentDefinitionModel {
 
     public List<EnumeracionXsdModel> getEnumeraciones() {
         return enumeraciones;
+    }
+
+    public List<MapeoXsdModel> getMapeos() {
+        return mapeos;
     }
 }
