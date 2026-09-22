@@ -11,4 +11,9 @@ public interface MapeoXsdRepository
             Long versionDocumentoXsdId,
             String estadoRegistro
     );
+
+    boolean existsByVersionDocumentoXsdIdAndRutaOrigen(
+            Long versionDocumentoXsdId,
+            String rutaOrigen
+    );
 }
