@@ -1,9 +1,7 @@
 package ec.dalara.factucore.domain.claveacceso;
 
-import ec.dalara.factucore.application.port.out.ClaveAccesoDatos;
 import ec.dalara.factucore.domain.shared.DomainException;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public final class ClaveAccesoGenerator {
@@ -14,56 +12,31 @@ public final class ClaveAccesoGenerator {
     private ClaveAccesoGenerator() {
     }
 
-    public static ClaveAccesoModel generar(
-            ClaveAccesoDatos datos
-    ) {
+    public static ClaveAccesoModel generar(ClaveAccesoDatos datos) {
         validar(datos);
 
-        String fecha =
-                datos.fechaEmision().format(FORMATO_FECHA);
+        String fecha = datos.fechaEmision().format(FORMATO_FECHA);
+        String codigoDocumento = validarNumerico(datos.codigoDocumento(), 2);
+        String ruc = validarNumerico(datos.ruc(), 13);
+        String ambiente = validarNumerico(datos.ambiente(), 1);
+        String establecimiento = validarNumerico(datos.establecimiento(), 3);
+        String puntoEmision = validarNumerico(datos.puntoEmision(), 3);
+        String secuencial = validarNumerico(datos.secuencial(), 9);
+        String codigoNumerico = validarNumerico(datos.codigoNumerico(), 8);
+        String tipoEmision = validarNumerico(datos.tipoEmision(), 1);
 
-        String codigoDocumento =
-                normalizar(datos.codigoDocumento(), 2);
+        String base = fecha
+                + codigoDocumento
+                + ruc
+                + ambiente
+                + establecimiento
+                + puntoEmision
+                + secuencial
+                + codigoNumerico
+                + tipoEmision;
 
-        String ruc =
-                normalizarNumerico(datos.ruc(), 13);
-
-        String ambiente =
-                normalizarNumerico(datos.ambiente(), 1);
-
-        String establecimiento =
-                normalizarNumerico(datos.establecimiento(), 3);
-
-        String puntoEmision =
-                normalizarNumerico(datos.puntoEmision(), 3);
-
-        String serie =
-                establecimiento + puntoEmision;
-
-        String secuencial =
-                normalizarNumerico(datos.secuencial(), 9);
-
-        String codigoNumerico =
-                normalizarNumerico(datos.codigoNumerico(), 8);
-
-        String tipoEmision =
-                normalizarNumerico(datos.tipoEmision(), 1);
-
-        String base =
-                fecha
-                        + codigoDocumento
-                        + ruc
-                        + ambiente
-                        + serie
-                        + secuencial
-                        + codigoNumerico
-                        + tipoEmision;
-
-        String digito =
-                calcularModulo11(base);
-
-        String clave =
-                base + digito;
+        String digitoVerificador = calcularModulo11(base);
+        String clave = base + digitoVerificador;
 
         return new ClaveAccesoModel(
                 clave,
@@ -71,17 +44,15 @@ public final class ClaveAccesoGenerator {
                 codigoDocumento,
                 ruc,
                 ambiente,
-                serie,
+                establecimiento + puntoEmision,
                 secuencial,
                 codigoNumerico,
                 tipoEmision,
-                digito
+                digitoVerificador
         );
     }
 
-    private static void validar(
-            ClaveAccesoDatos datos
-    ) {
+    private static void validar(ClaveAccesoDatos datos) {
         if (datos == null) {
             throw new DomainException(
                     "FACTUCORE.CLAVE_ACCESO.DATOS.REQUERIDOS"
@@ -95,31 +66,7 @@ public final class ClaveAccesoGenerator {
         }
     }
 
-    private static String normalizar(
-            String valor,
-            int longitud
-    ) {
-        if (valor == null || valor.isBlank()) {
-            throw new DomainException(
-                    "FACTUCORE.CLAVE_ACCESO.VALOR.REQUERIDO"
-            );
-        }
-
-        String resultado = valor.trim();
-
-        if (resultado.length() != longitud) {
-            throw new DomainException(
-                    "FACTUCORE.CLAVE_ACCESO.LONGITUD.INVALIDA"
-            );
-        }
-
-        return resultado;
-    }
-
-    private static String normalizarNumerico(
-            String valor,
-            int longitud
-    ) {
+    private static String validarNumerico(String valor, int longitud) {
         if (valor == null || valor.isBlank()) {
             throw new DomainException(
                     "FACTUCORE.CLAVE_ACCESO.VALOR.REQUERIDO"
@@ -137,22 +84,12 @@ public final class ClaveAccesoGenerator {
         return resultado;
     }
 
-    private static String calcularModulo11(
-            String valor
-    ) {
+    private static String calcularModulo11(String valor) {
         int factor = 2;
         int suma = 0;
 
         for (int i = valor.length() - 1; i >= 0; i--) {
-
-            int digito =
-                    Character.digit(
-                            valor.charAt(i),
-                            10
-                    );
-
-            suma += digito * factor;
-
+            suma += Character.digit(valor.charAt(i), 10) * factor;
             factor++;
 
             if (factor > 7) {
@@ -160,8 +97,7 @@ public final class ClaveAccesoGenerator {
             }
         }
 
-        int resultado =
-                11 - (suma % 11);
+        int resultado = 11 - (suma % 11);
 
         if (resultado == 11) {
             return "0";
