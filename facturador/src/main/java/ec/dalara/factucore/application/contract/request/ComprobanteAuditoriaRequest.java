@@ -13,18 +13,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ComprobanteAuditoriaRequest {
 
-    @NotNull
-    private Long idComprobante;
+	@NotNull
+	private Long idComprobante;
 
-    @Size(max = 50)
-    private String estadoAnterior;
+	@Size(max = 50)
+	private String estadoAnterior;
 
-    @Size(max = 50)
-    private String estadoNuevo;
+	@Size(max = 50)
+	private String estadoNuevo;
 
-    @Size(max = 100)
-    private String codigoError;
+	@Size(max = 100)
+	private String codigoError;
 
-    @Size(max = 2000)
-    private String mensajeError;
+	@Size(max = 2000)
+	private String mensajeError;
 }

@@ -1,13 +1,13 @@
 package ec.dalara.factucore.application.contract.response;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -15,33 +15,33 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ComprobanteRetencionResponse {
 
-    private Long id;
+	private Long id;
 
-    private Long idComprobante;
+	private Long idComprobante;
 
-    private String codigoImpuesto;
+	private String codigoImpuesto;
 
-    private String codigoRetencion;
+	private String codigoRetencion;
 
-    private BigDecimal porcentajeRetener;
+	private BigDecimal porcentajeRetener;
 
-    private BigDecimal baseImponible;
+	private BigDecimal baseImponible;
 
-    private BigDecimal valorRetenido;
+	private BigDecimal valorRetenido;
 
-    private String numeroDocumentoSustento;
+	private String numeroDocumentoSustento;
 
-    private LocalDate fechaEmisionDocumentoSustento;
+	private LocalDate fechaEmisionDocumentoSustento;
 
-    private String estadoRegistro;
+	private String estadoRegistro;
 
-    private String usuarioCreacion;
+	private String usuarioCreacion;
 
-    private String usuarioModificacion;
+	private String usuarioModificacion;
 
-    private LocalDateTime fechaCreacion;
+	private LocalDateTime fechaCreacion;
 
-    private LocalDateTime fechaModificacion;
+	private LocalDateTime fechaModificacion;
 
-    private String observacion;
+	private String observacion;
 }

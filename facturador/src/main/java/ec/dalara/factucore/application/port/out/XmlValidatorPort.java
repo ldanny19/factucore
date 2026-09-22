@@ -4,8 +4,5 @@ import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 
 public interface XmlValidatorPort {
 
-    void validar(
-            String xml,
-            DocumentDefinitionModel definition
-    );
+	void validar(String xml, DocumentDefinitionModel definition);
 }

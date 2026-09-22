@@ -1,25 +1,18 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface CertificadoFirmaRepository
-        extends BaseRepository<CertificadoFirma, Long> {
+import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 
-    List<CertificadoFirma> findByEmpresaId(Long empresaId);
+public interface CertificadoFirmaRepository extends BaseRepository<CertificadoFirma, Long> {
 
-    Optional<CertificadoFirma> findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
-            Long empresaId,
-            String estadoRegistro,
-            LocalDateTime fecha
-    );
+	List<CertificadoFirma> findByEmpresaId(Long empresaId);
 
-    Optional<CertificadoFirma> findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
-            Long empresaId,
-            String estadoRegistro,
-            LocalDateTime fecha
-    );
+	Optional<CertificadoFirma> findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+			Long empresaId, String estadoRegistro, LocalDateTime fecha);
+
+	Optional<CertificadoFirma> findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
+			Long empresaId, String estadoRegistro, LocalDateTime fecha);
 }

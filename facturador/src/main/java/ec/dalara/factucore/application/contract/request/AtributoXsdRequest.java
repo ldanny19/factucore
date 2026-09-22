@@ -14,22 +14,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AtributoXsdRequest {
 
-    @NotNull
-    private Long idElementoXsd;
+	@NotNull
+	private Long idElementoXsd;
 
-    @NotBlank
-    @Size(max = 300)
-    private String nombre;
+	@NotBlank
+	@Size(max = 300)
+	private String nombre;
 
-    @Size(max = 100)
-    private String tipoDato;
+	@Size(max = 100)
+	private String tipoDato;
 
-    @NotNull
-    private Boolean obligatorio;
+	@NotNull
+	private Boolean obligatorio;
 
-    @Size(max = 1000)
-    private String valorPredeterminado;
+	@Size(max = 1000)
+	private String valorPredeterminado;
 
-    @Size(max = 2000)
-    private String patron;
+	@Size(max = 2000)
+	private String patron;
 }

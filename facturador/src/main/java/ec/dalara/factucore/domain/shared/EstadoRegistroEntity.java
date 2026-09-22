@@ -2,7 +2,7 @@ package ec.dalara.factucore.domain.shared;
 
 public interface EstadoRegistroEntity {
 
-    String getEstadoRegistro();
+	String getEstadoRegistro();
 
-    void setEstadoRegistro(String estadoRegistro);
+	void setEstadoRegistro(String estadoRegistro);
 }

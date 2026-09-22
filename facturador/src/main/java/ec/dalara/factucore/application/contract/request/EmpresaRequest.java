@@ -14,24 +14,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmpresaRequest {
 
-    @NotBlank
-    @Size(max = 13)
-    private String ruc;
+	@NotBlank
+	@Size(max = 13)
+	private String ruc;
 
-    @NotBlank
-    @Size(max = 300)
-    private String razonSocial;
+	@NotBlank
+	@Size(max = 300)
+	private String razonSocial;
 
-    @Size(max = 300)
-    private String nombreComercial;
+	@Size(max = 300)
+	private String nombreComercial;
 
-    @NotBlank
-    @Size(max = 500)
-    private String direccionMatriz;
+	@NotBlank
+	@Size(max = 500)
+	private String direccionMatriz;
 
-    @NotNull
-    private Boolean obligadoContabilidad;
+	@NotNull
+	private Boolean obligadoContabilidad;
 
-    @NotNull
-    private Boolean contribuyenteRimpe;
+	@NotNull
+	private Boolean contribuyenteRimpe;
 }

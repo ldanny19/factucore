@@ -1,112 +1,86 @@
 package ec.dalara.factucore.domain.claveacceso;
 
-import ec.dalara.factucore.domain.shared.DomainException;
-
 import java.time.format.DateTimeFormatter;
+
+import ec.dalara.factucore.domain.shared.DomainException;
 
 public final class ClaveAccesoGenerator {
 
-    private static final DateTimeFormatter FORMATO_FECHA =
-            DateTimeFormatter.ofPattern("ddMMyyyy");
+	private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("ddMMyyyy");
 
-    private ClaveAccesoGenerator() {
-    }
+	private ClaveAccesoGenerator() {
+	}
 
-    public static ClaveAccesoModel generar(ClaveAccesoDatos datos) {
-        validar(datos);
+	public static ClaveAccesoModel generar(ClaveAccesoDatos datos) {
+		validar(datos);
 
-        String fecha = datos.fechaEmision().format(FORMATO_FECHA);
-        String codigoDocumento = validarNumerico(datos.codigoDocumento(), 2);
-        String ruc = validarNumerico(datos.ruc(), 13);
-        String ambiente = validarNumerico(datos.ambiente(), 1);
-        String establecimiento = validarNumerico(datos.establecimiento(), 3);
-        String puntoEmision = validarNumerico(datos.puntoEmision(), 3);
-        String secuencial = validarNumerico(datos.secuencial(), 9);
-        String codigoNumerico = validarNumerico(datos.codigoNumerico(), 8);
-        String tipoEmision = validarNumerico(datos.tipoEmision(), 1);
+		String fecha = datos.fechaEmision().format(FORMATO_FECHA);
+		String codigoDocumento = validarNumerico(datos.codigoDocumento(), 2);
+		String ruc = validarNumerico(datos.ruc(), 13);
+		String ambiente = validarNumerico(datos.ambiente(), 1);
+		String establecimiento = validarNumerico(datos.establecimiento(), 3);
+		String puntoEmision = validarNumerico(datos.puntoEmision(), 3);
+		String secuencial = validarNumerico(datos.secuencial(), 9);
+		String codigoNumerico = validarNumerico(datos.codigoNumerico(), 8);
+		String tipoEmision = validarNumerico(datos.tipoEmision(), 1);
 
-        String base = fecha
-                + codigoDocumento
-                + ruc
-                + ambiente
-                + establecimiento
-                + puntoEmision
-                + secuencial
-                + codigoNumerico
-                + tipoEmision;
+		String base = fecha + codigoDocumento + ruc + ambiente + establecimiento + puntoEmision + secuencial
+				+ codigoNumerico + tipoEmision;
 
-        String digitoVerificador = calcularModulo11(base);
-        String clave = base + digitoVerificador;
+		String digitoVerificador = calcularModulo11(base);
+		String clave = base + digitoVerificador;
 
-        return new ClaveAccesoModel(
-                clave,
-                fecha,
-                codigoDocumento,
-                ruc,
-                ambiente,
-                establecimiento + puntoEmision,
-                secuencial,
-                codigoNumerico,
-                tipoEmision,
-                digitoVerificador
-        );
-    }
+		return new ClaveAccesoModel(clave, fecha, codigoDocumento, ruc, ambiente, establecimiento + puntoEmision,
+				secuencial, codigoNumerico, tipoEmision, digitoVerificador);
+	}
 
-    private static void validar(ClaveAccesoDatos datos) {
-        if (datos == null) {
-            throw new DomainException(
-                    "FACTUCORE.CLAVE_ACCESO.DATOS.REQUERIDOS"
-            );
-        }
+	private static void validar(ClaveAccesoDatos datos) {
+		if (datos == null) {
+			throw new DomainException("FACTUCORE.CLAVE_ACCESO.DATOS.REQUERIDOS");
+		}
 
-        if (datos.fechaEmision() == null) {
-            throw new DomainException(
-                    "FACTUCORE.CLAVE_ACCESO.FECHA.REQUERIDA"
-            );
-        }
-    }
+		if (datos.fechaEmision() == null) {
+			throw new DomainException("FACTUCORE.CLAVE_ACCESO.FECHA.REQUERIDA");
+		}
+	}
 
-    private static String validarNumerico(String valor, int longitud) {
-        if (valor == null || valor.isBlank()) {
-            throw new DomainException(
-                    "FACTUCORE.CLAVE_ACCESO.VALOR.REQUERIDO"
-            );
-        }
+	private static String validarNumerico(String valor, int longitud) {
+		if (valor == null || valor.isBlank()) {
+			throw new DomainException("FACTUCORE.CLAVE_ACCESO.VALOR.REQUERIDO");
+		}
 
-        String resultado = valor.trim();
+		String resultado = valor.trim();
 
-        if (!resultado.matches("\\d{" + longitud + "}")) {
-            throw new DomainException(
-                    "FACTUCORE.CLAVE_ACCESO.FORMATO.NUMERICO_INVALIDO"
-            );
-        }
+		if (!resultado.matches("\\d{" + longitud + "}")) {
+			throw new DomainException("FACTUCORE.CLAVE_ACCESO.FORMATO.NUMERICO_INVALIDO");
+		}
 
-        return resultado;
-    }
+		return resultado;
+	}
 
-    private static String calcularModulo11(String valor) {
-        int factor = 2;
-        int suma = 0;
+	private static String calcularModulo11(String valor) {
+		int factor = 2;
+		int suma = 0;
 
-        for (int i = valor.length() - 1; i >= 0; i--) {
-            suma += Character.digit(valor.charAt(i), 10) * factor;
-            factor++;
+		for (int i = valor.length() - 1; i >= 0; i--) {
+			suma += Character.digit(valor.charAt(i), 10) * factor;
+			factor++;
 
-            if (factor > 7) {
-                factor = 2;
-            }
-        }
+			if (factor > 7) {
+				factor = 2;
+			}
+		}
 
-        int resultado = 11 - (suma % 11);
+		int resultado = 11 - (suma % 11);
 
-        if (resultado == 11) {
-            return "0";
-        }
+		if (resultado == 11) {
+			return "0";
+		}
 
-        if (resultado == 10) {
-            return "1";
-        }
+		if (resultado == 10) {
+			return "1";
+		}
 
-        return String.valueOf(resultado);
-    }
+		return String.valueOf(resultado);
+	}
 }

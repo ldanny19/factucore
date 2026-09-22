@@ -1,12 +1,12 @@
 package ec.dalara.factucore.application.contract.response;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -14,35 +14,35 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ComprobanteDetalleResponse {
 
-    private Long id;
+	private Long id;
 
-    private Long idComprobante;
+	private Long idComprobante;
 
-    private Integer orden;
+	private Integer orden;
 
-    private String codigoPrincipal;
+	private String codigoPrincipal;
 
-    private String codigoAuxiliar;
+	private String codigoAuxiliar;
 
-    private String descripcion;
+	private String descripcion;
 
-    private BigDecimal cantidad;
+	private BigDecimal cantidad;
 
-    private BigDecimal precioUnitario;
+	private BigDecimal precioUnitario;
 
-    private BigDecimal descuento;
+	private BigDecimal descuento;
 
-    private BigDecimal precioTotalSinImpuesto;
+	private BigDecimal precioTotalSinImpuesto;
 
-    private String estadoRegistro;
+	private String estadoRegistro;
 
-    private String usuarioCreacion;
+	private String usuarioCreacion;
 
-    private String usuarioModificacion;
+	private String usuarioModificacion;
 
-    private LocalDateTime fechaCreacion;
+	private LocalDateTime fechaCreacion;
 
-    private LocalDateTime fechaModificacion;
+	private LocalDateTime fechaModificacion;
 
-    private String observacion;
+	private String observacion;
 }

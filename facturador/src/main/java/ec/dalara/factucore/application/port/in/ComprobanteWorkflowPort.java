@@ -5,9 +5,7 @@ import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionRe
 
 public interface ComprobanteWorkflowPort {
 
-    ComprobanteGeneracionResponse procesar(
-            ComprobanteGeneracionRequest request
-    );
+	ComprobanteGeneracionResponse procesar(ComprobanteGeneracionRequest request);
 
-    void reprocesar(Long comprobanteId);
+	void reprocesar(Long comprobanteId);
 }

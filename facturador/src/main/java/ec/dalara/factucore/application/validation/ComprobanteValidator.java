@@ -4,7 +4,5 @@ import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionReq
 
 public interface ComprobanteValidator {
 
-    ComprobanteValidationResult validar(
-            ComprobanteGeneracionRequest request
-    );
+	ComprobanteValidationResult validar(ComprobanteGeneracionRequest request);
 }

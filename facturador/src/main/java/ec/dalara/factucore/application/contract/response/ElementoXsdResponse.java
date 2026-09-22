@@ -1,12 +1,12 @@
 package ec.dalara.factucore.application.contract.response;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -14,53 +14,53 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ElementoXsdResponse {
 
-    private Long id;
+	private Long id;
 
-    private Long idVersionDocumentoXsd;
+	private Long idVersionDocumentoXsd;
 
-    private Long idElementoPadre;
+	private Long idElementoPadre;
 
-    private String nombre;
+	private String nombre;
 
-    private String tipoDato;
+	private String tipoDato;
 
-    private Integer orden;
+	private Integer orden;
 
-    private Boolean obligatorio;
+	private Boolean obligatorio;
 
-    private Boolean repetible;
+	private Boolean repetible;
 
-    private Integer minOcurrencias;
+	private Integer minOcurrencias;
 
-    private Integer maxOcurrencias;
+	private Integer maxOcurrencias;
 
-    private Integer longitudMinima;
+	private Integer longitudMinima;
 
-    private Integer longitudMaxima;
+	private Integer longitudMaxima;
 
-    private Integer digitosTotales;
+	private Integer digitosTotales;
 
-    private Integer decimales;
+	private Integer decimales;
 
-    private BigDecimal valorMinimo;
+	private BigDecimal valorMinimo;
 
-    private BigDecimal valorMaximo;
+	private BigDecimal valorMaximo;
 
-    private String patron;
+	private String patron;
 
-    private LocalDateTime fechaInicio;
+	private LocalDateTime fechaInicio;
 
-    private LocalDateTime fechaFin;
+	private LocalDateTime fechaFin;
 
-    private String estadoRegistro;
+	private String estadoRegistro;
 
-    private String usuarioCreacion;
+	private String usuarioCreacion;
 
-    private String usuarioModificacion;
+	private String usuarioModificacion;
 
-    private LocalDateTime fechaCreacion;
+	private LocalDateTime fechaCreacion;
 
-    private LocalDateTime fechaModificacion;
+	private LocalDateTime fechaModificacion;
 
-    private String observacion;
+	private String observacion;
 }

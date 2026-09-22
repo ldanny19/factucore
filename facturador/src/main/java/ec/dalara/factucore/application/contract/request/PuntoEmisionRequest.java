@@ -14,14 +14,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PuntoEmisionRequest {
 
-    @NotNull
-    private Long idEstablecimiento;
+	@NotNull
+	private Long idEstablecimiento;
 
-    @NotBlank
-    @Size(max = 3)
-    private String codigo;
+	@NotBlank
+	@Size(max = 3)
+	private String codigo;
 
-    @NotBlank
-    @Size(max = 300)
-    private String nombre;
+	@NotBlank
+	@Size(max = 300)
+	private String nombre;
 }

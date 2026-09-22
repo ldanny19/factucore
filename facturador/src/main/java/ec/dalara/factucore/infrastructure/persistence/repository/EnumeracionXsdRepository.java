@@ -1,22 +1,15 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.EnumeracionXsd;
-
 import java.util.List;
 import java.util.Optional;
 
-public interface EnumeracionXsdRepository
-        extends BaseRepository<EnumeracionXsd, Long> {
+import ec.dalara.factucore.infrastructure.persistence.entity.EnumeracionXsd;
 
-    List<EnumeracionXsd> findByElementoXsdId(Long elementoXsdId);
+public interface EnumeracionXsdRepository extends BaseRepository<EnumeracionXsd, Long> {
 
-    Optional<EnumeracionXsd> findByElementoXsdIdAndValor(
-            Long elementoXsdId,
-            String valor
-    );
+	List<EnumeracionXsd> findByElementoXsdId(Long elementoXsdId);
 
-    boolean existsByElementoXsdIdAndValor(
-            Long elementoXsdId,
-            String valor
-    );
+	Optional<EnumeracionXsd> findByElementoXsdIdAndValor(Long elementoXsdId, String valor);
+
+	boolean existsByElementoXsdIdAndValor(Long elementoXsdId, String valor);
 }

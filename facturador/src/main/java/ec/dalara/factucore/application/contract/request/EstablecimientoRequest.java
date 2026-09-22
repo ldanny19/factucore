@@ -14,17 +14,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EstablecimientoRequest {
 
-    @NotNull
-    private Long idEmpresa;
+	@NotNull
+	private Long idEmpresa;
 
-    @NotBlank
-    @Size(max = 3)
-    private String codigo;
+	@NotBlank
+	@Size(max = 3)
+	private String codigo;
 
-    @Size(max = 300)
-    private String nombre;
+	@Size(max = 300)
+	private String nombre;
 
-    @NotBlank
-    @Size(max = 500)
-    private String direccion;
+	@NotBlank
+	@Size(max = 500)
+	private String direccion;
 }

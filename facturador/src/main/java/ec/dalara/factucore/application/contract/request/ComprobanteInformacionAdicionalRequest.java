@@ -13,13 +13,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ComprobanteInformacionAdicionalRequest {
 
-    @NotNull
-    private Long idComprobante;
+	@NotNull
+	private Long idComprobante;
 
-    @NotNull
-    @Size(max = 300)
-    private String nombre;
+	@NotNull
+	@Size(max = 300)
+	private String nombre;
 
-    @Size(max = 4000)
-    private String valor;
+	@Size(max = 4000)
+	private String valor;
 }

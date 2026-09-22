@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CatalogoRequest {
 
-    @NotBlank
-    @Size(max = 100)
-    private String codigo;
+	@NotBlank
+	@Size(max = 100)
+	private String codigo;
 
-    @NotBlank
-    @Size(max = 300)
-    private String nombre;
+	@NotBlank
+	@Size(max = 300)
+	private String nombre;
 
-    @Size(max = 500)
-    private String descripcion;
+	@Size(max = 500)
+	private String descripcion;
 }

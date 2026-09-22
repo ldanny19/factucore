@@ -14,18 +14,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MapeoXsdRequest {
 
-    @NotNull
-    private Long idVersionDocumentoXsd;
+	@NotNull
+	private Long idVersionDocumentoXsd;
 
-    @NotBlank
-    @Size(max = 1000)
-    private String rutaOrigen;
+	@NotBlank
+	@Size(max = 1000)
+	private String rutaOrigen;
 
-    private Long idElementoXsd;
+	private Long idElementoXsd;
 
-    private Long idAtributoXsd;
+	private Long idAtributoXsd;
 
-    @NotBlank
-    @Size(max = 20)
-    private String tipoMapeo;
+	@NotBlank
+	@Size(max = 20)
+	private String tipoMapeo;
 }

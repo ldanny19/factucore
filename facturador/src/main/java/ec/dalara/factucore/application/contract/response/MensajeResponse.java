@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MensajeResponse {
 
-    private String codigo;
+	private String codigo;
 
-    private String mensaje;
+	private String mensaje;
 
-    private String campo;
+	private String campo;
 }

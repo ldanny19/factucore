@@ -14,19 +14,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CatalogoItemRequest {
 
-    @NotNull
-    private Long idCatalogo;
+	@NotNull
+	private Long idCatalogo;
 
-    @NotBlank
-    @Size(max = 100)
-    private String codigo;
+	@NotBlank
+	@Size(max = 100)
+	private String codigo;
 
-    @NotBlank
-    @Size(max = 300)
-    private String nombre;
+	@NotBlank
+	@Size(max = 300)
+	private String nombre;
 
-    @Size(max = 500)
-    private String descripcion;
+	@Size(max = 500)
+	private String descripcion;
 
-    private Integer orden;
+	private Integer orden;
 }

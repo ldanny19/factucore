@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.contract.request;
 
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,25 +10,23 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CertificadoFirmaRequest {
 
-    @NotNull
-    private Long idEmpresa;
+	@NotNull
+	private Long idEmpresa;
 
-    @Size(max = 300)
-    private String nombreArchivo;
+	@Size(max = 300)
+	private String nombreArchivo;
 
-    @NotBlank
-    @Size(max = 1000)
-    private String rutaCertificado;
+	@NotBlank
+	@Size(max = 1000)
+	private String rutaCertificado;
 
-    private LocalDateTime fechaInicio;
+	private LocalDateTime fechaInicio;
 
-    private LocalDateTime fechaFin;
+	private LocalDateTime fechaFin;
 }

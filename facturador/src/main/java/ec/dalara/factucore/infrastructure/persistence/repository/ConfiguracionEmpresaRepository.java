@@ -1,37 +1,22 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface ConfiguracionEmpresaRepository
-        extends BaseRepository<ConfiguracionEmpresa, Long> {
+import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 
-    List<ConfiguracionEmpresa> findByEmpresaId(Long empresaId);
+public interface ConfiguracionEmpresaRepository extends BaseRepository<ConfiguracionEmpresa, Long> {
 
-    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClave(
-            Long empresaId,
-            String clave
-    );
+	List<ConfiguracionEmpresa> findByEmpresaId(Long empresaId);
 
-    boolean existsByEmpresaIdAndClave(
-            Long empresaId,
-            String clave
-    );
+	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClave(Long empresaId, String clave);
 
-    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
-            Long empresaId,
-            String clave,
-            String estadoRegistro,
-            LocalDateTime fecha
-    );
+	boolean existsByEmpresaIdAndClave(Long empresaId, String clave);
 
-    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
-            Long empresaId,
-            String clave,
-            String estadoRegistro,
-            LocalDateTime fecha
-    );
+	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
+			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
+
+	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
+			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
 }

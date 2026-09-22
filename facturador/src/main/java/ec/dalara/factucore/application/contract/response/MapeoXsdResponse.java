@@ -11,17 +11,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MapeoXsdResponse {
 
-    private Long id;
+	private Long id;
 
-    private Long idVersionDocumentoXsd;
+	private Long idVersionDocumentoXsd;
 
-    private String rutaOrigen;
+	private String rutaOrigen;
 
-    private Long idElementoXsd;
+	private Long idElementoXsd;
 
-    private Long idAtributoXsd;
+	private Long idAtributoXsd;
 
-    private String tipoMapeo;
+	private String tipoMapeo;
 
-    private String estadoRegistro;
+	private String estadoRegistro;
 }

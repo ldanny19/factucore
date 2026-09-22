@@ -1,5 +1,8 @@
 package ec.dalara.factucore.application.contract.request;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,55 +11,52 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ElementoXsdRequest {
 
-    @NotNull
-    private Long idVersionDocumentoXsd;
+	@NotNull
+	private Long idVersionDocumentoXsd;
 
-    private Long idElementoPadre;
+	private Long idElementoPadre;
 
-    @NotBlank
-    @Size(max = 300)
-    private String nombre;
+	@NotBlank
+	@Size(max = 300)
+	private String nombre;
 
-    @Size(max = 100)
-    private String tipoDato;
+	@Size(max = 100)
+	private String tipoDato;
 
-    private Integer orden;
+	private Integer orden;
 
-    @NotNull
-    private Boolean obligatorio;
+	@NotNull
+	private Boolean obligatorio;
 
-    @NotNull
-    private Boolean repetible;
+	@NotNull
+	private Boolean repetible;
 
-    private Integer minOcurrencias;
+	private Integer minOcurrencias;
 
-    private Integer maxOcurrencias;
+	private Integer maxOcurrencias;
 
-    private Integer longitudMinima;
+	private Integer longitudMinima;
 
-    private Integer longitudMaxima;
+	private Integer longitudMaxima;
 
-    private Integer digitosTotales;
+	private Integer digitosTotales;
 
-    private Integer decimales;
+	private Integer decimales;
 
-    private BigDecimal valorMinimo;
+	private BigDecimal valorMinimo;
 
-    private BigDecimal valorMaximo;
+	private BigDecimal valorMaximo;
 
-    @Size(max = 2000)
-    private String patron;
+	@Size(max = 2000)
+	private String patron;
 
-    private LocalDateTime fechaInicio;
+	private LocalDateTime fechaInicio;
 
-    private LocalDateTime fechaFin;
+	private LocalDateTime fechaFin;
 }

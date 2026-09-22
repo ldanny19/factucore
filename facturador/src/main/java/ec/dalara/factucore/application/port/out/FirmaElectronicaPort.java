@@ -4,9 +4,5 @@ import ec.dalara.factucore.domain.firmaelectronica.CertificadoFirmaModel;
 
 public interface FirmaElectronicaPort {
 
-    String firmar(
-            String xml,
-            CertificadoFirmaModel certificado,
-            char[] password
-    );
+	String firmar(String xml, CertificadoFirmaModel certificado, char[] password);
 }

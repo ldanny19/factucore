@@ -5,7 +5,7 @@ import ec.dalara.factucore.domain.claveacceso.ClaveAccesoModel;
 
 public interface ClaveAccesoPort {
 
-    ClaveAccesoModel generar(ClaveAccesoDatos datos);
+	ClaveAccesoModel generar(ClaveAccesoDatos datos);
 
-    boolean validar(String clave);
+	boolean validar(String clave);
 }

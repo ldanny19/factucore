@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SecuencialRequest {
 
-    @NotNull
-    private Long idPuntoEmision;
+	@NotNull
+	private Long idPuntoEmision;
 
-    @NotBlank
-    @Size(max = 2)
-    private String codigoDocumento;
+	@NotBlank
+	@Size(max = 2)
+	private String codigoDocumento;
 
-    @NotNull
-    private Long ultimoSecuencial;
+	@NotNull
+	private Long ultimoSecuencial;
 }

@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DatoComprobanteRequest {
 
-    @NotBlank
-    private String key;
+	@NotBlank
+	private String key;
 
-    private Object value;
+	private Object value;
 }

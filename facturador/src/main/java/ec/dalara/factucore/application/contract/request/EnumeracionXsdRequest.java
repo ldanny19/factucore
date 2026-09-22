@@ -14,15 +14,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EnumeracionXsdRequest {
 
-    @NotNull
-    private Long idElementoXsd;
+	@NotNull
+	private Long idElementoXsd;
 
-    @NotBlank
-    @Size(max = 300)
-    private String valor;
+	@NotBlank
+	@Size(max = 300)
+	private String valor;
 
-    @Size(max = 500)
-    private String descripcion;
+	@Size(max = 500)
+	private String descripcion;
 
-    private Integer orden;
+	private Integer orden;
 }

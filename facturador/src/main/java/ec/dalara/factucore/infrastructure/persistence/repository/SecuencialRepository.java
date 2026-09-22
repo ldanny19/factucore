@@ -1,28 +1,19 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.Secuencial;
-import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.Lock;
-
 import java.util.Optional;
 
-public interface SecuencialRepository
-        extends BaseRepository<Secuencial, Long> {
+import org.springframework.data.jpa.repository.Lock;
 
-    Optional<Secuencial> findByPuntoEmisionIdAndCodigoDocumento(
-            Long puntoEmisionId,
-            String codigoDocumento
-    );
+import ec.dalara.factucore.infrastructure.persistence.entity.Secuencial;
+import jakarta.persistence.LockModeType;
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Secuencial> findByPuntoEmisionIdAndCodigoDocumentoAndEstadoRegistro(
-            Long puntoEmisionId,
-            String codigoDocumento,
-            String estadoRegistro
-    );
+public interface SecuencialRepository extends BaseRepository<Secuencial, Long> {
 
-    boolean existsByPuntoEmisionIdAndCodigoDocumento(
-            Long puntoEmisionId,
-            String codigoDocumento
-    );
+	Optional<Secuencial> findByPuntoEmisionIdAndCodigoDocumento(Long puntoEmisionId, String codigoDocumento);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<Secuencial> findByPuntoEmisionIdAndCodigoDocumentoAndEstadoRegistro(Long puntoEmisionId,
+			String codigoDocumento, String estadoRegistro);
+
+	boolean existsByPuntoEmisionIdAndCodigoDocumento(Long puntoEmisionId, String codigoDocumento);
 }

@@ -1,11 +1,11 @@
 package ec.dalara.factucore.application.contract.response;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @Builder
@@ -13,9 +13,9 @@ import java.util.List;
 @AllArgsConstructor
 public class ResultadoResponse {
 
-    private List<MensajeResponse> errores;
+	private List<MensajeResponse> errores;
 
-    private List<MensajeResponse> advertencias;
+	private List<MensajeResponse> advertencias;
 
-    private List<MensajeResponse> mensajes;
+	private List<MensajeResponse> mensajes;
 }

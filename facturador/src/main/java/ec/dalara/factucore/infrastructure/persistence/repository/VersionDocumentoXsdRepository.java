@@ -1,36 +1,22 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface VersionDocumentoXsdRepository
-        extends BaseRepository<VersionDocumentoXsd, Long> {
+import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 
-    List<VersionDocumentoXsd> findByDocumentoXsdId(Long documentoXsdId);
+public interface VersionDocumentoXsdRepository extends BaseRepository<VersionDocumentoXsd, Long> {
 
-    Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndVersion(
-            Long documentoXsdId,
-            String version
-    );
+	List<VersionDocumentoXsd> findByDocumentoXsdId(Long documentoXsdId);
 
-    boolean existsByDocumentoXsdIdAndVersion(
-            Long documentoXsdId,
-            String version
-    );
+	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndVersion(Long documentoXsdId, String version);
 
-    Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
-            Long documentoXsdId,
-            String estadoRegistro,
-            LocalDateTime fechaInicio,
-            LocalDateTime fechaFin
-    );
+	boolean existsByDocumentoXsdIdAndVersion(Long documentoXsdId, String version);
 
-    Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
-            Long documentoXsdId,
-            String estadoRegistro,
-            LocalDateTime fechaInicio
-    );
+	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+			Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
+	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
+			Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio);
 }

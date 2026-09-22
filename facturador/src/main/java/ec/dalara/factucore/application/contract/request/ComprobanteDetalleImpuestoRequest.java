@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.contract.request;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,31 +10,29 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ComprobanteDetalleImpuestoRequest {
 
-    @NotNull
-    private Long idComprobanteDetalle;
+	@NotNull
+	private Long idComprobanteDetalle;
 
-    @NotBlank
-    @Size(max = 10)
-    private String codigoImpuesto;
+	@NotBlank
+	@Size(max = 10)
+	private String codigoImpuesto;
 
-    @Size(max = 10)
-    private String codigoPorcentaje;
+	@Size(max = 10)
+	private String codigoPorcentaje;
 
-    private BigDecimal tarifa;
+	private BigDecimal tarifa;
 
-    @NotNull
-    private BigDecimal baseImponible;
+	@NotNull
+	private BigDecimal baseImponible;
 
-    @NotNull
-    private BigDecimal valor;
+	@NotNull
+	private BigDecimal valor;
 
-    private BigDecimal valorDevolucionIva;
+	private BigDecimal valorDevolucionIva;
 }

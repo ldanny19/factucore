@@ -2,20 +2,13 @@ package ec.dalara.factucore.application.port.out.sri;
 
 import java.util.List;
 
-public record SriResponse(
-        boolean exitoso,
-        String estado,
-        String identificador,
-        List<SriMensaje> mensajes
-) {
+public record SriResponse(boolean exitoso, String estado, String identificador, List<SriMensaje> mensajes) {
 
-    public SriResponse {
-        mensajes = mensajes == null
-                ? List.of()
-                : List.copyOf(mensajes);
-    }
+	public SriResponse {
+		mensajes = mensajes == null ? List.of() : List.copyOf(mensajes);
+	}
 
-    public boolean tieneMensajes() {
-        return !mensajes.isEmpty();
-    }
+	public boolean tieneMensajes() {
+		return !mensajes.isEmpty();
+	}
 }

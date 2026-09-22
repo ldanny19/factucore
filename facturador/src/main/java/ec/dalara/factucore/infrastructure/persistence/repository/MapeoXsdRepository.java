@@ -1,19 +1,12 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.MapeoXsd;
-
 import java.util.List;
 
-public interface MapeoXsdRepository
-        extends BaseRepository<MapeoXsd, Long> {
+import ec.dalara.factucore.infrastructure.persistence.entity.MapeoXsd;
 
-    List<MapeoXsd> findByVersionDocumentoXsdIdAndEstadoRegistro(
-            Long versionDocumentoXsdId,
-            String estadoRegistro
-    );
+public interface MapeoXsdRepository extends BaseRepository<MapeoXsd, Long> {
 
-    boolean existsByVersionDocumentoXsdIdAndRutaOrigen(
-            Long versionDocumentoXsdId,
-            String rutaOrigen
-    );
+	List<MapeoXsd> findByVersionDocumentoXsdIdAndEstadoRegistro(Long versionDocumentoXsdId, String estadoRegistro);
+
+	boolean existsByVersionDocumentoXsdIdAndRutaOrigen(Long versionDocumentoXsdId, String rutaOrigen);
 }

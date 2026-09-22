@@ -1,17 +1,13 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
-
 import java.util.List;
 import java.util.Optional;
 
-public interface AtributoXsdRepository
-        extends BaseRepository<AtributoXsd, Long> {
+import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
 
-    List<AtributoXsd> findByElementoXsdId(Long elementoXsdId);
+public interface AtributoXsdRepository extends BaseRepository<AtributoXsd, Long> {
 
-    Optional<AtributoXsd> findByElementoXsdIdAndNombre(
-            Long elementoXsdId,
-            String nombre
-    );
+	List<AtributoXsd> findByElementoXsdId(Long elementoXsdId);
+
+	Optional<AtributoXsd> findByElementoXsdIdAndNombre(Long elementoXsdId, String nombre);
 }

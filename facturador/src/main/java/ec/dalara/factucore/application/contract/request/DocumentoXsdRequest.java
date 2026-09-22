@@ -13,18 +13,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DocumentoXsdRequest {
 
-    @NotBlank
-    @Size(max = 50)
-    private String codigo;
+	@NotBlank
+	@Size(max = 50)
+	private String codigo;
 
-    @NotBlank
-    @Size(max = 300)
-    private String nombre;
+	@NotBlank
+	@Size(max = 300)
+	private String nombre;
 
-    @Size(max = 500)
-    private String descripcion;
+	@Size(max = 500)
+	private String descripcion;
 
-    @NotBlank
-    @Size(max = 50)
-    private String tipoDocumento;
+	@NotBlank
+	@Size(max = 50)
+	private String tipoDocumento;
 }

@@ -6,9 +6,7 @@ import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 
 public interface WorkflowStep {
 
-    EtapaWorkflow etapa();
+	EtapaWorkflow etapa();
 
-    ResultadoEtapa ejecutar(
-            ContextoWorkflow contexto
-    );
+	ResultadoEtapa ejecutar(ContextoWorkflow contexto);
 }
