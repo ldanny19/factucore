@@ -1,5 +1,6 @@
 package ec.dalara.factucore.adapter.out.firmaelectronica;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FirmaElectronicaPort;
 import ec.dalara.factucore.domain.firmaelectronica.CertificadoFirmaModel;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.util.Arrays;
 
 @Component
 public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
@@ -84,12 +86,12 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
             );
 
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "No fue posible acceder al certificado de firma electrónica",
-                    e
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO.ACCESO_ERROR",
+                    certificado.getRutaCertificado()
             );
         } finally {
-            java.util.Arrays.fill(password, '\0');
+            Arrays.fill(password, '\0');
         }
     }
 
@@ -99,28 +101,29 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
             char[] password
     ) {
         if (xml == null || xml.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El XML a firmar es obligatorio"
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.XML.REQUERIDO"
             );
         }
 
         if (certificado == null) {
-            throw new IllegalArgumentException(
-                    "El certificado de firma es obligatorio"
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO.REQUERIDO"
             );
         }
 
         if (password == null || password.length == 0) {
-            throw new IllegalArgumentException(
-                    "La contraseña del certificado es obligatoria"
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.PASSWORD.REQUERIDO"
             );
-
         }
 
-        if (!Files.isRegularFile(
-                Path.of(certificado.getRutaCertificado()))) {
-            throw new IllegalArgumentException(
-                    "El archivo del certificado no existe"
+        Path ruta = Path.of(certificado.getRutaCertificado());
+
+        if (!Files.isRegularFile(ruta)) {
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO.NO_ENCONTRADO",
+                    certificado.getRutaCertificado()
             );
         }
     }
@@ -131,14 +134,14 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
         var claves = token.getKeys();
 
         if (claves == null || claves.isEmpty()) {
-            throw new IllegalStateException(
-                    "El certificado no contiene una clave privada utilizable"
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.CLAVE_PRIVADA.NO_ENCONTRADA"
             );
         }
 
         if (claves.size() > 1) {
-            throw new IllegalStateException(
-                    "El certificado contiene múltiples claves privadas"
+            throw new ApplicationException(
+                    "FACTUCORE.FIRMA_ELECTRONICA.CLAVES_PRIVADAS.MULTIPLES"
             );
         }
 

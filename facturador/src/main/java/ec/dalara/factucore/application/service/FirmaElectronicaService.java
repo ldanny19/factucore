@@ -1,5 +1,6 @@
 package ec.dalara.factucore.application.service;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FirmaElectronicaPort;
 import ec.dalara.factucore.domain.firmaelectronica.CertificadoFirmaModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
@@ -25,8 +26,10 @@ public class FirmaElectronicaService {
                 certificadoFirmaService
                         .obtenerVigente(empresaId, fecha)
                         .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "No existe un certificado de firma vigente"
+                                new ApplicationException(
+                                        "FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO_VIGENTE.NO_ENCONTRADO",
+                                        empresaId,
+                                        fecha
                                 )
                         );
 
