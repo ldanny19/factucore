@@ -1,42 +1,52 @@
 package ec.dalara.factucore.domain.workflow;
 
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
+import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
 public final class ContextoWorkflow {
 
-    private final Long comprobanteId;
+    private Long comprobanteId;
+
     private final ComprobanteGeneracionRequest solicitud;
+
     private final LocalDateTime fechaInicio;
 
     private Comprobante comprobante;
 
     private String secuencial;
+
     private String claveAcceso;
+
     private String xml;
+
     private String xmlFirmado;
+
     private byte[] ride;
 
     private String numeroAutorizacion;
+
     private LocalDateTime fechaAutorizacion;
+
     private String estadoSri;
 
     private EtapaWorkflow etapaActual;
+
     private ResultadoEtapa ultimoResultado;
 
     private final Map<EtapaWorkflow, ResultadoEtapa> resultados =
             new EnumMap<>(EtapaWorkflow.class);
 
     private ContextoWorkflow(
-            Long comprobanteId,
             ComprobanteGeneracionRequest solicitud,
             LocalDateTime fechaInicio
     ) {
-        this.comprobanteId = comprobanteId;
         this.solicitud = solicitud;
         this.fechaInicio = fechaInicio;
     }
@@ -45,7 +55,6 @@ public final class ContextoWorkflow {
             ComprobanteGeneracionRequest solicitud
     ) {
         return new ContextoWorkflow(
-                null,
                 solicitud,
                 LocalDateTime.now()
         );
@@ -55,31 +64,81 @@ public final class ContextoWorkflow {
             Comprobante comprobante,
             ComprobanteGeneracionRequest solicitud
     ) {
-        ContextoWorkflow contexto = new ContextoWorkflow(
-                comprobante.getId(),
-                solicitud,
-                comprobante.getFechaCreacion()
-        );
+        if (comprobante == null) {
+            throw new ApplicationException(
+                    MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO
+            );
+        }
 
-        contexto.comprobante = comprobante;
-        contexto.secuencial = comprobante.getSecuencial();
-        contexto.claveAcceso = comprobante.getClaveAcceso();
-        contexto.numeroAutorizacion = comprobante.getNumeroAutorizacion();
-        contexto.fechaAutorizacion = comprobante.getFechaAutorizacion();
-        contexto.estadoSri = comprobante.getEstadoProceso();
+        ContextoWorkflow contexto =
+                new ContextoWorkflow(
+                        solicitud,
+                        comprobante.getFechaCreacion()
+                );
+
+        contexto.comprobanteId =
+                comprobante.getId();
+
+        contexto.comprobante =
+                comprobante;
+
+        contexto.secuencial =
+                comprobante.getSecuencial();
+
+        contexto.claveAcceso =
+                comprobante.getClaveAcceso();
+
+        contexto.numeroAutorizacion =
+                comprobante.getNumeroAutorizacion();
+
+        contexto.fechaAutorizacion =
+                comprobante.getFechaAutorizacion();
 
         return contexto;
     }
 
-    public void registrarResultado(ResultadoEtapa resultado) {
-        this.etapaActual = resultado.getEtapa();
-        this.ultimoResultado = resultado;
-        this.resultados.put(resultado.getEtapa(), resultado);
+    public void asignarComprobante(
+            Comprobante comprobante
+    ) {
+        if (comprobante == null) {
+            throw new ApplicationException(
+                    MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO
+            );
+        }
+
+        this.comprobante = comprobante;
+        this.comprobanteId = comprobante.getId();
     }
 
-    public boolean etapaCompletada(EtapaWorkflow etapa) {
-        ResultadoEtapa resultado = resultados.get(etapa);
-        return resultado != null && resultado.isExitosa();
+    public void registrarResultado(
+            ResultadoEtapa resultado
+    ) {
+        if (resultado == null) {
+            throw new ApplicationException(
+                    MessageCodes.WORKFLOW_RESULTADO_ETAPA_REQUERIDO
+            );
+        }
+
+        this.etapaActual =
+                resultado.getEtapa();
+
+        this.ultimoResultado =
+                resultado;
+
+        this.resultados.put(
+                resultado.getEtapa(),
+                resultado
+        );
+    }
+
+    public boolean etapaCompletada(
+            EtapaWorkflow etapa
+    ) {
+        ResultadoEtapa resultado =
+                resultados.get(etapa);
+
+        return resultado != null
+                && resultado.isExitosa();
     }
 
     public Long getComprobanteId() {
@@ -96,10 +155,6 @@ public final class ContextoWorkflow {
 
     public Comprobante getComprobante() {
         return comprobante;
-    }
-
-    public void setComprobante(Comprobante comprobante) {
-        this.comprobante = comprobante;
     }
 
     public String getSecuencial() {
@@ -146,16 +201,22 @@ public final class ContextoWorkflow {
         return numeroAutorizacion;
     }
 
-    public void setNumeroAutorizacion(String numeroAutorizacion) {
-        this.numeroAutorizacion = numeroAutorizacion;
+    public void setNumeroAutorizacion(
+            String numeroAutorizacion
+    ) {
+        this.numeroAutorizacion =
+                numeroAutorizacion;
     }
 
     public LocalDateTime getFechaAutorizacion() {
         return fechaAutorizacion;
     }
 
-    public void setFechaAutorizacion(LocalDateTime fechaAutorizacion) {
-        this.fechaAutorizacion = fechaAutorizacion;
+    public void setFechaAutorizacion(
+            LocalDateTime fechaAutorizacion
+    ) {
+        this.fechaAutorizacion =
+                fechaAutorizacion;
     }
 
     public String getEstadoSri() {
@@ -175,6 +236,8 @@ public final class ContextoWorkflow {
     }
 
     public Map<EtapaWorkflow, ResultadoEtapa> getResultados() {
-        return Map.copyOf(resultados);
+        return Collections.unmodifiableMap(
+                resultados
+        );
     }
 }

@@ -109,6 +109,12 @@ public final class MessageCodes {
 
     public static final String SRI_RESPUESTA_INVALIDA =
             "FACTUCORE.SRI.RESPUESTA.INVALIDA";
+    
+    public static final String WORKFLOW_COMPROBANTE_REQUERIDO =
+            "FACTUCORE.WORKFLOW.COMPROBANTE.REQUERIDO";
+
+    public static final String WORKFLOW_RESULTADO_ETAPA_REQUERIDO =
+            "FACTUCORE.WORKFLOW.RESULTADO_ETAPA.REQUERIDO";
 
     private MessageCodes() {
     }
