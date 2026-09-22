@@ -8,6 +8,7 @@ import java.util.Map;
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.domain.shared.MessageCodes;
+import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 
 public final class ContextoWorkflow {
@@ -25,6 +26,8 @@ public final class ContextoWorkflow {
 	private String claveAcceso;
 
 	private String xml;
+
+	private DocumentDefinitionModel definicionDocumento;
 
 	private String xmlFirmado;
 
@@ -138,6 +141,14 @@ public final class ContextoWorkflow {
 
 	public void setXml(String xml) {
 		this.xml = xml;
+	}
+
+	public DocumentDefinitionModel getDefinicionDocumento() {
+		return definicionDocumento;
+	}
+
+	public void setDefinicionDocumento(DocumentDefinitionModel definicionDocumento) {
+		this.definicionDocumento = definicionDocumento;
 	}
 
 	public String getXmlFirmado() {
