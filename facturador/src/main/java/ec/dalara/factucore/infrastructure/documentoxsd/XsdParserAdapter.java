@@ -47,11 +47,13 @@ public class XsdParserAdapter implements XsdParserPort {
 
             Map<String, Element> complexTypes = new HashMap<>();
             Map<String, Element> simpleTypes = new HashMap<>();
+            Map<String, Element> globalElements = new HashMap<>();
 
             for (Document document : documents) {
                 Element schema = validarSchema(document);
                 indexTypes(schema, "complexType", complexTypes);
                 indexTypes(schema, "simpleType", simpleTypes);
+                indexGlobalElements(schema, globalElements);
             }
 
             Element root = firstElement(validarSchema(rootDocument), "element");
@@ -63,7 +65,7 @@ public class XsdParserAdapter implements XsdParserPort {
             List<XsdAttributeSource> atributos = new ArrayList<>();
             List<XsdEnumerationSource> enumeraciones = new ArrayList<>();
 
-            parseElement(root, "", 1, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
+            parseElement(root, "", 1, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones, new HashSet<>());
 
             Element rootSchema = validarSchema(rootDocument);
             return new XsdDefinitionSource(
@@ -166,7 +168,7 @@ public class XsdParserAdapter implements XsdParserPort {
             if (name == null || name.isBlank()) {
                 continue;
             }
-            Element previous = target.putIfAbsent(name, child);
+            Element previous = target.putIfAbsent(key(attr(parent, "targetNamespace"), name), child);
             if (previous != null && previous != child) {
                 throw new InfrastructureException("FACTUCORE.XSD.TIPO.DUPLICADO", name);
             }
@@ -175,8 +177,16 @@ public class XsdParserAdapter implements XsdParserPort {
 
     private void parseElement(Element element, String parentPath, int order,
             Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
-            List<XsdElementSource> elementos, List<XsdAttributeSource> atributos,
-            List<XsdEnumerationSource> enumeraciones) {
+            Map<String, Element> globalElements, List<XsdElementSource> elementos,
+            List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
+            Set<String> typeStack) {
+
+        String ref = attr(element, "ref");
+        if (ref != null) {
+            Element referenced = globalElements.get(key(namespaceForQName(element, ref), localTypeName(ref)));
+            if (referenced == null) throw new InfrastructureException("FACTUCORE.XSD.REFERENCIA.NO_ENCONTRADA", ref);
+            element = referenced;
+        }
 
         String name = attr(element, "name");
         if (name == null || name.isBlank()) {
@@ -190,8 +200,9 @@ public class XsdParserAdapter implements XsdParserPort {
 
         Element complexType = firstChild(element, "complexType");
         Element simpleType = firstChild(element, "simpleType");
-        if (complexType == null) complexType = findType(complexTypes, typeName);
-        if (simpleType == null) simpleType = findType(simpleTypes, typeName);
+        String typeNamespace = namespaceForQName(element, attr(element, "type"));
+        if (complexType == null) complexType = findType(complexTypes, typeNamespace, typeName);
+        if (simpleType == null) simpleType = findType(simpleTypes, typeNamespace, typeName);
 
         Restriction restriction = resolveRestriction(simpleType, simpleTypes);
 
@@ -202,17 +213,38 @@ public class XsdParserAdapter implements XsdParserPort {
 
         if (simpleType != null) parseEnumerations(simpleType, path, enumeraciones);
         if (complexType != null) {
-            parseComplexType(complexType, path, complexTypes, simpleTypes,
-                    elementos, atributos, enumeraciones);
+            parseComplexType(complexType, path, complexTypes, simpleTypes, globalElements,
+                    elementos, atributos, enumeraciones, typeStack, typeNamespace, typeName);
         }
     }
 
     private void parseComplexType(Element complexType, String parentPath,
             Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
-            List<XsdElementSource> elementos, List<XsdAttributeSource> atributos,
-            List<XsdEnumerationSource> enumeraciones) {
+            Map<String, Element> globalElements, List<XsdElementSource> elementos,
+            List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
+            Set<String> typeStack, String typeNamespace, String typeName) {
 
-        Element sequence = firstChild(complexType, "sequence");
+        String stackKey = key(typeNamespace, typeName);
+        if (typeName != null && !typeStack.add(stackKey)) {
+            throw new InfrastructureException("FACTUCORE.XSD.TIPO.CICLICO", typeName);
+        }
+
+        Element complexContent = firstChild(complexType, "complexContent");
+        Element content = complexContent == null ? null : firstChild(complexContent, "extension");
+        if (content == null && complexContent != null) content = firstChild(complexContent, "restriction");
+
+        if (content != null) {
+            String base = attr(content, "base");
+            String baseNamespace = namespaceForQName(content, base);
+            String baseName = localTypeName(base);
+            Element baseType = findType(complexTypes, baseNamespace, baseName);
+            if (baseType != null) parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements,
+                    elementos, atributos, enumeraciones, typeStack, baseNamespace, baseName);
+            parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements,
+                    elementos, atributos, enumeraciones, typeStack);
+            for (Element attribute : children(content, "attribute")) parseAttribute(attribute, parentPath, simpleTypes, atributos);
+        } else {
+            Element sequence = firstChild(complexType, "sequence");
         if (sequence != null) {
             parseParticle(sequence, parentPath, complexTypes, simpleTypes,
                     elementos, atributos, enumeraciones);
@@ -230,8 +262,9 @@ public class XsdParserAdapter implements XsdParserPort {
 
     private void parseParticle(Element particle, String parentPath,
             Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
-            List<XsdElementSource> elementos, List<XsdAttributeSource> atributos,
-            List<XsdEnumerationSource> enumeraciones) {
+            Map<String, Element> globalElements, List<XsdElementSource> elementos,
+            List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
+            Set<String> typeStack) {
 
         int order = 1;
         for (Element child : children(particle, "element")) {
@@ -254,7 +287,7 @@ public class XsdParserAdapter implements XsdParserPort {
 
         String typeName = localTypeName(attr(attribute, "type"));
         Element simpleType = firstChild(attribute, "simpleType");
-        if (simpleType == null) simpleType = findType(simpleTypes, typeName);
+        if (simpleType == null) simpleType = findType(simpleTypes, namespaceForQName(attribute, attr(attribute, "type")), typeName);
         Restriction restriction = resolveRestriction(simpleType, simpleTypes);
 
         atributos.add(new XsdAttributeSource(parentPath, name, typeName,
@@ -269,7 +302,7 @@ public class XsdParserAdapter implements XsdParserPort {
         Element restriction = firstChild(simpleType, "restriction");
         if (restriction == null) {
             String base = localTypeName(attr(simpleType, "type"));
-            Element referenced = findType(simpleTypes, base);
+            Element referenced = findType(simpleTypes, namespaceForQName(simpleType, attr(simpleType, "type")), base);
             return referenced == null ? Restriction.empty() : resolveRestriction(referenced, simpleTypes);
         }
 
@@ -306,8 +339,38 @@ public class XsdParserAdapter implements XsdParserPort {
         return result;
     }
 
-    private static Element findType(Map<String, Element> types, String name) {
-        return name == null ? null : types.get(name);
+    private static Element findType(Map<String, Element> types, String namespace, String name) {
+        return name == null ? null : types.get(key(namespace, name));
+    }
+
+    private static String key(String namespace, String name) {
+        return (namespace == null ? "" : namespace) + "|" + name;
+    }
+
+    private static String namespaceForQName(Element context, String qname) {
+        if (qname == null || qname.isBlank()) return null;
+        int separator = qname.indexOf(':');
+        return separator < 0 ? context.lookupNamespaceURI(null) : context.lookupNamespaceURI(qname.substring(0, separator));
+    }
+
+    private static void indexGlobalElements(Element schema, Map<String, Element> target) {
+        String namespace = attr(schema, "targetNamespace");
+        for (Element element : children(schema, "element")) {
+            String name = attr(element, "name");
+            if (name != null && !name.isBlank()) target.putIfAbsent(key(namespace, name), element);
+        }
+    }
+
+    private void parseParticleContainer(Element container, String parentPath,
+            Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
+            Map<String, Element> globalElements, List<XsdElementSource> elementos,
+            List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
+            Set<String> typeStack) {
+        Element sequence = firstChild(container, "sequence");
+        if (sequence != null) parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements,
+                elementos, atributos, enumeraciones, typeStack);
+        if (firstChild(container, "choice") != null) throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
+        if (firstChild(container, "all") != null) throw new InfrastructureException("FACTUCORE.XSD.ALL.NO_SOPORTADO", parentPath);
     }
 
     private static String localTypeName(String value) {
