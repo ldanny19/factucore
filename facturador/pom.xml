@@ -36,6 +36,15 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+
+			<dependency>
+				<groupId>org.apache.camel.springboot</groupId>
+				<artifactId>camel-spring-boot-bom</artifactId>
+				<version>4.10.7</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
@@ -132,6 +141,20 @@
 			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 			<artifactId>dss-token</artifactId>
 			<version>6.5</version>
+		</dependency>
+
+		<!-- Apache Camel -->
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-spring-boot-starter</artifactId>
+			<version>4.10.7</version>
+		</dependency>
+
+		<!-- Apache Camel XML DSL -->
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-spring-xml</artifactId>
+			<version>4.10.7</version>
 		</dependency>
 
 		<!-- Tests -->
