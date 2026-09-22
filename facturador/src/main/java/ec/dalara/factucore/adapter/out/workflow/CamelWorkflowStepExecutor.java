@@ -1,0 +1,52 @@
+package ec.dalara.factucore.adapter.out.workflow;
+
+import java.time.OffsetDateTime;
+import org.springframework.stereotype.Component;
+import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
+import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
+import ec.dalara.factucore.application.workflow.AsignacionSecuencialWorkflowStep;
+import ec.dalara.factucore.application.workflow.FirmaElectronicaWorkflowStep;
+import ec.dalara.factucore.application.workflow.GeneracionXmlWorkflowStep;
+import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class CamelWorkflowStepExecutor {
+    private final AsignacionSecuencialWorkflowStep asignacionSecuencial;
+    private final GeneracionXmlWorkflowStep generacionXml;
+    private final FirmaElectronicaWorkflowStep firmaElectronica;
+
+    public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
+        return ContextoWorkflow.nuevo(request);
+    }
+
+    public ContextoWorkflow asignarSecuencial(ContextoWorkflow contexto) {
+        contexto.registrarResultado(asignacionSecuencial.ejecutar(contexto));
+        return contexto;
+    }
+
+    public ContextoWorkflow generarXml(ContextoWorkflow contexto) {
+        contexto.registrarResultado(generacionXml.ejecutar(contexto));
+        return contexto;
+    }
+
+    public ContextoWorkflow firmar(ContextoWorkflow contexto) {
+        contexto.registrarResultado(firmaElectronica.ejecutar(contexto));
+        return contexto;
+    }
+
+    public ComprobanteGeneracionResponse respuesta(ContextoWorkflow contexto) {
+        var solicitud = contexto.getSolicitud();
+        return ComprobanteGeneracionResponse.builder()
+                .idTransaccion(solicitud.getIdTransaccion())
+                .fechaInicio(solicitud.getFechaInicio())
+                .fechaFin(OffsetDateTime.now())
+                .exitoso(contexto.getUltimoResultado() == null || contexto.getUltimoResultado().isExitosa())
+                .estado(contexto.getUltimoResultado() == null ? null : contexto.getUltimoResultado().getEstado())
+                .claveAcceso(contexto.getClaveAcceso())
+                .tipoDocumento(solicitud.getTipoDocumento())
+                .estadoSri(contexto.getEstadoSri())
+                .build();
+    }
+}

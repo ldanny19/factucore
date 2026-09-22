@@ -73,6 +73,10 @@ logging:
   file:
     name: "${factucore.path.logs}/facturador.log"
 
+camel:
+  main:
+    routes-include-pattern: ${factucore.workflow.rutas.facturacion}
+
 factucore:
   path:
     base: C:/factucore/facturador

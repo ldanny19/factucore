@@ -157,6 +157,12 @@
 			<version>4.10.7</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-spring-boot-xml-starter</artifactId>
+			<version>4.10.7</version>
+		</dependency>
+
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

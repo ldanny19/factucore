@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="facturador-workflow-procesar">
+        <from uri="direct:facturador.workflow.procesar"/>
+        <bean ref="camelWorkflowStepExecutor" method="crearContexto"/>
+        <bean ref="camelWorkflowStepExecutor" method="asignarSecuencial"/>
+        <bean ref="camelWorkflowStepExecutor" method="generarXml"/>
+        <bean ref="camelWorkflowStepExecutor" method="firmar"/>
+        <bean ref="camelWorkflowStepExecutor" method="respuesta"/>
+    </route>
+    <route id="facturador-workflow-reprocesar">
+        <from uri="direct:facturador.workflow.reprocesar"/>
+        <log message="Reproceso de comprobante solicitado"/>
+    </route>
+</routes>
