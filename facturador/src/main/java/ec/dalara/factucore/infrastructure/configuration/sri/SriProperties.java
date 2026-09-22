@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "factucore.sri")
 public class SriProperties {
 
+    private String ambiente;
+
     private AmbienteProperties pruebas = new AmbienteProperties();
 
     private AmbienteProperties produccion = new AmbienteProperties();

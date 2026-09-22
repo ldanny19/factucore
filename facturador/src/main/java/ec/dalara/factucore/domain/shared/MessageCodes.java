@@ -88,6 +88,27 @@ public final class MessageCodes {
 
     public static final String VERSION_DOCUMENTO_XSD_RANGO_FECHAS_INVALIDO =
             "FACTUCORE.VERSION_DOCUMENTO_XSD.RANGO_FECHAS.INVALIDO";
+    
+    public static final String SRI_XML_REQUERIDO =
+            "FACTUCORE.SRI.XML.REQUERIDO";
+
+    public static final String SRI_CLAVE_ACCESO_REQUERIDA =
+            "FACTUCORE.SRI.CLAVE_ACCESO.REQUERIDA";
+
+    public static final String SRI_AMBIENTE_REQUERIDO =
+            "FACTUCORE.SRI.AMBIENTE.REQUERIDO";
+
+    public static final String SRI_URL_RECEPCION_NO_CONFIGURADA =
+            "FACTUCORE.SRI.URL.RECEPCION.NO_CONFIGURADA";
+
+    public static final String SRI_URL_AUTORIZACION_NO_CONFIGURADA =
+            "FACTUCORE.SRI.URL.AUTORIZACION.NO_CONFIGURADA";
+
+    public static final String SRI_ERROR_COMUNICACION =
+            "FACTUCORE.SRI.COMUNICACION.ERROR";
+
+    public static final String SRI_RESPUESTA_INVALIDA =
+            "FACTUCORE.SRI.RESPUESTA.INVALIDA";
 
     private MessageCodes() {
     }
