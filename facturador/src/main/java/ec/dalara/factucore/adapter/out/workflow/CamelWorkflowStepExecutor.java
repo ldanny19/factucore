@@ -6,6 +6,7 @@ import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionReq
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.workflow.AsignacionSecuencialWorkflowStep;
 import ec.dalara.factucore.application.workflow.FirmaElectronicaWorkflowStep;
+import ec.dalara.factucore.application.workflow.EnvioSriWorkflowStep;
 import ec.dalara.factucore.application.workflow.GeneracionXmlWorkflowStep;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class CamelWorkflowStepExecutor {
     private final AsignacionSecuencialWorkflowStep asignacionSecuencial;
     private final GeneracionXmlWorkflowStep generacionXml;
     private final FirmaElectronicaWorkflowStep firmaElectronica;
+    private final EnvioSriWorkflowStep envioSri;
 
     public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
         return ContextoWorkflow.nuevo(request);
@@ -28,6 +30,11 @@ public class CamelWorkflowStepExecutor {
 
     public ContextoWorkflow generarXml(ContextoWorkflow contexto) {
         contexto.registrarResultado(generacionXml.ejecutar(contexto));
+        return contexto;
+    }
+
+    public ContextoWorkflow enviarSri(ContextoWorkflow contexto) {
+        contexto.registrarResultado(envioSri.ejecutar(contexto));
         return contexto;
     }
 

@@ -1,0 +1,50 @@
+package ec.dalara.factucore.application.workflow;
+
+import org.springframework.stereotype.Component;
+
+import ec.dalara.factucore.application.service.SriService;
+import ec.dalara.factucore.application.port.out.sri.SriResponse;
+import ec.dalara.factucore.domain.shared.MessageCodes;
+import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class EnvioSriWorkflowStep implements WorkflowStep {
+
+    private final SriService sriService;
+
+    @Override
+    public EtapaWorkflow etapa() {
+        return EtapaWorkflow.ENVIO_SRI;
+    }
+
+    @Override
+    public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+        if (contexto == null || contexto.getXmlFirmado() == null
+                || contexto.getXmlFirmado().isBlank()) {
+            throw new WorkflowException(MessageCodes.FIRMA_XML_REQUERIDO);
+        }
+
+        SriResponse respuesta = sriService.enviar(contexto.getXmlFirmado());
+        contexto.setEstadoSri(respuesta.estado());
+
+        return respuesta.exitoso()
+                ? ResultadoEtapa.exitosa(
+                        EtapaWorkflow.ENVIO_SRI,
+                        respuesta.estado(),
+                        java.util.Map.of("identificadorSri",
+                                respuesta.identificador() == null ? "" : respuesta.identificador()))
+                : ResultadoEtapa.fallida(
+                        EtapaWorkflow.ENVIO_SRI,
+                        respuesta.estado(),
+                        respuesta.mensajes().isEmpty()
+                                ? MessageCodes.SRI_RESPUESTA_INVALIDA
+                                : respuesta.mensajes().get(0).identificador(),
+                        respuesta.mensajes().isEmpty()
+                                ? null
+                                : respuesta.mensajes().get(0).mensaje());
+    }
+}
