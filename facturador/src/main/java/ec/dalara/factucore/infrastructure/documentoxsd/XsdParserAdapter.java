@@ -2,17 +2,26 @@ package ec.dalara.factucore.infrastructure.documentoxsd;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
 import ec.dalara.factucore.application.port.out.XsdParserPort;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdAttributeSource;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdDefinitionSource;
@@ -30,25 +39,22 @@ public class XsdParserAdapter implements XsdParserPort {
         if (inputStream == null) {
             throw new InfrastructureException("FACTUCORE.XSD.ARCHIVO.REQUERIDO");
         }
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            factory.setXIncludeAware(false);
-            factory.setExpandEntityReferences(false);
 
-            Document document = factory.newDocumentBuilder().parse(inputStream);
-            Element schema = document.getDocumentElement();
-            if (!XSD_NS.equals(schema.getNamespaceURI()) || !"schema".equals(schema.getLocalName())) {
-                throw new InfrastructureException("FACTUCORE.XSD.ESQUEMA.INVALIDO");
+        try {
+            Document rootDocument = parseDocument(inputStream, systemId);
+            List<Document> documents = new ArrayList<>();
+            collectDocuments(rootDocument, systemId, new HashSet<>(), documents);
+
+            Map<String, Element> complexTypes = new HashMap<>();
+            Map<String, Element> simpleTypes = new HashMap<>();
+
+            for (Document document : documents) {
+                Element schema = validarSchema(document);
+                indexTypes(schema, "complexType", complexTypes);
+                indexTypes(schema, "simpleType", simpleTypes);
             }
 
-            Map<String, Element> complexTypes = indexChildren(schema, "complexType");
-            Map<String, Element> simpleTypes = indexChildren(schema, "simpleType");
-            Element root = firstElement(schema, "element");
+            Element root = firstElement(validarSchema(rootDocument), "element");
             if (root == null) {
                 throw new InfrastructureException("FACTUCORE.XSD.ELEMENTO_RAIZ.NO_DEFINIDO");
             }
@@ -59,13 +65,111 @@ public class XsdParserAdapter implements XsdParserPort {
 
             parseElement(root, "", 1, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
 
+            Element rootSchema = validarSchema(rootDocument);
             return new XsdDefinitionSource(
-                    attr(schema, "targetNamespace"), attr(root, "name"),
-                    elementos, atributos, enumeraciones);
+                    attr(rootSchema, "targetNamespace"),
+                    attr(root, "name"),
+                    elementos,
+                    atributos,
+                    enumeraciones);
         } catch (InfrastructureException exception) {
             throw exception;
         } catch (Exception exception) {
             throw new InfrastructureException("FACTUCORE.XSD.PARSE.ERROR", exception);
+        }
+    }
+
+    private Document parseDocument(InputStream inputStream, String systemId) throws Exception {
+        DocumentBuilderFactory factory = secureFactory();
+        InputSource source = new InputSource(inputStream);
+        source.setSystemId(systemId);
+        return factory.newDocumentBuilder().parse(source);
+    }
+
+    private Document parseDocument(Path path) throws Exception {
+        if (!Files.isRegularFile(path)) {
+            throw new InfrastructureException("FACTUCORE.XSD.INCLUSION.NO_ENCONTRADA", path.toString());
+        }
+        return parseDocument(Files.newInputStream(path), path.toUri().toString());
+    }
+
+    private DocumentBuilderFactory secureFactory() throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        return factory;
+    }
+
+    private void collectDocuments(Document document, String systemId, Set<String> visited,
+            List<Document> documents) throws Exception {
+        String currentId = normalizarSystemId(systemId);
+        if (!visited.add(currentId)) {
+            return;
+        }
+
+        Element schema = validarSchema(document);
+        documents.add(document);
+
+        for (Element include : children(schema, "include")) {
+            cargarRelacionado(include, currentId, visited, documents);
+        }
+        for (Element imported : children(schema, "import")) {
+            cargarRelacionado(imported, currentId, visited, documents);
+        }
+    }
+
+    private void cargarRelacionado(Element relation, String currentId, Set<String> visited,
+            List<Document> documents) throws Exception {
+        String location = attr(relation, "schemaLocation");
+        if (location == null) {
+            throw new InfrastructureException("FACTUCORE.XSD.INCLUSION.UBICACION.REQUERIDA");
+        }
+
+        URI base = URI.create(currentId);
+        URI resolved = base.resolve(location);
+        if (!"file".equalsIgnoreCase(resolved.getScheme())) {
+            throw new InfrastructureException("FACTUCORE.XSD.INCLUSION.EXTERNA.NO_PERMITIDA",
+                    resolved.toString());
+        }
+
+        Path path = Path.of(resolved).normalize().toAbsolutePath();
+        collectDocuments(parseDocument(path), path.toUri().toString(), visited, documents);
+    }
+
+    private String normalizarSystemId(String systemId) {
+        if (systemId == null || systemId.isBlank()) {
+            throw new InfrastructureException("FACTUCORE.XSD.SYSTEM_ID.REQUERIDO");
+        }
+        URI uri = URI.create(systemId);
+        if (uri.getScheme() == null) {
+            return Path.of(systemId).toAbsolutePath().normalize().toUri().toString();
+        }
+        return uri.normalize().toString();
+    }
+
+    private Element validarSchema(Document document) {
+        Element schema = document.getDocumentElement();
+        if (!XSD_NS.equals(schema.getNamespaceURI()) || !"schema".equals(schema.getLocalName())) {
+            throw new InfrastructureException("FACTUCORE.XSD.ESQUEMA.INVALIDO");
+        }
+        return schema;
+    }
+
+    private void indexTypes(Element schema, String localName, Map<String, Element> target) {
+        for (Element child : children(schema, localName)) {
+            String name = attr(child, "name");
+            if (name == null || name.isBlank()) {
+                continue;
+            }
+            Element previous = target.putIfAbsent(name, child);
+            if (previous != null && previous != child) {
+                throw new InfrastructureException("FACTUCORE.XSD.TIPO.DUPLICADO", name);
+            }
         }
     }
 
@@ -97,8 +201,10 @@ public class XsdParserAdapter implements XsdParserPort {
                 restriction.pattern));
 
         if (simpleType != null) parseEnumerations(simpleType, path, enumeraciones);
-        if (complexType != null) parseComplexType(complexType, path, complexTypes, simpleTypes,
-                elementos, atributos, enumeraciones);
+        if (complexType != null) {
+            parseComplexType(complexType, path, complexTypes, simpleTypes,
+                    elementos, atributos, enumeraciones);
+        }
     }
 
     private void parseComplexType(Element complexType, String parentPath,
@@ -108,7 +214,8 @@ public class XsdParserAdapter implements XsdParserPort {
 
         Element sequence = firstChild(complexType, "sequence");
         if (sequence != null) {
-            parseParticle(sequence, parentPath, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
+            parseParticle(sequence, parentPath, complexTypes, simpleTypes,
+                    elementos, atributos, enumeraciones);
         }
         if (firstChild(complexType, "choice") != null) {
             throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
@@ -128,10 +235,12 @@ public class XsdParserAdapter implements XsdParserPort {
 
         int order = 1;
         for (Element child : children(particle, "element")) {
-            parseElement(child, parentPath, order++, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
+            parseElement(child, parentPath, order++, complexTypes, simpleTypes,
+                    elementos, atributos, enumeraciones);
         }
         for (Element nested : children(particle, "sequence")) {
-            parseParticle(nested, parentPath, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
+            parseParticle(nested, parentPath, complexTypes, simpleTypes,
+                    elementos, atributos, enumeraciones);
         }
         if (!children(particle, "choice").isEmpty()) {
             throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
@@ -174,13 +283,17 @@ public class XsdParserAdapter implements XsdParserPort {
                 facetValue(restriction, "pattern"));
     }
 
-    private void parseEnumerations(Element simpleType, String path, List<XsdEnumerationSource> enumeraciones) {
+    private void parseEnumerations(Element simpleType, String path,
+            List<XsdEnumerationSource> enumeraciones) {
         Element restriction = firstChild(simpleType, "restriction");
         if (restriction == null) return;
+
         int order = 1;
         for (Element enumeration : children(restriction, "enumeration")) {
             String value = attr(enumeration, "value");
-            if (value != null) enumeraciones.add(new XsdEnumerationSource(path, value, null, order++));
+            if (value != null) {
+                enumeraciones.add(new XsdEnumerationSource(path, value, null, order++));
+            }
         }
     }
 
@@ -249,8 +362,11 @@ public class XsdParserAdapter implements XsdParserPort {
         NodeList nodes = parent.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
-            if (node instanceof Element element && XSD_NS.equals(element.getNamespaceURI())
-                    && localName.equals(element.getLocalName())) result.add(element);
+            if (node instanceof Element element
+                    && XSD_NS.equals(element.getNamespaceURI())
+                    && localName.equals(element.getLocalName())) {
+                result.add(element);
+            }
         }
         return result;
     }
@@ -260,7 +376,8 @@ public class XsdParserAdapter implements XsdParserPort {
     }
 
     private record Restriction(Integer minLength, Integer maxLength, Integer totalDigits,
-            Integer fractionDigits, BigDecimal minInclusive, BigDecimal maxInclusive, String pattern) {
+            Integer fractionDigits, BigDecimal minInclusive, BigDecimal maxInclusive,
+            String pattern) {
         private static Restriction empty() {
             return new Restriction(null, null, null, null, null, null, null);
         }
