@@ -101,7 +101,7 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 	private XAdESSignatureParameters crearParametros(DSSPrivateKeyEntry privateKey) {
 		XAdESSignatureParameters parameters = new XAdESSignatureParameters();
 
-		parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		parameters.setSignatureLevel(SignatureLevel.XAdES_BES);
 
 		parameters.setSignaturePackaging(SignaturePackaging.ENVELOPED);
 

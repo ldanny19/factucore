@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FirmaElectronicaPort;
-import ec.dalara.factucore.domain.firmaelectronica.CertificadoFirmaModel;
+import ec.dalara.factucore.domain.certificadofirma.CertificadoFirmaModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import lombok.RequiredArgsConstructor;
 
