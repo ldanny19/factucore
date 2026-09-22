@@ -39,6 +39,15 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
             throw new WorkflowException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
         }
 
+        if (contexto.getClaveAcceso() != null && !contexto.getClaveAcceso().isBlank()) {
+            if (!claveAccesoService.validar(contexto.getClaveAcceso())) {
+                throw new WorkflowException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
+            }
+            return ResultadoEtapa.exitosa(
+                    EtapaWorkflow.GENERACION_CLAVE_ACCESO,
+                    "YA_GENERADA");
+        }
+
         if (contexto.getSecuencial() == null || contexto.getSecuencial().isBlank()) {
             throw new WorkflowException(MessageCodes.COMPROBANTE_NUMERO_REQUERIDO);
         }
