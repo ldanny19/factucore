@@ -42,7 +42,6 @@ public interface VersionDocumentoXsdMapper {
                 entity.getId(),
                 entity.getDocumentoXsd().getId(),
                 entity.getVersion(),
-                entity.getVersionXsd(),
                 entity.getFechaInicio(),
                 entity.getFechaFin()
         );
