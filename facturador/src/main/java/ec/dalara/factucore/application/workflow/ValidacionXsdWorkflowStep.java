@@ -1,7 +1,6 @@
 package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
-import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlValidatorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -12,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ValidacionXsdWorkflowStep implements WorkflowStep {
-    private final DocumentoDefinitionProvider definitionProvider;
     private final XmlValidatorPort xmlValidator;
 
     @Override public EtapaWorkflow etapa() { return EtapaWorkflow.VALIDACION_XSD; }
@@ -21,10 +19,10 @@ public class ValidacionXsdWorkflowStep implements WorkflowStep {
         if (contexto == null || contexto.getXml() == null || contexto.getXml().isBlank()) {
             throw new WorkflowException(MessageCodes.FIRMA_XML_REQUERIDO);
         }
-        var solicitud = contexto.getSolicitud();
-        var definition = definitionProvider
-                .obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
+        var definition = contexto.getDefinicionDocumento();
+        if (definition == null) {
+            throw new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA);
+        }
         xmlValidator.validar(contexto.getXml(), definition);
         return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION_XSD, "VALIDADO");
     }
