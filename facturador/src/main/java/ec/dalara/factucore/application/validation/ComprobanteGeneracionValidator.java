@@ -5,6 +5,7 @@ import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionReq
 import ec.dalara.factucore.application.contract.request.DatoComprobanteRequest;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,27 +22,6 @@ import java.util.Set;
 public class ComprobanteGeneracionValidator
         implements ComprobanteValidator {
 
-    private static final String REQUEST_REQUERIDO =
-            "FACTUCORE.COMPROBANTE.REQUEST.REQUERIDO";
-
-    private static final String TIPO_DOCUMENTO_REQUERIDO =
-            "FACTUCORE.COMPROBANTE.TIPO_DOCUMENTO.REQUERIDO";
-
-    private static final String FECHA_INICIO_REQUERIDA =
-            "FACTUCORE.COMPROBANTE.FECHA_INICIO.REQUERIDA";
-
-    private static final String DATOS_REQUERIDOS =
-            "FACTUCORE.COMPROBANTE.DATOS.REQUERIDOS";
-
-    private static final String DATO_DUPLICADO =
-            "FACTUCORE.COMPROBANTE.DATO.DUPLICADO";
-
-    private static final String DATO_KEY_REQUERIDA =
-            "FACTUCORE.COMPROBANTE.DATO.KEY.REQUERIDA";
-
-    private static final String DEFINICION_NO_ENCONTRADA =
-            "FACTUCORE.COMPROBANTE.DEFINICION.NO_ENCONTRADA";
-
     private final MessageResolver messageResolver;
     private final DocumentoDefinitionProvider documentoDefinitionProvider;
     private final DocumentDefinitionDataValidator documentDefinitionDataValidator;
@@ -51,43 +31,26 @@ public class ComprobanteGeneracionValidator
             ComprobanteGeneracionRequest request
     ) {
         ComprobanteValidationResult resultado =
-                new ComprobanteValidationResult(
-                        messageResolver
-                );
+                new ComprobanteValidationResult(messageResolver);
 
         if (request == null) {
-
             resultado.agregarError(
-                    REQUEST_REQUERIDO,
+                    MessageCodes.COMPROBANTE_REQUEST_REQUERIDO,
                     null
             );
 
             return resultado;
         }
 
-        validarTipoDocumento(
-                request,
-                resultado
-        );
-
-        validarFechaInicio(
-                request,
-                resultado
-        );
-
-        validarDatos(
-                request,
-                resultado
-        );
+        validarTipoDocumento(request, resultado);
+        validarFechaInicio(request, resultado);
+        validarDatos(request, resultado);
 
         if (!resultado.esValido()) {
             return resultado;
         }
 
-        validarDefinicionYDatos(
-                request,
-                resultado
-        );
+        validarDefinicionYDatos(request, resultado);
 
         return resultado;
     }
@@ -100,7 +63,7 @@ public class ComprobanteGeneracionValidator
                 || request.getTipoDocumento().isBlank()) {
 
             resultado.agregarError(
-                    TIPO_DOCUMENTO_REQUERIDO,
+                    MessageCodes.COMPROBANTE_TIPO_DOCUMENTO_REQUERIDO,
                     "tipoDocumento"
             );
         }
@@ -113,7 +76,7 @@ public class ComprobanteGeneracionValidator
         if (request.getFechaInicio() == null) {
 
             resultado.agregarError(
-                    FECHA_INICIO_REQUERIDA,
+                    MessageCodes.COMPROBANTE_FECHA_INICIO_REQUERIDA,
                     "fechaInicio"
             );
         }
@@ -129,15 +92,14 @@ public class ComprobanteGeneracionValidator
         if (datos == null || datos.isEmpty()) {
 
             resultado.agregarError(
-                    DATOS_REQUERIDOS,
+                    MessageCodes.COMPROBANTE_DATOS_REQUERIDOS,
                     "datos"
             );
 
             return;
         }
 
-        Set<String> claves =
-                new HashSet<>();
+        Set<String> claves = new HashSet<>();
 
         for (int i = 0; i < datos.size(); i++) {
 
@@ -150,7 +112,7 @@ public class ComprobanteGeneracionValidator
             if (dato == null) {
 
                 resultado.agregarError(
-                        DATO_KEY_REQUERIDA,
+                        MessageCodes.COMPROBANTE_DATO_KEY_REQUERIDA,
                         campo
                 );
 
@@ -161,19 +123,17 @@ public class ComprobanteGeneracionValidator
                     || dato.getKey().isBlank()) {
 
                 resultado.agregarError(
-                        DATO_KEY_REQUERIDA,
+                        MessageCodes.COMPROBANTE_DATO_KEY_REQUERIDA,
                         campo + ".key"
                 );
 
                 continue;
             }
 
-            if (!claves.add(
-                    dato.getKey()
-            )) {
+            if (!claves.add(dato.getKey())) {
 
                 resultado.agregarError(
-                        DATO_DUPLICADO,
+                        MessageCodes.COMPROBANTE_DATO_DUPLICADO,
                         campo + ".key",
                         dato.getKey()
                 );
@@ -193,9 +153,7 @@ public class ComprobanteGeneracionValidator
         }
 
         LocalDateTime fechaEmision =
-                convertirFecha(
-                        fechaInicio
-                );
+                convertirFecha(fechaInicio);
 
         var definicionOptional =
                 documentoDefinitionProvider
@@ -207,7 +165,7 @@ public class ComprobanteGeneracionValidator
         if (definicionOptional.isEmpty()) {
 
             resultado.agregarError(
-                    DEFINICION_NO_ENCONTRADA,
+                    MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA,
                     "tipoDocumento",
                     request.getTipoDocumento()
             );
@@ -219,9 +177,7 @@ public class ComprobanteGeneracionValidator
                 definicionOptional.get();
 
         Map<String, Object> datos =
-                convertirDatos(
-                        request.getDatos()
-                );
+                convertirDatos(request.getDatos());
 
         documentDefinitionDataValidator.validar(
                 definicion,
@@ -237,7 +193,6 @@ public class ComprobanteGeneracionValidator
                 new LinkedHashMap<>();
 
         for (DatoComprobanteRequest dato : datos) {
-
             resultado.put(
                     dato.getKey(),
                     dato.getValue()

@@ -74,6 +74,27 @@ public final class MessageCodes {
     public static final String COMPROBANTE_ESTADO_PROCESO_REQUERIDO =
             "FACTUCORE.COMPROBANTE.ESTADO_PROCESO.REQUERIDO";
 
+    public static final String COMPROBANTE_REQUEST_REQUERIDO =
+            "FACTUCORE.COMPROBANTE.REQUEST.REQUERIDO";
+
+    public static final String COMPROBANTE_TIPO_DOCUMENTO_REQUERIDO =
+            "FACTUCORE.COMPROBANTE.TIPO_DOCUMENTO.REQUERIDO";
+
+    public static final String COMPROBANTE_FECHA_INICIO_REQUERIDA =
+            "FACTUCORE.COMPROBANTE.FECHA_INICIO.REQUERIDA";
+
+    public static final String COMPROBANTE_DATOS_REQUERIDOS =
+            "FACTUCORE.COMPROBANTE.DATOS.REQUERIDOS";
+
+    public static final String COMPROBANTE_DATO_DUPLICADO =
+            "FACTUCORE.COMPROBANTE.DATO.DUPLICADO";
+
+    public static final String COMPROBANTE_DATO_KEY_REQUERIDA =
+            "FACTUCORE.COMPROBANTE.DATO.KEY.REQUERIDA";
+
+    public static final String COMPROBANTE_DEFINICION_NO_ENCONTRADA =
+            "FACTUCORE.COMPROBANTE.DEFINICION.NO_ENCONTRADA";
+
     public static final String VERSION_DOCUMENTO_XSD_DOCUMENTO_REQUERIDO =
             "FACTUCORE.VERSION_DOCUMENTO_XSD.DOCUMENTO.REQUERIDO";
 
@@ -88,7 +109,7 @@ public final class MessageCodes {
 
     public static final String VERSION_DOCUMENTO_XSD_RANGO_FECHAS_INVALIDO =
             "FACTUCORE.VERSION_DOCUMENTO_XSD.RANGO_FECHAS.INVALIDO";
-    
+
     public static final String SRI_XML_REQUERIDO =
             "FACTUCORE.SRI.XML.REQUERIDO";
 
@@ -109,7 +130,7 @@ public final class MessageCodes {
 
     public static final String SRI_RESPUESTA_INVALIDA =
             "FACTUCORE.SRI.RESPUESTA.INVALIDA";
-    
+
     public static final String WORKFLOW_COMPROBANTE_REQUERIDO =
             "FACTUCORE.WORKFLOW.COMPROBANTE.REQUERIDO";
 

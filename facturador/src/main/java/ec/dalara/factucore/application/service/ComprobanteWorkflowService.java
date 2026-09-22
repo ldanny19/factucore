@@ -7,6 +7,7 @@ import ec.dalara.factucore.application.port.in.ComprobanteWorkflowPort;
 import ec.dalara.factucore.application.port.out.WorkflowExecutionPort;
 import ec.dalara.factucore.application.validation.ComprobanteGeneracionValidator;
 import ec.dalara.factucore.application.validation.ComprobanteValidationResult;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,8 +33,7 @@ public class ComprobanteWorkflowService
 
         if (comprobanteId == null) {
             throw new ApplicationException(
-                    "FACTUCORE.WORKFLOW.COMPROBANTE.REQUERIDO",
-                    comprobanteId
+                    MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO
             );
         }
 
@@ -47,9 +47,12 @@ public class ComprobanteWorkflowService
                 validator.validar(request);
 
         if (!resultado.esValido()) {
+
+            var primerError =
+                    resultado.getErrores().get(0);
+
             throw new ApplicationException(
-                    resultado.obtenerPrimerCodigoError(),
-                    resultado.obtenerPrimerParametros()
+                    primerError.getCodigo()
             );
         }
     }
