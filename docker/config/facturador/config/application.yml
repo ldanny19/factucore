@@ -1,0 +1,114 @@
+# ============================================================
+# FACTUCORE - FACTURADOR
+# CONFIGURACION EXTERNA
+# ============================================================
+
+spring:
+  application:
+    name: facturador
+
+  # ----------------------------------------------------------
+  # MENSAJES
+  # ----------------------------------------------------------
+
+  messages:
+    basename: "file:${factucore.path.config}/messages/messages"
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  # ----------------------------------------------------------
+  # SERVER
+  # ----------------------------------------------------------
+
+  main:
+    banner-mode: off
+
+  # ----------------------------------------------------------
+  # POSTGRESQL
+  # ----------------------------------------------------------
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://db_factucore:5432/feFactuCore}
+    username: ${DB_USERNAME:usr_factucore}
+    password: ${DB_PASSWORD:usr_factucore}
+    driver-class-name: org.postgresql.Driver
+
+    # --------------------------------------------------------
+    # HIKARI
+    # --------------------------------------------------------
+
+    hikari:
+      pool-name: FactuCoreHikariCP
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # ----------------------------------------------------------
+  # JPA / HIBERNATE
+  # ----------------------------------------------------------
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: America/Guayaquil
+
+  # ----------------------------------------------------------
+  # FLYWAY
+  # ----------------------------------------------------------
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    clean-disabled: true
+
+
+# ============================================================
+# SERVER
+# ============================================================
+
+server:
+  port: 8083
+  servlet:
+    context-path: /factucore-api
+
+
+# ============================================================
+# LOGGING
+# ============================================================
+
+logging:
+  level:
+    root: INFO
+    ec.dalara.factucore: INFO
+    org.flywaydb: INFO
+    org.hibernate.SQL: INFO
+
+  file:
+    name: "${factucore.path.logs}/facturador.log"
+
+
+# ============================================================
+# FACTUCORE - DIRECTORIOS EXTERNOS
+# ============================================================
+
+factucore:
+  path:
+    base: C:/factucore/facturador
+    config: C:/factucore/facturador/config
+    certificados: C:/factucore/facturador/certificados
+    jasper: C:/factucore/facturador/jasper
+    documentos: C:/factucore/facturador/documentos
+    documentos-xml: C:/factucore/facturador/documentos/xml
+    documentos-pdf: C:/factucore/facturador/documentos/pdf
+    logs: C:/factucore/facturador/logs
