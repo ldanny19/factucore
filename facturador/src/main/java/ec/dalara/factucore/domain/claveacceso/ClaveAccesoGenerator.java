@@ -38,7 +38,7 @@ public final class ClaveAccesoGenerator {
     private static String numerico(String valor, int longitud) {
         if (valor == null || valor.isBlank()) throw new DomainException("FACTUCORE.CLAVE_ACCESO.VALOR.REQUERIDO");
         String resultado = valor.trim();
-        if (!resultado.matches("\d{" + longitud + "}"))
+        if (!resultado.matches("\\d{" + longitud + "}"))
             throw new DomainException("FACTUCORE.CLAVE_ACCESO.FORMATO.NUMERICO_INVALIDO");
         return resultado;
     }
