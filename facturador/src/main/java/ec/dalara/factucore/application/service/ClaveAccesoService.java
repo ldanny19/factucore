@@ -2,7 +2,6 @@ package ec.dalara.factucore.application.service;
 
 import org.springframework.stereotype.Service;
 
-import ec.dalara.factucore.application.port.out.ClaveAccesoPort;
 import ec.dalara.factucore.domain.claveacceso.ClaveAccesoCodigoNumericoGenerator;
 import ec.dalara.factucore.domain.claveacceso.ClaveAccesoDatos;
 import ec.dalara.factucore.domain.claveacceso.ClaveAccesoGenerator;
@@ -12,14 +11,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ClaveAccesoService implements ClaveAccesoPort {
+public class ClaveAccesoService {
 
-	@Override
 	public ClaveAccesoModel generar(ClaveAccesoDatos datos) {
 		return ClaveAccesoGenerator.generar(datos);
 	}
 
-	@Override
 	public boolean validar(String clave) {
 		return ClaveAccesoValidator.esValida(clave);
 	}
