@@ -9,7 +9,8 @@ import ec.dalara.factucore.application.contract.request.MapeoXsdRequest;
 import ec.dalara.factucore.application.contract.response.MapeoXsdResponse;
 import ec.dalara.factucore.domain.shared.DomainException;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
-import ec.dalara.factucore.infrastructure.mapper.MapeoXsdMapper;
+import ec.dalara.factucore.application.mapper.MapeoXsdMapper;
+import ec.dalara.factucore.infrastructure.mapper.entity.MapeoXsdEntityMapper;
 import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.ElementoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.MapeoXsd;
@@ -30,6 +31,7 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 	private final ElementoXsdRepository elementoXsdRepository;
 	private final AtributoXsdRepository atributoXsdRepository;
 	private final MapeoXsdMapper mapeoXsdMapper;
+	private final MapeoXsdEntityMapper mapeoXsdEntityMapper;
 
 	@Override
 	protected BaseRepository<MapeoXsd, Long> getRepository() {
@@ -74,7 +76,7 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 			throw new DomainException("FACTUCORE.MAPEO_XSD.RUTA_ORIGEN.DUPLICADA");
 		}
 
-		MapeoXsd entity = mapeoXsdMapper.toEntity(request);
+		MapeoXsd entity = mapeoXsdEntityMapper.toEntity(mapeoXsdMapper.toModel(request));
 		entity.setVersionDocumentoXsd(version);
 		entity.setElementoXsd(elemento);
 		entity.setAtributoXsd(atributo);
