@@ -9,6 +9,9 @@ import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.ElementoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.MapeoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
+import ec.dalara.factucore.infrastructure.persistence.repository.AtributoXsdRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.BaseRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.ElementoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.MapeoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.VersionDocumentoXsdRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,8 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 
     private final MapeoXsdRepository mapeoXsdRepository;
     private final VersionDocumentoXsdRepository versionDocumentoXsdRepository;
+    private final ElementoXsdRepository elementoXsdRepository;
+    private final AtributoXsdRepository atributoXsdRepository;
     private final MapeoXsdMapper mapeoXsdMapper;
 
     @Override
@@ -45,14 +50,16 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 
         ElementoXsd elemento = null;
         if (request.getIdElementoXsd() != null) {
-            elemento = new ElementoXsd();
-            elemento.setId(request.getIdElementoXsd());
+            elemento = elementoXsdRepository.findByIdAndEstadoRegistro(
+                    request.getIdElementoXsd(),
+                    EstadoRegistro.ACTIVO
+            ).orElseThrow(() -> new DomainException(
+                    "FACTUCORE.MAPEO_XSD.ELEMENTO.NO_ENCONTRADO"
+            ));
 
-            if (!versionDocumentoXsdRepository
-                    .existsByIdAndElementoXsdId(
-                            request.getIdVersionDocumentoXsd(),
-                            request.getIdElementoXsd()
-                    )) {
+            if (elemento.getVersionDocumentoXsd() == null
+                    || !request.getIdVersionDocumentoXsd().equals(
+                    elemento.getVersionDocumentoXsd().getId())) {
                 throw new DomainException(
                         "FACTUCORE.MAPEO_XSD.ELEMENTO.VERSION_INVALIDA"
                 );
@@ -61,14 +68,17 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 
         AtributoXsd atributo = null;
         if (request.getIdAtributoXsd() != null) {
-            atributo = new AtributoXsd();
-            atributo.setId(request.getIdAtributoXsd());
+            atributo = atributoXsdRepository.findByIdAndEstadoRegistro(
+                    request.getIdAtributoXsd(),
+                    EstadoRegistro.ACTIVO
+            ).orElseThrow(() -> new DomainException(
+                    "FACTUCORE.MAPEO_XSD.ATRIBUTO.NO_ENCONTRADO"
+            ));
 
-            if (!versionDocumentoXsdRepository
-                    .existsByIdAndAtributoXsdId(
-                            request.getIdVersionDocumentoXsd(),
-                            request.getIdAtributoXsd()
-                    )) {
+            if (atributo.getElementoXsd() == null
+                    || atributo.getElementoXsd().getVersionDocumentoXsd() == null
+                    || !request.getIdVersionDocumentoXsd().equals(
+                    atributo.getElementoXsd().getVersionDocumentoXsd().getId())) {
                 throw new DomainException(
                         "FACTUCORE.MAPEO_XSD.ATRIBUTO.VERSION_INVALIDA"
                 );
