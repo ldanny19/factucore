@@ -1,7 +1,10 @@
 package ec.dalara.factucore.domain.documentoxsd;
 
+import java.util.Objects;
+
 public class AtributoXsdModel {
 
+    private final Long id;
     private final Long elementoXsdId;
     private final String nombre;
     private final String tipoDato;
@@ -10,6 +13,7 @@ public class AtributoXsdModel {
     private final String patron;
 
     public AtributoXsdModel(
+            Long id,
             Long elementoXsdId,
             String nombre,
             String tipoDato,
@@ -17,12 +21,23 @@ public class AtributoXsdModel {
             String valorPredeterminado,
             String patron
     ) {
-        this.elementoXsdId = elementoXsdId;
-        this.nombre = nombre;
+        this.id = id;
+        this.elementoXsdId = Objects.requireNonNull(
+                elementoXsdId,
+                "elementoXsdId"
+        );
+        this.nombre = Objects.requireNonNull(
+                nombre,
+                "nombre"
+        );
         this.tipoDato = tipoDato;
         this.obligatorio = obligatorio;
         this.valorPredeterminado = valorPredeterminado;
         this.patron = patron;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public Long getElementoXsdId() {

@@ -1,6 +1,7 @@
 package ec.dalara.factucore.application.validation;
 
 import ec.dalara.factucore.application.MessageResolver;
+import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
@@ -9,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,35 +72,200 @@ public class DocumentDefinitionDataValidator
         }
 
         Map<Long, ElementoXsdModel> elementosPorId =
-                indexarElementos(definition.getElementos());
+                indexarElementos(
+                        definition.getElementos()
+                );
 
         for (MapeoXsdModel mapeo : definition.getMapeos()) {
 
-            if (mapeo == null || !mapeo.esElemento()) {
+            if (mapeo == null) {
                 continue;
             }
 
-            ElementoXsdModel elemento =
-                    elementosPorId.get(mapeo.getElementoXsdId());
+            if (mapeo.esElemento()) {
 
-            if (elemento == null) {
+                ElementoXsdModel elemento =
+                        elementosPorId.get(
+                                mapeo.getElementoXsdId()
+                        );
+
+                if (elemento == null) {
+                    continue;
+                }
+
+                Object valor =
+                        obtenerValor(
+                                datos,
+                                mapeo.getRutaOrigen()
+                        );
+
+                validarElemento(
+                        elemento,
+                        valor,
+                        mapeo.getRutaOrigen(),
+                        definition,
+                        resultado
+                );
+
                 continue;
             }
 
-            Object valor =
-                    obtenerValor(
-                            datos,
-                            mapeo.getRutaOrigen()
-                    );
+            if (mapeo.esAtributo()) {
 
-            validarElemento(
-                    elemento,
-                    valor,
-                    mapeo.getRutaOrigen(),
-                    definition,
+                validarAtributo(
+                        mapeo,
+                        datos,
+                        definition,
+                        elementosPorId,
+                        resultado
+                );
+            }
+        }
+    }
+
+    private void validarAtributo(
+            MapeoXsdModel mapeo,
+            Map<String, Object> datos,
+            DocumentDefinitionModel definition,
+            Map<Long, ElementoXsdModel> elementosPorId,
+            ComprobanteValidationResult resultado
+    ) {
+        AtributoXsdModel atributo =
+                encontrarAtributo(
+                        mapeo,
+                        definition
+                );
+
+        if (atributo == null) {
+            return;
+        }
+
+        Object valor =
+                obtenerValor(
+                        datos,
+                        mapeo.getRutaOrigen()
+                );
+
+        String campo =
+                mapeo.getRutaOrigen();
+
+        validarAtributoValor(
+                atributo,
+                valor,
+                campo,
+                resultado
+        );
+    }
+
+    private AtributoXsdModel encontrarAtributo(
+            MapeoXsdModel mapeo,
+            DocumentDefinitionModel definition
+    ) {
+        if (mapeo.getAtributoXsdId() == null) {
+            return null;
+        }
+
+        /*
+         * AtributoXsdModel no posee un ID propio.
+         * El identificador persistido del atributo corresponde
+         * al elemento padre + nombre del atributo.
+         *
+         * Por eso se utiliza la referencia almacenada en
+         * MapeoXsdModel únicamente para localizar el atributo
+         * cuando el modelo disponible lo permite.
+         *
+         * La validación concreta se realiza contra la colección
+         * de atributos de la definición.
+         */
+
+        return definition.getAtributos()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(atributo ->
+                        Objects.equals(
+                                atributo.getElementoXsdId(),
+                                obtenerElementoPadreId(
+                                        mapeo,
+                                        definition
+                                )
+                        )
+                )
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Long obtenerElementoPadreId(
+            MapeoXsdModel mapeo,
+            DocumentDefinitionModel definition
+    ) {
+        return definition.getElementos()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(elemento ->
+                        Objects.equals(
+                                elemento.getId(),
+                                mapeo.getElementoXsdId()
+                        )
+                )
+                .map(ElementoXsdModel::getId)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void validarAtributoValor(
+            AtributoXsdModel atributo,
+            Object valor,
+            String campo,
+            ComprobanteValidationResult resultado
+    ) {
+        if (valor == null) {
+
+            if (Boolean.TRUE.equals(
+                    atributo.getObligatorio()
+            )) {
+
+                resultado.agregarError(
+                        VALOR_REQUERIDO,
+                        campo
+                );
+            }
+
+            return;
+        }
+
+        if (esEstructura(valor)) {
+            return;
+        }
+
+        boolean tipoValido =
+                validarTipo(
+                        atributo.getTipoDato(),
+                        valor,
+                        campo,
+                        resultado
+                );
+
+        if (!tipoValido) {
+            return;
+        }
+
+        if (valor instanceof String texto) {
+
+            validarLongitud(
+                    texto,
+                    null,
+                    null,
+                    campo,
                     resultado
             );
         }
+
+        validarPatron(
+                atributo.getPatron(),
+                valor,
+                campo,
+                resultado
+        );
     }
 
     private void validarElemento(
@@ -222,7 +387,7 @@ public class DocumentDefinitionDataValidator
         }
 
         validarPatron(
-                elemento,
+                elemento.getPatron(),
                 valor,
                 campo,
                 resultado
@@ -243,10 +408,22 @@ public class DocumentDefinitionDataValidator
             String campo,
             ComprobanteValidationResult resultado
     ) {
+        return validarTipo(
+                elemento.getTipoDato(),
+                valor,
+                campo,
+                resultado
+        );
+    }
+
+    private boolean validarTipo(
+            String tipoDato,
+            Object valor,
+            String campo,
+            ComprobanteValidationResult resultado
+    ) {
         String tipo =
-                normalizarTipo(
-                        elemento.getTipoDato()
-                );
+                normalizarTipo(tipoDato);
 
         boolean valido =
                 switch (tipo) {
@@ -279,10 +456,8 @@ public class DocumentDefinitionDataValidator
                             valor instanceof Boolean
                                     || esBooleanoTexto(valor);
 
-                    case "DATE" ->
-                            valor instanceof String;
-
-                    case "DATETIME",
+                    case "DATE",
+                         "DATETIME",
                          "DATE_TIME" ->
                             valor instanceof String;
 
@@ -295,7 +470,7 @@ public class DocumentDefinitionDataValidator
             resultado.agregarError(
                     TIPO_INVALIDO,
                     campo,
-                    elemento.getTipoDato()
+                    tipoDato
             );
         }
 
@@ -308,9 +483,22 @@ public class DocumentDefinitionDataValidator
             String campo,
             ComprobanteValidationResult resultado
     ) {
-        Integer minimo =
-                elemento.getLongitudMinima();
+        validarLongitud(
+                valor,
+                elemento.getLongitudMinima(),
+                elemento.getLongitudMaxima(),
+                campo,
+                resultado
+        );
+    }
 
+    private void validarLongitud(
+            String valor,
+            Integer minimo,
+            Integer maximo,
+            String campo,
+            ComprobanteValidationResult resultado
+    ) {
         if (minimo != null
                 && valor.length() < minimo) {
 
@@ -320,9 +508,6 @@ public class DocumentDefinitionDataValidator
                     minimo
             );
         }
-
-        Integer maximo =
-                elemento.getLongitudMaxima();
 
         if (maximo != null
                 && valor.length() > maximo) {
@@ -422,14 +607,11 @@ public class DocumentDefinitionDataValidator
     }
 
     private void validarPatron(
-            ElementoXsdModel elemento,
+            String patron,
             Object valor,
             String campo,
             ComprobanteValidationResult resultado
     ) {
-        String patron =
-                elemento.getPatron();
-
         if (patron == null
                 || patron.isBlank()) {
             return;

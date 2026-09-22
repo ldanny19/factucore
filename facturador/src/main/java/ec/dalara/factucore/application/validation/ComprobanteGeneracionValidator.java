@@ -36,6 +36,9 @@ public class ComprobanteGeneracionValidator
     private static final String DATO_KEY_REQUERIDA =
             "FACTUCORE.COMPROBANTE.DATO.KEY.REQUERIDA";
 
+    private static final String FECHA_INICIO_REQUERIDA =
+            "FACTUCORE.COMPROBANTE.FECHA_INICIO.REQUERIDA";
+
     private static final String DEFINICION_NO_ENCONTRADA =
             "FACTUCORE.COMPROBANTE.DEFINICION.NO_ENCONTRADA";
 
@@ -59,6 +62,11 @@ public class ComprobanteGeneracionValidator
         }
 
         validarTipoDocumento(
+                request,
+                resultado
+        );
+
+        validarFechaInicio(
                 request,
                 resultado
         );
@@ -90,6 +98,18 @@ public class ComprobanteGeneracionValidator
             resultado.agregarError(
                     TIPO_DOCUMENTO_REQUERIDO,
                     "tipoDocumento"
+            );
+        }
+    }
+
+    private void validarFechaInicio(
+            ComprobanteGeneracionRequest request,
+            ComprobanteValidationResult resultado
+    ) {
+        if (request.getFechaInicio() == null) {
+            resultado.agregarError(
+                    FECHA_INICIO_REQUERIDA,
+                    "fechaInicio"
             );
         }
     }
