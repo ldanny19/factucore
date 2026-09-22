@@ -67,21 +67,6 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
 
-  # ----------------------------------------------------------
-  # CAMUNDA - WORKFLOW
-  # ----------------------------------------------------------
-
-  camunda:
-    bpm:
-      database:
-        type: postgres
-        schema-update: false
-      history-level: full
-      job-execution:
-        enabled: true
-      auto-deployment-enabled: true
-      deployment-resource-pattern: classpath*:/processes/*.bpmn
-
 # ============================================================
 # SERVER
 # ============================================================
@@ -111,8 +96,8 @@ logging:
 
 factucore:
   workflow:
-    motor: camunda
-    version: 7.24.0
+    motor: apache-camel
+    version: 4.10.7
   path:
     base: C:/factucore/facturador
     config: C:/factucore/facturador/config
