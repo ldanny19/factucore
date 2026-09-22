@@ -1,10 +1,8 @@
 package ec.dalara.factucore.messaging.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.config.MessagingProperties;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -110,13 +108,5 @@ public class KafkaMessagingConfiguration {
         ));
 
         return factory;
-    }
-
-    @Bean
-    KafkaConsumerRegistrar kafkaConsumerRegistrar(
-            org.springframework.context.ApplicationContext applicationContext,
-            ConcurrentKafkaListenerContainerFactory<String, EventoMensaje> factory
-    ) {
-        return new KafkaConsumerRegistrar(applicationContext, factory);
     }
 }
