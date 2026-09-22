@@ -36,6 +36,17 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
                         (primero, segundo) -> segundo,
                         java.util.LinkedHashMap::new));
 
+        if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
+            throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
+        }
+
+        // Valores generados por el workflow tienen precedencia sobre los datos de entrada.
+        datos.put("claveAcceso", contexto.getClaveAcceso());
+
+        if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
+            datos.put("secuencial", contexto.getSecuencial());
+        }
+
         String xml = xmlGenerator.generar(definition, datos);
         contexto.setXml(xml);
 
