@@ -334,6 +334,7 @@ CREATE TABLE comprobante (
     ruta_xml_firmado VARCHAR(1000),
     ruta_respuesta_sri VARCHAR(1000),
     ruta_ride VARCHAR(1000),
+    datos_comprobante JSONB NOT NULL,
     estado_registro VARCHAR(20) NOT NULL,
     usuario_creacion VARCHAR(100) NOT NULL,
     usuario_modificacion VARCHAR(100),

@@ -118,6 +118,9 @@ public class Comprobante implements EstadoRegistroEntity {
     @Column(name = "ruta_ride", length = 1000)
     private String rutaRide;
 
+    @Column(name = "datos_comprobante", columnDefinition = "jsonb", nullable = false)
+    private String datosComprobante;
+    
     @Column(name = "estado_registro", nullable = false, length = 20)
     private String estadoRegistro;
 
