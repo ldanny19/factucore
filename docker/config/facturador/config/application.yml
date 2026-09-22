@@ -33,10 +33,6 @@ spring:
     password: ${DB_PASSWORD:usr_factucore}
     driver-class-name: org.postgresql.Driver
 
-    # --------------------------------------------------------
-    # HIKARI
-    # --------------------------------------------------------
-
     hikari:
       pool-name: FactuCoreHikariCP
       maximum-pool-size: 10
@@ -54,7 +50,6 @@ spring:
       ddl-auto: validate
     show-sql: false
     open-in-view: false
-
     properties:
       hibernate:
         format_sql: true
@@ -72,6 +67,20 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
 
+  # ----------------------------------------------------------
+  # CAMUNDA - WORKFLOW
+  # ----------------------------------------------------------
+
+  camunda:
+    bpm:
+      database:
+        type: postgres
+        schema-update: false
+      history-level: full
+      job-execution:
+        enabled: true
+      auto-deployment-enabled: true
+      deployment-resource-pattern: classpath*:/processes/*.bpmn
 
 # ============================================================
 # SERVER
@@ -81,7 +90,6 @@ server:
   port: 8083
   servlet:
     context-path: /factucore-api
-
 
 # ============================================================
 # LOGGING
@@ -97,12 +105,14 @@ logging:
   file:
     name: "${factucore.path.logs}/facturador.log"
 
-
 # ============================================================
 # FACTUCORE - DIRECTORIOS EXTERNOS
 # ============================================================
 
 factucore:
+  workflow:
+    motor: camunda
+    version: 7.24.0
   path:
     base: C:/factucore/facturador
     config: C:/factucore/facturador/config
