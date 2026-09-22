@@ -7,17 +7,20 @@ import ec.dalara.factucore.domain.documentoxsd.DocumentoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.VersionDocumentoXsdModel;
+import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.ElementoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.EnumeracionXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
+import ec.dalara.factucore.infrastructure.persistence.entity.MapeoXsd;
 import ec.dalara.factucore.infrastructure.persistence.repository.AtributoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.DocumentoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.ElementoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.EnumeracionXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.VersionDocumentoXsdRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.MapeoXsdRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +38,7 @@ public class JpaDocumentoDefinitionProvider
     private final ElementoXsdRepository elementoXsdRepository;
     private final AtributoXsdRepository atributoXsdRepository;
     private final EnumeracionXsdRepository enumeracionXsdRepository;
+    private final MapeoXsdRepository mapeoXsdRepository;
 
     @Override
     public Optional<VersionDocumentoXsdModel> obtenerVersionVigente(
@@ -111,6 +115,16 @@ public class JpaDocumentoDefinitionProvider
                         .map(this::crearEnumeracionModel)
                         .toList();
 
+        List<MapeoXsdModel> mapeoModels =
+                mapeoXsdRepository
+                        .findByVersionDocumentoXsdIdAndEstadoRegistro(
+                                version.getId(),
+                                EstadoRegistro.ACTIVO
+                        )
+                        .stream()
+                        .map(this::crearMapeoModel)
+                        .toList();
+
         DocumentoXsdModel documentoModel =
                 new DocumentoXsdModel(
                         documento.getCodigo(),
@@ -128,7 +142,8 @@ public class JpaDocumentoDefinitionProvider
                         versionModel,
                         elementoModels,
                         atributoModels,
-                        enumeracionModels
+                        enumeracionModels,
+                        mapeoModels
                 )
         );
     }
@@ -240,6 +255,23 @@ public class JpaDocumentoDefinitionProvider
                 enumeracion.getValor(),
                 enumeracion.getDescripcion(),
                 enumeracion.getOrden()
+        );
+    }
+
+    private MapeoXsdModel crearMapeoModel(
+            MapeoXsd mapeo
+    ) {
+        return new MapeoXsdModel(
+                mapeo.getId(),
+                mapeo.getVersionDocumentoXsd().getId(),
+                mapeo.getRutaOrigen(),
+                mapeo.getElementoXsd() == null
+                        ? null
+                        : mapeo.getElementoXsd().getId(),
+                mapeo.getAtributoXsd() == null
+                        ? null
+                        : mapeo.getAtributoXsd().getId(),
+                mapeo.getTipoMapeo()
         );
     }
 }
