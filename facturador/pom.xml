@@ -16,7 +16,6 @@
 		<java.version>21</java.version>
 		<spring-boot.version>3.5.16</spring-boot.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
-		<camunda.version>7.24.0</camunda.version>
 		<maven.compiler.release>21</maven.compiler.release>
 	</properties>
 
@@ -52,13 +51,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-
-		<!-- Workflow / BPMN -->
-		<dependency>
-			<groupId>org.camunda.bpm.springboot</groupId>
-			<artifactId>camunda-bpm-spring-boot-starter</artifactId>
-			<version>${camunda.version}</version>
 		</dependency>
 
 		<!-- JPA / Hibernate -->
