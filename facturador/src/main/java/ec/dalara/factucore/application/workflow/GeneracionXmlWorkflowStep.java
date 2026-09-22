@@ -26,9 +26,15 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
     public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
         var solicitud = contexto.getSolicitud();
 
-        var definition = definitionProvider
-                .obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
+        var definition = contexto.getDefinicionDocumento();
+
+        if (definition == null) {
+            definition = definitionProvider
+                    .obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
+                    .orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
+
+            contexto.setDefinicionDocumento(definition);
+        }
 
         var datos = solicitud.getDatos().stream()
                 .collect(java.util.stream.Collectors.toMap(
