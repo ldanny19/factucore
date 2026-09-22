@@ -3,8 +3,10 @@
     <route id="facturador-workflow-procesar">
         <from uri="direct:facturador.workflow.procesar"/>
         <bean ref="camelWorkflowStepExecutor" method="crearContexto"/>
+        <bean ref="camelWorkflowStepExecutor" method="validar"/>
         <bean ref="camelWorkflowStepExecutor" method="asignarSecuencial"/>
         <bean ref="camelWorkflowStepExecutor" method="generarXml"/>
+        <bean ref="camelWorkflowStepExecutor" method="validarXsd"/>
         <bean ref="camelWorkflowStepExecutor" method="firmar"/>
         <bean ref="camelWorkflowStepExecutor" method="enviarSri"/>
         <bean ref="camelWorkflowStepExecutor" method="autorizarSri"/>
