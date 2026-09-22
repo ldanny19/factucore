@@ -53,7 +53,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                     factory.newDocumentBuilder().newDocument();
 
             ElementoXsdModel raiz =
-                    obtenerRaiz(definition);
+                    obtenerRaiz(
+                            definition
+                    );
+
+            String namespaceXml =
+                    definition.getVersion()
+                            .getNamespaceXml();
 
             Element elementoRaiz =
                     crearElemento(
@@ -61,46 +67,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                             raiz,
                             datos,
                             definition,
-                            datos
+                            datos,
+                            namespaceXml
                     );
 
             document.appendChild(elementoRaiz);
 
-            var transformerFactory =
-                    TransformerFactory.newInstance();
-
-            transformerFactory.setFeature(
-                    XMLConstants.FEATURE_SECURE_PROCESSING,
-                    true
-            );
-
-            var transformer =
-                    transformerFactory.newTransformer();
-
-            transformer.setOutputProperty(
-                    OutputKeys.ENCODING,
-                    "UTF-8"
-            );
-
-            transformer.setOutputProperty(
-                    OutputKeys.INDENT,
-                    "yes"
-            );
-
-            transformer.setOutputProperty(
-                    OutputKeys.OMIT_XML_DECLARATION,
-                    "no"
-            );
-
-            StringWriter writer =
-                    new StringWriter();
-
-            transformer.transform(
-                    new DOMSource(document),
-                    new StreamResult(writer)
-            );
-
-            return writer.toString();
+            return serializar(document);
 
         } catch (ApplicationException exception) {
             throw exception;
@@ -115,25 +88,47 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     private ElementoXsdModel obtenerRaiz(
             DocumentDefinitionModel definition
     ) {
-        return definition.getElementos()
-                .stream()
-                .filter(elemento ->
-                        elemento.getElementoPadreId() == null
-                )
-                .sorted(
-                        Comparator.comparing(
-                                ElementoXsdModel::getOrden,
-                                Comparator.nullsLast(
-                                        Integer::compareTo
+        String nombreRaizConfigurado =
+                definition.getVersion()
+                        .getElementoRaiz();
+
+        List<ElementoXsdModel> raices =
+                definition.getElementos()
+                        .stream()
+                        .filter(elemento ->
+                                elemento.getElementoPadreId() == null
+                        )
+                        .filter(elemento ->
+                                nombreRaizConfigurado == null
+                                        || nombreRaizConfigurado.isBlank()
+                                        || Objects.equals(
+                                                elemento.getNombre(),
+                                                nombreRaizConfigurado
+                                        )
+                        )
+                        .sorted(
+                                Comparator.comparing(
+                                        ElementoXsdModel::getOrden,
+                                        Comparator.nullsLast(
+                                                Integer::compareTo
+                                        )
                                 )
                         )
-                )
-                .findFirst()
-                .orElseThrow(() ->
-                        new ApplicationException(
-                                "FACTUCORE.XML.ELEMENTO_RAIZ.NO_DEFINIDO"
-                        )
-                );
+                        .toList();
+
+        if (raices.isEmpty()) {
+            throw new ApplicationException(
+                    "FACTUCORE.XML.ELEMENTO_RAIZ.NO_DEFINIDO"
+            );
+        }
+
+        if (raices.size() > 1) {
+            throw new ApplicationException(
+                    "FACTUCORE.XML.ELEMENTO_RAIZ.MULTIPLE"
+            );
+        }
+
+        return raices.get(0);
     }
 
     private Element crearElemento(
@@ -141,11 +136,14 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             ElementoXsdModel definicion,
             Object valor,
             DocumentDefinitionModel definition,
-            Map<String, Object> contexto
+            Map<String, Object> contexto,
+            String namespaceXml
     ) {
         Element elemento =
-                document.createElement(
-                        definicion.getNombre()
+                crearElementoXml(
+                        document,
+                        definicion.getNombre(),
+                        namespaceXml
                 );
 
         aplicarAtributos(
@@ -155,17 +153,17 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 contexto
         );
 
-        if (valor != null
-                && !esEstructura(valor)) {
-
-            elemento.setTextContent(
-                    convertirValor(valor)
-            );
+        if (esValorSimple(valor)) {
+            if (valor != null) {
+                elemento.setTextContent(
+                        convertirValor(valor)
+                );
+            }
 
             return elemento;
         }
 
-        Map<String, Object> datosHijo =
+        Map<String, Object> contextoLocal =
                 convertirMapa(valor);
 
         List<ElementoXsdModel> hijos =
@@ -188,9 +186,9 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
             Object valorHijo =
                     obtenerValor(
+                            contextoLocal,
                             contexto,
-                            mapeo.getRutaOrigen(),
-                            datosHijo
+                            mapeo.getRutaOrigen()
                     );
 
             if (valorHijo == null) {
@@ -203,11 +201,29 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                     hijo,
                     valorHijo,
                     definition,
-                    contexto
+                    contexto,
+                    namespaceXml
             );
         }
 
         return elemento;
+    }
+
+    private Element crearElementoXml(
+            Document document,
+            String nombre,
+            String namespaceXml
+    ) {
+        if (namespaceXml == null
+                || namespaceXml.isBlank()) {
+
+            return document.createElement(nombre);
+        }
+
+        return document.createElementNS(
+                namespaceXml,
+                nombre
+        );
     }
 
     private void agregarHijo(
@@ -216,37 +232,80 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             ElementoXsdModel definicion,
             Object valor,
             DocumentDefinitionModel definition,
-            Map<String, Object> contexto
+            Map<String, Object> contexto,
+            String namespaceXml
     ) {
         if (valor instanceof Iterable<?> iterable) {
 
             for (Object item : iterable) {
 
-                Element elemento =
+                Element hijo =
                         crearElemento(
                                 document,
                                 definicion,
                                 item,
                                 definition,
-                                contexto
+                                contexto,
+                                namespaceXml
                         );
 
-                padre.appendChild(elemento);
+                padre.appendChild(hijo);
             }
 
             return;
         }
 
-        Element elemento =
+        Element hijo =
                 crearElemento(
                         document,
                         definicion,
                         valor,
                         definition,
-                        contexto
+                        contexto,
+                        namespaceXml
                 );
 
-        padre.appendChild(elemento);
+        padre.appendChild(hijo);
+    }
+
+    private List<ElementoXsdModel> obtenerHijos(
+            ElementoXsdModel padre,
+            DocumentDefinitionModel definition
+    ) {
+        return definition.getElementos()
+                .stream()
+                .filter(elemento ->
+                        Objects.equals(
+                                elemento.getElementoPadreId(),
+                                padre.getId()
+                        )
+                )
+                .sorted(
+                        Comparator.comparing(
+                                ElementoXsdModel::getOrden,
+                                Comparator.nullsLast(
+                                        Integer::compareTo
+                                )
+                        )
+                )
+                .toList();
+    }
+
+    private MapeoXsdModel obtenerMapeoElemento(
+            ElementoXsdModel elemento,
+            DocumentDefinitionModel definition
+    ) {
+        return definition.getMapeos()
+                .stream()
+                .filter(MapeoXsdModel::esElemento)
+                .filter(mapeo ->
+                        Objects.equals(
+                                mapeo.getElementoXsdId(),
+                                elemento.getId()
+                        )
+                )
+                .findFirst()
+                .orElse(null);
     }
 
     private void aplicarAtributos(
@@ -286,39 +345,32 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                         .filter(item ->
                                 Objects.equals(
                                         item.getAtributoXsdId(),
-                                        obtenerIdAtributo(
-                                                atributo,
-                                                definition
-                                        )
+                                        atributo.getId()
                                 )
                         )
                         .findFirst()
                         .orElse(null);
 
-        if (mapeo == null) {
-            if (atributo.getValorPredeterminado() != null) {
-                elemento.setAttribute(
-                        atributo.getNombre(),
-                        atributo.getValorPredeterminado()
-                );
-            }
+        Object valor = null;
 
-            return;
+        if (mapeo != null) {
+            valor =
+                    obtenerRuta(
+                            contexto,
+                            mapeo.getRutaOrigen()
+                    );
         }
-
-        Object valor =
-                obtenerValor(
-                        contexto,
-                        mapeo.getRutaOrigen(),
-                        contexto
-                );
 
         if (valor != null) {
             elemento.setAttribute(
                     atributo.getNombre(),
                     convertirValor(valor)
             );
-        } else if (atributo.getValorPredeterminado() != null) {
+
+            return;
+        }
+
+        if (atributo.getValorPredeterminado() != null) {
             elemento.setAttribute(
                     atributo.getNombre(),
                     atributo.getValorPredeterminado()
@@ -326,116 +378,27 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         }
     }
 
-    private Long obtenerIdAtributo(
-            AtributoXsdModel atributo,
-            DocumentDefinitionModel definition
-    ) {
-        return definition.getMapeos()
-                .stream()
-                .filter(MapeoXsdModel::esAtributo)
-                .filter(mapeo ->
-                        definition.getAtributos()
-                                .stream()
-                                .anyMatch(item ->
-                                        item == atributo
-                                                && Objects.equals(
-                                                mapeo.getAtributoXsdId(),
-                                                buscarIdAtributo(
-                                                        atributo,
-                                                        definition
-                                                )
-                                )
-                        )
-                )
-                .map(MapeoXsdModel::getAtributoXsdId)
-                .findFirst()
-                .orElse(
-                        buscarIdAtributo(
-                                atributo,
-                                definition
-                        )
-                );
-    }
-
-    private Long buscarIdAtributo(
-            AtributoXsdModel atributo,
-            DocumentDefinitionModel definition
-    ) {
-        /*
-         * El modelo actual de AtributoXsdModel no contiene su propio ID.
-         *
-         * La relación de mapeo hacia atributos requiere que el modelo
-         * conserve dicho identificador para resolver correctamente:
-         *
-         * ruta_origen -> atributo_xsd_id.
-         *
-         * Mientras el modelo no exponga ese ID, no es posible realizar
-         * este enlace de forma segura.
-         */
-        return null;
-    }
-
-    private MapeoXsdModel obtenerMapeoElemento(
-            ElementoXsdModel elemento,
-            DocumentDefinitionModel definition
-    ) {
-        return definition.getMapeos()
-                .stream()
-                .filter(MapeoXsdModel::esElemento)
-                .filter(mapeo ->
-                        Objects.equals(
-                                mapeo.getElementoXsdId(),
-                                elemento.getId()
-                        )
-                )
-                .findFirst()
-                .orElse(null);
-    }
-
-    private List<ElementoXsdModel> obtenerHijos(
-            ElementoXsdModel padre,
-            DocumentDefinitionModel definition
-    ) {
-        return definition.getElementos()
-                .stream()
-                .filter(elemento ->
-                        Objects.equals(
-                                elemento.getElementoPadreId(),
-                                padre.getId()
-                        )
-                )
-                .sorted(
-                        Comparator.comparing(
-                                ElementoXsdModel::getOrden,
-                                Comparator.nullsLast(
-                                        Integer::compareTo
-                                )
-                        )
-                )
-                .toList();
-    }
-
     private Object obtenerValor(
-            Map<String, Object> contexto,
-            String ruta,
-            Map<String, Object> contextoLocal
+            Map<String, Object> contextoLocal,
+            Map<String, Object> contextoGlobal,
+            String ruta
     ) {
         if (ruta == null || ruta.isBlank()) {
             return null;
         }
 
-        Object valorLocal =
+        Object valor =
                 obtenerRuta(
                         contextoLocal,
                         ruta
                 );
 
-        if (valorLocal != null) {
-            return valorLocal;
+        if (valor != null) {
+            return valor;
         }
 
         return obtenerRuta(
-                contexto,
+                contextoGlobal,
                 ruta
         );
     }
@@ -444,7 +407,9 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             Map<String, Object> datos,
             String ruta
     ) {
-        if (datos == null) {
+        if (datos == null
+                || ruta == null
+                || ruta.isBlank()) {
             return null;
         }
 
@@ -455,23 +420,74 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         String[] partes =
                 ruta.split("\\.");
 
-        Object actual = datos;
+        return resolverRuta(
+                datos,
+                partes,
+                0
+        );
+    }
 
-        for (String parte : partes) {
-
-            if (!(actual instanceof Map<?, ?> mapa)) {
-                return null;
-            }
-
-            actual =
-                    mapa.get(parte);
-
-            if (actual == null) {
-                return null;
-            }
+    private Object resolverRuta(
+            Object actual,
+            String[] partes,
+            int indice
+    ) {
+        if (actual == null) {
+            return null;
         }
 
-        return actual;
+        if (indice >= partes.length) {
+            return actual;
+        }
+
+        if (actual instanceof Map<?, ?> mapa) {
+
+            Object siguiente =
+                    mapa.get(partes[indice]);
+
+            return resolverRuta(
+                    siguiente,
+                    partes,
+                    indice + 1
+            );
+        }
+
+        if (actual instanceof Iterable<?> iterable) {
+
+            java.util.ArrayList<Object> resultados =
+                    new java.util.ArrayList<>();
+
+            for (Object item : iterable) {
+
+                Object resultado =
+                        resolverRuta(
+                                item,
+                                partes,
+                                indice
+                        );
+
+                if (resultado instanceof Iterable<?> resultadosAnidados) {
+                    for (Object resultadoAnidado :
+                            resultadosAnidados) {
+
+                        resultados.add(
+                                resultadoAnidado
+                        );
+                    }
+
+                } else if (resultado != null) {
+                    resultados.add(resultado);
+                }
+            }
+
+            if (resultados.isEmpty()) {
+                return null;
+            }
+
+            return resultados;
+        }
+
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -485,16 +501,58 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         return new LinkedHashMap<>();
     }
 
-    private boolean esEstructura(
+    private boolean esValorSimple(
             Object valor
     ) {
-        return valor instanceof Map<?, ?>
-                || valor instanceof Iterable<?>;
+        return valor == null
+                || (!(valor instanceof Map<?, ?>)
+                && !(valor instanceof Iterable<?>));
     }
 
     private String convertirValor(
             Object valor
     ) {
         return String.valueOf(valor);
+    }
+
+    private String serializar(
+            Document document
+    ) throws Exception {
+
+        TransformerFactory transformerFactory =
+                TransformerFactory.newInstance();
+
+        transformerFactory.setFeature(
+                XMLConstants.FEATURE_SECURE_PROCESSING,
+                true
+        );
+
+        var transformer =
+                transformerFactory.newTransformer();
+
+        transformer.setOutputProperty(
+                OutputKeys.ENCODING,
+                "UTF-8"
+        );
+
+        transformer.setOutputProperty(
+                OutputKeys.INDENT,
+                "yes"
+        );
+
+        transformer.setOutputProperty(
+                OutputKeys.OMIT_XML_DECLARATION,
+                "no"
+        );
+
+        StringWriter writer =
+                new StringWriter();
+
+        transformer.transform(
+                new DOMSource(document),
+                new StreamResult(writer)
+        );
+
+        return writer.toString();
     }
 }

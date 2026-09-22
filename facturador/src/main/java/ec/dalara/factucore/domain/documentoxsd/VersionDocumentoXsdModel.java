@@ -9,6 +9,8 @@ public final class VersionDocumentoXsdModel {
     private final Long id;
     private final Long documentoXsdId;
     private final String version;
+    private final String namespaceXml;
+    private final String elementoRaiz;
     private final LocalDateTime fechaInicio;
     private final LocalDateTime fechaFin;
 
@@ -16,6 +18,8 @@ public final class VersionDocumentoXsdModel {
             Long id,
             Long documentoXsdId,
             String version,
+            String namespaceXml,
+            String elementoRaiz,
             LocalDateTime fechaInicio,
             LocalDateTime fechaFin
     ) {
@@ -46,6 +50,8 @@ public final class VersionDocumentoXsdModel {
         this.id = id;
         this.documentoXsdId = documentoXsdId;
         this.version = version;
+        this.namespaceXml = namespaceXml;
+        this.elementoRaiz = elementoRaiz;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }
@@ -68,6 +74,14 @@ public final class VersionDocumentoXsdModel {
 
     public String getVersion() {
         return version;
+    }
+
+    public String getNamespaceXml() {
+        return namespaceXml;
+    }
+
+    public String getElementoRaiz() {
+        return elementoRaiz;
     }
 
     public LocalDateTime getFechaInicio() {

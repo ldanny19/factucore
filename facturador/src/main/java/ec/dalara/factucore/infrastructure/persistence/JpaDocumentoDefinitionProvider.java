@@ -160,11 +160,8 @@ public class JpaDocumentoDefinitionProvider
             LocalDateTime fechaEmision
     ) {
         if (codigoDocumento == null
-                || codigoDocumento.isBlank()) {
-            return Optional.empty();
-        }
-
-        if (fechaEmision == null) {
+                || codigoDocumento.isBlank()
+                || fechaEmision == null) {
             return Optional.empty();
         }
 
@@ -212,6 +209,8 @@ public class JpaDocumentoDefinitionProvider
                 version.getId(),
                 version.getDocumentoXsd().getId(),
                 version.getVersion(),
+                version.getNamespaceXml(),
+                version.getElementoRaiz(),
                 version.getFechaInicio(),
                 version.getFechaFin()
         );
