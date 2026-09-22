@@ -32,11 +32,11 @@ public class AsignacionSecuencialWorkflowStep implements WorkflowStep {
 
         Establecimiento establecimiento = establecimientoService
                 .obtenerPorEmpresaYCodigo(solicitud.getIdEmpresa(), solicitud.getCodigoEstablecimiento())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL.NO_ENCONTRADO));
+                .orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
 
         PuntoEmision puntoEmision = puntoEmisionService
                 .obtenerPorEstablecimientoYCodigo(establecimiento.getId(), solicitud.getPuntoEmision())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL.NO_ENCONTRADO));
+                .orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
 
         Long siguiente = secuencialService.obtenerSiguienteSecuencial(
                 puntoEmision.getId(), solicitud.getTipoDocumento());
