@@ -27,6 +27,9 @@ public class ComprobanteGeneracionValidator
     private static final String TIPO_DOCUMENTO_REQUERIDO =
             "FACTUCORE.COMPROBANTE.TIPO_DOCUMENTO.REQUERIDO";
 
+    private static final String FECHA_INICIO_REQUERIDA =
+            "FACTUCORE.COMPROBANTE.FECHA_INICIO.REQUERIDA";
+
     private static final String DATOS_REQUERIDOS =
             "FACTUCORE.COMPROBANTE.DATOS.REQUERIDOS";
 
@@ -35,9 +38,6 @@ public class ComprobanteGeneracionValidator
 
     private static final String DATO_KEY_REQUERIDA =
             "FACTUCORE.COMPROBANTE.DATO.KEY.REQUERIDA";
-
-    private static final String FECHA_INICIO_REQUERIDA =
-            "FACTUCORE.COMPROBANTE.FECHA_INICIO.REQUERIDA";
 
     private static final String DEFINICION_NO_ENCONTRADA =
             "FACTUCORE.COMPROBANTE.DEFINICION.NO_ENCONTRADA";
@@ -51,13 +51,17 @@ public class ComprobanteGeneracionValidator
             ComprobanteGeneracionRequest request
     ) {
         ComprobanteValidationResult resultado =
-                new ComprobanteValidationResult(messageResolver);
+                new ComprobanteValidationResult(
+                        messageResolver
+                );
 
         if (request == null) {
+
             resultado.agregarError(
                     REQUEST_REQUERIDO,
                     null
             );
+
             return resultado;
         }
 
@@ -107,6 +111,7 @@ public class ComprobanteGeneracionValidator
             ComprobanteValidationResult resultado
     ) {
         if (request.getFechaInicio() == null) {
+
             resultado.agregarError(
                     FECHA_INICIO_REQUERIDA,
                     "fechaInicio"
@@ -122,14 +127,17 @@ public class ComprobanteGeneracionValidator
                 request.getDatos();
 
         if (datos == null || datos.isEmpty()) {
+
             resultado.agregarError(
                     DATOS_REQUERIDOS,
                     "datos"
             );
+
             return;
         }
 
-        Set<String> claves = new HashSet<>();
+        Set<String> claves =
+                new HashSet<>();
 
         for (int i = 0; i < datos.size(); i++) {
 
@@ -140,10 +148,12 @@ public class ComprobanteGeneracionValidator
                     "datos[" + i + "]";
 
             if (dato == null) {
+
                 resultado.agregarError(
                         DATO_KEY_REQUERIDA,
                         campo
                 );
+
                 continue;
             }
 
@@ -158,7 +168,10 @@ public class ComprobanteGeneracionValidator
                 continue;
             }
 
-            if (!claves.add(dato.getKey())) {
+            if (!claves.add(
+                    dato.getKey()
+            )) {
+
                 resultado.agregarError(
                         DATO_DUPLICADO,
                         campo + ".key",
@@ -172,9 +185,16 @@ public class ComprobanteGeneracionValidator
             ComprobanteGeneracionRequest request,
             ComprobanteValidationResult resultado
     ) {
+        OffsetDateTime fechaInicio =
+                request.getFechaInicio();
+
+        if (fechaInicio == null) {
+            return;
+        }
+
         LocalDateTime fechaEmision =
                 convertirFecha(
-                        request.getFechaInicio()
+                        fechaInicio
                 );
 
         var definicionOptional =
@@ -185,11 +205,13 @@ public class ComprobanteGeneracionValidator
                         );
 
         if (definicionOptional.isEmpty()) {
+
             resultado.agregarError(
                     DEFINICION_NO_ENCONTRADA,
                     "tipoDocumento",
                     request.getTipoDocumento()
             );
+
             return;
         }
 
@@ -215,6 +237,7 @@ public class ComprobanteGeneracionValidator
                 new LinkedHashMap<>();
 
         for (DatoComprobanteRequest dato : datos) {
+
             resultado.put(
                     dato.getKey(),
                     dato.getValue()

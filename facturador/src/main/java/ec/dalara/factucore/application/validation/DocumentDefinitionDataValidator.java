@@ -76,6 +76,11 @@ public class DocumentDefinitionDataValidator
                         definition.getElementos()
                 );
 
+        Map<Long, AtributoXsdModel> atributosPorId =
+                indexarAtributos(
+                        definition.getAtributos()
+                );
+
         for (MapeoXsdModel mapeo : definition.getMapeos()) {
 
             if (mapeo == null) {
@@ -112,11 +117,25 @@ public class DocumentDefinitionDataValidator
 
             if (mapeo.esAtributo()) {
 
+                AtributoXsdModel atributo =
+                        atributosPorId.get(
+                                mapeo.getAtributoXsdId()
+                        );
+
+                if (atributo == null) {
+                    continue;
+                }
+
+                Object valor =
+                        obtenerValor(
+                                datos,
+                                mapeo.getRutaOrigen()
+                        );
+
                 validarAtributo(
-                        mapeo,
-                        datos,
-                        definition,
-                        elementosPorId,
+                        atributo,
+                        valor,
+                        mapeo.getRutaOrigen(),
                         resultado
                 );
             }
@@ -124,106 +143,25 @@ public class DocumentDefinitionDataValidator
     }
 
     private void validarAtributo(
-            MapeoXsdModel mapeo,
-            Map<String, Object> datos,
-            DocumentDefinitionModel definition,
-            Map<Long, ElementoXsdModel> elementosPorId,
-            ComprobanteValidationResult resultado
-    ) {
-        AtributoXsdModel atributo =
-                encontrarAtributo(
-                        mapeo,
-                        definition
-                );
-
-        if (atributo == null) {
-            return;
-        }
-
-        Object valor =
-                obtenerValor(
-                        datos,
-                        mapeo.getRutaOrigen()
-                );
-
-        String campo =
-                mapeo.getRutaOrigen();
-
-        validarAtributoValor(
-                atributo,
-                valor,
-                campo,
-                resultado
-        );
-    }
-
-    private AtributoXsdModel encontrarAtributo(
-            MapeoXsdModel mapeo,
-            DocumentDefinitionModel definition
-    ) {
-        if (mapeo.getAtributoXsdId() == null) {
-            return null;
-        }
-
-        /*
-         * AtributoXsdModel no posee un ID propio.
-         * El identificador persistido del atributo corresponde
-         * al elemento padre + nombre del atributo.
-         *
-         * Por eso se utiliza la referencia almacenada en
-         * MapeoXsdModel únicamente para localizar el atributo
-         * cuando el modelo disponible lo permite.
-         *
-         * La validación concreta se realiza contra la colección
-         * de atributos de la definición.
-         */
-
-        return definition.getAtributos()
-                .stream()
-                .filter(Objects::nonNull)
-                .filter(atributo ->
-                        Objects.equals(
-                                atributo.getElementoXsdId(),
-                                obtenerElementoPadreId(
-                                        mapeo,
-                                        definition
-                                )
-                        )
-                )
-                .findFirst()
-                .orElse(null);
-    }
-
-    private Long obtenerElementoPadreId(
-            MapeoXsdModel mapeo,
-            DocumentDefinitionModel definition
-    ) {
-        return definition.getElementos()
-                .stream()
-                .filter(Objects::nonNull)
-                .filter(elemento ->
-                        Objects.equals(
-                                elemento.getId(),
-                                mapeo.getElementoXsdId()
-                        )
-                )
-                .map(ElementoXsdModel::getId)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private void validarAtributoValor(
             AtributoXsdModel atributo,
             Object valor,
             String campo,
             ComprobanteValidationResult resultado
     ) {
+        /*
+         * Un atributo con valor predeterminado puede omitirse.
+         * El valor predeterminado será aplicado posteriormente
+         * durante la generación XML.
+         */
         if (valor == null) {
+
+            if (atributo.getValorPredeterminado() != null) {
+                return;
+            }
 
             if (Boolean.TRUE.equals(
                     atributo.getObligatorio()
             )) {
-
                 resultado.agregarError(
                         VALOR_REQUERIDO,
                         campo
@@ -247,17 +185,6 @@ public class DocumentDefinitionDataValidator
 
         if (!tipoValido) {
             return;
-        }
-
-        if (valor instanceof String texto) {
-
-            validarLongitud(
-                    texto,
-                    null,
-                    null,
-                    campo,
-                    resultado
-            );
         }
 
         validarPatron(
@@ -284,8 +211,9 @@ public class DocumentDefinitionDataValidator
         if (ocurrencias < minimo) {
 
             resultado.agregarError(
-                    elemento.getObligatorio() != null
-                            && elemento.getObligatorio()
+                    Boolean.TRUE.equals(
+                            elemento.getObligatorio()
+                    )
                             ? VALOR_REQUERIDO
                             : OCURRENCIAS_MINIMAS,
                     campo,
@@ -356,7 +284,7 @@ public class DocumentDefinitionDataValidator
 
         boolean tipoValido =
                 validarTipo(
-                        elemento,
+                        elemento.getTipoDato(),
                         valor,
                         campo,
                         resultado
@@ -376,7 +304,9 @@ public class DocumentDefinitionDataValidator
             );
         }
 
-        if (esNumerico(elemento.getTipoDato())) {
+        if (esNumerico(
+                elemento.getTipoDato()
+        )) {
 
             validarNumerico(
                     elemento,
@@ -397,20 +327,6 @@ public class DocumentDefinitionDataValidator
                 elemento,
                 valor,
                 definition,
-                campo,
-                resultado
-        );
-    }
-
-    private boolean validarTipo(
-            ElementoXsdModel elemento,
-            Object valor,
-            String campo,
-            ComprobanteValidationResult resultado
-    ) {
-        return validarTipo(
-                elemento.getTipoDato(),
-                valor,
                 campo,
                 resultado
         );
@@ -483,39 +399,25 @@ public class DocumentDefinitionDataValidator
             String campo,
             ComprobanteValidationResult resultado
     ) {
-        validarLongitud(
-                valor,
-                elemento.getLongitudMinima(),
-                elemento.getLongitudMaxima(),
-                campo,
-                resultado
-        );
-    }
-
-    private void validarLongitud(
-            String valor,
-            Integer minimo,
-            Integer maximo,
-            String campo,
-            ComprobanteValidationResult resultado
-    ) {
-        if (minimo != null
-                && valor.length() < minimo) {
+        if (elemento.getLongitudMinima() != null
+                && valor.length()
+                < elemento.getLongitudMinima()) {
 
             resultado.agregarError(
                     LONGITUD_MINIMA,
                     campo,
-                    minimo
+                    elemento.getLongitudMinima()
             );
         }
 
-        if (maximo != null
-                && valor.length() > maximo) {
+        if (elemento.getLongitudMaxima() != null
+                && valor.length()
+                > elemento.getLongitudMaxima()) {
 
             resultado.agregarError(
                     LONGITUD_MAXIMA,
                     campo,
-                    maximo
+                    elemento.getLongitudMaxima()
             );
         }
     }
@@ -657,6 +559,7 @@ public class DocumentDefinitionDataValidator
         List<EnumeracionXsdModel> enumeraciones =
                 definition.getEnumeraciones()
                         .stream()
+                        .filter(Objects::nonNull)
                         .filter(enumeracion ->
                                 Objects.equals(
                                         enumeracion.getElementoXsdId(),
@@ -712,11 +615,33 @@ public class DocumentDefinitionDataValidator
         return resultado;
     }
 
+    private Map<Long, AtributoXsdModel> indexarAtributos(
+            List<AtributoXsdModel> atributos
+    ) {
+        Map<Long, AtributoXsdModel> resultado =
+                new LinkedHashMap<>();
+
+        for (AtributoXsdModel atributo : atributos) {
+
+            if (atributo != null
+                    && atributo.getId() != null) {
+
+                resultado.put(
+                        atributo.getId(),
+                        atributo
+                );
+            }
+        }
+
+        return resultado;
+    }
+
     private Object obtenerValor(
             Map<String, Object> datos,
             String ruta
     ) {
-        if (ruta == null || ruta.isBlank()) {
+        if (ruta == null
+                || ruta.isBlank()) {
             return null;
         }
 
@@ -727,7 +652,8 @@ public class DocumentDefinitionDataValidator
         String[] partes =
                 ruta.split("\\.");
 
-        Object actual = datos;
+        Object actual =
+                datos;
 
         for (String parte : partes) {
 
@@ -783,6 +709,7 @@ public class DocumentDefinitionDataValidator
                 normalizarTipo(tipoDato);
 
         return switch (tipo) {
+
             case "INTEGER",
                  "INT",
                  "LONG",
@@ -790,9 +717,11 @@ public class DocumentDefinitionDataValidator
                  "BYTE",
                  "DECIMAL",
                  "DOUBLE",
-                 "FLOAT" -> true;
+                 "FLOAT" ->
+                    true;
 
-            default -> false;
+            default ->
+                    false;
         };
     }
 
@@ -830,6 +759,7 @@ public class DocumentDefinitionDataValidator
                 tipo.lastIndexOf(':');
 
         if (separador >= 0) {
+
             tipo =
                     tipo.substring(
                             separador + 1

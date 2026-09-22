@@ -66,8 +66,11 @@ public class JpaDocumentoDefinitionProvider
             return Optional.empty();
         }
 
-        VersionDocumentoXsd version = versionOptional.get();
-        DocumentoXsd documento = version.getDocumentoXsd();
+        VersionDocumentoXsd version =
+                versionOptional.get();
+
+        DocumentoXsd documento =
+                version.getDocumentoXsd();
 
         List<ElementoXsd> elementos =
                 elementoXsdRepository
@@ -89,7 +92,9 @@ public class JpaDocumentoDefinitionProvider
                 elementos.stream()
                         .flatMap(elemento ->
                                 atributoXsdRepository
-                                        .findByElementoXsdId(elemento.getId())
+                                        .findByElementoXsdId(
+                                                elemento.getId()
+                                        )
                                         .stream()
                         )
                         .filter(atributo ->
@@ -104,7 +109,9 @@ public class JpaDocumentoDefinitionProvider
                 elementos.stream()
                         .flatMap(elemento ->
                                 enumeracionXsdRepository
-                                        .findByElementoXsdId(elemento.getId())
+                                        .findByElementoXsdId(
+                                                elemento.getId()
+                                        )
                                         .stream()
                         )
                         .filter(enumeracion ->
@@ -152,7 +159,8 @@ public class JpaDocumentoDefinitionProvider
             String codigoDocumento,
             LocalDateTime fechaEmision
     ) {
-        if (codigoDocumento == null || codigoDocumento.isBlank()) {
+        if (codigoDocumento == null
+                || codigoDocumento.isBlank()) {
             return Optional.empty();
         }
 
@@ -173,7 +181,8 @@ public class JpaDocumentoDefinitionProvider
             return Optional.empty();
         }
 
-        DocumentoXsd documento = documentoOptional.get();
+        DocumentoXsd documento =
+                documentoOptional.get();
 
         Optional<VersionDocumentoXsd> version =
                 versionDocumentoXsdRepository
@@ -238,6 +247,7 @@ public class JpaDocumentoDefinitionProvider
             AtributoXsd atributo
     ) {
         return new AtributoXsdModel(
+                atributo.getId(),
                 atributo.getElementoXsd().getId(),
                 atributo.getNombre(),
                 atributo.getTipoDato(),
