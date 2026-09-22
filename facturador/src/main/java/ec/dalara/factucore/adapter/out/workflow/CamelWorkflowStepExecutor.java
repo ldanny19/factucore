@@ -9,6 +9,7 @@ import ec.dalara.factucore.application.workflow.FirmaElectronicaWorkflowStep;
 import ec.dalara.factucore.application.workflow.EnvioSriWorkflowStep;
 import ec.dalara.factucore.application.workflow.AutorizacionSriWorkflowStep;
 import ec.dalara.factucore.application.workflow.GeneracionXmlWorkflowStep;
+import ec.dalara.factucore.application.workflow.GeneracionClaveAccesoWorkflowStep;
 import ec.dalara.factucore.application.workflow.ValidacionComprobanteWorkflowStep;
 import ec.dalara.factucore.application.workflow.ValidacionXsdWorkflowStep;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class CamelWorkflowStepExecutor {
     private final AsignacionSecuencialWorkflowStep asignacionSecuencial;
     private final ValidacionComprobanteWorkflowStep validacionComprobante;
+    private final GeneracionClaveAccesoWorkflowStep generacionClaveAcceso;
     private final ValidacionXsdWorkflowStep validacionXsd;
     private final GeneracionXmlWorkflowStep generacionXml;
     private final FirmaElectronicaWorkflowStep firmaElectronica;
@@ -36,6 +38,11 @@ public class CamelWorkflowStepExecutor {
 
     public ContextoWorkflow asignarSecuencial(ContextoWorkflow contexto) {
         contexto.registrarResultado(asignacionSecuencial.ejecutar(contexto));
+        return contexto;
+    }
+
+    public ContextoWorkflow generarClaveAcceso(ContextoWorkflow contexto) {
+        contexto.registrarResultado(generacionClaveAcceso.ejecutar(contexto));
         return contexto;
     }
 
