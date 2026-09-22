@@ -5,6 +5,8 @@ import ec.dalara.factucore.domain.empresa.EmpresaModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 @Mapper(config=ec.dalara.factucore.infrastructure.mapper.MapStructInfrastructureConfig.class)
 public interface EmpresaEntityMapper {
-    default EmpresaModel toModel(Empresa r){if(r==null)return null;return new EmpresaModel(r.getId(),r.getRuc(),r.getRazonSocial(),r.getNombreComercial(),r.getDireccionMatriz(),r.getObligadoContabilidad(),r.getContribuyenteRimpe());}
-    Empresa toEntity(EmpresaModel model);
+ default EmpresaModel toModel(Empresa e){if(e==null)return null;return new EmpresaModel(e.getId(),e.getRuc(),e.getRazonSocial(),e.getNombreComercial(),e.getDireccionMatriz(),e.getObligadoContabilidad(),e.getContribuyenteRimpe());}
+ @Mapping(target="id",ignore=true)
+ 
+ Empresa toEntity(EmpresaModel model);
 }

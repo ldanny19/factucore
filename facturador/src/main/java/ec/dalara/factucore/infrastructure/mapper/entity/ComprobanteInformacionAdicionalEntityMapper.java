@@ -5,7 +5,8 @@ import ec.dalara.factucore.domain.comprobante.ComprobanteInformacionAdicionalMod
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteInformacionAdicional;
 @Mapper(config=ec.dalara.factucore.infrastructure.mapper.MapStructInfrastructureConfig.class)
 public interface ComprobanteInformacionAdicionalEntityMapper {
- ComprobanteInformacionAdicionalModel toModel(ComprobanteInformacionAdicional entity);
+ default ComprobanteInformacionAdicionalModel toModel(ComprobanteInformacionAdicional e){if(e==null)return null;return new ComprobanteInformacionAdicionalModel(e.getNombre(),e.getValor());}
  @Mapping(target="id",ignore=true)
+ @Mapping(target="comprobante", ignore=true)
  ComprobanteInformacionAdicional toEntity(ComprobanteInformacionAdicionalModel model);
 }

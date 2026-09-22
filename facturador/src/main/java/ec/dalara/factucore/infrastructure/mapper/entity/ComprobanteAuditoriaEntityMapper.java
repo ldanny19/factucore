@@ -5,7 +5,8 @@ import ec.dalara.factucore.domain.comprobante.ComprobanteAuditoriaModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteAuditoria;
 @Mapper(config=ec.dalara.factucore.infrastructure.mapper.MapStructInfrastructureConfig.class)
 public interface ComprobanteAuditoriaEntityMapper {
- ComprobanteAuditoriaModel toModel(ComprobanteAuditoria entity);
+ default ComprobanteAuditoriaModel toModel(ComprobanteAuditoria e){if(e==null)return null;return new ComprobanteAuditoriaModel(e.getEstadoAnterior(),e.getEstadoNuevo(),e.getCodigoError(),e.getMensajeError(),e.getFecha());}
  @Mapping(target="id",ignore=true)
+ @Mapping(target="comprobante", ignore=true)
  ComprobanteAuditoria toEntity(ComprobanteAuditoriaModel model);
 }
