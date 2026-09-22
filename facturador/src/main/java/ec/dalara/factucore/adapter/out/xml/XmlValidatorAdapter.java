@@ -7,6 +7,11 @@ import java.util.Objects;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.Validator;
+
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -19,7 +24,10 @@ import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
 
 @Component
+@RequiredArgsConstructor
 public class XmlValidatorAdapter implements XmlValidatorPort {
+
+	private final XsdSchemaBuilder schemaBuilder;
 
 	@Override
 	public void validar(String xml, DocumentDefinitionModel definition) {
@@ -40,12 +48,22 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			validarAtributos(document.getDocumentElement(), definition);
 
+			validarContraEsquema(xml, definition);
+
 		} catch (ApplicationException exception) {
 			throw exception;
 
 		} catch (Exception exception) {
 			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ERROR");
 		}
+	}
+
+	private void validarContraEsquema(String xml, DocumentDefinitionModel definition) throws Exception {
+		Schema schema = schemaBuilder.construir(definition);
+		Validator validator = schema.newValidator();
+		validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+		validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+		validator.validate(new StreamSource(new StringReader(xml)));
 	}
 
 	private Document parsearXml(String xml) throws Exception {
