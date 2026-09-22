@@ -32,8 +32,8 @@ public class ComprobanteGeneracionRequest {
     @NotNull
     private Long idEmpresa;
 
-    @NotNull
-    private Long idEstablecimiento;
+    @NotBlank
+    private String codigoEstablecimiento;
 
     @NotBlank
     private String puntoEmision;

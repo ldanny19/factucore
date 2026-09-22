@@ -136,6 +136,12 @@ public final class MessageCodes {
 
     public static final String WORKFLOW_RESULTADO_ETAPA_REQUERIDO =
             "FACTUCORE.WORKFLOW.RESULTADO_ETAPA.REQUERIDO";
+    
+    public static final String SECUENCIAL_NO_ENCONTRADO =
+            "FACTUCORE.SECUENCIAL.NO_ENCONTRADO";
+
+    public static final String SECUENCIAL_LIMITE_ALCANZADO =
+            "FACTUCORE.SECUENCIAL.LIMITE_ALCANZADO";
 
     private MessageCodes() {
     }
