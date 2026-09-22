@@ -34,6 +34,12 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
             throw new WorkflowException(MessageCodes.FIRMA_XML_REQUERIDO);
         }
 
+        if (contexto.getXmlFirmado() != null && !contexto.getXmlFirmado().isBlank()) {
+            return ResultadoEtapa.exitosa(
+                    EtapaWorkflow.FIRMA_ELECTRONICA,
+                    "YA_FIRMADA");
+        }
+
         char[] password = passwordPort.obtenerPassword(contexto.getSolicitud().getIdEmpresa());
         try {
             String xmlFirmado = firmaElectronicaService.firmar(
