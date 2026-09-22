@@ -100,12 +100,12 @@ CREATE TABLE configuracion_empresa (
     tipo_dato VARCHAR(30) NOT NULL DEFAULT 'STRING',
     fecha_vigencia_desde TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_vigencia_hasta TIMESTAMP,
-    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-    USUARIO_CREACION VARCHAR(100) NOT NULL,
-    USUARIO_MODIFICACION VARCHAR(100),
-    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FECHA_MODIFICACION TIMESTAMP,
-    OBSERVACION VARCHAR(500),
+    estado_registro VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+	usuario_creacion VARCHAR(100) NOT NULL,
+	usuario_modificacion VARCHAR(100),
+	fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	fecha_modificacion TIMESTAMP,
+	observacion VARCHAR(500),
     CONSTRAINT fk_configuracion_empresa
         FOREIGN KEY (empresa_id) REFERENCES empresa(id),
     CONSTRAINT uk_configuracion_empresa
@@ -388,12 +388,12 @@ CREATE TABLE comprobante_detalle_impuesto (
     base_imponible NUMERIC(14,2) NOT NULL,
     valor NUMERIC(14,2) NOT NULL,
     valor_devolucion_iva NUMERIC(14,2),
-    ESTADO_REGISTRO VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-    USUARIO_CREACION VARCHAR(100) NOT NULL,
-    USUARIO_MODIFICACION VARCHAR(100),
-    FECHA_CREACION TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FECHA_MODIFICACION TIMESTAMP,
-    OBSERVACION VARCHAR(500),
+    estado_registro VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+	usuario_creacion VARCHAR(100) NOT NULL,
+	usuario_modificacion VARCHAR(100),
+	fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	fecha_modificacion TIMESTAMP,
+	observacion VARCHAR(500),
     CONSTRAINT fk_detalle_impuesto_detalle
         FOREIGN KEY (comprobante_detalle_id)
         REFERENCES comprobante_detalle(id)
