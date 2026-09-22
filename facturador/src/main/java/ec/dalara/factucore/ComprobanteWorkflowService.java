@@ -4,7 +4,6 @@ import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.port.in.ComprobanteWorkflowPort;
-import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.application.port.out.XmlValidatorPort;

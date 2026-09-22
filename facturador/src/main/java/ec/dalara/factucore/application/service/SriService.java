@@ -5,21 +5,15 @@ import ec.dalara.factucore.application.port.out.SriPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class SriService {
 
     private final SriPort sriPort;
     private final SriProperties properties;
-
-    public SriService(
-            SriPort sriPort,
-            SriProperties properties) {
-
-        this.sriPort = sriPort;
-        this.properties = properties;
-    }
 
     public SriResponse enviar(String xml) {
 
@@ -29,12 +23,12 @@ public class SriService {
             );
         }
 
-        int maxIntentos = obtenerMaxIntentos();
-
-        Exception ultimaExcepcion = null;
+        int maxIntentos = Math.max(
+                properties.getEnvio().getMaxIntentos(),
+                1
+        );
 
         for (int intento = 1; intento <= maxIntentos; intento++) {
-
             try {
                 return sriPort.recibir(xml);
 
@@ -43,7 +37,12 @@ public class SriService {
 
             } catch (Exception exception) {
 
-                ultimaExcepcion = exception;
+                if (intento == maxIntentos) {
+                    throw new ApplicationException(
+                            MessageCodes.SRI_ERROR_COMUNICACION,
+                            exception.getMessage()
+                    );
+                }
 
                 esperarEntreIntentos(
                         properties.getEnvio().getEsperaMs()
@@ -64,13 +63,12 @@ public class SriService {
             );
         }
 
-        int maxIntentos =
-                obtenerMaxIntentosAutorizacion();
-
-        Exception ultimaExcepcion = null;
+        int maxIntentos = Math.max(
+                properties.getAutorizacion().getMaxIntentos(),
+                1
+        );
 
         for (int intento = 1; intento <= maxIntentos; intento++) {
-
             try {
                 return sriPort.autorizar(claveAcceso);
 
@@ -79,7 +77,12 @@ public class SriService {
 
             } catch (Exception exception) {
 
-                ultimaExcepcion = exception;
+                if (intento == maxIntentos) {
+                    throw new ApplicationException(
+                            MessageCodes.SRI_ERROR_COMUNICACION,
+                            exception.getMessage()
+                    );
+                }
 
                 esperarEntreIntentos(
                         properties.getAutorizacion().getEsperaMs()
@@ -92,22 +95,6 @@ public class SriService {
         );
     }
 
-    private int obtenerMaxIntentos() {
-
-        return Math.max(
-                properties.getEnvio().getMaxIntentos(),
-                1
-        );
-    }
-
-    private int obtenerMaxIntentosAutorizacion() {
-
-        return Math.max(
-                properties.getAutorizacion().getMaxIntentos(),
-                1
-        );
-    }
-
     private void esperarEntreIntentos(long esperaMs) {
 
         if (esperaMs <= 0) {
@@ -115,7 +102,6 @@ public class SriService {
         }
 
         try {
-
             Thread.sleep(esperaMs);
 
         } catch (InterruptedException exception) {
@@ -123,7 +109,8 @@ public class SriService {
             Thread.currentThread().interrupt();
 
             throw new ApplicationException(
-                    MessageCodes.SRI_ERROR_COMUNICACION
+                    MessageCodes.SRI_ERROR_COMUNICACION,
+                    exception.getMessage()
             );
         }
     }
