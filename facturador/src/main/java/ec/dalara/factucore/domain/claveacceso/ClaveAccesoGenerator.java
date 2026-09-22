@@ -71,11 +71,13 @@ public final class ClaveAccesoGenerator {
 			}
 		}
 
-		int resultado = 11 - (suma % 11);
+		int residuo = suma % 11;
 
-		if (resultado == 11) {
+		if (residuo == 0) {
 			return "0";
 		}
+
+		int resultado = 11 - residuo;
 
 		if (resultado == 10) {
 			return "1";
