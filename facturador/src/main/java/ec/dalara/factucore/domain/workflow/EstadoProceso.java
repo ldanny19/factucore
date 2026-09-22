@@ -1,0 +1,16 @@
+package ec.dalara.factucore.domain.workflow;
+
+public enum EstadoProceso {
+
+    RECIBIDO,
+    VALIDADO,
+    SECUENCIAL_ASIGNADO,
+    CLAVE_ACCESO_GENERADA,
+    XML_GENERADO,
+    XML_VALIDADO,
+    FIRMADO,
+    ENVIADO_SRI,
+    AUTORIZADO,
+    RIDE_GENERADO,
+    ERROR
+}
