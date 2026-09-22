@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FirmaElectronicaPort;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.firmaelectronica.CertificadoFirmaModel;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -56,7 +57,7 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 			return new String(documentoFirmado.getBytes(), StandardCharsets.UTF_8);
 
 		} catch (IOException e) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO.ACCESO_ERROR",
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_CERTIFICADO_ACCESO_ERROR,
 					certificado.getRutaCertificado());
 		} finally {
 			Arrays.fill(password, '\0');
@@ -65,21 +66,21 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 
 	private void validarEntrada(String xml, CertificadoFirmaModel certificado, char[] password) {
 		if (xml == null || xml.isBlank()) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.XML.REQUERIDO");
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_XML_REQUERIDO);
 		}
 
 		if (certificado == null) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO.REQUERIDO");
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_CERTIFICADO_REQUERIDO);
 		}
 
 		if (password == null || password.length == 0) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.PASSWORD.REQUERIDO");
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_PASSWORD_REQUERIDO);
 		}
 
 		Path ruta = Path.of(certificado.getRutaCertificado());
 
 		if (!Files.isRegularFile(ruta)) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO.NO_ENCONTRADO",
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_CERTIFICADO_NO_ENCONTRADO,
 					certificado.getRutaCertificado());
 		}
 	}
@@ -88,11 +89,11 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 		var claves = token.getKeys();
 
 		if (claves == null || claves.isEmpty()) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.CLAVE_PRIVADA.NO_ENCONTRADA");
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_CLAVE_PRIVADA_NO_ENCONTRADA);
 		}
 
 		if (claves.size() > 1) {
-			throw new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.CLAVES_PRIVADAS.MULTIPLES");
+			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_CLAVES_PRIVADAS_MULTIPLES);
 		}
 
 		return claves.get(0);
