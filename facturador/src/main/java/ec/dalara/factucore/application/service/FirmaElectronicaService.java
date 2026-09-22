@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FirmaElectronicaPort;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.certificadofirma.CertificadoFirmaModel;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class FirmaElectronicaService {
 
 	public String firmar(Long empresaId, String xml, char[] password, LocalDateTime fecha) {
 		CertificadoFirma certificado = certificadoFirmaService.obtenerVigente(empresaId, fecha).orElseThrow(
-				() -> new ApplicationException("FACTUCORE.FIRMA_ELECTRONICA.CERTIFICADO_VIGENTE.NO_ENCONTRADO",
+				() -> new ApplicationException(MessageCodes.FIRMA_CERTIFICADO_VIGENTE_NO_ENCONTRADO,
 						empresaId, fecha));
 
 		CertificadoFirmaModel modelo = new CertificadoFirmaModel(certificado.getId(), certificado.getEmpresa().getId(),
