@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
@@ -54,6 +55,23 @@ public class CamelWorkflowStepExecutor {
 
     public ContextoWorkflow asignarSecuencial(ContextoWorkflow contexto) {
         registrarResultado(contexto, asignacionSecuencial.ejecutar(contexto));
+        return contexto;
+    }
+
+    @Transactional
+    public ContextoWorkflow reservarComprobante(ContextoWorkflow contexto) {
+        if (contexto == null || contexto.isIdempotente()) {
+            return contexto;
+        }
+
+        asignarSecuencial(contexto);
+
+        if (contexto.isIdempotente()) {
+            return contexto;
+        }
+
+        generarClaveAcceso(contexto);
+        persistirComprobante(contexto);
         return contexto;
     }
 
