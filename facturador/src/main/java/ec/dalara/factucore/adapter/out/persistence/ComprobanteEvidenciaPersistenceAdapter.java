@@ -105,13 +105,17 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
 
         try {
             Files.createDirectories(directorio);
-            respaldarSiExiste(archivo);
+            Path respaldo = respaldarSiExiste(archivo);
 
             ComprobanteEvidencia anterior = evidenciaRepository
                     .findByComprobanteIdAndTipoEvidenciaAndActualTrue(comprobanteId, tipo)
                     .orElse(null);
 
             if (anterior != null) {
+                if (respaldo != null) {
+                    anterior.setRutaArchivo(respaldo.toString());
+                    anterior.setNombreArchivo(respaldo.getFileName().toString());
+                }
                 anterior.setActual(false);
                 anterior.setUsuarioModificacion(usuario);
                 anterior.setFechaModificacion(LocalDateTime.now());
@@ -151,9 +155,9 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
         };
     }
 
-    private void respaldarSiExiste(Path archivo) throws IOException {
+    private Path respaldarSiExiste(Path archivo) throws IOException {
         if (!Files.exists(archivo)) {
-            return;
+            return null;
         }
 
         String nombre = archivo.getFileName().toString();
@@ -165,6 +169,7 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
                 base + "_" + LocalDateTime.now().format(RESPALDO_FORMATTER) + extension);
 
         Files.move(archivo, respaldo, StandardCopyOption.REPLACE_EXISTING);
+        return respaldo;
     }
 
     private Comprobante obtenerComprobante(Long comprobanteId) {
