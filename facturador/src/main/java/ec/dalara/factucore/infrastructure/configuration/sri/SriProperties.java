@@ -46,7 +46,6 @@ public class SriProperties {
 
         private int maxIntentos;
 
-        private int maxConsultas;
 
         private long esperaConsultaMs;
     }
