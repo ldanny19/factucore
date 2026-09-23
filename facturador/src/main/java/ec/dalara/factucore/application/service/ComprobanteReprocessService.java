@@ -31,14 +31,16 @@ public class ComprobanteReprocessService {
         Comprobante comprobante = comprobanteRepository.findByIdAndEstadoRegistro(
                 comprobanteId, EstadoRegistro.ACTIVO).orElse(null);
 
-        if (comprobante == null || !EstadoProceso.AUTORIZACION_PENDIENTE.name().equals(comprobante.getEstadoProceso())) {
+        if (comprobante == null
+                || !EstadoProceso.AUTORIZACION_PENDIENTE.name().equals(comprobante.getEstadoProceso())) {
             return;
         }
 
         final SriResponse respuesta;
         try {
             respuesta = sriService.autorizar(comprobante.getClaveAcceso());
-            evidenciaPort.guardarRespuestaSriAutorizacion(comprobante.getId(), respuesta);
+            String rutaRespuesta = evidenciaPort.guardarRespuestaSriAutorizacion(comprobante.getId(), respuesta);
+            comprobante.setRutaRespuestaSri(rutaRespuesta);
         } catch (RuntimeException exception) {
             comprobante.setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
             long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
@@ -48,8 +50,6 @@ public class ComprobanteReprocessService {
             comprobanteRepository.save(comprobante);
             return;
         }
-
-        comprobante.setNumeroConsultasAutorizacion(comprobante.getNumeroConsultasAutorizacion() + 1);
 
         if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
             comprobante.setEstadoProceso(EstadoProceso.AUTORIZADO.name());
@@ -61,7 +61,8 @@ public class ComprobanteReprocessService {
 
             try {
                 byte[] pdf = ridePort.generar(comprobante);
-                comprobante.setArchivoPdf(pdf);
+                String rutaRide = evidenciaPort.guardarRide(comprobante.getId(), pdf);
+                comprobante.setRutaRide(rutaRide);
                 comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
             } catch (RuntimeException exception) {
                 comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
@@ -76,16 +77,9 @@ public class ComprobanteReprocessService {
                 comprobante.setMensajeError(respuesta.mensajes().get(0).mensaje());
             }
         } else if ("EN PROCESO".equalsIgnoreCase(respuesta.estado())) {
-            int maxConsultas = Math.max(sriProperties.getAutorizacion().getMaxConsultas(), 1);
-            if (comprobante.getNumeroConsultasAutorizacion() >= maxConsultas) {
-                comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-                comprobante.setFechaProximoReproceso(null);
-                comprobante.setCodigoError(MessageCodes.SRI_MAX_CONSULTAS_AUTORIZACION);
-            } else {
-                long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
-                comprobante.setFechaProximoReproceso(
-                        LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
-            }
+            long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
+            comprobante.setFechaProximoReproceso(
+                    LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
         } else {
             comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
             comprobante.setFechaProximoReproceso(null);
