@@ -116,6 +116,7 @@ factucore:
       facturacion: ${FACTUCORE_WORKFLOW_RUTA_FACTURACION:file:${factucore.path.config}/camel/facturacion.xml}
     reproceso:
       habilitado: ${FACTUCORE_WORKFLOW_REPROCESO_HABILITADO:true}
+      bloqueo-ms: ${FACTUCORE_WORKFLOW_REPROCESO_BLOQUEO_MS:60000}
 
   kafka:
     topics:
