@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.application.service.SriService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AutorizacionSriWorkflowStep implements WorkflowStep {
 
+    private final ComprobanteEvidenciaPort evidenciaPort;
     private final SriService sriService;
 
     @Override
@@ -31,6 +33,7 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
         }
 
         SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
+        evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta);
         contexto.setEstadoSri(respuesta.estado());
 
         if (respuesta.exitoso()) {
