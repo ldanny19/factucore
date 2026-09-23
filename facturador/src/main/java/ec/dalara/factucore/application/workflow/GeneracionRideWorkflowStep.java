@@ -32,15 +32,22 @@ public class GeneracionRideWorkflowStep implements WorkflowStep {
         }
 
         var comprobante = contexto.getComprobante();
-        byte[] pdf = ridePort.generar(comprobante);
-        contexto.setRide(pdf);
+        try {
+            byte[] pdf = ridePort.generar(comprobante);
+            contexto.setRide(pdf);
 
-        String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf);
-        comprobante.setRutaRide(ruta);
-        comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
-        comprobante.setFechaProximoReproceso(null);
+            String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf);
+            comprobante.setRutaRide(ruta);
+            comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
+            comprobante.setFechaProximoReproceso(null);
 
-        return ResultadoEtapa.exitosa(etapa(), "RIDE_GENERADO",
-                Map.of("archivoPdfGenerado", true, "rutaRide", ruta));
+            return ResultadoEtapa.exitosa(etapa(), EstadoProceso.RIDE_GENERADO.name(),
+                    Map.of("archivoPdfGenerado", true, "rutaRide", ruta));
+        } catch (RuntimeException exception) {
+            comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
+            comprobante.setFechaProximoReproceso(null);
+            return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
+                    MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
+        }
     }
 }
