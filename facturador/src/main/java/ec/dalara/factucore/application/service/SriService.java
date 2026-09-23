@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.SriPort;
+import ec.dalara.factucore.application.port.out.sri.SriCommunicationException;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
@@ -13,79 +14,79 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SriService {
 
-	private final SriPort sriPort;
-	private final SriProperties properties;
+    private final SriPort sriPort;
+    private final SriProperties properties;
 
-	public SriResponse enviar(String xml) {
+    public SriResponse enviar(String xml) {
 
-		if (xml == null || xml.isBlank()) {
-			throw new ApplicationException(MessageCodes.SRI_XML_REQUERIDO);
-		}
+        if (xml == null || xml.isBlank()) {
+            throw new ApplicationException(MessageCodes.SRI_XML_REQUERIDO);
+        }
 
-		int maxIntentos = Math.max(properties.getEnvio().getMaxIntentos(), 1);
+        int maxIntentos = Math.max(properties.getEnvio().getMaxIntentos(), 1);
 
-		for (int intento = 1; intento <= maxIntentos; intento++) {
-			try {
-				return sriPort.recibir(xml);
+        for (int intento = 1; intento <= maxIntentos; intento++) {
+            try {
+                return sriPort.recibir(xml);
 
-			} catch (ApplicationException exception) {
-				throw exception;
+            } catch (SriCommunicationException exception) {
 
-			} catch (Exception exception) {
+                if (intento == maxIntentos) {
+                    throw new ApplicationException(
+                            MessageCodes.SRI_ERROR_COMUNICACION,
+                            exception.getMessage());
+                }
 
-				if (intento == maxIntentos) {
-					throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
-				}
+                esperarEntreIntentos(properties.getEnvio().getEsperaMs());
+            }
+        }
 
-				esperarEntreIntentos(properties.getEnvio().getEsperaMs());
-			}
-		}
+        throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
+    }
 
-		throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
-	}
+    public SriResponse autorizar(String claveAcceso) {
 
-	public SriResponse autorizar(String claveAcceso) {
+        if (claveAcceso == null || claveAcceso.isBlank()) {
+            throw new ApplicationException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
+        }
 
-		if (claveAcceso == null || claveAcceso.isBlank()) {
-			throw new ApplicationException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
-		}
+        int maxIntentos = Math.max(properties.getAutorizacion().getMaxIntentos(), 1);
 
-		int maxIntentos = Math.max(properties.getAutorizacion().getMaxIntentos(), 1);
+        for (int intento = 1; intento <= maxIntentos; intento++) {
+            try {
+                return sriPort.autorizar(claveAcceso);
 
-		for (int intento = 1; intento <= maxIntentos; intento++) {
-			try {
-				return sriPort.autorizar(claveAcceso);
+            } catch (SriCommunicationException exception) {
 
-			} catch (ApplicationException exception) {
-				throw exception;
+                if (intento == maxIntentos) {
+                    throw new ApplicationException(
+                            MessageCodes.SRI_ERROR_COMUNICACION,
+                            exception.getMessage());
+                }
 
-			} catch (Exception exception) {
+                esperarEntreIntentos(properties.getAutorizacion().getEsperaMs());
+            }
+        }
 
-				if (intento == maxIntentos) {
-					throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
-				}
+        throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
+    }
 
-				esperarEntreIntentos(properties.getAutorizacion().getEsperaMs());
-			}
-		}
+    private void esperarEntreIntentos(long esperaMs) {
 
-		throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
-	}
+        if (esperaMs <= 0) {
+            return;
+        }
 
-	private void esperarEntreIntentos(long esperaMs) {
+        try {
+            Thread.sleep(esperaMs);
 
-		if (esperaMs <= 0) {
-			return;
-		}
+        } catch (InterruptedException exception) {
 
-		try {
-			Thread.sleep(esperaMs);
+            Thread.currentThread().interrupt();
 
-		} catch (InterruptedException exception) {
-
-			Thread.currentThread().interrupt();
-
-			throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
-		}
-	}
+            throw new ApplicationException(
+                    MessageCodes.SRI_ERROR_COMUNICACION,
+                    exception.getMessage());
+        }
+    }
 }
