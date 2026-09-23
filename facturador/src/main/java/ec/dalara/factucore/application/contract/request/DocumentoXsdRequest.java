@@ -27,4 +27,8 @@ public class DocumentoXsdRequest {
 	@NotBlank
 	@Size(max = 50)
 	private String tipoDocumento;
+
+	@NotBlank
+	@Size(max = 20)
+	private String prefijoArchivo;
 }
