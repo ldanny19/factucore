@@ -123,38 +123,8 @@ public class Comprobante implements EstadoRegistroEntity {
 	@Column(name = "ruta_ride", length = 1000)
 	private String rutaRide;
 
-	@Column(name = "archivo_pdf")
-	private byte[] archivoPdf;
-
-	@Column(name = "xml_generado", columnDefinition = "TEXT")
-	private String xmlGenerado;
-
-	@Column(name = "xml_firmado", columnDefinition = "TEXT")
-	private String xmlFirmado;
-
-	@Column(name = "respuesta_sri_recepcion", columnDefinition = "jsonb")
-	private String respuestaSriRecepcion;
-
-	@Column(name = "respuesta_sri_autorizacion", columnDefinition = "jsonb")
-	private String respuestaSriAutorizacion;
-
-	@Column(name = "fecha_generacion_xml")
-	private LocalDateTime fechaGeneracionXml;
-
-	@Column(name = "fecha_firma")
-	private LocalDateTime fechaFirma;
-
-	@Column(name = "fecha_respuesta_sri_recepcion")
-	private LocalDateTime fechaRespuestaSriRecepcion;
-
-	@Column(name = "fecha_respuesta_sri_autorizacion")
-	private LocalDateTime fechaRespuestaSriAutorizacion;
-
 	@Column(name = "fecha_proximo_reproceso")
 	private LocalDateTime fechaProximoReproceso;
-
-	@Column(name = "numero_consultas_autorizacion", nullable = false)
-	private int numeroConsultasAutorizacion;
 
 	@Column(name = "datos_comprobante", columnDefinition = "jsonb", nullable = false)
 	private String datosComprobante;
