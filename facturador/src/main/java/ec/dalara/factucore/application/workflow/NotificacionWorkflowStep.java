@@ -26,15 +26,15 @@ public class NotificacionWorkflowStep implements WorkflowStep {
     @Override
     public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
         if (contexto == null || contexto.getComprobante() == null) {
-            throw new WorkflowException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
+            throw new WorkflowException(MessageCodes.NOTIFICACION_COMPROBANTE_REQUERIDO);
         }
 
         var comprobante = contexto.getComprobante();
         if (!EstadoProceso.RIDE_GENERADO.name().equals(comprobante.getEstadoProceso())
                 && !EstadoProceso.AUTORIZADO.name().equals(comprobante.getEstadoProceso())) {
             return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
-                    MessageCodes.WORKFLOW_RESULTADO_ETAPA_REQUERIDO,
-                    "El comprobante no está listo para notificación");
+                    MessageCodes.NOTIFICACION_PUBLICACION_ERROR,
+                    null);
         }
 
         try {
@@ -43,7 +43,7 @@ public class NotificacionWorkflowStep implements WorkflowStep {
                     Map.of("notificacionPublicada", true));
         } catch (RuntimeException exception) {
             return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
-                    MessageCodes.WORKFLOW_RESULTADO_ETAPA_REQUERIDO, exception.getMessage());
+                    MessageCodes.NOTIFICACION_PUBLICACION_ERROR, null);
         }
     }
 }
