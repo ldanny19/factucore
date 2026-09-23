@@ -3,7 +3,11 @@
     <route id="facturador-workflow-procesar">
         <from uri="direct:facturador.workflow.procesar"/>
         <bean ref="camelWorkflowStepExecutor" method="crearContexto"/>
-        <bean ref="camelWorkflowStepExecutor" method="validar"/>
+        <bean ref="camelWorkflowStepExecutor" method="verificarIdempotencia"/>
+        <choice>
+            <when>
+                <simple>${body.idempotente} == false</simple>
+                <bean ref="camelWorkflowStepExecutor" method="validar"/>
         <bean ref="camelWorkflowStepExecutor" method="asignarSecuencial"/>
         <bean ref="camelWorkflowStepExecutor" method="generarClaveAcceso"/>
         <bean ref="camelWorkflowStepExecutor" method="persistirComprobante"/>
@@ -17,6 +21,8 @@
                 <simple>${body.comprobante.estadoProceso} == 'AUTORIZADO'</simple>
                 <bean ref="camelWorkflowStepExecutor" method="generarRide"/>
                 <bean ref="camelWorkflowStepExecutor" method="publicarNotificacion"/>
+            </when>
+        </choice>
             </when>
         </choice>
         <bean ref="camelWorkflowStepExecutor" method="respuesta"/>
