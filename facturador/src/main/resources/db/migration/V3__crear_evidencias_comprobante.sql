@@ -38,3 +38,8 @@ CREATE INDEX ix_comprobante_evidencia_tipo
     ON comprobante_evidencia (comprobante_id, tipo_evidencia)
     WHERE es_actual = TRUE;
 
+
+ALTER TABLE comprobante
+    DROP COLUMN ruta_xml_firmado,
+    DROP COLUMN ruta_respuesta_sri,
+    DROP COLUMN ruta_ride;
