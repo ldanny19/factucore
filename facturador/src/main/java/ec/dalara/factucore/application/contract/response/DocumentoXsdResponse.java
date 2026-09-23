@@ -23,6 +23,8 @@ public class DocumentoXsdResponse {
 
 	private String tipoDocumento;
 
+	private String prefijoArchivo;
+
 	private String estadoRegistro;
 
 	private String usuarioCreacion;
