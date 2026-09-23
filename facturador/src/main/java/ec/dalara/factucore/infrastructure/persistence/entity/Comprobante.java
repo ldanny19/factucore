@@ -117,15 +117,6 @@ public class Comprobante implements EstadoRegistroEntity {
 	@Column(name = "fecha_autorizacion")
 	private LocalDateTime fechaAutorizacion;
 
-	@Column(name = "ruta_xml_firmado", length = 1000)
-	private String rutaXmlFirmado;
-
-	@Column(name = "ruta_respuesta_sri", length = 1000)
-	private String rutaRespuestaSri;
-
-	@Column(name = "ruta_ride", length = 1000)
-	private String rutaRide;
-
 	@Column(name = "fecha_proximo_reproceso")
 	private LocalDateTime fechaProximoReproceso;
 
