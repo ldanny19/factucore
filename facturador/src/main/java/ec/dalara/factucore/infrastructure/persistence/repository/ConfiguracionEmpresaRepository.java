@@ -8,15 +8,21 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpres
 
 public interface ConfiguracionEmpresaRepository extends BaseRepository<ConfiguracionEmpresa, Long> {
 
-	List<ConfiguracionEmpresa> findByEmpresaId(Long empresaId);
+    List<ConfiguracionEmpresa> findByEmpresaId(Long empresaId);
 
-	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClave(Long empresaId, String clave);
+    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClave(Long empresaId, String clave);
 
-	boolean existsByEmpresaIdAndClave(Long empresaId, String clave);
+    boolean existsByEmpresaIdAndClave(Long empresaId, String clave);
 
-	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
-			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
+    boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesde(
+            Long empresaId, String clave, LocalDateTime fechaVigenciaDesde);
 
-	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
-			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
+    boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesdeAndIdNot(
+            Long empresaId, String clave, LocalDateTime fechaVigenciaDesde, Long id);
+
+    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
+            Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
+
+    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
+            Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
 }
