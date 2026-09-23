@@ -1,18 +1,13 @@
 package ec.dalara.factucore.application.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
-import ec.dalara.factucore.application.port.out.RidePort;
-import ec.dalara.factucore.application.port.out.sri.SriResponse;
+import ec.dalara.factucore.application.workflow.AutorizacionSriWorkflowStep;
+import ec.dalara.factucore.application.workflow.GeneracionRideWorkflowStep;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
-import ec.dalara.factucore.domain.shared.MessageCodes;
+import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
-import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
-import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -21,14 +16,12 @@ import lombok.RequiredArgsConstructor;
 public class ComprobanteReprocessService {
 
     private final ComprobanteRepository comprobanteRepository;
-    private final SriService sriService;
-    private final SriProperties sriProperties;
-    private final RidePort ridePort;
-    private final ComprobanteEvidenciaPort evidenciaPort;
+    private final AutorizacionSriWorkflowStep autorizacionSri;
+    private final GeneracionRideWorkflowStep generacionRide;
 
     @Transactional
     public void reprocesarAutorizacion(Long comprobanteId) {
-        Comprobante comprobante = comprobanteRepository.findByIdAndEstadoRegistro(
+        var comprobante = comprobanteRepository.findByIdAndEstadoRegistro(
                 comprobanteId, EstadoRegistro.ACTIVO).orElse(null);
 
         if (comprobante == null
@@ -36,55 +29,13 @@ public class ComprobanteReprocessService {
             return;
         }
 
-        final SriResponse respuesta;
-        try {
-            respuesta = sriService.autorizar(comprobante.getClaveAcceso());
-            String rutaRespuesta = evidenciaPort.guardarRespuestaSriAutorizacion(comprobante.getId(), respuesta);
-            comprobante.setRutaRespuestaSri(rutaRespuesta);
-        } catch (RuntimeException exception) {
-            comprobante.setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
-            long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
-            comprobante.setFechaProximoReproceso(LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
-            comprobante.setCodigoError(MessageCodes.SRI_ERROR_COMUNICACION);
-            comprobante.setMensajeError(exception.getMessage());
-            comprobanteRepository.save(comprobante);
-            return;
-        }
+        var contexto = ContextoWorkflow.existente(comprobante, null);
+        var resultadoAutorizacion = autorizacionSri.ejecutar(contexto);
+        contexto.registrarResultado(resultadoAutorizacion);
 
-        if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
-            comprobante.setEstadoProceso(EstadoProceso.AUTORIZADO.name());
-            comprobante.setNumeroAutorizacion(respuesta.identificador());
-            comprobante.setFechaAutorizacion(LocalDateTime.now());
-            comprobante.setFechaProximoReproceso(null);
-            comprobante.setCodigoError(null);
-            comprobante.setMensajeError(null);
-
-            try {
-                byte[] pdf = ridePort.generar(comprobante);
-                String rutaRide = evidenciaPort.guardarRide(comprobante.getId(), pdf);
-                comprobante.setRutaRide(rutaRide);
-                comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
-            } catch (RuntimeException exception) {
-                comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-                comprobante.setCodigoError(MessageCodes.RIDE_GENERACION_ERROR);
-                comprobante.setMensajeError(exception.getMessage());
-            }
-        } else if ("NO AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
-            comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-            comprobante.setFechaProximoReproceso(null);
-            if (!respuesta.mensajes().isEmpty()) {
-                comprobante.setCodigoError(respuesta.mensajes().get(0).identificador());
-                comprobante.setMensajeError(respuesta.mensajes().get(0).mensaje());
-            }
-        } else if ("EN PROCESO".equalsIgnoreCase(respuesta.estado())) {
-            long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
-            comprobante.setFechaProximoReproceso(
-                    LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
-        } else {
-            comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-            comprobante.setFechaProximoReproceso(null);
-            comprobante.setCodigoError(MessageCodes.SRI_ESTADO_AUTORIZACION_NO_RECONOCIDO);
-            comprobante.setMensajeError(respuesta.estado());
+        if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
+            var resultadoRide = generacionRide.ejecutar(contexto);
+            contexto.registrarResultado(resultadoRide);
         }
 
         comprobanteRepository.save(comprobante);
