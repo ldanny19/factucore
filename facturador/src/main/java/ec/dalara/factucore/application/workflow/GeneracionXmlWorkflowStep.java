@@ -2,6 +2,7 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
+    private final ComprobanteEvidenciaPort evidenciaPort;
     private final DocumentoDefinitionProvider definitionProvider;
     private final XmlGeneratorPort xmlGenerator;
 
@@ -46,7 +48,6 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
             throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
         }
 
-        // Valores generados por el workflow tienen precedencia sobre los datos de entrada.
         datos.put("claveAcceso", contexto.getClaveAcceso());
 
         if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
@@ -55,6 +56,7 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
         String xml = xmlGenerator.generar(definition, datos);
         contexto.setXml(xml);
+        evidenciaPort.guardarXmlGenerado(contexto.getComprobanteId(), xml);
 
         return ResultadoEtapa.exitosa(
                 EtapaWorkflow.GENERACION_XML, "COMPLETADA",
