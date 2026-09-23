@@ -14,123 +14,42 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SriService {
 
-    private static final String ESTADO_EN_PROCESO = "EN PROCESO";
-
     private final SriPort sriPort;
     private final SriProperties properties;
 
     public SriResponse enviar(String xml) {
-
         if (xml == null || xml.isBlank()) {
             throw new ApplicationException(MessageCodes.SRI_XML_REQUERIDO);
         }
 
         int maxIntentos = Math.max(properties.getEnvio().getMaxIntentos(), 1);
-
         for (int intento = 1; intento <= maxIntentos; intento++) {
             try {
                 return sriPort.recibir(xml);
-
             } catch (SriCommunicationException exception) {
-
                 if (intento == maxIntentos) {
-                    throw new ApplicationException(
-                            MessageCodes.SRI_ERROR_COMUNICACION,
-                            exception.getMessage());
+                    throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
                 }
-
-                esperarEntreIntentos(properties.getEnvio().getEsperaMs());
             }
         }
-
         throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
     }
 
     public SriResponse autorizar(String claveAcceso) {
-
         if (claveAcceso == null || claveAcceso.isBlank()) {
             throw new ApplicationException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
         }
 
         int maxIntentos = Math.max(properties.getAutorizacion().getMaxIntentos(), 1);
-
         for (int intento = 1; intento <= maxIntentos; intento++) {
             try {
                 return sriPort.autorizar(claveAcceso);
-
             } catch (SriCommunicationException exception) {
-
                 if (intento == maxIntentos) {
-                    throw new ApplicationException(
-                            MessageCodes.SRI_ERROR_COMUNICACION,
-                            exception.getMessage());
+                    throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
                 }
-
-                esperarEntreIntentos(properties.getAutorizacion().getEsperaMs());
             }
         }
-
         throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
-    }
-
-    public SriResponse autorizarHastaResultadoFinal(String claveAcceso) {
-
-        if (claveAcceso == null || claveAcceso.isBlank()) {
-            throw new ApplicationException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
-        }
-
-        int maxConsultas = Math.max(properties.getAutorizacion().getMaxConsultas(), 1);
-
-        for (int consulta = 1; consulta <= maxConsultas; consulta++) {
-
-            SriResponse respuesta = autorizar(claveAcceso);
-
-            if (!ESTADO_EN_PROCESO.equalsIgnoreCase(respuesta.estado())
-                    || consulta == maxConsultas) {
-                return respuesta;
-            }
-
-            esperarEntreConsultas(properties.getAutorizacion().getEsperaConsultaMs());
-        }
-
-        throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
-    }
-
-    private void esperarEntreIntentos(long esperaMs) {
-
-        if (esperaMs <= 0) {
-            return;
-        }
-
-        try {
-            Thread.sleep(esperaMs);
-
-        } catch (InterruptedException exception) {
-
-            Thread.currentThread().interrupt();
-
-            throw new ApplicationException(
-                    MessageCodes.SRI_ERROR_COMUNICACION,
-                    exception.getMessage());
-        }
-    }
-
-    private void esperarEntreConsultas(long esperaMs) {
-
-        if (esperaMs <= 0) {
-            return;
-        }
-
-        try {
-            Thread.sleep(esperaMs);
-
-        } catch (InterruptedException exception) {
-
-            Thread.currentThread().interrupt();
-
-            throw new ApplicationException(
-                    MessageCodes.SRI_ERROR_COMUNICACION,
-                    exception.getMessage());
-        }
     }
 }
