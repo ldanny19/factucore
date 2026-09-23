@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 
 @AutoConfiguration
 @EnableConfigurationProperties(MessagingProperties.class)
+@ConditionalOnProperty(prefix = "factucore.messaging", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(prefix = "factucore.messaging", name = "broker", havingValue = "RABBITMQ")
 public class RabbitMessagingConfiguration {
 
