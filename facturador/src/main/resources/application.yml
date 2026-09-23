@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: facturador
+
+factucore:
+  messaging:
+    enabled: true
+    broker: KAFKA
+
+    kafka:
+      bootstrap-servers: localhost:9092
+      security-protocol: PLAINTEXT
+      client-id: factucore-facturador
+      producer:
+        acks: all
+      consumer:
+        auto-offset-reset: earliest
+        enable-auto-commit: false
+        concurrency: 1
+
+    rabbitmq:
+      addresses: localhost:5672
+      username: guest
+      password: guest
+      virtual-host: /
+      exchange-type: topic
+      exchange-prefix: factucore
+      durable: true
+
+    retry:
+      intervalo-ms: 5000
+      max-intentos: 3
+      dlq-habilitada: true
+      sufijo-dlq: .DLQ
+
+  notificacion:
+    topico: factucore.notificacion
+    tipo-evento: COMPROBANTE_AUTORIZADO
+    version-evento: "1.0"
