@@ -178,7 +178,7 @@ public class SriSoapAdapter implements SriPort {
         String estado = obtenerTexto(respuesta, "estado");
         List<SriMensaje> mensajes = obtenerMensajes(respuesta, "comprobante");
         String identificador = obtenerTexto(respuesta, "claveAcceso");
-        return new SriResponse("RECIBIDA".equalsIgnoreCase(estado), estado, identificador, mensajes);
+        return new SriResponse("RECIBIDA".equalsIgnoreCase(estado), estado, identificador, mensajes, xml);
     }
 
     private SriResponse procesarRespuestaAutorizacion(String xml) {
@@ -195,7 +195,7 @@ public class SriSoapAdapter implements SriPort {
         String estado = obtenerTexto(autorizacion, "estado");
         String numeroAutorizacion = obtenerTexto(autorizacion, "numeroAutorizacion");
         List<SriMensaje> mensajes = obtenerMensajes(autorizacion, "autorizacion");
-        return new SriResponse("AUTORIZADO".equalsIgnoreCase(estado), estado, numeroAutorizacion, mensajes);
+        return new SriResponse("AUTORIZADO".equalsIgnoreCase(estado), estado, numeroAutorizacion, mensajes, xml);
     }
 
     private List<SriMensaje> obtenerMensajes(Element contenedor, String elementoContenedor) {
