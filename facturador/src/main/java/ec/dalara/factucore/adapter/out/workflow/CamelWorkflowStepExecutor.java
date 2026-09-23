@@ -13,6 +13,7 @@ import ec.dalara.factucore.application.workflow.GeneracionClaveAccesoWorkflowSte
 import ec.dalara.factucore.application.workflow.ValidacionComprobanteWorkflowStep;
 import ec.dalara.factucore.application.workflow.ValidacionXsdWorkflowStep;
 import ec.dalara.factucore.application.workflow.GeneracionRideWorkflowStep;
+import ec.dalara.factucore.application.workflow.PersistenciaComprobanteWorkflowStep;
 import ec.dalara.factucore.application.service.ComprobanteReprocessService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class CamelWorkflowStepExecutor {
     private final AutorizacionSriWorkflowStep autorizacionSri;
     private final ComprobanteReprocessService comprobanteReprocessService;
     private final GeneracionRideWorkflowStep generacionRide;
+    private final PersistenciaComprobanteWorkflowStep persistenciaComprobante;
 
     public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
         return ContextoWorkflow.nuevo(request);
@@ -47,6 +49,11 @@ public class CamelWorkflowStepExecutor {
 
     public ContextoWorkflow generarClaveAcceso(ContextoWorkflow contexto) {
         contexto.registrarResultado(generacionClaveAcceso.ejecutar(contexto));
+        return contexto;
+    }
+
+    public ContextoWorkflow persistirComprobante(ContextoWorkflow contexto) {
+        contexto.registrarResultado(persistenciaComprobante.ejecutar(contexto));
         return contexto;
     }
 
