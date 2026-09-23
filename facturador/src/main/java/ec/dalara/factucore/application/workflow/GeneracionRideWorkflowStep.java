@@ -8,6 +8,7 @@ import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
+import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
@@ -38,7 +39,7 @@ public class GeneracionRideWorkflowStep implements WorkflowStep {
         byte[] pdf = ridePort.generar(comprobante);
         contexto.setRide(pdf);
         comprobante.setArchivoPdf(pdf);
-        comprobante.setEstadoProceso("RIDE_GENERADO");
+        comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
         comprobante.setFechaProximoReproceso(null);
 
         return ResultadoEtapa.exitosa(etapa(), "RIDE_GENERADO",
