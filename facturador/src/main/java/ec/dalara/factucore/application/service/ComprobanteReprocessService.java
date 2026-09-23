@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
@@ -23,6 +24,7 @@ public class ComprobanteReprocessService {
     private final SriService sriService;
     private final SriProperties sriProperties;
     private final RidePort ridePort;
+    private final ComprobanteEvidenciaPort evidenciaPort;
 
     @Transactional
     public void reprocesarAutorizacion(Long comprobanteId) {
@@ -36,6 +38,7 @@ public class ComprobanteReprocessService {
         final SriResponse respuesta;
         try {
             respuesta = sriService.autorizar(comprobante.getClaveAcceso());
+            evidenciaPort.guardarRespuestaSriAutorizacion(comprobante.getId(), respuesta);
         } catch (RuntimeException exception) {
             comprobante.setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
             long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
