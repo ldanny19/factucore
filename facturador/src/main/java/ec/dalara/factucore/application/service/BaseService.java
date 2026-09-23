@@ -5,50 +5,89 @@ import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.shared.EstadoRegistroEntity;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.repository.BaseRepository;
 
 @Transactional(readOnly = true)
 public abstract class BaseService<T extends EstadoRegistroEntity> {
 
-	protected abstract BaseRepository<T, Long> getRepository();
+    protected abstract BaseRepository<T, Long> getRepository();
 
-	public Optional<T> obtenerPorId(Long id) {
-		return getRepository().findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO);
-	}
+    public Optional<T> obtenerPorId(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return getRepository().findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO);
+    }
 
-	public List<T> listar() {
-		return getRepository().findByEstadoRegistroNot(EstadoRegistro.ELIMINADO);
-	}
+    public List<T> listar() {
+        return getRepository().findByEstadoRegistroNot(EstadoRegistro.ELIMINADO);
+    }
 
-	@Transactional
-	public T guardar(T entidad) {
+    @Transactional
+    public T guardar(T entidad) {
+        if (entidad == null) {
+            throw new ApplicationException(MessageCodes.REGISTRO_REQUERIDO);
+        }
 
-		if (entidad.getEstadoRegistro() == null) {
-			entidad.setEstadoRegistro(EstadoRegistro.ACTIVO);
-		}
+        if (entidad.getEstadoRegistro() == null) {
+            entidad.setEstadoRegistro(EstadoRegistro.ACTIVO);
+        }
 
-		return getRepository().save(entidad);
-	}
+        if (EstadoRegistro.ELIMINADO.equals(entidad.getEstadoRegistro())) {
+            throw new ApplicationException(MessageCodes.REGISTRO_ELIMINADO_NO_MODIFICABLE);
+        }
 
-	@Transactional
-	public T inactivar(Long id) {
+        return getRepository().save(entidad);
+    }
 
-		T entidad = getRepository().findById(id).orElseThrow();
+    @Transactional
+    public T inactivar(Long id) {
+        T entidad = obtenerAdministrable(id);
+        if (!EstadoRegistro.ACTIVO.equals(entidad.getEstadoRegistro())) {
+            throw new ApplicationException(MessageCodes.REGISTRO_ESTADO_INVALIDO, EstadoRegistro.ACTIVO);
+        }
 
-		entidad.setEstadoRegistro(EstadoRegistro.INACTIVO);
+        entidad.setEstadoRegistro(EstadoRegistro.INACTIVO);
+        return getRepository().save(entidad);
+    }
 
-		return getRepository().save(entidad);
-	}
+    @Transactional
+    public T reactivar(Long id) {
+        if (id == null) {
+            throw new ApplicationException(MessageCodes.REGISTRO_ID_REQUERIDO);
+        }
 
-	@Transactional
-	public T eliminar(Long id) {
+        T entidad = getRepository().findByIdAndEstadoRegistro(id, EstadoRegistro.INACTIVO)
+                .orElseThrow(() -> new ApplicationException(MessageCodes.REGISTRO_NO_ENCONTRADO, id));
 
-		T entidad = getRepository().findById(id).orElseThrow();
+        entidad.setEstadoRegistro(EstadoRegistro.ACTIVO);
+        return getRepository().save(entidad);
+    }
 
-		entidad.setEstadoRegistro(EstadoRegistro.ELIMINADO);
+    @Transactional
+    public T eliminar(Long id) {
+        T entidad = obtenerAdministrable(id);
+        if (!EstadoRegistro.ACTIVO.equals(entidad.getEstadoRegistro())
+                && !EstadoRegistro.INACTIVO.equals(entidad.getEstadoRegistro())) {
+            throw new ApplicationException(MessageCodes.REGISTRO_ESTADO_INVALIDO,
+                    EstadoRegistro.ACTIVO + "/" + EstadoRegistro.INACTIVO);
+        }
 
-		return getRepository().save(entidad);
-	}
+        entidad.setEstadoRegistro(EstadoRegistro.ELIMINADO);
+        return getRepository().save(entidad);
+    }
+
+    private T obtenerAdministrable(Long id) {
+        if (id == null) {
+            throw new ApplicationException(MessageCodes.REGISTRO_ID_REQUERIDO);
+        }
+
+        return getRepository().findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
+                .or(() -> getRepository().findByIdAndEstadoRegistro(id, EstadoRegistro.INACTIVO))
+                .orElseThrow(() -> new ApplicationException(MessageCodes.REGISTRO_NO_ENCONTRADO, id));
+    }
 }
