@@ -37,65 +37,79 @@ public class CamelWorkflowStepExecutor {
     }
 
     public ContextoWorkflow validar(ContextoWorkflow contexto) {
-        contexto.registrarResultado(validacion.ejecutar(contexto));
+        registrarResultado(contexto, validacion.ejecutar(contexto));
         return contexto;
     }
 
     public ContextoWorkflow asignarSecuencial(ContextoWorkflow contexto) {
-        contexto.registrarResultado(asignacionSecuencial.ejecutar(contexto));
+        registrarResultado(contexto, asignacionSecuencial.ejecutar(contexto));
         return contexto;
     }
 
     public ContextoWorkflow generarClaveAcceso(ContextoWorkflow contexto) {
-        contexto.registrarResultado(generacionClaveAcceso.ejecutar(contexto));
+        registrarResultado(contexto, generacionClaveAcceso.ejecutar(contexto));
         return contexto;
     }
 
     public ContextoWorkflow persistirComprobante(ContextoWorkflow contexto) {
-        contexto.registrarResultado(persistenciaComprobante.ejecutar(contexto));
+        registrarResultado(contexto, persistenciaComprobante.ejecutar(contexto));
         return contexto;
     }
 
     public ContextoWorkflow generarXml(ContextoWorkflow contexto) {
-        contexto.registrarResultado(generacionXml.ejecutar(contexto));
+        registrarResultado(contexto, generacionXml.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow validarXsd(ContextoWorkflow contexto) {
-        contexto.registrarResultado(validacionXsd.ejecutar(contexto));
+        registrarResultado(contexto, validacionXsd.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow firmar(ContextoWorkflow contexto) {
-        contexto.registrarResultado(firmaElectronica.ejecutar(contexto));
+        registrarResultado(contexto, firmaElectronica.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow enviarSri(ContextoWorkflow contexto) {
-        contexto.registrarResultado(envioSri.ejecutar(contexto));
+        registrarResultado(contexto, envioSri.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow autorizarSri(ContextoWorkflow contexto) {
-        contexto.registrarResultado(autorizacionSri.ejecutar(contexto));
+        registrarResultado(contexto, autorizacionSri.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow generarRide(ContextoWorkflow contexto) {
-        contexto.registrarResultado(generacionRide.ejecutar(contexto));
+        registrarResultado(contexto, generacionRide.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow publicarNotificacion(ContextoWorkflow contexto) {
-        contexto.registrarResultado(notificacion.ejecutar(contexto));
+        registrarResultado(contexto, notificacion.ejecutar(contexto));
         persistirCambios(contexto);
         return contexto;
+    }
+
+    private void registrarResultado(ContextoWorkflow contexto, ec.dalara.factucore.domain.workflow.ResultadoEtapa resultado) {
+        contexto.registrarResultado(resultado);
+
+        if (contexto.getComprobante() != null) {
+            if (!resultado.isExitosa()) {
+                contexto.getComprobante().setCodigoError(resultado.getCodigoError());
+                contexto.getComprobante().setMensajeError(resultado.getMensaje());
+            } else if (!EstadoProceso.ERROR.name().equals(resultado.getEstado())) {
+                contexto.getComprobante().setCodigoError(null);
+                contexto.getComprobante().setMensajeError(null);
+            }
+        }
     }
 
     private void persistirCambios(ContextoWorkflow contexto) {

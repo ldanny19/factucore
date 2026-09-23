@@ -8,6 +8,7 @@ import ec.dalara.factucore.application.workflow.GeneracionRideWorkflowStep;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +37,14 @@ public class ComprobanteReprocessService {
         if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
             var resultadoRide = generacionRide.ejecutar(contexto);
             contexto.registrarResultado(resultadoRide);
+        }
+
+        if (!resultadoAutorizacion.isExitosa()) {
+            comprobante.setCodigoError(resultadoAutorizacion.getCodigoError());
+            comprobante.setMensajeError(resultadoAutorizacion.getMensaje());
+        } else if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
+            comprobante.setCodigoError(null);
+            comprobante.setMensajeError(null);
         }
 
         comprobanteRepository.save(comprobante);
