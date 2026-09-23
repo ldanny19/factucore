@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.application.service.SriService;
+import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
+import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
@@ -19,6 +21,7 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 
     private final ComprobanteEvidenciaPort evidenciaPort;
     private final SriService sriService;
+    private final SriProperties sriProperties;
 
     @Override
     public EtapaWorkflow etapa() {
@@ -37,17 +40,27 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
         contexto.getComprobante().setRutaRespuestaSri(ruta);
         contexto.setEstadoSri(respuesta.estado());
 
-        if (respuesta.exitoso()) {
+        if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
             contexto.setNumeroAutorizacion(respuesta.identificador());
-            return ResultadoEtapa.exitosa(etapa(), respuesta.estado(),
-                    Map.of("numeroAutorizacion",
-                            respuesta.identificador() == null ? "" : respuesta.identificador()));
+            contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZADO.name());
+            contexto.getComprobante().setFechaProximoReproceso(null);
+            contexto.getComprobante().setNumeroAutorizacion(respuesta.identificador());
+            return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZADO.name(),
+                    Map.of("numeroAutorizacion", respuesta.identificador() == null ? "" : respuesta.identificador()));
         }
 
+        if ("EN PROCESO".equalsIgnoreCase(respuesta.estado())) {
+            long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
+            contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
+            contexto.getComprobante().setFechaProximoReproceso(java.time.LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
+            return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name());
+        }
+
+        contexto.getComprobante().setEstadoProceso(EstadoProceso.ERROR.name());
+        contexto.getComprobante().setFechaProximoReproceso(null);
         var mensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
-        return ResultadoEtapa.fallida(etapa(), respuesta.estado(),
-                mensaje == null || mensaje.identificador() == null
-                        ? MessageCodes.SRI_RESPUESTA_INVALIDA : mensaje.identificador(),
+        return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
+                mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA : mensaje.identificador(),
                 mensaje == null ? null : mensaje.mensaje());
     }
 }
