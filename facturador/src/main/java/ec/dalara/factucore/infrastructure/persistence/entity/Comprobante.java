@@ -34,6 +34,9 @@ public class Comprobante implements EstadoRegistroEntity {
 	@TableGenerator(name = "generador_comprobante", table = "hibernate_sequences", pkColumnName = "sequence_name", valueColumnName = "next_val", pkColumnValue = "comprobante", allocationSize = 1)
 	private Long id;
 
+	@Column(name = "id_transaccion", nullable = false, length = 100)
+	private String idTransaccion;
+
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "empresa_id", nullable = false)
 	private Empresa empresa;
