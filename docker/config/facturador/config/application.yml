@@ -105,7 +105,9 @@ factucore:
 
     autorizacion:
       espera-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_MS:5000}
-      max-intentos: ${FACTUCORE_SRI_AUTORIZACION_MAX_INTENTOS:5}
+      max-intentos: ${FACTUCORE_SRI_AUTORIZACION_MAX_INTENTOS:3}
+      max-consultas: ${FACTUCORE_SRI_AUTORIZACION_MAX_CONSULTAS:5}
+      espera-consulta-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_CONSULTA_MS:5000}
 
   workflow:
     motor: apache-camel
