@@ -2,7 +2,6 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
-import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -15,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
-    private final ComprobanteEvidenciaPort evidenciaPort;
     private final DocumentoDefinitionProvider definitionProvider;
     private final XmlGeneratorPort xmlGenerator;
 
@@ -27,14 +25,13 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
     @Override
     public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
         var solicitud = contexto.getSolicitud();
-
         var definition = contexto.getDefinicionDocumento();
 
         if (definition == null) {
             definition = definitionProvider
-                    .obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
+                    .obtenerDefinicionVigente(solicitud.getTipoDocumento(),
+                            solicitud.getFechaInicio().toLocalDateTime())
                     .orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
-
             contexto.setDefinicionDocumento(definition);
         }
 
@@ -49,17 +46,14 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
         }
 
         datos.put("claveAcceso", contexto.getClaveAcceso());
-
         if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
             datos.put("secuencial", contexto.getSecuencial());
         }
 
         String xml = xmlGenerator.generar(definition, datos);
         contexto.setXml(xml);
-        evidenciaPort.guardarXmlGenerado(contexto.getComprobanteId(), xml);
 
-        return ResultadoEtapa.exitosa(
-                EtapaWorkflow.GENERACION_XML, "COMPLETADA",
+        return ResultadoEtapa.exitosa(etapa(), "COMPLETADA",
                 java.util.Map.of("xmlGenerado", true));
     }
 }
