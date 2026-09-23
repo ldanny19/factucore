@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import ec.dalara.factucore.application.port.out.WorkflowExecutionPort;\nimport ec.dalara.factucore.infrastructure.configuration.workflow.WorkflowReprocessProperties;
+import ec.dalara.factucore.application.port.out.WorkflowExecutionPort;
+import ec.dalara.factucore.infrastructure.configuration.workflow.WorkflowReprocessProperties;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 
