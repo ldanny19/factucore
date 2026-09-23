@@ -97,7 +97,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
                 .direccionEstablecimientoEmisor(emision.establecimiento().getDireccion())
                 .estadoProceso(EstadoProceso.CLAVE_ACCESO_GENERADA.name())
                 .datosComprobante(serializarDatos(solicitud))
-                .estadoRegistro(EstadoRegistro.ACTIVO.name())
+                .estadoRegistro(EstadoRegistro.ACTIVO)
                 .usuarioCreacion(solicitud.getUsuario())
                 .fechaCreacion(LocalDateTime.now())
                 .build();
