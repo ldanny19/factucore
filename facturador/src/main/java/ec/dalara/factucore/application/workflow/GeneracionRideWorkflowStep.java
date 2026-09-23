@@ -36,7 +36,7 @@ public class GeneracionRideWorkflowStep implements WorkflowStep {
             byte[] pdf = ridePort.generar(comprobante);
             contexto.setRide(pdf);
 
-            String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf);
+            String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, contexto.getSolicitud().getUsuario());
             comprobante.setRutaRide(ruta);
             comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
             comprobante.setFechaProximoReproceso(null);
