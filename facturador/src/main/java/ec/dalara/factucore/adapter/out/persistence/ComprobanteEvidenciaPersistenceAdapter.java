@@ -14,7 +14,9 @@ import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteRespuestaSri;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRespuestaSriRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -23,6 +25,7 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
 
     private final ComprobanteRepository comprobanteRepository;
     private final ObjectMapper objectMapper;
+    private final ComprobanteRespuestaSriRepository respuestaSriRepository;
 
     @Override
     @Transactional
@@ -46,24 +49,45 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
     @Transactional
     public void guardarRespuestaSriRecepcion(Long comprobanteId, SriResponse respuesta) {
         Comprobante comprobante = obtener(comprobanteId);
-        comprobante.setRespuestaSriRecepcion(serializar(respuesta));
-        comprobante.setFechaRespuestaSriRecepcion(LocalDateTime.now());
+        String evidencia = serializar(respuesta);
+        LocalDateTime ahora = LocalDateTime.now();
+        comprobante.setRespuestaSriRecepcion(evidencia);
+        comprobante.setFechaRespuestaSriRecepcion(ahora);
         comprobanteRepository.save(comprobante);
+        guardarHistorial(comprobante, "RECEPCION", respuesta, evidencia, ahora);
     }
 
     @Override
     @Transactional
     public void guardarRespuestaSriAutorizacion(Long comprobanteId, SriResponse respuesta) {
         Comprobante comprobante = obtener(comprobanteId);
-        comprobante.setRespuestaSriAutorizacion(serializar(respuesta));
-        comprobante.setFechaRespuestaSriAutorizacion(LocalDateTime.now());
+        String evidencia = serializar(respuesta);
+        LocalDateTime ahora = LocalDateTime.now();
+        comprobante.setRespuestaSriAutorizacion(evidencia);
+        comprobante.setFechaRespuestaSriAutorizacion(ahora);
         comprobanteRepository.save(comprobante);
+        guardarHistorial(comprobante, "AUTORIZACION", respuesta, evidencia, ahora);
     }
 
     private Comprobante obtener(Long comprobanteId) {
         return comprobanteRepository.findByIdAndEstadoRegistro(comprobanteId, EstadoRegistro.ACTIVO)
                 .orElseThrow(() -> new ApplicationException(
                         MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO));
+    }
+
+    private void guardarHistorial(Comprobante comprobante, String tipoRespuesta, SriResponse respuesta,
+            String evidencia, LocalDateTime fechaRespuesta) {
+        respuestaSriRepository.save(ComprobanteRespuestaSri.builder()
+                .comprobante(comprobante)
+                .tipoRespuesta(tipoRespuesta)
+                .estado(respuesta.estado())
+                .identificador(respuesta.identificador())
+                .respuesta(evidencia)
+                .fechaRespuesta(fechaRespuesta)
+                .estadoRegistro(EstadoRegistro.ACTIVO.name())
+                .usuarioCreacion("SISTEMA")
+                .fechaCreacion(fechaRespuesta)
+                .build());
     }
 
     private String serializar(SriResponse respuesta) {
