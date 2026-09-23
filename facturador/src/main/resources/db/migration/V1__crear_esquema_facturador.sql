@@ -331,6 +331,7 @@ CREATE TABLE comprobante (
     mensaje_error VARCHAR(2000),
     numero_autorizacion VARCHAR(100),
     fecha_autorizacion TIMESTAMP,
+    fecha_proximo_reproceso TIMESTAMP,
     ruta_xml_firmado VARCHAR(1000),
     ruta_respuesta_sri VARCHAR(1000),
     ruta_ride VARCHAR(1000),
@@ -524,6 +525,9 @@ CREATE INDEX idx_comprobante_version_documento_xsd
 
 CREATE INDEX idx_comprobante_estado_proceso
     ON comprobante (estado_proceso);
+
+CREATE INDEX idx_comprobante_reproceso_autorizacion
+    ON comprobante (estado_proceso, fecha_proximo_reproceso);
 
 CREATE INDEX idx_comprobante_fecha_emision
     ON comprobante (fecha_emision);
