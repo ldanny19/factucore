@@ -34,4 +34,7 @@ CREATE INDEX ix_comprobante_evidencia_comprobante
     ON comprobante_evidencia (comprobante_id);
 
 CREATE INDEX ix_comprobante_evidencia_tipo
-    ON comprobante_evidencia (tipo_evidencia);
+    ON comprobante_evidencia (tipo_evidencia);CREATE UNIQUE INDEX uk_comprobante_evidencia_actual
+    ON comprobante_evidencia (comprobante_id, tipo_evidencia)
+    WHERE es_actual = TRUE;
+
