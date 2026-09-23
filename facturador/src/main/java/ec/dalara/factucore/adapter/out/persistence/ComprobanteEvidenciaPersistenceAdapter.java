@@ -65,7 +65,8 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
             Path directorio = Path.of(directorioDocumentos, "comprobantes", comprobanteId.toString());
             Files.createDirectories(directorio);
             Path archivo = directorio.resolve(tipo + "." + extension);
-            Files.write(archivo, contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);\n            return archivo.toString();
+            Files.write(archivo, contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            return archivo.toString();
         } catch (IOException exception) {
             throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
         }
