@@ -6,6 +6,7 @@
         <bean ref="camelWorkflowStepExecutor" method="validar"/>
         <bean ref="camelWorkflowStepExecutor" method="asignarSecuencial"/>
         <bean ref="camelWorkflowStepExecutor" method="generarClaveAcceso"/>
+        <bean ref="camelWorkflowStepExecutor" method="persistirComprobante"/>
         <bean ref="camelWorkflowStepExecutor" method="generarXml"/>
         <bean ref="camelWorkflowStepExecutor" method="validarXsd"/>
         <bean ref="camelWorkflowStepExecutor" method="firmar"/>
