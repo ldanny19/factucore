@@ -10,4 +10,5 @@ import lombok.Setter;
 public class WorkflowReprocessProperties {
     private boolean habilitado = true;
     private long intervaloMs = 5000;
+    private long bloqueoMs = 60000;
 }
