@@ -17,6 +17,7 @@ import org.springframework.kafka.core.ProducerFactory;
 
 @AutoConfiguration
 @EnableConfigurationProperties(MessagingProperties.class)
+@ConditionalOnProperty(prefix = "factucore.messaging", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(prefix = "factucore.messaging", name = "broker", havingValue = "KAFKA", matchIfMissing = true)
 public class KafkaMessagingConfiguration {
 
