@@ -13,7 +13,7 @@
         <bean ref="camelWorkflowStepExecutor" method="autorizarSri"/>
         <choice>
             <when>
-                <simple>\${body.numeroAutorizacion} != null and \${body.numeroAutorizacion} != ''</simple>
+                <simple>${body.numeroAutorizacion} != null and ${body.numeroAutorizacion} != ''</simple>
                 <bean ref="camelWorkflowStepExecutor" method="generarRide"/>
             </when>
         </choice>
