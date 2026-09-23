@@ -307,6 +307,7 @@ CREATE TABLE mapeo_xsd (
 CREATE TABLE comprobante (
     id BIGINT PRIMARY KEY,
     empresa_id BIGINT NOT NULL,
+    id_transaccion VARCHAR(100) NOT NULL,
     establecimiento_id BIGINT NOT NULL,
     punto_emision_id BIGINT NOT NULL,
     documento_xsd_id BIGINT NOT NULL,
@@ -353,6 +354,8 @@ CREATE TABLE comprobante (
     CONSTRAINT fk_comprobante_version_documento_xsd
         FOREIGN KEY (version_documento_xsd_id)
         REFERENCES version_documento_xsd(id),
+    CONSTRAINT uk_comprobante_empresa_id_transaccion
+        UNIQUE (empresa_id, id_transaccion),
     CONSTRAINT uk_comprobante_clave_acceso
         UNIQUE (clave_acceso)
 );
