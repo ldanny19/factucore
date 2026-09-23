@@ -13,9 +13,11 @@ import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 public interface ComprobanteRepository extends BaseRepository<Comprobante, Long> {
 
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
+	Optional<Comprobante> findByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 
 	boolean existsByClaveAcceso(String claveAcceso);
 	boolean existsByClaveAccesoAndIdNot(String claveAcceso, Long id);
+	boolean existsByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 
 	Optional<Comprobante> findByEmpresaIdAndEstablecimientoIdAndPuntoEmisionIdAndCodigoDocumentoAndSecuencial(
 			Long empresaId, Long establecimientoId, Long puntoEmisionId, String codigoDocumento, String secuencial);
