@@ -9,4 +9,6 @@ public interface DocumentoXsdRepository extends BaseRepository<DocumentoXsd, Lon
 	Optional<DocumentoXsd> findByCodigo(String codigo);
 
 	boolean existsByCodigo(String codigo);
+
+	boolean existsByCodigoAndIdNot(String codigo, Long id);
 }
