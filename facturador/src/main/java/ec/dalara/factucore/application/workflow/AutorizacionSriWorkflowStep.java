@@ -30,7 +30,7 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
             throw new WorkflowException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
         }
 
-        SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
+        SriResponse respuesta = sriService.autorizarHastaResultadoFinal(contexto.getClaveAcceso());
         contexto.setEstadoSri(respuesta.estado());
 
         if (respuesta.exitoso()) {
