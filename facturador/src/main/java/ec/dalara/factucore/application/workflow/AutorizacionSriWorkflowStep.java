@@ -45,6 +45,8 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
             contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZADO.name());
             contexto.getComprobante().setFechaProximoReproceso(null);
             contexto.getComprobante().setNumeroAutorizacion(respuesta.identificador());
+            evidenciaPort.guardarRespuestaSriAutorizacion(
+                    contexto.getComprobanteId(), respuesta, contexto.getSolicitud().getUsuario());
             return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZADO.name(),
                     Map.of("numeroAutorizacion", respuesta.identificador() == null ? "" : respuesta.identificador()));
         }
@@ -58,6 +60,8 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 
         contexto.getComprobante().setEstadoProceso(EstadoProceso.ERROR.name());
         contexto.getComprobante().setFechaProximoReproceso(null);
+        evidenciaPort.guardarRespuestaSriAutorizacion(
+                contexto.getComprobanteId(), respuesta, contexto.getSolicitud().getUsuario());
         var mensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
         return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
                 mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA : mensaje.identificador(),
