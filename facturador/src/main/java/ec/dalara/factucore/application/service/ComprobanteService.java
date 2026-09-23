@@ -31,12 +31,14 @@ public class ComprobanteService extends BaseService<Comprobante> {
 		validar(e);
 		boolean dup = e.getId() == null ? comprobanteRepository.existsByClaveAcceso(e.getClaveAcceso()) : comprobanteRepository.existsByClaveAccesoAndIdNot(e.getClaveAcceso(), e.getId());
 		if (dup) throw new ApplicationException(MessageCodes.COMPROBANTE_CLAVE_ACCESO_DUPLICADA, e.getClaveAcceso());
+		if (comprobanteRepository.findByEmpresaIdAndIdTransaccion(e.getEmpresa().getId(), e.getIdTransaccion()).filter(c -> e.getId() == null || !c.getId().equals(e.getId())).isPresent()) throw new ApplicationException(MessageCodes.COMPROBANTE_ID_TRANSACCION_DUPLICADA, e.getIdTransaccion());
 		return super.guardar(e);
 	}
 
 	private void validar(Comprobante e) {
 		if (e == null) throw new ApplicationException(MessageCodes.COMPROBANTE_REQUERIDO);
 		if (e.getEmpresa() == null || e.getEmpresa().getId() == null) throw new ApplicationException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA);
+		if (e.getIdTransaccion() == null || e.getIdTransaccion().isBlank()) throw new ApplicationException(MessageCodes.COMPROBANTE_ID_TRANSACCION_REQUERIDO);
 		if (e.getEstablecimiento() == null || e.getEstablecimiento().getId() == null) throw new ApplicationException(MessageCodes.COMPROBANTE_ESTABLECIMIENTO_REQUERIDO);
 		if (e.getPuntoEmision() == null || e.getPuntoEmision().getId() == null) throw new ApplicationException(MessageCodes.COMPROBANTE_PUNTO_EMISION_REQUERIDO);
 		if (e.getDocumentoXsd() == null || e.getDocumentoXsd().getId() == null) throw new ApplicationException(MessageCodes.COMPROBANTE_DOCUMENTO_XSD_REQUERIDO);
@@ -49,6 +51,10 @@ public class ComprobanteService extends BaseService<Comprobante> {
 		if (e.getFechaEmision() == null) throw new ApplicationException(MessageCodes.COMPROBANTE_FECHA_EMISION_REQUERIDA);
 		if (e.getEstadoProceso() == null || e.getEstadoProceso().isBlank()) throw new ApplicationException(MessageCodes.COMPROBANTE_ESTADO_PROCESO_REQUERIDO);
 		if (e.getDatosComprobante() == null || e.getDatosComprobante().isBlank()) throw new ApplicationException(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS);
+	}
+
+	public Optional<Comprobante> obtenerPorEmpresaEIdTransaccion(Long empresaId, String idTransaccion) {
+		return comprobanteRepository.findByEmpresaIdAndIdTransaccion(empresaId, idTransaccion).filter(c -> EstadoRegistro.ACTIVO.equals(c.getEstadoRegistro()));
 	}
 
 	public Optional<Comprobante> obtenerPorClaveAcceso(String claveAcceso) {
