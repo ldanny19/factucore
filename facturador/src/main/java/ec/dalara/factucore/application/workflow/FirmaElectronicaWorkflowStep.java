@@ -44,7 +44,7 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
                     contexto.getSolicitud().getFechaInicio().toLocalDateTime());
 
             contexto.setXmlFirmado(xmlFirmado);
-            String ruta = evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado);
+            String ruta = evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado, contexto.getSolicitud().getUsuario());
             contexto.getComprobante().setRutaXmlFirmado(ruta);
 
             return ResultadoEtapa.exitosa(etapa(), "COMPLETADA");
