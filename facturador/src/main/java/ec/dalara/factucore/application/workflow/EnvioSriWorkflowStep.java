@@ -3,8 +3,8 @@ package ec.dalara.factucore.application.workflow;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
-import ec.dalara.factucore.application.service.SriService;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
+import ec.dalara.factucore.application.service.SriService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
@@ -31,23 +31,17 @@ public class EnvioSriWorkflowStep implements WorkflowStep {
         }
 
         SriResponse respuesta = sriService.enviar(contexto.getXmlFirmado());
-        evidenciaPort.guardarRespuestaSriRecepcion(contexto.getComprobanteId(), respuesta);
+        String ruta = evidenciaPort.guardarRespuestaSriRecepcion(contexto.getComprobanteId(), respuesta);
+        contexto.getComprobante().setRutaRespuestaSri(ruta);
         contexto.setEstadoSri(respuesta.estado());
 
         return respuesta.exitoso()
-                ? ResultadoEtapa.exitosa(
-                        EtapaWorkflow.ENVIO_SRI,
-                        respuesta.estado(),
-                        java.util.Map.of("identificadorSri",
-                                respuesta.identificador() == null ? "" : respuesta.identificador()))
-                : ResultadoEtapa.fallida(
-                        EtapaWorkflow.ENVIO_SRI,
-                        respuesta.estado(),
+                ? ResultadoEtapa.exitosa(etapa(), respuesta.estado())
+                : ResultadoEtapa.fallida(etapa(), respuesta.estado(),
                         respuesta.mensajes().isEmpty()
                                 ? MessageCodes.SRI_RESPUESTA_INVALIDA
                                 : respuesta.mensajes().get(0).identificador(),
-                        respuesta.mensajes().isEmpty()
-                                ? null
+                        respuesta.mensajes().isEmpty() ? null
                                 : respuesta.mensajes().get(0).mensaje());
     }
 }
