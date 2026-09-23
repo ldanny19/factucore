@@ -69,6 +69,10 @@ public final class ContextoWorkflow {
 
 		contexto.claveAcceso = comprobante.getClaveAcceso();
 
+		contexto.xml = comprobante.getXmlGenerado();
+
+		contexto.xmlFirmado = comprobante.getXmlFirmado();
+
 		contexto.numeroAutorizacion = comprobante.getNumeroAutorizacion();
 
 		contexto.fechaAutorizacion = comprobante.getFechaAutorizacion();
