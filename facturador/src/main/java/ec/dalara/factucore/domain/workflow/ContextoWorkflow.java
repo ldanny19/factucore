@@ -21,6 +21,8 @@ public final class ContextoWorkflow {
 
 	private Comprobante comprobante;
 
+	private boolean idempotente;
+
 	private String secuencial;
 
 	private String claveAcceso;
@@ -79,6 +81,10 @@ public final class ContextoWorkflow {
 
 		return contexto;
 	}
+
+	public void marcarIdempotente() { this.idempotente = true; }
+
+	public boolean isIdempotente() { return idempotente; }
 
 	public void asignarComprobante(Comprobante comprobante) {
 		if (comprobante == null) {
