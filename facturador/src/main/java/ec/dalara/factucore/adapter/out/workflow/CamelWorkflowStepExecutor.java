@@ -12,6 +12,7 @@ import ec.dalara.factucore.application.workflow.GeneracionXmlWorkflowStep;
 import ec.dalara.factucore.application.workflow.GeneracionClaveAccesoWorkflowStep;
 import ec.dalara.factucore.application.workflow.ValidacionComprobanteWorkflowStep;
 import ec.dalara.factucore.application.workflow.ValidacionXsdWorkflowStep;
+import ec.dalara.factucore.application.workflow.GeneracionRideWorkflowStep;
 import ec.dalara.factucore.application.service.ComprobanteReprocessService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class CamelWorkflowStepExecutor {
     private final EnvioSriWorkflowStep envioSri;
     private final AutorizacionSriWorkflowStep autorizacionSri;
     private final ComprobanteReprocessService comprobanteReprocessService;
+    private final GeneracionRideWorkflowStep generacionRide;
 
     public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
         return ContextoWorkflow.nuevo(request);
@@ -72,6 +74,11 @@ public class CamelWorkflowStepExecutor {
         return contexto;
     }
 
+    public ContextoWorkflow generarRide(ContextoWorkflow contexto) {
+        contexto.registrarResultado(generacionRide.ejecutar(contexto));
+        return contexto;
+    }
+
     public ContextoWorkflow firmar(ContextoWorkflow contexto) {
         contexto.registrarResultado(firmaElectronica.ejecutar(contexto));
         return contexto;
@@ -88,6 +95,7 @@ public class CamelWorkflowStepExecutor {
                 .claveAcceso(contexto.getClaveAcceso())
                 .tipoDocumento(solicitud.getTipoDocumento())
                 .estadoSri(contexto.getEstadoSri())
+                .archivoPdf(contexto.getRide())
                 .build();
     }
 }
