@@ -290,39 +290,25 @@ Los documentos históricos deben conservar la referencia exacta a la versión de
 
 ---
 
-# 8. Snapshot histórico
+# 8. Evidencias históricas del comprobante
 
-La información necesaria para generar posteriormente XML y RIDE debe quedar materializada históricamente en el documento.
+La preservación histórica de la representación electrónica del comprobante se resuelve mediante las evidencias persistidas asociadas al comprobante.
 
-Por ejemplo, la información relevante de:
+FactuCore debe conservar, según corresponda:
 
-- empresa
-- establecimiento
-- punto de emisión
-- secuencial
-- emisor
-- receptor
-- detalles
-- impuestos
-- pagos
-- información adicional
-- demás datos necesarios para la representación electrónica
+- XML generado
+- XML firmado
+- XML autorizado
+- XML no autorizado
+- RIDE/PDF
 
-debe conservar los valores correspondientes al momento de emisión.
+Estas evidencias deben permanecer asociadas al comprobante y conservar su integridad mediante hash y registro histórico.
 
-No depender de consultar nuevamente la configuración actual de la empresa para reconstruir un documento histórico.
+No crear un snapshot histórico adicional ni duplicar en otra estructura la información que ya queda materializada en el XML y RIDE/PDF.
 
-Ejemplo:
+El comprobante puede conservar referencias a las entidades maestras y sus datos de procesamiento para trazabilidad, pero la reconstrucción de una evidencia histórica no debe depender de que los datos actuales de las entidades maestras permanezcan iguales.
 
-```text
-Empresa cambia dirección
-        │
-        ▼
-Los comprobantes anteriores
-mantienen la dirección histórica
-```
-
-Los identificadores de las entidades maestras pueden conservarse para trazabilidad, pero la generación histórica no debe depender de que sus datos actuales permanezcan iguales.
+Si una evidencia se regenera, la versión anterior debe conservarse como evidencia histórica y la nueva registrarse como actual.
 
 ---
 
