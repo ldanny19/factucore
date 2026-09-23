@@ -33,55 +33,63 @@ public class ComprobanteReprocessService {
             return;
         }
 
+        final SriResponse respuesta;
         try {
-            SriResponse respuesta = sriService.autorizar(comprobante.getClaveAcceso());
-            comprobante.setNumeroConsultasAutorizacion(comprobante.getNumeroConsultasAutorizacion() + 1);
-
-            if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
-                comprobante.setEstadoProceso(EstadoProceso.AUTORIZADO.name());
-                comprobante.setNumeroAutorizacion(respuesta.identificador());
-                comprobante.setFechaAutorizacion(LocalDateTime.now());
-                comprobante.setFechaProximoReproceso(null);
-                comprobante.setCodigoError(null);
-                comprobante.setMensajeError(null);
-
-                byte[] pdf = ridePort.generar(comprobante);
-                comprobante.setArchivoPdf(pdf);
-                comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
-            } else if ("NO AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
-                comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-                comprobante.setFechaProximoReproceso(null);
-                if (!respuesta.mensajes().isEmpty()) {
-                    comprobante.setCodigoError(respuesta.mensajes().get(0).identificador());
-                    comprobante.setMensajeError(respuesta.mensajes().get(0).mensaje());
-                }
-            } else if ("EN PROCESO".equalsIgnoreCase(respuesta.estado())) {
-                int maxConsultas = Math.max(sriProperties.getAutorizacion().getMaxConsultas(), 1);
-                if (comprobante.getNumeroConsultasAutorizacion() >= maxConsultas) {
-                    comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-                    comprobante.setFechaProximoReproceso(null);
-                    comprobante.setCodigoError(MessageCodes.SRI_MAX_CONSULTAS_AUTORIZACION);
-                } else {
-                    long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
-                    comprobante.setFechaProximoReproceso(
-                            LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
-                }
-            } else {
-                comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-                comprobante.setFechaProximoReproceso(null);
-                comprobante.setCodigoError(MessageCodes.SRI_ESTADO_AUTORIZACION_NO_RECONOCIDO);
-                comprobante.setMensajeError(respuesta.estado());
-            }
-
-            comprobanteRepository.save(comprobante);
+            respuesta = sriService.autorizar(comprobante.getClaveAcceso());
         } catch (RuntimeException exception) {
             comprobante.setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
             long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
-            comprobante.setFechaProximoReproceso(
-                    LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
+            comprobante.setFechaProximoReproceso(LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
             comprobante.setCodigoError(MessageCodes.SRI_ERROR_COMUNICACION);
             comprobante.setMensajeError(exception.getMessage());
             comprobanteRepository.save(comprobante);
+            return;
         }
+
+        comprobante.setNumeroConsultasAutorizacion(comprobante.getNumeroConsultasAutorizacion() + 1);
+
+        if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
+            comprobante.setEstadoProceso(EstadoProceso.AUTORIZADO.name());
+            comprobante.setNumeroAutorizacion(respuesta.identificador());
+            comprobante.setFechaAutorizacion(LocalDateTime.now());
+            comprobante.setFechaProximoReproceso(null);
+            comprobante.setCodigoError(null);
+            comprobante.setMensajeError(null);
+
+            try {
+                byte[] pdf = ridePort.generar(comprobante);
+                comprobante.setArchivoPdf(pdf);
+                comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
+            } catch (RuntimeException exception) {
+                comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
+                comprobante.setCodigoError(MessageCodes.RIDE_GENERACION_ERROR);
+                comprobante.setMensajeError(exception.getMessage());
+            }
+        } else if ("NO AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
+            comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
+            comprobante.setFechaProximoReproceso(null);
+            if (!respuesta.mensajes().isEmpty()) {
+                comprobante.setCodigoError(respuesta.mensajes().get(0).identificador());
+                comprobante.setMensajeError(respuesta.mensajes().get(0).mensaje());
+            }
+        } else if ("EN PROCESO".equalsIgnoreCase(respuesta.estado())) {
+            int maxConsultas = Math.max(sriProperties.getAutorizacion().getMaxConsultas(), 1);
+            if (comprobante.getNumeroConsultasAutorizacion() >= maxConsultas) {
+                comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
+                comprobante.setFechaProximoReproceso(null);
+                comprobante.setCodigoError(MessageCodes.SRI_MAX_CONSULTAS_AUTORIZACION);
+            } else {
+                long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
+                comprobante.setFechaProximoReproceso(
+                        LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
+            }
+        } else {
+            comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
+            comprobante.setFechaProximoReproceso(null);
+            comprobante.setCodigoError(MessageCodes.SRI_ESTADO_AUTORIZACION_NO_RECONOCIDO);
+            comprobante.setMensajeError(respuesta.estado());
+        }
+
+        comprobanteRepository.save(comprobante);
     }
 }
