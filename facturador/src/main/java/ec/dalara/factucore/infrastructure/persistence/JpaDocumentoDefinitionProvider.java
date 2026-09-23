@@ -78,8 +78,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 				.findByVersionDocumentoXsdIdAndEstadoRegistro(version.getId(), EstadoRegistro.ACTIVO).stream()
 				.map(this::crearMapeoModel).toList();
 
-		DocumentoXsdModel documentoModel = new DocumentoXsdModel(documento.getCodigo(), documento.getNombre(),
-				documento.getDescripcion(), documento.getTipoDocumento());
+		DocumentoXsdModel documentoModel = new DocumentoXsdModel(documento.getCodigo(), documento.getNombre(), documento.getDescripcion(),
+				documento.getTipoDocumento(), documento.getPrefijoArchivo());
 
 		VersionDocumentoXsdModel versionModel = crearVersionModel(version);
 
