@@ -36,6 +36,17 @@ public class CamelWorkflowStepExecutor {
         return ContextoWorkflow.nuevo(request);
     }
 
+    public ContextoWorkflow verificarIdempotencia(ContextoWorkflow contexto) {
+        if (contexto == null || contexto.getSolicitud() == null) return contexto;
+        comprobanteService.obtenerPorEmpresaEIdTransaccion(contexto.getSolicitud().getIdEmpresa(), contexto.getSolicitud().getIdTransaccion()).ifPresent(c -> {
+            contexto.asignarComprobante(c);
+            contexto.setClaveAcceso(c.getClaveAcceso());
+            contexto.setSecuencial(c.getSecuencial());
+            contexto.marcarIdempotente();
+        });
+        return contexto;
+    }
+
     public ContextoWorkflow validar(ContextoWorkflow contexto) {
         registrarResultado(contexto, validacion.ejecutar(contexto));
         return contexto;
