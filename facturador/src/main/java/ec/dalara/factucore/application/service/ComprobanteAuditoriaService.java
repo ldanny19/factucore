@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import ec.dalara.factucore.application.ApplicationException;
 
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,30 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 	@Override
 	protected BaseRepository<ComprobanteAuditoria, Long> getRepository() {
 		return comprobanteAuditoriaRepository;
+	}
+
+	@Override
+	@Transactional
+	public ComprobanteAuditoria guardar(ComprobanteAuditoria entidad) {
+		throw new ApplicationException("FACTUCORE.COMPROBANTE_AUDITORIA.SOLO_LECTURA");
+	}
+
+	@Override
+	@Transactional
+	public ComprobanteAuditoria inactivar(Long id) {
+		throw new ApplicationException("FACTUCORE.COMPROBANTE_AUDITORIA.SOLO_LECTURA");
+	}
+
+	@Override
+	@Transactional
+	public ComprobanteAuditoria reactivar(Long id) {
+		throw new ApplicationException("FACTUCORE.COMPROBANTE_AUDITORIA.SOLO_LECTURA");
+	}
+
+	@Override
+	@Transactional
+	public ComprobanteAuditoria eliminar(Long id) {
+		throw new ApplicationException("FACTUCORE.COMPROBANTE_AUDITORIA.SOLO_LECTURA");
 	}
 
 	public List<ComprobanteAuditoria> listarPorComprobante(Long comprobanteId) {
