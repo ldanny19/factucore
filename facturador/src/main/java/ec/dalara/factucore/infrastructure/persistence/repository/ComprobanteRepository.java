@@ -15,6 +15,7 @@ public interface ComprobanteRepository extends BaseRepository<Comprobante, Long>
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
 
 	boolean existsByClaveAcceso(String claveAcceso);
+	boolean existsByClaveAccesoAndIdNot(String claveAcceso, Long id);
 
 	Optional<Comprobante> findByEmpresaIdAndEstablecimientoIdAndPuntoEmisionIdAndCodigoDocumentoAndSecuencial(
 			Long empresaId, Long establecimientoId, Long puntoEmisionId, String codigoDocumento, String secuencial);
