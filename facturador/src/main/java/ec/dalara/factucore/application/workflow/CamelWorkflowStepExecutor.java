@@ -9,6 +9,7 @@ import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionReq
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.contract.response.ResultadoResponse;
 import ec.dalara.factucore.application.service.ComprobanteReprocessService;
+import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class CamelWorkflowStepExecutor {
     private final GeneracionRideWorkflowStep generacionRide;
     private final NotificacionWorkflowStep notificacion;
     private final ComprobanteReprocessService reprocessService;
+    private final ComprobanteService comprobanteService;
 
     public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
         return ContextoWorkflow.nuevo(request);
@@ -56,37 +58,50 @@ public class CamelWorkflowStepExecutor {
 
     public ContextoWorkflow generarXml(ContextoWorkflow contexto) {
         contexto.registrarResultado(generacionXml.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow validarXsd(ContextoWorkflow contexto) {
         contexto.registrarResultado(validacionXsd.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow firmar(ContextoWorkflow contexto) {
         contexto.registrarResultado(firmaElectronica.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow enviarSri(ContextoWorkflow contexto) {
         contexto.registrarResultado(envioSri.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow autorizarSri(ContextoWorkflow contexto) {
         contexto.registrarResultado(autorizacionSri.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow generarRide(ContextoWorkflow contexto) {
         contexto.registrarResultado(generacionRide.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
     }
 
     public ContextoWorkflow publicarNotificacion(ContextoWorkflow contexto) {
         contexto.registrarResultado(notificacion.ejecutar(contexto));
+        persistirCambios(contexto);
         return contexto;
+    }
+
+    private void persistirCambios(ContextoWorkflow contexto) {
+        if (contexto.getComprobante() != null) {
+            comprobanteService.guardar(contexto.getComprobante());
+        }
     }
 
     public ComprobanteGeneracionResponse respuesta(ContextoWorkflow contexto) {
