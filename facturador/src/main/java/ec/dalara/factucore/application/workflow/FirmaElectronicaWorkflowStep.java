@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.port.out.CertificadoFirmaPasswordPort;
+import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.service.FirmaElectronicaService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FirmaElectronicaWorkflowStep implements WorkflowStep {
 
+    private final ComprobanteEvidenciaPort evidenciaPort;
     private final FirmaElectronicaService firmaElectronicaService;
     private final CertificadoFirmaPasswordPort passwordPort;
 
@@ -35,6 +37,7 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
         }
 
         if (contexto.getXmlFirmado() != null && !contexto.getXmlFirmado().isBlank()) {
+            evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), contexto.getXmlFirmado());
             return ResultadoEtapa.exitosa(
                     EtapaWorkflow.FIRMA_ELECTRONICA,
                     "YA_FIRMADA");
@@ -49,12 +52,13 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
                     contexto.getSolicitud().getFechaInicio().toLocalDateTime());
 
             contexto.setXmlFirmado(xmlFirmado);
+            evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado);
 
             return ResultadoEtapa.exitosa(
                     EtapaWorkflow.FIRMA_ELECTRONICA,
                     "COMPLETADA");
         } finally {
-            Arrays.fill(password, '\\0');
+            Arrays.fill(password, '\0');
         }
     }
 }
