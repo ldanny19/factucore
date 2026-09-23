@@ -15,6 +15,6 @@
     </route>
     <route id="facturador-workflow-reprocesar">
         <from uri="direct:facturador.workflow.reprocesar"/>
-        <log message="Reproceso de comprobante solicitado"/>
+        <bean ref="camelWorkflowStepExecutor" method="reprocesarAutorizacion"/>
     </route>
 </routes>
