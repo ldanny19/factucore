@@ -4,11 +4,11 @@ import java.time.LocalDateTime;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.port.out.WorkflowExecutionPort;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.infrastructure.configuration.workflow.WorkflowReprocessProperties;
+import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,7 @@ public class WorkflowReprocessScheduler {
     private final ComprobanteRepository comprobanteRepository;
     private final WorkflowExecutionPort workflowExecutionPort;
     private final WorkflowReprocessProperties properties;
+    private final WorkflowReprocessClaimService claimService;
 
     @Scheduled(fixedDelayString = "${factucore.workflow.reproceso.intervalo-ms:5000}")
     public void procesarPendientes() {
@@ -35,12 +36,8 @@ public class WorkflowReprocessScheduler {
                 .forEach(comprobante -> procesarSiReclamado(comprobante, ahora, bloqueadoHasta));
     }
 
-    @Transactional
     protected void procesarSiReclamado(Comprobante comprobante, LocalDateTime ahora, LocalDateTime bloqueadoHasta) {
-        int reclamado = comprobanteRepository.reclamarReproceso(
-                comprobante.getId(), EstadoProceso.AUTORIZACION_PENDIENTE.name(), ahora, bloqueadoHasta);
-
-        if (reclamado == 1) {
+        if (claimService.reclamar(comprobante.getId(), ahora, bloqueadoHasta)) {
             workflowExecutionPort.reprocesar(comprobante.getId());
         }
     }
