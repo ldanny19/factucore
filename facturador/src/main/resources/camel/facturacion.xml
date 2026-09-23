@@ -16,6 +16,7 @@
             <when>
                 <simple>${body.comprobante.estadoProceso} == 'AUTORIZADO'</simple>
                 <bean ref="camelWorkflowStepExecutor" method="generarRide"/>
+                <bean ref="camelWorkflowStepExecutor" method="publicarNotificacion"/>
             </when>
         </choice>
         <bean ref="camelWorkflowStepExecutor" method="respuesta"/>
