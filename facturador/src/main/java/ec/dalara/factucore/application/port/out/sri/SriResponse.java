@@ -13,6 +13,10 @@ public record SriResponse(
         mensajes = mensajes == null ? List.of() : List.copyOf(mensajes);
     }
 
+    public SriResponse(boolean exitoso, String estado, String identificador, List<SriMensaje> mensajes) {
+        this(exitoso, estado, identificador, mensajes, null);
+    }
+
     public boolean tieneMensajes() {
         return !mensajes.isEmpty();
     }
