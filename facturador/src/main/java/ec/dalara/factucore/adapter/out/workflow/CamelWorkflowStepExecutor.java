@@ -11,7 +11,7 @@ import ec.dalara.factucore.application.workflow.AutorizacionSriWorkflowStep;
 import ec.dalara.factucore.application.workflow.GeneracionXmlWorkflowStep;
 import ec.dalara.factucore.application.workflow.GeneracionClaveAccesoWorkflowStep;
 import ec.dalara.factucore.application.workflow.ValidacionComprobanteWorkflowStep;
-import ec.dalara.factucore.application.workflow.ValidacionXsdWorkflowStep;
+import ec.dalara.factucore.application.workflow.ValidacionXsdWorkflowStep;\nimport ec.dalara.factucore.application.service.ComprobanteReprocessService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class CamelWorkflowStepExecutor {
     private final GeneracionXmlWorkflowStep generacionXml;
     private final FirmaElectronicaWorkflowStep firmaElectronica;
     private final EnvioSriWorkflowStep envioSri;
-    private final AutorizacionSriWorkflowStep autorizacionSri;
+    private final AutorizacionSriWorkflowStep autorizacionSri;\n    private final ComprobanteReprocessService comprobanteReprocessService;
 
     public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
         return ContextoWorkflow.nuevo(request);
@@ -56,7 +56,7 @@ public class CamelWorkflowStepExecutor {
         return contexto;
     }
 
-    public ContextoWorkflow autorizarSri(ContextoWorkflow contexto) {
+    public void reprocesarAutorizacion(Long comprobanteId) {\n        comprobanteReprocessService.reprocesarAutorizacion(comprobanteId);\n    }\n\n    public ContextoWorkflow autorizarSri(ContextoWorkflow contexto) {
         contexto.registrarResultado(autorizacionSri.ejecutar(contexto));
         return contexto;
     }
