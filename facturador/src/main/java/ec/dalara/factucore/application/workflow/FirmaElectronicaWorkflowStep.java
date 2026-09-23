@@ -31,16 +31,8 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
         if (contexto == null || contexto.getSolicitud() == null) {
             throw new WorkflowException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
         }
-
         if (contexto.getXml() == null || contexto.getXml().isBlank()) {
             throw new WorkflowException(MessageCodes.FIRMA_XML_REQUERIDO);
-        }
-
-        if (contexto.getXmlFirmado() != null && !contexto.getXmlFirmado().isBlank()) {
-            evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), contexto.getXmlFirmado());
-            return ResultadoEtapa.exitosa(
-                    EtapaWorkflow.FIRMA_ELECTRONICA,
-                    "YA_FIRMADA");
         }
 
         char[] password = passwordPort.obtenerPassword(contexto.getSolicitud().getIdEmpresa());
@@ -52,11 +44,10 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
                     contexto.getSolicitud().getFechaInicio().toLocalDateTime());
 
             contexto.setXmlFirmado(xmlFirmado);
-            evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado);
+            String ruta = evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado);
+            contexto.getComprobante().setRutaXmlFirmado(ruta);
 
-            return ResultadoEtapa.exitosa(
-                    EtapaWorkflow.FIRMA_ELECTRONICA,
-                    "COMPLETADA");
+            return ResultadoEtapa.exitosa(etapa(), "COMPLETADA");
         } finally {
             Arrays.fill(password, '\0');
         }
