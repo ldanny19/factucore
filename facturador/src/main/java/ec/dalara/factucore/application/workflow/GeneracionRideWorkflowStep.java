@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class GeneracionRideWorkflowStep implements WorkflowStep {
 
     private final RidePort ridePort;
+    private final ComprobanteEvidenciaPort evidenciaPort;
 
     @Override
     public EtapaWorkflow etapa() {
@@ -30,19 +32,15 @@ public class GeneracionRideWorkflowStep implements WorkflowStep {
         }
 
         var comprobante = contexto.getComprobante();
-        if (comprobante.getArchivoPdf() != null && comprobante.getArchivoPdf().length > 0) {
-            contexto.setRide(comprobante.getArchivoPdf());
-            return ResultadoEtapa.exitosa(etapa(), "RIDE_GENERADO",
-                    Map.of("archivoPdfGenerado", true, "reutilizado", true));
-        }
-
         byte[] pdf = ridePort.generar(comprobante);
         contexto.setRide(pdf);
-        comprobante.setArchivoPdf(pdf);
+
+        String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf);
+        comprobante.setRutaRide(ruta);
         comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
         comprobante.setFechaProximoReproceso(null);
 
         return ResultadoEtapa.exitosa(etapa(), "RIDE_GENERADO",
-                Map.of("archivoPdfGenerado", true));
+                Map.of("archivoPdfGenerado", true, "rutaRide", ruta));
     }
 }
