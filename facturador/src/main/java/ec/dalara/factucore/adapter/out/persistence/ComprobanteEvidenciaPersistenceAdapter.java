@@ -1,9 +1,13 @@
 package ec.dalara.factucore.adapter.out.persistence;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,83 +15,60 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
-import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.shared.MessageCodes;
-import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
-import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteRespuestaSri;
-import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
-import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRespuestaSriRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEvidenciaPort {
 
-    private final ComprobanteRepository comprobanteRepository;
     private final ObjectMapper objectMapper;
-    private final ComprobanteRespuestaSriRepository respuestaSriRepository;
+
+    @Value("${factucore.path.documentos}")
+    private String directorioDocumentos;
 
     @Override
-    @Transactional
-    public void guardarXmlGenerado(Long comprobanteId, String xml) {
-        Comprobante comprobante = obtener(comprobanteId);
-        comprobante.setXmlGenerado(xml);
-        comprobante.setFechaGeneracionXml(LocalDateTime.now());
-        comprobanteRepository.save(comprobante);
-    }
-
-    @Override
-    @Transactional
     public void guardarXmlFirmado(Long comprobanteId, String xmlFirmado) {
-        Comprobante comprobante = obtener(comprobanteId);
-        comprobante.setXmlFirmado(xmlFirmado);
-        comprobante.setFechaFirma(LocalDateTime.now());
-        comprobanteRepository.save(comprobante);
+        guardarTexto(comprobanteId, "xml-firmado", "xml", xmlFirmado);
     }
 
     @Override
-    @Transactional
     public void guardarRespuestaSriRecepcion(Long comprobanteId, SriResponse respuesta) {
-        Comprobante comprobante = obtener(comprobanteId);
-        String evidencia = serializar(respuesta);
-        LocalDateTime ahora = LocalDateTime.now();
-        comprobante.setRespuestaSriRecepcion(evidencia);
-        comprobante.setFechaRespuestaSriRecepcion(ahora);
-        comprobanteRepository.save(comprobante);
-        guardarHistorial(comprobante, "RECEPCION", respuesta, evidencia, ahora);
+        guardarTexto(comprobanteId, "sri-recepcion", "json", serializar(respuesta));
     }
 
     @Override
-    @Transactional
     public void guardarRespuestaSriAutorizacion(Long comprobanteId, SriResponse respuesta) {
-        Comprobante comprobante = obtener(comprobanteId);
-        String evidencia = serializar(respuesta);
-        LocalDateTime ahora = LocalDateTime.now();
-        comprobante.setRespuestaSriAutorizacion(evidencia);
-        comprobante.setFechaRespuestaSriAutorizacion(ahora);
-        comprobanteRepository.save(comprobante);
-        guardarHistorial(comprobante, "AUTORIZACION", respuesta, evidencia, ahora);
+        guardarTexto(comprobanteId, "sri-autorizacion", "json", serializar(respuesta));
     }
 
-    private Comprobante obtener(Long comprobanteId) {
-        return comprobanteRepository.findByIdAndEstadoRegistro(comprobanteId, EstadoRegistro.ACTIVO)
-                .orElseThrow(() -> new ApplicationException(
-                        MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO));
+    @Override
+    public void guardarRide(Long comprobanteId, byte[] pdf) {
+        if (pdf == null || pdf.length == 0) {
+            throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR);
+        }
+        guardarBytes(comprobanteId, "ride", "pdf", pdf);
     }
 
-    private void guardarHistorial(Comprobante comprobante, String tipoRespuesta, SriResponse respuesta,
-            String evidencia, LocalDateTime fechaRespuesta) {
-        respuestaSriRepository.save(ComprobanteRespuestaSri.builder()
-                .comprobante(comprobante)
-                .tipoRespuesta(tipoRespuesta)
-                .estado(respuesta.estado())
-                .identificador(respuesta.identificador())
-                .respuesta(evidencia)
-                .fechaRespuesta(fechaRespuesta)
-                .estadoRegistro(EstadoRegistro.ACTIVO.name())
-                .usuarioCreacion("SISTEMA")
-                .fechaCreacion(fechaRespuesta)
-                .build());
+    private void guardarTexto(Long comprobanteId, String tipo, String extension, String contenido) {
+        if (contenido == null || contenido.isBlank()) {
+            throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+        }
+        guardarBytes(comprobanteId, tipo, extension, contenido.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void guardarBytes(Long comprobanteId, String tipo, String extension, byte[] contenido) {
+        if (comprobanteId == null) {
+            throw new ApplicationException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
+        }
+        try {
+            Path directorio = Path.of(directorioDocumentos, "comprobantes", comprobanteId.toString());
+            Files.createDirectories(directorio);
+            Path archivo = directorio.resolve(tipo + "." + extension);
+            Files.write(archivo, contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException exception) {
+            throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
+        }
     }
 
     private String serializar(SriResponse respuesta) {
