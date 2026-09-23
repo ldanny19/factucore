@@ -28,36 +28,36 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
     private String directorioDocumentos;
 
     @Override
-    public void guardarXmlFirmado(Long comprobanteId, String xmlFirmado) {
-        guardarTexto(comprobanteId, "xml-firmado", "xml", xmlFirmado);
+    public String guardarXmlFirmado(Long comprobanteId, String xmlFirmado) {
+        return guardarTexto(comprobanteId, "xml-firmado", "xml", xmlFirmado);
     }
 
     @Override
-    public void guardarRespuestaSriRecepcion(Long comprobanteId, SriResponse respuesta) {
-        guardarTexto(comprobanteId, "sri-recepcion", "json", serializar(respuesta));
+    public String guardarRespuestaSriRecepcion(Long comprobanteId, SriResponse respuesta) {
+        return guardarTexto(comprobanteId, "sri-recepcion", "json", serializar(respuesta));
     }
 
     @Override
-    public void guardarRespuestaSriAutorizacion(Long comprobanteId, SriResponse respuesta) {
-        guardarTexto(comprobanteId, "sri-autorizacion", "json", serializar(respuesta));
+    public String guardarRespuestaSriAutorizacion(Long comprobanteId, SriResponse respuesta) {
+        return guardarTexto(comprobanteId, "sri-autorizacion", "json", serializar(respuesta));
     }
 
     @Override
-    public void guardarRide(Long comprobanteId, byte[] pdf) {
+    public String guardarRide(Long comprobanteId, byte[] pdf) {
         if (pdf == null || pdf.length == 0) {
             throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR);
         }
-        guardarBytes(comprobanteId, "ride", "pdf", pdf);
+        return guardarBytes(comprobanteId, "ride", "pdf", pdf);
     }
 
-    private void guardarTexto(Long comprobanteId, String tipo, String extension, String contenido) {
+    private String guardarTexto(Long comprobanteId, String tipo, String extension, String contenido) {
         if (contenido == null || contenido.isBlank()) {
             throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
         }
-        guardarBytes(comprobanteId, tipo, extension, contenido.getBytes(StandardCharsets.UTF_8));
+        return guardarBytes(comprobanteId, tipo, extension, contenido.getBytes(StandardCharsets.UTF_8));
     }
 
-    private void guardarBytes(Long comprobanteId, String tipo, String extension, byte[] contenido) {
+    private String guardarBytes(Long comprobanteId, String tipo, String extension, byte[] contenido) {
         if (comprobanteId == null) {
             throw new ApplicationException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
         }
@@ -65,7 +65,7 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
             Path directorio = Path.of(directorioDocumentos, "comprobantes", comprobanteId.toString());
             Files.createDirectories(directorio);
             Path archivo = directorio.resolve(tipo + "." + extension);
-            Files.write(archivo, contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(archivo, contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);\n            return archivo.toString();
         } catch (IOException exception) {
             throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
         }
