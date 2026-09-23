@@ -10,40 +10,44 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "factucore.sri")
 public class SriProperties {
 
-	private String ambiente;
+    private String ambiente;
 
-	private AmbienteProperties pruebas = new AmbienteProperties();
+    private AmbienteProperties pruebas = new AmbienteProperties();
 
-	private AmbienteProperties produccion = new AmbienteProperties();
+    private AmbienteProperties produccion = new AmbienteProperties();
 
-	private EnvioProperties envio = new EnvioProperties();
+    private EnvioProperties envio = new EnvioProperties();
 
-	private AutorizacionProperties autorizacion = new AutorizacionProperties();
+    private AutorizacionProperties autorizacion = new AutorizacionProperties();
 
-	@Getter
-	@Setter
-	public static class AmbienteProperties {
+    @Getter
+    @Setter
+    public static class AmbienteProperties {
 
-		private String recepcionUrl;
+        private String recepcionUrl;
 
-		private String autorizacionUrl;
-	}
+        private String autorizacionUrl;
+    }
 
-	@Getter
-	@Setter
-	public static class EnvioProperties {
+    @Getter
+    @Setter
+    public static class EnvioProperties {
 
-		private int maxIntentos;
+        private int maxIntentos;
 
-		private long esperaMs;
-	}
+        private long esperaMs;
+    }
 
-	@Getter
-	@Setter
-	public static class AutorizacionProperties {
+    @Getter
+    @Setter
+    public static class AutorizacionProperties {
 
-		private long esperaMs;
+        private long esperaMs;
 
-		private int maxIntentos;
-	}
+        private int maxIntentos;
+
+        private int maxConsultas;
+
+        private long esperaConsultaMs;
+    }
 }
