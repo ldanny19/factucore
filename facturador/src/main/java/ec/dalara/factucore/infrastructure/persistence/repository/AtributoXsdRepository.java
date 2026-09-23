@@ -10,4 +10,7 @@ public interface AtributoXsdRepository extends BaseRepository<AtributoXsd, Long>
 	List<AtributoXsd> findByElementoXsdId(Long elementoXsdId);
 
 	Optional<AtributoXsd> findByElementoXsdIdAndNombre(Long elementoXsdId, String nombre);
+
+	boolean existsByElementoXsdIdAndNombre(Long elementoXsdId, String nombre);
+	boolean existsByElementoXsdIdAndNombreAndIdNot(Long elementoXsdId, String nombre, Long id);
 }
