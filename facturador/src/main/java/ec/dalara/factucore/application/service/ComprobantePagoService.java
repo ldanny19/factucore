@@ -1,6 +1,9 @@
 package ec.dalara.factucore.application.service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,17 @@ public class ComprobantePagoService extends BaseService<ComprobantePago> {
 		return comprobantePagoRepository;
 	}
 
+	@Override
+	@Transactional
+	public ComprobantePago guardar(ComprobantePago e){
+		if(e==null) throw new ApplicationException(MessageCodes.COMPROBANTE_PAGO_REQUERIDO);
+		if(e.getComprobante()==null||e.getComprobante().getId()==null) throw new ApplicationException(MessageCodes.COMPROBANTE_PAGO_COMPROBANTE_REQUERIDO);
+		if(e.getTotal()==null) throw new ApplicationException(MessageCodes.COMPROBANTE_PAGO_TOTAL_REQUERIDO);
+		if(e.getTotal().signum()<0) throw new ApplicationException(MessageCodes.COMPROBANTE_PAGO_TOTAL_INVALIDO);
+		if(e.getPlazo()!=null&&e.getPlazo()<0) throw new ApplicationException(MessageCodes.COMPROBANTE_PAGO_PLAZO_INVALIDO);
+		return super.guardar(e);
+	}
+	
 	public List<ComprobantePago> listarPorComprobante(Long comprobanteId) {
 		return comprobantePagoRepository.findByComprobanteId(comprobanteId).stream()
 				.filter(pago -> !EstadoRegistro.ELIMINADO.equals(pago.getEstadoRegistro())).toList();
