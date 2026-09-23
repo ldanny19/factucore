@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
@@ -57,7 +58,7 @@ public class ComprobanteReprocessService {
                 if (comprobante.getNumeroConsultasAutorizacion() >= maxConsultas) {
                     comprobante.setEstadoProceso(ESTADO_ERROR_AUTORIZACION);
                     comprobante.setFechaProximoReproceso(null);
-                    comprobante.setCodigoError("MAX_CONSULTAS_AUTORIZACION");
+                    comprobante.setCodigoError(MessageCodes.SRI_MAX_CONSULTAS_AUTORIZACION);
                     comprobante.setMensajeError(null);
                 } else {
                     long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
@@ -66,7 +67,7 @@ public class ComprobanteReprocessService {
             } else {
                 comprobante.setEstadoProceso(ESTADO_ERROR_AUTORIZACION);
                 comprobante.setFechaProximoReproceso(null);
-                comprobante.setCodigoError("ESTADO_SRI_NO_RECONOCIDO");
+                comprobante.setCodigoError(MessageCodes.SRI_ESTADO_AUTORIZACION_NO_RECONOCIDO);
                 comprobante.setMensajeError(respuesta.estado());
             }
 
@@ -75,7 +76,7 @@ public class ComprobanteReprocessService {
             comprobante.setEstadoProceso(ESTADO_AUTORIZACION_PENDIENTE);
             long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
             comprobante.setFechaProximoReproceso(LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
-            comprobante.setCodigoError("ERROR_REPROCESO_AUTORIZACION");
+            comprobante.setCodigoError(MessageCodes.SRI_ERROR_COMUNICACION);
             comprobante.setMensajeError(exception.getMessage());
             comprobanteRepository.save(comprobante);
         }
