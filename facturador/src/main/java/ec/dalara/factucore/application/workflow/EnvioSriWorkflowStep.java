@@ -2,7 +2,6 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
-import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.application.service.SriService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -16,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EnvioSriWorkflowStep implements WorkflowStep {
 
-    private final ComprobanteEvidenciaPort evidenciaPort;
     private final SriService sriService;
 
     @Override
@@ -32,8 +30,6 @@ public class EnvioSriWorkflowStep implements WorkflowStep {
         }
 
         SriResponse respuesta = sriService.enviar(contexto.getXmlFirmado());
-        String ruta = evidenciaPort.guardarRespuestaSriRecepcion(contexto.getComprobanteId(), respuesta);
-        contexto.getComprobante().setRutaRespuestaSri(ruta);
         contexto.setEstadoSri(respuesta.estado());
 
         if (respuesta.exitoso()) {
