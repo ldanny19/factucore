@@ -30,11 +30,10 @@ public class NotificacionWorkflowStep implements WorkflowStep {
         }
 
         var comprobante = contexto.getComprobante();
-        if (!EstadoProceso.RIDE_GENERADO.name().equals(comprobante.getEstadoProceso())
-                && !EstadoProceso.AUTORIZADO.name().equals(comprobante.getEstadoProceso())) {
+
+        if (!EstadoProceso.RIDE_GENERADO.name().equals(comprobante.getEstadoProceso())) {
             return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
-                    MessageCodes.NOTIFICACION_PUBLICACION_ERROR,
-                    null);
+                    MessageCodes.NOTIFICACION_PUBLICACION_ERROR, null);
         }
 
         try {
