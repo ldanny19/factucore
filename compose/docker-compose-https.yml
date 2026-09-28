@@ -33,6 +33,12 @@ services:
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/vault/agent:/vault/agent:ro
       - factucore_vault_secrets:/vault/secrets
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /vault/secrets/postgres_password && test -s /vault/secrets/keycloak_admin_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
 
   db_factucore:
     image: postgres:17
