@@ -35,8 +35,6 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 		}
 
 		SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
-		String ruta = evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta);
-		contexto.getComprobante().setRutaRespuestaSri(ruta);
 		contexto.setEstadoSri(respuesta.estado());
 
 		if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
