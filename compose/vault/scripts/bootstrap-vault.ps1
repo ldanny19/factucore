@@ -33,7 +33,12 @@ if(-not $statusJson.initialized){
 if($statusJson.sealed){
     if(-not(Test-Path $InitFile)){throw "Vault esta sellado y no existe $InitFile."}
     $initJson=Get-Content -Raw $InitFile|ConvertFrom-Json
-    foreach($key in $initJson.unseal_keys_b64|Select-Object -First ([int]$initJson.secret_threshold)){
+    $threshold = [int]$statusJson.t
+    if ($threshold -le 0 -and $initJson.PSObject.Properties.Name -contains "unseal_threshold") {
+        $threshold = [int]$initJson.unseal_threshold
+    }
+    if ($threshold -le 0) { throw "No se pudo determinar el umbral de unseal desde el estado de Vault ni desde $InitFile." }
+    foreach($key in $initJson.unseal_keys_b64|Select-Object -First $threshold){
         & docker exec $VaultContainer vault operator unseal $key *> $null
         if($LASTEXITCODE -ne 0){throw "No se pudo ejecutar el unseal."}
     }
