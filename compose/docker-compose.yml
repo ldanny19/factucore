@@ -31,7 +31,7 @@ services:
     volumes:
       - ./vault/agent:/vault/agent:ro
       - type: bind
-        source: ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt
+        source: ../secrets/vault_agent_token.txt
         target: /run/secrets/vault_agent_token
         read_only: true
         bind:
