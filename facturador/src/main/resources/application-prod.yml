@@ -25,7 +25,6 @@ factucore:
 
     rabbitmq:
       addresses: localhost:5672
-      security-protocol: PLAINTEXT
       username: guest
       password: guest
       virtual-host: /
@@ -45,5 +44,6 @@ factucore:
     version-evento: "1.0"
 
   seguridad:
+    habilitada: false
     oauth2:
       issuer-uri: http://localhost:8080/realms/factucore
