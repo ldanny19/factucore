@@ -67,10 +67,40 @@ ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
 if [[ -z "$ROOT_TOKEN" && -f "$INIT_FILE" ]]; then ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | head -1 | cut -d '"' -f 4); fi
 [[ -n "$ROOT_TOKEN" ]] || fail "No se encontro el root token."
 
-POSTGRES_PASSWORD="${FACTUCORE_POSTGRES_PASSWORD:-}"
-if [[ -z "$POSTGRES_PASSWORD" ]]; then read -r -s -p "Contraseña de PostgreSQL: " POSTGRES_PASSWORD; printf '\n'; fi
-KEYCLOAK_PASSWORD="${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}"
-if [[ -z "$KEYCLOAK_PASSWORD" ]]; then read -r -s -p "Contraseña del administrador de Keycloak: " KEYCLOAK_PASSWORD; printf '\n'; fi
+read_secret() {
+  local prompt="$1"
+  local value=""
+  printf '%s' "$prompt" >&2
+  IFS= read -r -s value
+  printf '\n' >&2
+  [[ -n "$value" ]] || fail "La contraseña no puede estar vacia."
+  printf '%s' "$value"
+}
+
+SECRET_EXISTS_POSTGRES=0
+SECRET_EXISTS_KEYCLOAK=0
+SECRETS_CURRENT="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault kv get -format=json secret/factucore/postgresql 2>/dev/null || true)"
+if [[ -n "$SECRETS_CURRENT" ]]; then SECRET_EXISTS_POSTGRES=1; fi
+SECRETS_CURRENT="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault kv get -format=json secret/factucore/keycloak 2>/dev/null || true)"
+if [[ -n "$SECRETS_CURRENT" ]]; then SECRET_EXISTS_KEYCLOAK=1; fi
+
+if [[ "${FACTUCORE_VAULT_ACTUALIZAR_CREDENCIALES:-false}" == "true" ]]; then
+  log "Actualizando credenciales solicitadas"
+  POSTGRES_PASSWORD="${FACTUCORE_POSTGRES_PASSWORD:-}"
+  if [[ -z "$POSTGRES_PASSWORD" ]]; then POSTGRES_PASSWORD="$(read_secret "Nueva contraseña de PostgreSQL: ")"; fi
+  KEYCLOAK_PASSWORD="${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}"
+  if [[ -z "$KEYCLOAK_PASSWORD" ]]; then KEYCLOAK_PASSWORD="$(read_secret "Nueva contraseña del administrador de Keycloak: ")"; fi
+else
+  if [[ "$SECRET_EXISTS_POSTGRES" -eq 0 || "$SECRET_EXISTS_KEYCLOAK" -eq 0 ]]; then
+    log "Configurando credenciales iniciales"
+    POSTGRES_PASSWORD="${FACTUCORE_POSTGRES_PASSWORD:-}"
+    if [[ -z "$POSTGRES_PASSWORD" ]]; then POSTGRES_PASSWORD="$(read_secret "Contraseña de PostgreSQL: ")"; fi
+    KEYCLOAK_PASSWORD="${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}"
+    if [[ -z "$KEYCLOAK_PASSWORD" ]]; then KEYCLOAK_PASSWORD="$(read_secret "Contraseña del administrador de Keycloak: ")"; fi
+  else
+    log "Credenciales ya existentes en Vault; no se sobrescriben."
+  fi
+fi
 
 log "Configurando KV v2"
 MOUNTS_JSON="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault secrets list -format=json)"
@@ -78,8 +108,12 @@ if ! printf '%s' "$MOUNTS_JSON" | grep -q '"secret/"'; then
   docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault secrets enable -path=secret kv-v2
 fi
 
-docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault kv put secret/factucore/postgresql "password=$POSTGRES_PASSWORD"
-docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault kv put secret/factucore/keycloak "password=$KEYCLOAK_PASSWORD"
+if [[ -n "${POSTGRES_PASSWORD:-}" ]]; then
+  docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault kv put secret/factucore/postgresql "password=$POSTGRES_PASSWORD"
+fi
+if [[ -n "${KEYCLOAK_PASSWORD:-}" ]]; then
+  docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault kv put secret/factucore/keycloak "password=$KEYCLOAK_PASSWORD"
+fi
 
 log "Configurando policy y Vault Agent"
 [[ -f "$POLICY_FILE" ]] || fail "No existe la policy: $POLICY_FILE"
