@@ -51,9 +51,15 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
         }
 
         container.setCommonErrorHandler(errorHandler);
-        container.setupMessageListener((ConsumerRecord<String,String> record) -> {
-            try { consumidor.consumir(objectMapper.readValue(record.value(), EventoMensaje.class)); }
-            catch (Exception e) { throw new IllegalStateException("No fue posible procesar el mensaje", e); }
+        container.setupMessageListener(new org.springframework.kafka.listener.MessageListener<String, String>() {
+            @Override
+            public void onMessage(ConsumerRecord<String, String> record) {
+                try {
+                    consumidor.consumir(objectMapper.readValue(record.value(), EventoMensaje.class));
+                } catch (Exception e) {
+                    throw new IllegalStateException("No fue posible procesar el mensaje", e);
+                }
+            }
         });
         container.start();
     }
