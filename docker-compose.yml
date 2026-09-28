@@ -95,4 +95,4 @@ services:
 
 volumes:
   factucore_postgres_data:
-  factucore_documentos
+  factucore_documentos:
