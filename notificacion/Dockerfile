@@ -43,6 +43,7 @@ RUN mkdir -p \
 	
 
 COPY --from=build /build/target/*.jar ${APP_HOME}/notificacion.jar
+COPY config ${APP_HOME}/config
 
 RUN chown factucore:factucore ${APP_HOME}/notificacion.jar
 
