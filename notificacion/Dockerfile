@@ -4,6 +4,8 @@
 
 FROM eclipse-temurin:21-jre
 
+ARG APP_VERSION
+
 ENV APP_HOME=/app
 
 WORKDIR ${APP_HOME}
@@ -23,7 +25,7 @@ RUN mkdir -p \
 
 # El JAR debe existir previamente en target/.
 # Docker solo empaqueta el artefacto generado por Maven.
-COPY target/notificacion-1.0.0.jar ${APP_HOME}/notificacion.jar
+COPY target/notificacion-${APP_VERSION}.jar ${APP_HOME}/notificacion.jar
 
 RUN chown factucore:factucore ${APP_HOME}/notificacion.jar
 
