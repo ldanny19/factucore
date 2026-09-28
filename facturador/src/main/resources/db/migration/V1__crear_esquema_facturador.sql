@@ -329,6 +329,8 @@ CREATE TABLE comprobante (
     razon_social_receptor VARCHAR(300),
     direccion_receptor VARCHAR(500),
     estado_proceso VARCHAR(50) NOT NULL,
+    ruta_xml_firmado VARCHAR(1000),
+    ruta_ride VARCHAR(1000),
     codigo_error VARCHAR(100),
     mensaje_error VARCHAR(2000),
     numero_autorizacion VARCHAR(100),
