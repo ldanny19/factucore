@@ -1,0 +1,4 @@
+package ec.dalara.factucore.notificacion.infrastructure.template;
+import java.nio.charset.StandardCharsets; import java.nio.file.Files; import java.nio.file.Path; import java.util.Map; import org.springframework.stereotype.Service; import ec.dalara.factucore.notificacion.infrastructure.config.NotificacionProperties; import lombok.RequiredArgsConstructor;
+@Service @RequiredArgsConstructor
+public class PlantillaCorreoService {private final NotificacionProperties properties; public String renderizar(Map<String,String> variables){Path p=Path.of(properties.getPlantilla().getRuta());try{String r=Files.readString(p,StandardCharsets.UTF_8);for(var e:variables.entrySet())r=r.replace("{{"+e.getKey()+"}}",e.getValue());return r;}catch(Exception e){throw new IllegalStateException("No fue posible leer la plantilla de correo: "+p,e);}}}
