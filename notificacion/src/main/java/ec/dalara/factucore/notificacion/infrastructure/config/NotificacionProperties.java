@@ -11,6 +11,10 @@ public class NotificacionProperties {
 
     private Correo correo = new Correo();
     private Plantilla plantilla = new Plantilla();
+    private String topico = "factucore.notificacion.comprobante";
+
+    public String getTopico() { return topico; }
+    public void setTopico(String topico) { this.topico = topico; }
 
     @Getter
     @Setter
