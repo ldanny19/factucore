@@ -33,11 +33,11 @@ if [[ "$STATUS_RC" -ne 0 && "$STATUS_RC" -ne 2 ]]; then
   fail "No se pudo consultar el estado de Vault. Verifica que el contenedor '$VAULT_CONTAINER' este levantado."
 fi
 
-INITIALIZED="$(printf '%s' "$STATUS_JSON" | python -c 'import json,sys; print(str(json.load(sys.stdin)["initialized"]).lower())')"
-SEALED="$(printf '%s' "$STATUS_JSON" | python -c 'import json,sys; print(str(json.load(sys.stdin)["sealed"]).lower())')"
+INITIALIZED=$(printf '%s' "$STATUS_JSON" | grep -o '"initialized"[[:space:]]*:[[:space:]]*true' || true)
+SEALED=$(printf '%s' "$STATUS_JSON" | grep -o '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 
-[[ "$INITIALIZED" == "true" ]] || fail "Vault no esta inicializado. Ejecuta 'vault operator init' una sola vez y conserva las claves fuera del repositorio."
-[[ "$SEALED" == "false" ]] || fail "Vault esta sellado. Haz unseal antes de ejecutar este bootstrap."
+[[ -n "$INITIALIZED" ]] || fail "Vault no esta inicializado. Ejecuta 'vault operator init' una sola vez y conserva las claves fuera del repositorio."
+[[ -z "$SEALED" ]] || fail "Vault esta sellado. Haz unseal antes de ejecutar este bootstrap."
 
 log "Obteniendo credenciales externas"
 ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
@@ -61,10 +61,10 @@ fi
 
 log "Habilitando/verificando KV v2"
 MOUNTS_JSON="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault secrets list -format=json)"
-if printf '%s' "$MOUNTS_JSON" | python -c 'import json,sys; d=json.load(sys.stdin); m=d.get("secret/",{}); raise SystemExit(0 if m else 1)'; then
-  TYPE="$(printf '%s' "$MOUNTS_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["secret/"]["type"])')"
-  VERSION="$(printf '%s' "$MOUNTS_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["secret/"].get("options",{}).get("version",""))')"
-  [[ "$TYPE" == "kv" && "$VERSION" == "2" ]] || fail "El mount 'secret/' existe pero no es KV v2."
+if printf '%s' "$MOUNTS_JSON" | grep -q '^secret/'; then
+  if ! printf '%s' "$MOUNTS_JSON" | grep '^secret/' | grep -q 'kv.*2'; then
+    fail "El mount 'secret/' existe pero no se pudo confirmar que sea KV v2."
+  fi
 else
   docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault secrets enable -path=secret kv-v2
 fi
@@ -94,7 +94,7 @@ if [[ -n "$AGENT_TOKEN" ]]; then
 fi
 
 if [[ "$TOKEN_VALID" == "false" ]]; then
-  AGENT_TOKEN="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault token create -policy=factucore-agent -orphan -format=json | python -c 'import json,sys; print(json.load(sys.stdin)["auth"]["client_token"])')"
+  AGENT_TOKEN="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault token create -policy=factucore-agent -orphan -format=json | grep -o '"client_token"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | cut -d '"' -f 4)"
   [[ -n "$AGENT_TOKEN" ]] || fail "Vault no devolvio un client token."
   printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_FILE"
   chmod 600 "$AGENT_TOKEN_FILE"
