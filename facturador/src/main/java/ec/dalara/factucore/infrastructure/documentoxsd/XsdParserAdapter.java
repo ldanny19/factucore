@@ -216,47 +216,53 @@ public class XsdParserAdapter implements XsdParserPort {
 	}
 
 	private void parseComplexType(Element complexType, String parentPath,
-            Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
-            Map<String, Element> globalElements, List<XsdElementSource> elementos,
-            List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
-            Set<String> typeStack, String typeNamespace, String typeName) {
+			Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
+			Map<String, Element> globalElements, List<XsdElementSource> elementos,
+			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
+			Set<String> typeStack, String typeNamespace, String typeName) {
 
-        String stackKey = key(typeNamespace, typeName);
-        if (typeName != null && !typeStack.add(stackKey)) {
-            throw new InfrastructureException("FACTUCORE.XSD.TIPO.CICLICO", typeName);
-        }
+		String stackKey = key(typeNamespace, typeName);
+		if (typeName != null && !typeStack.add(stackKey)) {
+			throw new InfrastructureException("FACTUCORE.XSD.TIPO.CICLICO", typeName);
+		}
 
-        Element complexContent = firstChild(complexType, "complexContent");
-        Element content = complexContent == null ? null : firstChild(complexContent, "extension");
-        if (content == null && complexContent != null) content = firstChild(complexContent, "restriction");
+		Element complexContent = firstChild(complexType, "complexContent");
+		Element content = complexContent == null ? null : firstChild(complexContent, "extension");
+		if (content == null && complexContent != null) {
+			content = firstChild(complexContent, "restriction");
+		}
 
-        if (content != null) {
-            String base = attr(content, "base");
-            String baseNamespace = namespaceForQName(content, base);
-            String baseName = localTypeName(base);
-            Element baseType = findType(complexTypes, baseNamespace, baseName);
-            if (baseType != null) parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements,
-                    elementos, atributos, enumeraciones, typeStack, baseNamespace, baseName);
-            parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements,
-                    elementos, atributos, enumeraciones, typeStack);
-            for (Element attribute : children(content, "attribute")) parseAttribute(attribute, parentPath, simpleTypes, atributos);
-        } else {
-            Element sequence = firstChild(complexType, "sequence");
-        if (sequence != null) {
-            parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements,
-                    elementos, atributos, enumeraciones, typeStack);
-        }
-        if (firstChild(complexType, "choice") != null) {
-            throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
-        }
-        if (firstChild(complexType, "all") != null) {
-            throw new InfrastructureException("FACTUCORE.XSD.ALL.NO_SOPORTADO", parentPath);
-        }
-        for (Element attribute : children(complexType, "attribute")) {
-            parseAttribute(attribute, parentPath, simpleTypes, atributos);
-        }
-    }
-
+		if (content != null) {
+			String base = attr(content, "base");
+			String baseNamespace = namespaceForQName(content, base);
+			String baseName = localTypeName(base);
+			Element baseType = findType(complexTypes, baseNamespace, baseName);
+			if (baseType != null) {
+				parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements,
+						elementos, atributos, enumeraciones, typeStack, baseNamespace, baseName);
+			}
+			parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements,
+					elementos, atributos, enumeraciones, typeStack);
+			for (Element attribute : children(content, "attribute")) {
+				parseAttribute(attribute, parentPath, simpleTypes, atributos);
+			}
+		} else {
+			Element sequence = firstChild(complexType, "sequence");
+			if (sequence != null) {
+				parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements,
+						elementos, atributos, enumeraciones, typeStack);
+			}
+			if (firstChild(complexType, "choice") != null) {
+				throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
+			}
+			if (firstChild(complexType, "all") != null) {
+				throw new InfrastructureException("FACTUCORE.XSD.ALL.NO_SOPORTADO", parentPath);
+			}
+			for (Element attribute : children(complexType, "attribute")) {
+				parseAttribute(attribute, parentPath, simpleTypes, atributos);
+			}
+		}
+	}
 	private void parseParticle(Element particle, String parentPath, Map<String, Element> complexTypes,
 			Map<String, Element> simpleTypes, Map<String, Element> globalElements, List<XsdElementSource> elementos,
 			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones, Set<String> typeStack) {
