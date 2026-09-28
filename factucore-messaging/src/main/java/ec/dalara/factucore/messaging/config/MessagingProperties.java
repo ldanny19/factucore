@@ -12,6 +12,7 @@ public class MessagingProperties {
     private boolean enabled = true;
     private String broker = "KAFKA";
     private KafkaProperties kafka = new KafkaProperties();
+    private RabbitmqProperties rabbitmq = new RabbitmqProperties();
     private RetryProperties retry = new RetryProperties();
 
     @Getter
@@ -35,6 +36,19 @@ public class MessagingProperties {
     public static class ConsumerProperties {
         private String autoOffsetReset = "earliest";
         private boolean enableAutoCommit = false;
+        private int concurrency = 1;
+    }
+
+    @Getter
+    @Setter
+    public static class RabbitmqProperties {
+        private String addresses = "localhost:5672";
+        private String username = "guest";
+        private String password = "guest";
+        private String virtualHost = "/";
+        private String exchangeType = "topic";
+        private String exchangePrefix = "factucore";
+        private boolean durable = true;
         private int concurrency = 1;
     }
 
