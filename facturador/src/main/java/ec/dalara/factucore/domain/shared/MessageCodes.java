@@ -2,6 +2,7 @@ package ec.dalara.factucore.domain.shared;
 
 public final class MessageCodes {
 
+    public static final String OPERACION_EXITOSA = "FACTUCORE.OPERACION.EXITOSA";
     public static final String REGISTRO_REQUERIDO = "FACTUCORE.REGISTRO.REQUERIDO";
     public static final String REGISTRO_ID_REQUERIDO = "FACTUCORE.REGISTRO.ID.REQUERIDO";
     public static final String REGISTRO_NO_ENCONTRADO = "FACTUCORE.REGISTRO.NO_ENCONTRADO";
