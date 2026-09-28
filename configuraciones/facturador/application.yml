@@ -111,6 +111,11 @@ factucore:
     ruta: ${FACTUCORE_LOGGING_RUTA:${factucore.path.logs}}
     archivo: ${FACTUCORE_LOGGING_ARCHIVO:facturador.log}
 
+  notificacion:
+    topico: ${FACTUCORE_NOTIFICACION_TOPICO:factucore.notificacion.comprobante}
+    tipo-evento: ${FACTUCORE_NOTIFICACION_TIPO_EVENTO:COMPROBANTE_AUTORIZADO}
+    version-evento: ${FACTUCORE_NOTIFICACION_VERSION_EVENTO:1.0}
+
   workflow:
     motor: apache-camel
     version: 4.10.7
