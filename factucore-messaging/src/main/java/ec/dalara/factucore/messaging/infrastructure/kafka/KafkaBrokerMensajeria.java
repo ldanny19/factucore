@@ -45,14 +45,7 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
                     properties.getRetry().getIntervaloMs(),
                     Math.max(0, properties.getRetry().getMaxIntentos() - 1)));
         } else {
-            org.springframework.kafka.listener.ConsumerRecordRecoverer noOp =
-                    new org.springframework.kafka.listener.ConsumerRecordRecoverer() {
-                        @Override
-                        public void accept(ConsumerRecord<?, ?> record, Exception exception) {
-                            // Sin DLQ: se registra el error y se descarta el mensaje.
-                        }
-                    };
-            errorHandler = new DefaultErrorHandler(noOp);
+            errorHandler = new DefaultErrorHandler(new FixedBackOff(0L, 0L));
         }
 
         container.setCommonErrorHandler(errorHandler);
