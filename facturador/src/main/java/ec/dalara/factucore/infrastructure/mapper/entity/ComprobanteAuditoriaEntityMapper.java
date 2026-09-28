@@ -12,7 +12,7 @@ public interface ComprobanteAuditoriaEntityMapper {
 		if (e == null)
 			return null;
 		return new ComprobanteAuditoriaModel(e.getEstadoAnterior(), e.getEstadoNuevo(), e.getCodigoError(),
-				e.getMensajeError(), e.getFecha());
+				e.getMensajeError(), e.getFechaCreacion());
 	}
 
 	@Mapping(target = "id", ignore = true)
