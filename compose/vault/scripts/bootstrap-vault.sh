@@ -4,14 +4,13 @@ set -euo pipefail
 VAULT_CONTAINER="${FACTUCORE_VAULT_CONTAINER:-factucore-vault}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-FACTUCORE_HOME_VALUE="${FACTUCORE_HOME:-}"
-if [[ -z "$FACTUCORE_HOME_VALUE" && -f "$COMPOSE_DIR/.env" ]]; then
-  FACTUCORE_HOME_VALUE="$(grep '^FACTUCORE_HOME=' "$COMPOSE_DIR/.env" | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | sed 's/^"//; s/"$//')"
+FACTUCORE_HOME_VALUE=""
+if [[ -f "$COMPOSE_DIR/.env" ]]; then
+  FACTUCORE_HOME_VALUE="$(grep "^FACTUCORE_HOME=" "$COMPOSE_DIR/.env" | head -n 1 | cut -d "=" -f 2- | tr -d "\r")"
 fi
 if [[ -z "$FACTUCORE_HOME_VALUE" ]]; then
-  fail "FACTUCORE_HOME no esta definido. Configuralo en $COMPOSE_DIR/.env o como variable de entorno."
+  fail "FACTUCORE_HOME no esta definido en $COMPOSE_DIR/.env."
 fi
-
 SECRETS_DIR="$FACTUCORE_HOME_VALUE/secrets"
 INIT_FILE="$SECRETS_DIR/vault-init.json"
 AGENT_TOKEN_FILE="$SECRETS_DIR/vault_agent_token.txt"
