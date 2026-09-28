@@ -127,8 +127,8 @@ services:
 
   facturador:
     build:
-      context: ../facturador
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: facturador/Dockerfile
     container_name: factucore-facturador
     restart: unless-stopped
     depends_on:
@@ -163,8 +163,8 @@ services:
 
   notificacion:
     build:
-      context: ../notificacion
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: notificacion/Dockerfile
     container_name: factucore-notificacion
     restart: unless-stopped
     depends_on:
