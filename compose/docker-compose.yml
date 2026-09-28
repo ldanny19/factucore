@@ -14,7 +14,7 @@ services:
     command: server
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/vault/data:/vault/data
-      - ${FACTUCORE_HOME:-D:/factucore}/vault/config:/vault/config:ro
+      - ./vault/config:/vault/config:ro
     ports:
       - "${VAULT_PORT:-8200}:8200"
 
@@ -31,7 +31,7 @@ services:
     secrets:
       - vault_agent_token
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/vault/agent:/vault/agent:ro
+      - ./vault/agent:/vault/agent:ro
       - factucore_vault_secrets:/vault/secrets
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/secrets/postgres_password && test -s /vault/secrets/keycloak_admin_password"]
