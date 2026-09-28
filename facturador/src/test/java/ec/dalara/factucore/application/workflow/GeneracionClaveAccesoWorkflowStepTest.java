@@ -46,7 +46,7 @@ class GeneracionClaveAccesoWorkflowStepTest {
         when(emisionService.resolver(10L, "001", "001"))
                 .thenReturn(new EmisionService.ResultadoEmision(establecimiento, puntoEmision));
 
-        var documento = new DocumentoXsdModel("01", "Factura", null, "FACTURA");
+        var documento = new DocumentoXsdModel("01", "Factura", null, "FACTURA", "factura");
         var definition = mock(DocumentDefinitionModel.class);
         when(definition.getDocumento()).thenReturn(documento);
         when(definitionProvider.obtenerDefinicionVigente(any(), any())).thenReturn(Optional.of(definition));
