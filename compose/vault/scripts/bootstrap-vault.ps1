@@ -3,7 +3,17 @@ $ErrorActionPreference = "Stop"
 $VaultContainer = if ($env:FACTUCORE_VAULT_CONTAINER) { $env:FACTUCORE_VAULT_CONTAINER } else { "factucore-vault" }
 $ScriptDir = $PSScriptRoot
 $ComposeDir = (Resolve-Path (Join-Path $ScriptDir "..\..")).Path
-$FactuCoreHome = if ($env:FACTUCORE_HOME) { $env:FACTUCORE_HOME } else { "D:\factucore" }
+$FactuCoreHome = $env:FACTUCORE_HOME
+if (-not $FactuCoreHome) {
+    $EnvFile = Join-Path $ComposeDir ".env"
+    if (Test-Path $EnvFile) {
+        $line = Get-Content $EnvFile | Where-Object { $_ -match '^FACTUCORE_HOME\s*=' } | Select-Object -First 1
+        if ($line) {
+            $FactuCoreHome = ($line -replace '^FACTUCORE_HOME\s*=\s*', '').Trim().Trim('"').Trim("'")
+        }
+    }
+}
+if (-not $FactuCoreHome) { throw "FACTUCORE_HOME no esta definido. Configuralo en $EnvFile o como variable de entorno." }
 $SecretsDir = Join-Path $FactuCoreHome "secrets"
 $InitFile = Join-Path $SecretsDir "vault-init.json"
 $AgentTokenFile = Join-Path $SecretsDir "vault_agent_token.txt"
