@@ -39,11 +39,16 @@ fi
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -o '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 if [[ -n "$SEALED" ]]; then
   [[ -f "$INIT_FILE" ]] || fail "Vault esta sellado y no existe $INIT_FILE."
-  THRESHOLD=$(grep -o '"secret_threshold"[[:space:]]*:[[:space:]]*[0-9]*' "$INIT_FILE" | grep -o '[0-9]*$' || true)
-  [[ -n "$THRESHOLD" ]] || fail "No se pudo determinar el umbral de unseal."
-  KEYS=$(grep -o '"unseal_keys_b64"[[:space:]]*:[[:space:]]*\[[^]]*\]' "$INIT_FILE" | grep -o '"[^"]*"' | tail -n +2 | tr -d '"' | head -n "$THRESHOLD")
+  THRESHOLD=$(sed -n 's/.*"secret_threshold"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$INIT_FILE" | head -1)
+  [[ -n "$THRESHOLD" ]] || fail "No se pudo determinar el umbral de unseal desde $INIT_FILE."
+  KEYS=$(sed -n '/\"unseal_keys_b64\"/,/]/p' "$INIT_FILE" | grep -o '"[^"]*"' | tail -n +2 | tr -d '"' | head -n "$THRESHOLD")
+  KEY_COUNT=$(printf '%s\n' "$KEYS" | sed '/^$/d' | wc -l | tr -d ' ')
+  [[ "$KEY_COUNT" -ge "$THRESHOLD" ]] || fail "No se encontraron suficientes claves de unseal en $INIT_FILE."
   log "Ejecutando unseal"
-  while IFS= read -r key; do [[ -n "$key" ]] && docker exec "$VAULT_CONTAINER" vault operator unseal "$key" >/dev/null || true; done <<< "$KEYS"
+  while IFS= read -r key; do
+    [[ -n "$key" ]] || continue
+    docker exec "$VAULT_CONTAINER" vault operator unseal "$key" >/dev/null || fail "No se pudo ejecutar el unseal."
+  done <<< "$KEYS"
 fi
 
 STATUS_JSON="$(docker exec "$VAULT_CONTAINER" vault status -format=json 2>/dev/null)" || fail "No se pudo verificar el estado de Vault."
