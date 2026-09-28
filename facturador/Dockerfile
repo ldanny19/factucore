@@ -52,4 +52,4 @@ USER factucore
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/facturador.jar"]
+ENTRYPOINT ["java", "-jar", "/app/facturador.jar", "--spring.config.additional-location=file:/app/config/"]
