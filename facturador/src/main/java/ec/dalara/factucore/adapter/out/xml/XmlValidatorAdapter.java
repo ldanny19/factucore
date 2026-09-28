@@ -11,8 +11,6 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 
@@ -22,6 +20,7 @@ import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FirmaElectronicaPort;
+import ec.dalara.factucore.domain.certificadofirma.CertificadoFirmaModel;
 import ec.dalara.factucore.domain.shared.MessageCodes;
-import ec.dalara.factucore.domain.firmaelectronica.CertificadoFirmaModel;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;

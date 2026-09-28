@@ -7,10 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.contract.request.MapeoXsdRequest;
 import ec.dalara.factucore.application.contract.response.MapeoXsdResponse;
-import ec.dalara.factucore.domain.shared.DomainException;
-import ec.dalara.factucore.domain.shared.MessageCodes;
-import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.application.mapper.MapeoXsdMapper;
+import ec.dalara.factucore.domain.shared.DomainException;
+import ec.dalara.factucore.domain.shared.EstadoRegistro;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.mapper.entity.MapeoXsdEntityMapper;
 import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.ElementoXsd;

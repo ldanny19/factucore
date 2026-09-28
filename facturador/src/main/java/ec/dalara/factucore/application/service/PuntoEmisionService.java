@@ -18,77 +18,74 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PuntoEmisionService extends BaseService<PuntoEmision> {
 
-    private final PuntoEmisionRepository puntoEmisionRepository;
+	private final PuntoEmisionRepository puntoEmisionRepository;
 
-    @Override
-    protected BaseRepository<PuntoEmision, Long> getRepository() {
-        return puntoEmisionRepository;
-    }
+	@Override
+	protected BaseRepository<PuntoEmision, Long> getRepository() {
+		return puntoEmisionRepository;
+	}
 
-    @Override
-    @Transactional
-    public PuntoEmision guardar(PuntoEmision puntoEmision) {
-        validar(puntoEmision);
+	@Override
+	@Transactional
+	public PuntoEmision guardar(PuntoEmision puntoEmision) {
+		validar(puntoEmision);
 
-        boolean duplicado = puntoEmision.getId() == null
-                ? puntoEmisionRepository.existsByEstablecimientoIdAndCodigo(
-                        puntoEmision.getEstablecimiento().getId(), puntoEmision.getCodigo())
-                : puntoEmisionRepository.existsByEstablecimientoIdAndCodigoAndIdNot(
-                        puntoEmision.getEstablecimiento().getId(), puntoEmision.getCodigo(), puntoEmision.getId());
+		boolean duplicado = puntoEmision.getId() == null
+				? puntoEmisionRepository.existsByEstablecimientoIdAndCodigo(puntoEmision.getEstablecimiento().getId(),
+						puntoEmision.getCodigo())
+				: puntoEmisionRepository.existsByEstablecimientoIdAndCodigoAndIdNot(
+						puntoEmision.getEstablecimiento().getId(), puntoEmision.getCodigo(), puntoEmision.getId());
 
-        if (duplicado) {
-            throw new ApplicationException(
-                    MessageCodes.PUNTO_EMISION_ESTABLECIMIENTO_CODIGO_DUPLICADO,
-                    puntoEmision.getEstablecimiento().getId(), puntoEmision.getCodigo());
-        }
+		if (duplicado) {
+			throw new ApplicationException(MessageCodes.PUNTO_EMISION_ESTABLECIMIENTO_CODIGO_DUPLICADO,
+					puntoEmision.getEstablecimiento().getId(), puntoEmision.getCodigo());
+		}
 
-        return super.guardar(puntoEmision);
-    }
+		return super.guardar(puntoEmision);
+	}
 
-    public List<PuntoEmision> listarPorEstablecimiento(Long establecimientoId) {
-        if (establecimientoId == null) {
-            return List.of();
-        }
+	public List<PuntoEmision> listarPorEstablecimiento(Long establecimientoId) {
+		if (establecimientoId == null) {
+			return List.of();
+		}
 
-        return puntoEmisionRepository.findByEstablecimientoId(establecimientoId).stream()
-                .filter(puntoEmision -> !EstadoRegistro.ELIMINADO.equals(puntoEmision.getEstadoRegistro()))
-                .toList();
-    }
+		return puntoEmisionRepository.findByEstablecimientoId(establecimientoId).stream()
+				.filter(puntoEmision -> !EstadoRegistro.ELIMINADO.equals(puntoEmision.getEstadoRegistro())).toList();
+	}
 
-    public Optional<PuntoEmision> obtenerPorEstablecimientoYCodigo(Long establecimientoId, String codigo) {
-        if (establecimientoId == null || codigo == null || codigo.isBlank()) {
-            return Optional.empty();
-        }
+	public Optional<PuntoEmision> obtenerPorEstablecimientoYCodigo(Long establecimientoId, String codigo) {
+		if (establecimientoId == null || codigo == null || codigo.isBlank()) {
+			return Optional.empty();
+		}
 
-        return puntoEmisionRepository.findByEstablecimientoIdAndCodigo(establecimientoId, codigo)
-                .filter(puntoEmision -> EstadoRegistro.ACTIVO.equals(puntoEmision.getEstadoRegistro()));
-    }
+		return puntoEmisionRepository.findByEstablecimientoIdAndCodigo(establecimientoId, codigo)
+				.filter(puntoEmision -> EstadoRegistro.ACTIVO.equals(puntoEmision.getEstadoRegistro()));
+	}
 
-    public boolean existePorEstablecimientoYCodigo(Long establecimientoId, String codigo) {
-        if (establecimientoId == null || codigo == null || codigo.isBlank()) {
-            return false;
-        }
+	public boolean existePorEstablecimientoYCodigo(Long establecimientoId, String codigo) {
+		if (establecimientoId == null || codigo == null || codigo.isBlank()) {
+			return false;
+		}
 
-        return puntoEmisionRepository.findByEstablecimientoIdAndCodigo(establecimientoId, codigo)
-                .filter(puntoEmision -> !EstadoRegistro.ELIMINADO.equals(puntoEmision.getEstadoRegistro()))
-                .isPresent();
-    }
+		return puntoEmisionRepository.findByEstablecimientoIdAndCodigo(establecimientoId, codigo)
+				.filter(puntoEmision -> !EstadoRegistro.ELIMINADO.equals(puntoEmision.getEstadoRegistro())).isPresent();
+	}
 
-    private void validar(PuntoEmision puntoEmision) {
-        if (puntoEmision == null) {
-            throw new ApplicationException(MessageCodes.PUNTO_EMISION_REQUERIDO);
-        }
+	private void validar(PuntoEmision puntoEmision) {
+		if (puntoEmision == null) {
+			throw new ApplicationException(MessageCodes.PUNTO_EMISION_REQUERIDO);
+		}
 
-        if (puntoEmision.getEstablecimiento() == null || puntoEmision.getEstablecimiento().getId() == null) {
-            throw new ApplicationException(MessageCodes.PUNTO_EMISION_ESTABLECIMIENTO_REQUERIDO);
-        }
+		if (puntoEmision.getEstablecimiento() == null || puntoEmision.getEstablecimiento().getId() == null) {
+			throw new ApplicationException(MessageCodes.PUNTO_EMISION_ESTABLECIMIENTO_REQUERIDO);
+		}
 
-        if (puntoEmision.getCodigo() == null || puntoEmision.getCodigo().isBlank()) {
-            throw new ApplicationException(MessageCodes.PUNTO_EMISION_CODIGO_REQUERIDO);
-        }
+		if (puntoEmision.getCodigo() == null || puntoEmision.getCodigo().isBlank()) {
+			throw new ApplicationException(MessageCodes.PUNTO_EMISION_CODIGO_REQUERIDO);
+		}
 
-        if (!puntoEmision.getCodigo().matches("\\d{3}")) {
-            throw new ApplicationException(MessageCodes.PUNTO_EMISION_CODIGO_FORMATO_INVALIDO);
-        }
-    }
+		if (!puntoEmision.getCodigo().matches("\\d{3}")) {
+			throw new ApplicationException(MessageCodes.PUNTO_EMISION_CODIGO_FORMATO_INVALIDO);
+		}
+	}
 }

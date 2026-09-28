@@ -8,8 +8,8 @@ import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
+import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
@@ -17,37 +17,37 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionRideWorkflowStep implements WorkflowStep {
 
-    private final RidePort ridePort;
-    private final ComprobanteEvidenciaPort evidenciaPort;
+	private final RidePort ridePort;
+	private final ComprobanteEvidenciaPort evidenciaPort;
 
-    @Override
-    public EtapaWorkflow etapa() {
-        return EtapaWorkflow.GENERACION_RIDE;
-    }
+	@Override
+	public EtapaWorkflow etapa() {
+		return EtapaWorkflow.GENERACION_RIDE;
+	}
 
-    @Override
-    public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
-        if (contexto == null || contexto.getComprobante() == null) {
-            throw new WorkflowException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
-        }
+	@Override
+	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+		if (contexto == null || contexto.getComprobante() == null) {
+			throw new WorkflowException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
+		}
 
-        var comprobante = contexto.getComprobante();
-        try {
-            byte[] pdf = ridePort.generar(comprobante);
-            contexto.setRide(pdf);
+		var comprobante = contexto.getComprobante();
+		try {
+			byte[] pdf = ridePort.generar(comprobante);
+			contexto.setRide(pdf);
 
-            String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, contexto.getSolicitud().getUsuario());
-            comprobante.setRutaRide(ruta);
-            comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
-            comprobante.setFechaProximoReproceso(null);
+			String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, contexto.getSolicitud().getUsuario());
+			comprobante.setRutaRide(ruta);
+			comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
+			comprobante.setFechaProximoReproceso(null);
 
-            return ResultadoEtapa.exitosa(etapa(), EstadoProceso.RIDE_GENERADO.name(),
-                    Map.of("archivoPdfGenerado", true, "rutaRide", ruta));
-        } catch (RuntimeException exception) {
-            comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-            comprobante.setFechaProximoReproceso(null);
-            return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
-                    MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
-        }
-    }
+			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.RIDE_GENERADO.name(),
+					Map.of("archivoPdfGenerado", true, "rutaRide", ruta));
+		} catch (RuntimeException exception) {
+			comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
+			comprobante.setFechaProximoReproceso(null);
+			return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(), MessageCodes.RIDE_GENERACION_ERROR,
+					exception.getMessage());
+		}
+	}
 }

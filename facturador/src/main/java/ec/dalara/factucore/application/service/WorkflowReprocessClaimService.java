@@ -13,11 +13,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WorkflowReprocessClaimService {
 
-    private final ComprobanteRepository comprobanteRepository;
+	private final ComprobanteRepository comprobanteRepository;
 
-    @Transactional
-    public boolean reclamar(Long comprobanteId, LocalDateTime ahora, LocalDateTime bloqueadoHasta) {
-        return comprobanteRepository.reclamarReproceso(
-                comprobanteId, EstadoProceso.AUTORIZACION_PENDIENTE.name(), ahora, bloqueadoHasta) == 1;
-    }
+	@Transactional
+	public boolean reclamar(Long comprobanteId, LocalDateTime ahora, LocalDateTime bloqueadoHasta) {
+		return comprobanteRepository.reclamarReproceso(comprobanteId, EstadoProceso.AUTORIZACION_PENDIENTE.name(),
+				ahora, bloqueadoHasta) == 1;
+	}
 }

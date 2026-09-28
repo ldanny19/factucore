@@ -20,88 +20,74 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 
-    private static final String TIPO_EMISION_NORMAL = "1";
+	private static final String TIPO_EMISION_NORMAL = "1";
 
-    private final ClaveAccesoService claveAccesoService;
-    private final EmpresaService empresaService;
-    private final EmisionService emisionService;
-    private final DocumentoDefinitionProvider definitionProvider;
-    private final SriProperties sriProperties;
+	private final ClaveAccesoService claveAccesoService;
+	private final EmpresaService empresaService;
+	private final EmisionService emisionService;
+	private final DocumentoDefinitionProvider definitionProvider;
+	private final SriProperties sriProperties;
 
-    @Override
-    public EtapaWorkflow etapa() {
-        return EtapaWorkflow.GENERACION_CLAVE_ACCESO;
-    }
+	@Override
+	public EtapaWorkflow etapa() {
+		return EtapaWorkflow.GENERACION_CLAVE_ACCESO;
+	}
 
-    @Override
-    public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
-        if (contexto == null || contexto.getSolicitud() == null) {
-            throw new WorkflowException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
-        }
+	@Override
+	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+		if (contexto == null || contexto.getSolicitud() == null) {
+			throw new WorkflowException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
+		}
 
-        if (contexto.getClaveAcceso() != null && !contexto.getClaveAcceso().isBlank()) {
-            if (!claveAccesoService.validar(contexto.getClaveAcceso())) {
-                throw new WorkflowException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
-            }
-            return ResultadoEtapa.exitosa(
-                    EtapaWorkflow.GENERACION_CLAVE_ACCESO,
-                    "YA_GENERADA");
-        }
+		if (contexto.getClaveAcceso() != null && !contexto.getClaveAcceso().isBlank()) {
+			if (!claveAccesoService.validar(contexto.getClaveAcceso())) {
+				throw new WorkflowException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
+			}
+			return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "YA_GENERADA");
+		}
 
-        if (contexto.getSecuencial() == null || contexto.getSecuencial().isBlank()) {
-            throw new WorkflowException(MessageCodes.COMPROBANTE_NUMERO_REQUERIDO);
-        }
+		if (contexto.getSecuencial() == null || contexto.getSecuencial().isBlank()) {
+			throw new WorkflowException(MessageCodes.COMPROBANTE_NUMERO_REQUERIDO);
+		}
 
-        var solicitud = contexto.getSolicitud();
+		var solicitud = contexto.getSolicitud();
 
-        var empresa = empresaService.obtenerPorId(solicitud.getIdEmpresa())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
+		var empresa = empresaService.obtenerPorId(solicitud.getIdEmpresa())
+				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
 
-        var emision = emisionService.resolver(
-                solicitud.getIdEmpresa(),
-                solicitud.getCodigoEstablecimiento(),
-                solicitud.getPuntoEmision());
+		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getCodigoEstablecimiento(),
+				solicitud.getPuntoEmision());
 
-        var definition = definitionProvider
-                .obtenerDefinicionVigente(
-                        solicitud.getTipoDocumento(),
-                        solicitud.getFechaInicio().toLocalDateTime())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+		var definition = definitionProvider
+				.obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
+				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
-        String ambiente = resolverAmbiente(sriProperties.getAmbiente());
+		String ambiente = resolverAmbiente(sriProperties.getAmbiente());
 
-        var datos = new ClaveAccesoDatos(
-                LocalDate.from(solicitud.getFechaInicio()),
-                definition.getDocumento().getCodigo(),
-                empresa.getRuc(),
-                ambiente,
-                emision.establecimiento().getCodigo(),
-                emision.puntoEmision().getCodigo(),
-                contexto.getSecuencial(),
-                null,
-                TIPO_EMISION_NORMAL);
+		var datos = new ClaveAccesoDatos(LocalDate.from(solicitud.getFechaInicio()),
+				definition.getDocumento().getCodigo(), empresa.getRuc(), ambiente,
+				emision.establecimiento().getCodigo(), emision.puntoEmision().getCodigo(), contexto.getSecuencial(),
+				null, TIPO_EMISION_NORMAL);
 
-        var resultado = claveAccesoService.generarConCodigoNumerico(datos);
-        contexto.setClaveAcceso(resultado.getClave());
+		var resultado = claveAccesoService.generarConCodigoNumerico(datos);
+		contexto.setClaveAcceso(resultado.getClave());
 
-        if (contexto.getComprobante() != null) {
-            contexto.getComprobante().setClaveAcceso(resultado.getClave());
-        }
+		if (contexto.getComprobante() != null) {
+			contexto.getComprobante().setClaveAcceso(resultado.getClave());
+		}
 
-        return ResultadoEtapa.exitosa(
-                EtapaWorkflow.GENERACION_CLAVE_ACCESO,
-                "GENERADA");
-    }
+		return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "GENERADA");
+	}
 
-    private String resolverAmbiente(String ambiente) {
-        if ("PRUEBAS".equalsIgnoreCase(ambiente)) {
-            return "1";
-        }
+	private String resolverAmbiente(String ambiente) {
+		if ("PRUEBAS".equalsIgnoreCase(ambiente)) {
+			return "1";
+		}
 
-        if ("PRODUCCION".equalsIgnoreCase(ambiente)) {
-            return "2";
-        }
+		if ("PRODUCCION".equalsIgnoreCase(ambiente)) {
+			return "2";
+		}
 
-        throw new WorkflowException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
-    }
+		throw new WorkflowException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
+	}
 }

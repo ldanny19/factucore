@@ -12,5 +12,6 @@ public interface EnumeracionXsdRepository extends BaseRepository<EnumeracionXsd,
 	Optional<EnumeracionXsd> findByElementoXsdIdAndValor(Long elementoXsdId, String valor);
 
 	boolean existsByElementoXsdIdAndValor(Long elementoXsdId, String valor);
+
 	boolean existsByElementoXsdIdAndValorAndIdNot(Long elementoXsdId, String valor, Long id);
 }

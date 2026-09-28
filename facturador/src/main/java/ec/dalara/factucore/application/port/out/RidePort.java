@@ -4,5 +4,5 @@ import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 
 public interface RidePort {
 
-    byte[] generar(Comprobante comprobante);
+	byte[] generar(Comprobante comprobante);
 }

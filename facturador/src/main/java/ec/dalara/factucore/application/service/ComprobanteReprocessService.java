@@ -8,7 +8,6 @@ import ec.dalara.factucore.application.workflow.GeneracionRideWorkflowStep;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
-import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -16,37 +15,37 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ComprobanteReprocessService {
 
-    private final ComprobanteRepository comprobanteRepository;
-    private final AutorizacionSriWorkflowStep autorizacionSri;
-    private final GeneracionRideWorkflowStep generacionRide;
+	private final ComprobanteRepository comprobanteRepository;
+	private final AutorizacionSriWorkflowStep autorizacionSri;
+	private final GeneracionRideWorkflowStep generacionRide;
 
-    @Transactional
-    public void reprocesarAutorizacion(Long comprobanteId) {
-        var comprobante = comprobanteRepository.findByIdAndEstadoRegistro(
-                comprobanteId, EstadoRegistro.ACTIVO).orElse(null);
+	@Transactional
+	public void reprocesarAutorizacion(Long comprobanteId) {
+		var comprobante = comprobanteRepository.findByIdAndEstadoRegistro(comprobanteId, EstadoRegistro.ACTIVO)
+				.orElse(null);
 
-        if (comprobante == null
-                || !EstadoProceso.AUTORIZACION_PENDIENTE.name().equals(comprobante.getEstadoProceso())) {
-            return;
-        }
+		if (comprobante == null
+				|| !EstadoProceso.AUTORIZACION_PENDIENTE.name().equals(comprobante.getEstadoProceso())) {
+			return;
+		}
 
-        var contexto = ContextoWorkflow.existente(comprobante, null);
-        var resultadoAutorizacion = autorizacionSri.ejecutar(contexto);
-        contexto.registrarResultado(resultadoAutorizacion);
+		var contexto = ContextoWorkflow.existente(comprobante, null);
+		var resultadoAutorizacion = autorizacionSri.ejecutar(contexto);
+		contexto.registrarResultado(resultadoAutorizacion);
 
-        if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
-            var resultadoRide = generacionRide.ejecutar(contexto);
-            contexto.registrarResultado(resultadoRide);
-        }
+		if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
+			var resultadoRide = generacionRide.ejecutar(contexto);
+			contexto.registrarResultado(resultadoRide);
+		}
 
-        if (!resultadoAutorizacion.isExitosa()) {
-            comprobante.setCodigoError(resultadoAutorizacion.getCodigoError());
-            comprobante.setMensajeError(resultadoAutorizacion.getMensaje());
-        } else if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
-            comprobante.setCodigoError(null);
-            comprobante.setMensajeError(null);
-        }
+		if (!resultadoAutorizacion.isExitosa()) {
+			comprobante.setCodigoError(resultadoAutorizacion.getCodigoError());
+			comprobante.setMensajeError(resultadoAutorizacion.getMensaje());
+		} else if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
+			comprobante.setCodigoError(null);
+			comprobante.setMensajeError(null);
+		}
 
-        comprobanteRepository.save(comprobante);
-    }
+		comprobanteRepository.save(comprobante);
+	}
 }

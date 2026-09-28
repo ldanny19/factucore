@@ -1,6 +1,7 @@
 package ec.dalara.factucore.infrastructure.configuration.workflow;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,7 @@ import lombok.Setter;
 @Setter
 @ConfigurationProperties(prefix = "factucore.workflow.reproceso")
 public class WorkflowReprocessProperties {
-    private boolean habilitado = true;
-    private long intervaloMs = 5000;
-    private long bloqueoMs = 60000;
+	private boolean habilitado = true;
+	private long intervaloMs = 5000;
+	private long bloqueoMs = 60000;
 }

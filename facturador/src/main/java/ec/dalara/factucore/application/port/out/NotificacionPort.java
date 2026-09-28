@@ -4,5 +4,5 @@ import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 
 public interface NotificacionPort {
 
-    void publicar(ContextoWorkflow contexto);
+	void publicar(ContextoWorkflow contexto);
 }

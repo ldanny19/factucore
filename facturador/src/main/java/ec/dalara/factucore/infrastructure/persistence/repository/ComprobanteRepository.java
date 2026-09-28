@@ -13,28 +13,29 @@ import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 public interface ComprobanteRepository extends BaseRepository<Comprobante, Long> {
 
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
+
 	Optional<Comprobante> findByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 
 	boolean existsByClaveAcceso(String claveAcceso);
+
 	boolean existsByClaveAccesoAndIdNot(String claveAcceso, Long id);
+
 	boolean existsByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 
 	Optional<Comprobante> findByEmpresaIdAndEstablecimientoIdAndPuntoEmisionIdAndCodigoDocumentoAndSecuencial(
 			Long empresaId, Long establecimientoId, Long puntoEmisionId, String codigoDocumento, String secuencial);
 
-    List<Comprobante> findTop100ByEstadoProcesoAndFechaProximoReprocesoLessThanEqualOrderByFechaProximoReprocesoAsc(
-            String estadoProceso, LocalDateTime fecha);
+	List<Comprobante> findTop100ByEstadoProcesoAndFechaProximoReprocesoLessThanEqualOrderByFechaProximoReprocesoAsc(
+			String estadoProceso, LocalDateTime fecha);
 
-    @Modifying
-    @Query("""
-            update Comprobante c
-               set c.fechaProximoReproceso = :bloqueadoHasta
-             where c.id = :id
-               and c.estadoProceso = :estadoProceso
-               and c.fechaProximoReproceso <= :ahora
-            """)
-    int reclamarReproceso(@Param("id") Long id,
-            @Param("estadoProceso") String estadoProceso,
-            @Param("ahora") LocalDateTime ahora,
-            @Param("bloqueadoHasta") LocalDateTime bloqueadoHasta);
+	@Modifying
+	@Query("""
+			update Comprobante c
+			   set c.fechaProximoReproceso = :bloqueadoHasta
+			 where c.id = :id
+			   and c.estadoProceso = :estadoProceso
+			   and c.fechaProximoReproceso <= :ahora
+			""")
+	int reclamarReproceso(@Param("id") Long id, @Param("estadoProceso") String estadoProceso,
+			@Param("ahora") LocalDateTime ahora, @Param("bloqueadoHasta") LocalDateTime bloqueadoHasta);
 }

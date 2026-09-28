@@ -7,8 +7,8 @@ import java.util.Map;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
-import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 
 public final class ContextoWorkflow {
@@ -82,9 +82,13 @@ public final class ContextoWorkflow {
 		return contexto;
 	}
 
-	public void marcarIdempotente() { this.idempotente = true; }
+	public void marcarIdempotente() {
+		this.idempotente = true;
+	}
 
-	public boolean isIdempotente() { return idempotente; }
+	public boolean isIdempotente() {
+		return idempotente;
+	}
 
 	public void asignarComprobante(Comprobante comprobante) {
 		if (comprobante == null) {

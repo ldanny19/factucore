@@ -8,6 +8,6 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteEvidenci
 
 public interface ComprobanteEvidenciaRepository extends JpaRepository<ComprobanteEvidencia, Long> {
 
-    Optional<ComprobanteEvidencia> findByComprobanteIdAndTipoEvidenciaAndActualTrue(
-            Long comprobanteId, String tipoEvidencia);
+	Optional<ComprobanteEvidencia> findByComprobanteIdAndTipoEvidenciaAndActualTrue(Long comprobanteId,
+			String tipoEvidencia);
 }

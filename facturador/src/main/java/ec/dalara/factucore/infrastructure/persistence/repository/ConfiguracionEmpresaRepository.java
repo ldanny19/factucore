@@ -8,21 +8,21 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpres
 
 public interface ConfiguracionEmpresaRepository extends BaseRepository<ConfiguracionEmpresa, Long> {
 
-    List<ConfiguracionEmpresa> findByEmpresaId(Long empresaId);
+	List<ConfiguracionEmpresa> findByEmpresaId(Long empresaId);
 
-    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClave(Long empresaId, String clave);
+	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClave(Long empresaId, String clave);
 
-    boolean existsByEmpresaIdAndClave(Long empresaId, String clave);
+	boolean existsByEmpresaIdAndClave(Long empresaId, String clave);
 
-    boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesde(
-            Long empresaId, String clave, LocalDateTime fechaVigenciaDesde);
+	boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesde(Long empresaId, String clave,
+			LocalDateTime fechaVigenciaDesde);
 
-    boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesdeAndIdNot(
-            Long empresaId, String clave, LocalDateTime fechaVigenciaDesde, Long id);
+	boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesdeAndIdNot(Long empresaId, String clave,
+			LocalDateTime fechaVigenciaDesde, Long id);
 
-    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
-            Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
+	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
+			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
 
-    Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
-            Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
+	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
+			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
 }

@@ -15,11 +15,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class XsdImportService {
 
-    private final XsdParserPort parser;
-    private final XsdDefinitionPersistencePort persistence;
+	private final XsdParserPort parser;
+	private final XsdDefinitionPersistencePort persistence;
 
-    public XsdImportResult importar(InputStream inputStream, String systemId, XsdImportRequest request) {
-        XsdDefinitionSource definition = parser.parse(inputStream, systemId);
-        return persistence.persist(request, definition);
-    }
+	public XsdImportResult importar(InputStream inputStream, String systemId, XsdImportRequest request) {
+		XsdDefinitionSource definition = parser.parse(inputStream, systemId);
+		return persistence.persist(request, definition);
+	}
 }
