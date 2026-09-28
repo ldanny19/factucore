@@ -45,8 +45,9 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
                     properties.getRetry().getIntervaloMs(),
                     Math.max(0, properties.getRetry().getMaxIntentos() - 1)));
         } else {
-            errorHandler = new DefaultErrorHandler(
-                (ConsumerRecord<?, ?> record, Exception exception) -> { });
+            org.springframework.kafka.listener.ConsumerRecordRecoverer noOp =
+                    (record, exception) -> { };
+            errorHandler = new DefaultErrorHandler(noOp);
         }
 
         container.setCommonErrorHandler(errorHandler);
