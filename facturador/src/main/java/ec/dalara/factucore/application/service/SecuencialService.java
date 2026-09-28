@@ -54,6 +54,24 @@ public class SecuencialService extends BaseService<Secuencial> {
 				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO, puntoEmisionId, codigoDocumento));
 	}
 
+	@Transactional
+	public Long consumirSiguienteSecuencial(Secuencial secuencial) {
+		if (secuencial == null || secuencial.getId() == null) {
+			throw new ApplicationException(MessageCodes.SECUENCIAL_REQUERIDO);
+		}
+		Long ultimo = secuencial.getUltimoSecuencial();
+		if (ultimo == null || ultimo < 0) {
+			throw new ApplicationException(MessageCodes.SECUENCIAL_VALOR_INVALIDO);
+		}
+		if (ultimo >= MAXIMO_SECUENCIAL) {
+			throw new ApplicationException(MessageCodes.SECUENCIAL_LIMITE_ALCANZADO);
+		}
+		long siguiente = ultimo + 1;
+		secuencial.setUltimoSecuencial(siguiente);
+		secuencialRepository.save(secuencial);
+		return siguiente;
+	}
+
 	public Optional<Secuencial> obtenerPorPuntoEmisionYDocumento(Long puntoEmisionId, String codigoDocumento) {
 		if (puntoEmisionId == null || codigoDocumento == null || codigoDocumento.isBlank()) {
 			return Optional.empty();
