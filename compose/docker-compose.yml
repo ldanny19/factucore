@@ -11,27 +11,44 @@ services:
     environment:
       VAULT_ADDR: http://vault:8200
       SKIP_CHOWN: "true"
-    command: server
+    command: server -config=/vault/config/config.hcl
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/vault/data:/vault/data
       - ./vault/config:/vault/config:ro
     ports:
       - "${VAULT_PORT:-8200}:8200"
 
+  vault-bootstrap:
+    image: hashicorp/vault:1.20
+    container_name: factucore-vault-bootstrap
+    restart: "no"
+    depends_on:
+      vault:
+        condition: service_started
+    environment:
+      VAULT_ADDR: http://vault:8200
+      FACTUCORE_POSTGRES_PASSWORD: ${FACTUCORE_POSTGRES_PASSWORD:-}
+      FACTUCORE_KEYCLOAK_ADMIN_PASSWORD: ${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}
+    volumes:
+      - ./vault/scripts:/vault/scripts:ro
+      - ./vault/policy:/vault/policy:ro
+      - ${FACTUCORE_HOME:-D:/factucore}/secrets:/vault/bootstrap-secrets
+    command: /bin/sh /vault/scripts/bootstrap-vault.sh
+
   vault-agent:
     image: hashicorp/vault:1.20
     container_name: factucore-vault-agent
     restart: unless-stopped
     depends_on:
-      vault:
-        condition: service_started
+      vault-bootstrap:
+        condition: service_completed_successfully
     command: agent -config=/vault/agent/config.hcl
     environment:
       VAULT_ADDR: http://vault:8200
     volumes:
       - ./vault/agent:/vault/agent:ro
       - type: bind
-        source: ../secrets/vault_agent_token.txt
+        source: ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt
         target: /run/secrets/vault_agent_token
         read_only: true
         bind:
