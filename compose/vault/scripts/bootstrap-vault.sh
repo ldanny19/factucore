@@ -71,8 +71,12 @@ read_secret() {
   local prompt="$1"
   local value=""
   printf '%s' "$prompt" >&2
-  IFS= read -r -s value
+  stty -echo 2>/dev/null || true
+  IFS= read -r value
+  local read_status=$?
+  stty echo 2>/dev/null || true
   printf '\n' >&2
+  [[ "$read_status" -eq 0 ]] || fail "No se pudo leer la contraseña."
   [[ -n "$value" ]] || fail "La contraseña no puede estar vacia."
   printf '%s' "$value"
 }
