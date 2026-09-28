@@ -5,7 +5,13 @@ VAULT_CONTAINER="${FACTUCORE_VAULT_CONTAINER:-factucore-vault}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FACTUCORE_HOME_VALUE="${FACTUCORE_HOME:-}"
-if [[ -z "$FACTUCORE_HOME_VALUE" ]]; then FACTUCORE_HOME_VALUE="$(cd "$COMPOSE_DIR/.." && pwd)"; fi
+if [[ -z "$FACTUCORE_HOME_VALUE" ]]; then
+  if [[ "${OSTYPE:-}" == msys* || "${OSTYPE:-}" == cygwin* || "${OSTYPE:-}" == win32* ]]; then
+    FACTUCORE_HOME_VALUE="D:/factucore"
+  else
+    FACTUCORE_HOME_VALUE="$(cd "$COMPOSE_DIR/.." && pwd)"
+  fi
+fi
 SECRETS_DIR="$FACTUCORE_HOME_VALUE/secrets"
 INIT_FILE="$SECRETS_DIR/vault-init.json"
 AGENT_TOKEN_FILE="$SECRETS_DIR/vault_agent_token.txt"
