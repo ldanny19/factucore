@@ -1,0 +1,36 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: factucore-notificacion
+  mail:
+    host: ${FACTUCORE_NOTIFICACION_SMTP_HOST:localhost}
+    port: ${FACTUCORE_NOTIFICACION_SMTP_PORT:1025}
+    username: ${FACTUCORE_NOTIFICACION_SMTP_USERNAME:}
+    password: ${FACTUCORE_NOTIFICACION_SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${FACTUCORE_NOTIFICACION_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${FACTUCORE_NOTIFICACION_SMTP_STARTTLS:false}
+factucore:
+  messaging:
+    enabled: ${FACTUCORE_MESSAGING_ENABLED:true}
+    broker: ${FACTUCORE_MESSAGING_BROKER:KAFKA}
+    kafka:
+      bootstrap-servers: ${FACTUCORE_MESSAGING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      consumer:
+        auto-offset-reset: earliest
+        enable-auto-commit: false
+        concurrency: 1
+    rabbitmq:
+      addresses: ${FACTUCORE_MESSAGING_RABBITMQ_ADDRESSES:localhost:5672}
+      username: ${FACTUCORE_MESSAGING_RABBITMQ_USERNAME:guest}
+      password: ${FACTUCORE_MESSAGING_RABBITMQ_PASSWORD:guest}
+      virtual-host: ${FACTUCORE_MESSAGING_RABBITMQ_VIRTUAL_HOST:/}
+  notificacion:
+    correo:
+      remitente: ${FACTUCORE_NOTIFICACION_CORREO_REMITENTE:no-reply@factucore.local}
+      asunto: ${FACTUCORE_NOTIFICACION_CORREO_ASUNTO:Comprobante electrónico autorizado}
+    plantilla:
+      ruta: ${FACTUCORE_NOTIFICACION_PLANTILLA_RUTA:./config/plantillas/comprobante-autorizado.html}
+management:
+  endpoints.web.exposure.include: health,info
