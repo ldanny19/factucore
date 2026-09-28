@@ -130,8 +130,7 @@ services:
     # build:
     #   context: ..
     #   dockerfile: facturador/Dockerfile
-    # TODO: reemplazar por la imagen publicada en el Docker Registry.
-    image: factucore-facturador:local
+    image: factucore-facturador:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
     container_name: factucore-facturador
     restart: unless-stopped
     depends_on:
@@ -168,8 +167,7 @@ services:
     # build:
     #   context: ..
     #   dockerfile: notificacion/Dockerfile
-    # TODO: reemplazar por la imagen publicada en el Docker Registry.
-    image: factucore-notificacion:local
+    image: factucore-notificacion:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
     container_name: factucore-notificacion
     restart: unless-stopped
     depends_on:
