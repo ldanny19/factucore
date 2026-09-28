@@ -9,11 +9,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "factucore.messaging")
 public class MessagingProperties {
 
-    private String bootstrapServers = "localhost:9092";
-    private String securityProtocol = "PLAINTEXT";
-    private ProducerProperties producer = new ProducerProperties();
-    private ConsumerProperties consumer = new ConsumerProperties();
+    private boolean enabled = true;
+    private String broker = "KAFKA";
+    private KafkaProperties kafka = new KafkaProperties();
     private RetryProperties retry = new RetryProperties();
+
+    @Getter
+    @Setter
+    public static class KafkaProperties {
+        private String bootstrapServers = "localhost:9092";
+        private String securityProtocol = "PLAINTEXT";
+        private String clientId = "factucore";
+        private ProducerProperties producer = new ProducerProperties();
+        private ConsumerProperties consumer = new ConsumerProperties();
+    }
 
     @Getter
     @Setter
@@ -26,6 +35,7 @@ public class MessagingProperties {
     public static class ConsumerProperties {
         private String autoOffsetReset = "earliest";
         private boolean enableAutoCommit = false;
+        private int concurrency = 1;
     }
 
     @Getter
