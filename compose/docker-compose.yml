@@ -9,8 +9,9 @@ services:
     cap_add:
       - IPC_LOCK
     environment:
-      VAULT_ADDR: http://0.0.0.0:8200
-    command: server -config=/vault/config/vault.hcl
+      VAULT_ADDR: http://vault:8200
+      SKIP_CHOWN: "true"
+    command: server
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/vault/data:/vault/data
       - ${FACTUCORE_HOME:-D:/factucore}/vault/config:/vault/config:ro
