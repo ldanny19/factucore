@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="facturador-workflow-procesar">
+        <from uri="direct:facturador.workflow.procesar"/>
+        <bean ref="camelWorkflowStepExecutor" method="crearContexto"/>
+        <bean ref="camelWorkflowStepExecutor" method="verificarIdempotencia"/>
+        <choice>
+            <when>
+                <simple>${body.idempotente} == false</simple>
+                <bean ref="camelWorkflowStepExecutor" method="validar"/>
+        <bean ref="camelWorkflowStepExecutor" method="reservarComprobante"/>
+        <choice>
+            <when>
+                <simple>${body.idempotente} == false</simple>
+                <bean ref="camelWorkflowStepExecutor" method="generarXml"/>
+                <bean ref="camelWorkflowStepExecutor" method="validarXsd"/>
+                <bean ref="camelWorkflowStepExecutor" method="firmar"/>
+                <bean ref="camelWorkflowStepExecutor" method="enviarSri"/>
+                <bean ref="camelWorkflowStepExecutor" method="autorizarSri"/>
+                <choice>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'AUTORIZADO'</simple>
+                        <bean ref="camelWorkflowStepExecutor" method="generarRide"/>
+                        <bean ref="camelWorkflowStepExecutor" method="publicarNotificacion"/>
+                    </when>
+                </choice>
+            </when>
+        </choice>
+            </when>
+        </choice>
+        <bean ref="camelWorkflowStepExecutor" method="respuesta"/>
+    </route>
+    <route id="facturador-workflow-reprocesar">
+        <from uri="direct:facturador.workflow.reprocesar"/>
+        <bean ref="camelWorkflowStepExecutor" method="reprocesarAutorizacion"/>
+    </route>
+</routes>
