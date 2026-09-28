@@ -50,10 +50,20 @@ Variables opcionales:
 
 No se deben versionar el root token, las claves de unseal, el token del Agent ni las contraseñas.
 
-Ejecución desde PowerShell:
+Ejecución:
+
+Git Bash / Linux:
+
+```bash
+./compose/vault/scripts/bootstrap-vault.sh
+```
+
+PowerShell:
 
 ```powershell
-.\\compose\\vault\\scripts\\bootstrap-vault.ps1
+.\compose\vault\scripts\bootstrap-vault.ps1
 ```
+
+Ambos scripts realizan el mismo bootstrap y mantienen la configuración de Vault fuera del Docker Compose.
 
 Después del bootstrap se puede levantar el resto del stack mediante Docker Compose.
