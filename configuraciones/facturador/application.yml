@@ -70,8 +70,6 @@ logging:
     ec.dalara.factucore: INFO
     org.flywaydb: INFO
     org.hibernate.SQL: INFO
-  file:
-    name: "${factucore.path.logs}/facturador.log"
 
 camel:
   main:
@@ -79,14 +77,14 @@ camel:
 
 factucore:
   path:
-    base: C:/factucore/facturador
-    config: C:/factucore/facturador/config
-    certificados: C:/factucore/facturador/certificados
-    jasper: C:/factucore/facturador/jasper
-    documentos: C:/factucore/facturador/documentos
-    documentos-xml: C:/factucore/facturador/documentos/xml
-    documentos-pdf: C:/factucore/facturador/documentos/pdf
-    logs: C:/factucore/facturador/logs
+    base: ${FACTUCORE_PATH_BASE:/app}
+    config: ${FACTUCORE_PATH_CONFIG:${factucore.path.base}/config}
+    certificados: ${FACTUCORE_PATH_CERTIFICADOS:${factucore.path.base}/certificados}
+    jasper: ${FACTUCORE_PATH_JASPER:${factucore.path.base}/jasper}
+    documentos: ${FACTUCORE_PATH_DOCUMENTOS:${factucore.path.base}/documentos}
+    documentos-xml: ${FACTUCORE_PATH_DOCUMENTOS_XML:${factucore.path.documentos}/xml}
+    documentos-pdf: ${FACTUCORE_PATH_DOCUMENTOS_PDF:${factucore.path.documentos}/pdf}
+    logs: ${FACTUCORE_PATH_LOGS:${factucore.path.base}/logs}
 
   sri:
     ambiente: ${FACTUCORE_SRI_AMBIENTE:PRUEBAS}
@@ -107,6 +105,11 @@ factucore:
       espera-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_MS:5000}
       max-intentos: ${FACTUCORE_SRI_AUTORIZACION_MAX_INTENTOS:3}
       espera-consulta-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_CONSULTA_MS:5000}
+
+  logging:
+    nivel: ${FACTUCORE_LOGGING_NIVEL:INFO}
+    ruta: ${FACTUCORE_LOGGING_RUTA:${factucore.path.logs}}
+    archivo: ${FACTUCORE_LOGGING_ARCHIVO:facturador.log}
 
   workflow:
     motor: apache-camel
