@@ -9,7 +9,7 @@ public record EventoMensaje(
         String id, String tipo, String version, Instant fecha,
         String correlationId, JsonNode payload) {
     public EventoMensaje {
-        id = Objects.requireNonNullElseGet(id, UUID.randomUUID()::toString);
+        id = Objects.requireNonNullElseGet(id, () -> UUID.randomUUID().toString());
         tipo = Objects.requireNonNull(tipo, "tipo");
         version = Objects.requireNonNull(version, "version");
         fecha = Objects.requireNonNullElseGet(fecha, Instant::now);
