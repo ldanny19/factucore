@@ -10,7 +10,7 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "factucore.notificacion")
 public class NotificacionMessagingProperties {
 
-	private String topico = "factucore.notificacion";
+	private String topico = "factucore.notificacion.comprobante";
 	private String tipoEvento = "COMPROBANTE_AUTORIZADO";
 	private String versionEvento = "1.0";
 }
