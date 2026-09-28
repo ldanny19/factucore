@@ -13,6 +13,7 @@ import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.*;
 import org.springframework.util.backoff.FixedBackOff;
 import java.util.HashMap;
+import java.util.function.BiFunction;
 
 @RequiredArgsConstructor
 public class KafkaBrokerMensajeria implements BrokerMensajeria {
@@ -33,9 +34,10 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
         container.setConcurrency(properties.getKafka().getConsumer().getConcurrency());
         container.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
 
-        var recoverer = new DeadLetterPublishingRecoverer(template,
-            (record, exception) -> new TopicPartition(
-                record.topic() + properties.getRetry().getSufijoDlq(), record.partition()));
+        BiFunction<ConsumerRecord<?, ?>, Exception, TopicPartition> destinoDlq =
+                (record, exception) -> new TopicPartition(
+                        record.topic() + properties.getRetry().getSufijoDlq(), record.partition());
+        var recoverer = new DeadLetterPublishingRecoverer(template, destinoDlq);
 
         DefaultErrorHandler errorHandler;
         if (properties.getRetry().isDlqHabilitada()) {
