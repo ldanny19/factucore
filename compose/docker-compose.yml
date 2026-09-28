@@ -32,7 +32,7 @@ services:
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \\$POSTGRES_USER -d \\$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,7 +46,7 @@ services:
       - /bin/sh
       - -c
     command:
-      - exec /opt/keycloak/bin/kc.sh start-dev --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /run/secrets/keycloak_bootstrap_admin_password)"
+      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /run/secrets/keycloak_bootstrap_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
     secrets:
