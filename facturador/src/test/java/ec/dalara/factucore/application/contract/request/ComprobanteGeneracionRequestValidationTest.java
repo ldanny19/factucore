@@ -1,0 +1,70 @@
+package ec.dalara.factucore.application.contract.request;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.OffsetDateTime;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+
+class ComprobanteGeneracionRequestValidationTest {
+
+    private static ValidatorFactory validatorFactory;
+    private static Validator validator;
+
+    @BeforeAll
+    static void setUpValidator() {
+        validatorFactory = Validation.buildDefaultValidatorFactory();
+        validator = validatorFactory.getValidator();
+    }
+
+    @AfterAll
+    static void closeValidator() {
+        validatorFactory.close();
+    }
+
+    @Test
+    void requestValido_noDebeTenerViolaciones() {
+        var request = ComprobanteGeneracionRequest.builder()
+                .idTransaccion("TX-001")
+                .fechaInicio(OffsetDateTime.now())
+                .usuario("usuario")
+                .canal("API")
+                .idEmpresa(1L)
+                .codigoEstablecimiento("001")
+                .puntoEmision("001")
+                .tipoDocumento("01")
+                .build();
+
+        assertTrue(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void requestSinCamposObligatorios_debeDetectarViolaciones() {
+        var request = ComprobanteGeneracionRequest.builder().build();
+
+        assertTrue(validator.validate(request).size() >= 7);
+    }
+
+    @Test
+    void idTransaccionExcedeLongitud_debeDetectarViolacion() {
+        var request = ComprobanteGeneracionRequest.builder()
+                .idTransaccion("A".repeat(101))
+                .fechaInicio(OffsetDateTime.now())
+                .usuario("usuario")
+                .canal("API")
+                .idEmpresa(1L)
+                .codigoEstablecimiento("001")
+                .puntoEmision("001")
+                .tipoDocumento("01")
+                .build();
+
+        assertTrue(validator.validate(request).stream()
+                .anyMatch(v -> "idTransaccion".equals(v.getPropertyPath().toString())));
+    }
+}
