@@ -13,7 +13,7 @@ services:
       SKIP_CHOWN: "true"
     command: server -config=/vault/config/config.hcl
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/vault/data:/vault/data
+      - ${FACTUCORE_HOME}/vault/data:/vault/data
       - ./vault/config:/vault/config:ro
     ports:
       - "${VAULT_PORT:-8200}:8200"
@@ -32,8 +32,9 @@ services:
     volumes:
       - ./vault/scripts:/vault/scripts:ro
       - ./vault/policy:/vault/policy:ro
-      - ${FACTUCORE_HOME:-D:/factucore}/secrets:/vault/bootstrap-secrets
-    entrypoint: ["/bin/sh", "/vault/scripts/bootstrap-vault.sh"]
+      - ${FACTUCORE_HOME}/secrets:/vault/bootstrap-secrets
+    entrypoint: ["/bin/sh", "-c"]
+    command: /vault/scripts/bootstrap-vault.sh
 
   vault-agent:
     image: hashicorp/vault:1.20
@@ -48,7 +49,7 @@ services:
     volumes:
       - ./vault/agent:/vault/agent:ro
       - type: bind
-        source: ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt
+        source: ${FACTUCORE_HOME}/secrets/vault_agent_token.txt
         target: /run/secrets/vault_agent_token
         read_only: true
         bind:
@@ -73,7 +74,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-usr_factucore}
       POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_password
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/data/postgres:/var/lib/postgresql/data
+      - ${FACTUCORE_HOME}/data/postgres:/var/lib/postgresql/data
       - factucore_vault_secrets:/vault/secrets:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -155,10 +156,10 @@ services:
       FACTUCORE_SRI_AMBIENTE: ${FACTUCORE_SRI_AMBIENTE:-PRUEBAS}
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
-      - ${FACTUCORE_HOME:-D:/factucore}/config/facturador:/app/config:ro
-      - ${FACTUCORE_HOME:-D:/factucore}/documentos:/app/documentos
-      - ${FACTUCORE_HOME:-D:/factucore}/certificados:/app/certificados:ro
-      - ${FACTUCORE_HOME:-D:/factucore}/logs/facturador:/app/logs
+      - ${FACTUCORE_HOME}/config/facturador:/app/config:ro
+      - ${FACTUCORE_HOME}/documentos:/app/documentos
+      - ${FACTUCORE_HOME}/certificados:/app/certificados:ro
+      - ${FACTUCORE_HOME}/logs/facturador:/app/logs
     ports:
       - "${FACTURADOR_PORT:-8081}:8083"
 
@@ -177,9 +178,9 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/config/notificacion:/app/config:ro
-      - ${FACTUCORE_HOME:-D:/factucore}/documentos:/app/documentos:ro
-      - ${FACTUCORE_HOME:-D:/factucore}/logs/notificacion:/app/logs
+      - ${FACTUCORE_HOME}/config/notificacion:/app/config:ro
+      - ${FACTUCORE_HOME}/documentos:/app/documentos:ro
+      - ${FACTUCORE_HOME}/logs/notificacion:/app/logs
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
@@ -188,10 +189,10 @@ services:
 #
 # secrets:
 #   postgres_password:
-#     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/postgres_password.txt
+#     file: ${FACTUCORE_HOME}/secrets/postgres_password.txt
 #
 #   keycloak_bootstrap_admin_password:
-#     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/keycloak_bootstrap_admin_password.txt
+#     file: ${FACTUCORE_HOME}/secrets/keycloak_bootstrap_admin_password.txt
 #
 # El token del Agent se monta como archivo desde FACTUCORE_HOME/secrets/vault_agent_token.txt.
 # El bootstrap debe dejarlo allí.
