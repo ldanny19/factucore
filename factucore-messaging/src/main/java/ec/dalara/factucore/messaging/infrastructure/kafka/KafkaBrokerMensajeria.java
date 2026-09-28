@@ -20,7 +20,6 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
-import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
@@ -91,6 +90,7 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, properties.getKafka().getConsumer().getAutoOffsetReset());
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, properties.getKafka().getConsumer().isEnableAutoCommit());
+        config.put(ConsumerConfig.CLIENT_ID_CONFIG, properties.getKafka().getClientId());
         config.put("security.protocol", properties.getKafka().getSecurityProtocol());
         return new DefaultKafkaConsumerFactory<>(config);
     }
