@@ -164,7 +164,7 @@ public class XsdParserAdapter implements XsdParserPort {
 			if (name == null || name.isBlank()) {
 				continue;
 			}
-			Element previous = target.putIfAbsent(key(attr(parent, "targetNamespace"), name), child);
+			Element previous = target.putIfAbsent(key(attr(schema, "targetNamespace"), name), child);
 			if (previous != null && previous != child) {
 				throw new InfrastructureException("FACTUCORE.XSD.TIPO.DUPLICADO", name);
 			}
@@ -263,10 +263,10 @@ public class XsdParserAdapter implements XsdParserPort {
 
 		int order = 1;
 		for (Element child : children(particle, "element")) {
-			parseElement(child, parentPath, order++, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
+			parseElement(child, parentPath, order++, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones, typeStack);
 		}
 		for (Element nested : children(particle, "sequence")) {
-			parseParticle(nested, parentPath, complexTypes, simpleTypes, elementos, atributos, enumeraciones);
+			parseParticle(nested, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones, typeStack);
 		}
 		if (!children(particle, "choice").isEmpty()) {
 			throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
