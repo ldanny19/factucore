@@ -250,7 +250,7 @@ public class SriSoapAdapter implements SriPort {
 
 	private String escaparXml(String valor) {
         return valor.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace(""", "&quot;").replace("'", "&apos;");
+                .replace("\"", "&quot;").replace("'", "&apos;");
     }
 
 	private void configurarParserSeguro(DocumentBuilderFactory factory) {
