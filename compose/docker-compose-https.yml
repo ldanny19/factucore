@@ -62,6 +62,25 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+  auth-server:
+    image: quay.io/keycloak/keycloak:26
+    container_name: auth-server
+    restart: unless-stopped
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /vault/secrets/keycloak_admin_password)"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+    volumes:
+      - factucore_vault_secrets:/vault/secrets:ro
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+
   kafka:
     image: apache/kafka:4.0.1
     container_name: factucore-kafka
