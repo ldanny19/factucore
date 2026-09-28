@@ -6,15 +6,26 @@ FROM maven:3.9.11-eclipse-temurin-21 AS build
 
 WORKDIR /build
 
-COPY pom.xml .
+# Biblioteca compartida de mensajería de FactuCore.
+COPY factucore-messaging/pom.xml factucore-messaging/pom.xml
+COPY factucore-messaging/src factucore-messaging/src
 
-# Cache persistente de dependencias Maven
+# Instala la biblioteca en el repositorio Maven local de la imagen.
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -f factucore-messaging/pom.xml clean install -DskipTests -B
+
+# Proyecto Notificación.
+COPY notificacion/pom.xml notificacion/pom.xml
+
+WORKDIR /build/notificacion
+
+# Cache persistente de dependencias Maven, incluyendo factucore-messaging local.
 RUN --mount=type=cache,target=/root/.m2 \
     mvn dependency:go-offline -B
 
-COPY src ./src
+COPY notificacion/src ./src
 
-# Reutiliza el cache Maven
+# Reutiliza el cache Maven.
 RUN --mount=type=cache,target=/root/.m2 \
     mvn clean package -DskipTests -B
 
@@ -41,7 +52,7 @@ RUN mkdir -p \
       ${APP_HOME}/logs \
     && chown -R factucore:factucore ${APP_HOME}
 
-COPY --from=build /build/target/*.jar ${APP_HOME}/notificacion.jar
+COPY --from=build /build/notificacion/target/*.jar ${APP_HOME}/notificacion.jar
 
 RUN chown factucore:factucore ${APP_HOME}/notificacion.jar
 
