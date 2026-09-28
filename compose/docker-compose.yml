@@ -18,46 +18,44 @@ services:
     ports:
       - "${VAULT_PORT:-8200}:8200"
 
+  vault-agent:
+    image: hashicorp/vault:1.20
+    container_name: factucore-vault-agent
+    restart: unless-stopped
+    depends_on:
+      vault:
+        condition: service_started
+    command: agent -config=/vault/agent/config.hcl
+    environment:
+      VAULT_ADDR: http://vault:8200
+    secrets:
+      - vault_agent_token
+    volumes:
+      - ${FACTUCORE_HOME:-D:/factucore}/vault/agent:/vault/agent:ro
+      - factucore_vault_secrets:/vault/secrets
+
   db_factucore:
     image: postgres:17
     container_name: db_factucore
     restart: unless-stopped
+    depends_on:
+      vault-agent:
+        condition: service_healthy
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-factucore}
       POSTGRES_USER: ${POSTGRES_USER:-usr_factucore}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-    secrets:
-      - postgres_password
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_password
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/data/postgres:/var/lib/postgresql/data
+      - factucore_vault_secrets:/vault/secrets:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
-
-  auth-server:
-    image: quay.io/keycloak/keycloak:26
-    container_name: auth-server
-    restart: unless-stopped
-    depends_on:
-      vault-agent:
-        condition: service_healthy
-    entrypoint:
-      - /bin/sh
-      - -c
-    command:
-      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /vault/secrets/keycloak_admin_password)"
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
-    volumes:
-      - factucore_vault_secrets:/vault/secrets:ro
-    ports:
-      - "${KEYCLOAK_PORT:-8180}:8080"
-
   kafka:
     image: apache/kafka:4.0.1
     container_name: factucore-kafka
@@ -105,7 +103,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       FACTUCORE_SRI_AMBIENTE: ${FACTUCORE_SRI_AMBIENTE:-PRUEBAS}
     volumes:
-      - factucore_vault_secrets:/vault/secrets:ro
+      - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME:-D:/factucore}/config/facturador:/app/config:ro
       - ${FACTUCORE_HOME:-D:/factucore}/documentos:/app/documentos
       - ${FACTUCORE_HOME:-D:/factucore}/certificados:/app/certificados:ro
@@ -131,9 +129,20 @@ services:
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
+# Alternativa anterior: Docker Secrets para credenciales de PostgreSQL/Keycloak.
+# Se conserva comentada como alternativa y NO es la fuente activa.
+#
+# secrets:
+#   postgres_password:
+#     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/postgres_password.txt
+#
+#   keycloak_bootstrap_admin_password:
+#     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/keycloak_bootstrap_admin_password.txt
+#
+# Fuente activa: Vault KV. El token Docker solo autentica al Vault Agent.
 secrets:
-  postgres_password:
-    file: ${FACTUCORE_HOME:-D:/factucore}/secrets/postgres_password.txt
+  vault_agent_token:
+    file: ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt
 
-  keycloak_bootstrap_admin_password:
-    file: ${FACTUCORE_HOME:-D:/factucore}/secrets/keycloak_bootstrap_admin_password.txt
+volumes:
+  factucore_vault_secrets:
