@@ -2,13 +2,15 @@
 set -euo pipefail
 
 VAULT_CONTAINER="${FACTUCORE_VAULT_CONTAINER:-factucore-vault}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FACTUCORE_HOME_VALUE="${FACTUCORE_HOME:-}"
 if [[ -z "$FACTUCORE_HOME_VALUE" ]]; then
-  FACTUCORE_HOME_VALUE="$(pwd)"
+  FACTUCORE_HOME_VALUE="$(cd "$COMPOSE_DIR/.." && pwd)"
 fi
 SECRETS_DIR="$FACTUCORE_HOME_VALUE/secrets"
 AGENT_TOKEN_FILE="$SECRETS_DIR/vault_agent_token.txt"
-POLICY_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../policy" && pwd)/factucore-agent.hcl"
+POLICY_FILE="$SCRIPT_DIR/../policy/factucore-agent.hcl"
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -25,19 +27,47 @@ require_command() {
 
 require_command docker
 
-log "Verificando Vault"
-STATUS_JSON="$(docker exec "$VAULT_CONTAINER" vault status -format=json 2>/dev/null)" || STATUS_RC=$?
-STATUS_RC="${STATUS_RC:-0}"
+log "Levantando Vault"
+docker compose -f "$COMPOSE_DIR/docker-compose.yml" up -d vault >/dev/null
 
-if [[ "$STATUS_RC" -ne 0 && "$STATUS_RC" -ne 2 ]]; then
-  fail "No se pudo consultar el estado de Vault. Verifica que el contenedor '$VAULT_CONTAINER' este levantado."
+log "Esperando disponibilidad de Vault"
+STATUS_JSON=""
+STATUS_RC=1
+for _ in $(seq 1 30); do
+  STATUS_RC=0
+  STATUS_JSON="$(docker exec "$VAULT_CONTAINER" vault status -format=json 2>/dev/null)" || STATUS_RC=$?
+  if [[ "$STATUS_RC" -eq 0 || "$STATUS_RC" -eq 1 || "$STATUS_RC" -eq 2 ]]; then
+    break
+  fi
+  sleep 2
+done
+
+if [[ "$STATUS_RC" -ne 0 && "$STATUS_RC" -ne 1 && "$STATUS_RC" -ne 2 ]]; then
+  fail "No se pudo consultar el estado de Vault. Verifica el contenedor '$VAULT_CONTAINER'."
 fi
 
 INITIALIZED=$(printf '%s' "$STATUS_JSON" | grep -o '"initialized"[[:space:]]*:[[:space:]]*true' || true)
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -o '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 
 [[ -n "$INITIALIZED" ]] || fail "Vault no esta inicializado. Ejecuta 'vault operator init' una sola vez y conserva las claves fuera del repositorio."
-[[ -z "$SEALED" ]] || fail "Vault esta sellado. Haz unseal antes de ejecutar este bootstrap."
+
+if [[ -n "$SEALED" ]]; then
+  THRESHOLD=$(printf '%s' "$STATUS_JSON" | grep -o '"t"[[:space:]]*:[[:space:]]*[0-9]*' | head -1 | grep -o '[0-9]*$' || true)
+  [[ -n "$THRESHOLD" ]] || THRESHOLD=1
+
+  log "Vault esta sellado; iniciando unseal interactivo"
+  for ((i=1; i<=THRESHOLD; i++)); do
+    read -r -s -p "Unseal Key $i/$THRESHOLD: " UNSEAL_KEY
+    printf '\n'
+    [[ -n "$UNSEAL_KEY" ]] || fail "La clave de unseal no puede estar vacia."
+    docker exec "$VAULT_CONTAINER" vault operator unseal "$UNSEAL_KEY" >/dev/null || fail "La clave de unseal no fue aceptada."
+    unset UNSEAL_KEY
+  done
+fi
+
+STATUS_JSON="$(docker exec "$VAULT_CONTAINER" vault status -format=json 2>/dev/null)" || fail "No se pudo verificar el estado final de Vault."
+SEALED=$(printf '%s' "$STATUS_JSON" | grep -o '"sealed"[[:space:]]*:[[:space:]]*true' || true)
+[[ -z "$SEALED" ]] || fail "Vault continua sellado. Verifica las claves de unseal."
 
 log "Obteniendo credenciales externas"
 ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
@@ -61,9 +91,9 @@ fi
 
 log "Habilitando/verificando KV v2"
 MOUNTS_JSON="$(docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault secrets list -format=json)"
-if printf '%s' "$MOUNTS_JSON" | grep -q '^secret/'; then
-  if ! printf '%s' "$MOUNTS_JSON" | grep '^secret/' | grep -q 'kv.*2'; then
-    fail "El mount 'secret/' existe pero no se pudo confirmar que sea KV v2."
+if printf '%s' "$MOUNTS_JSON" | grep -q '"secret/"'; then
+  if ! printf '%s' "$MOUNTS_JSON" | grep '"secret/"' | grep -q '"type"[[:space:]]*:[[:space:]]*"kv"' || ! printf '%s' "$MOUNTS_JSON" | grep '"secret/"' | grep -q '"version"[[:space:]]*:[[:space:]]*"2"'; then
+    fail "El mount 'secret/' ya existe pero no es KV v2."
   fi
 else
   docker exec -e "VAULT_TOKEN=$ROOT_TOKEN" "$VAULT_CONTAINER" vault secrets enable -path=secret kv-v2
