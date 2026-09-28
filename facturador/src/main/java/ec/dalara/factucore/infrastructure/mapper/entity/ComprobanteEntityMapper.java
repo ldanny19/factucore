@@ -32,5 +32,5 @@ public interface ComprobanteEntityMapper {
 	@Mapping(target = "documentoXsd", ignore = true)
 	@Mapping(target = "versionDocumentoXsd", ignore = true)
 	@Mapping(target = "datosComprobante", ignore = true)
-	Comprobante toEntity(ComprobanteModel model);
+	default String map(ClaveAcceso value) {\n\t\treturn value == null ? null : value.valor();\n\t}\n\n\tComprobante toEntity(ComprobanteModel model);
 }
