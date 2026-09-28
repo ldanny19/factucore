@@ -33,8 +33,7 @@ services:
       - ./vault/scripts:/vault/scripts:ro
       - ./vault/policy:/vault/policy:ro
       - ${FACTUCORE_HOME:-D:/factucore}/secrets:/vault/bootstrap-secrets
-    entrypoint: ["/bin/sh", "-c"]
-    command: /vault/scripts/bootstrap-vault.sh
+    entrypoint: ["/bin/sh", "/vault/scripts/bootstrap-vault.sh"]
 
   vault-agent:
     image: hashicorp/vault:1.20
