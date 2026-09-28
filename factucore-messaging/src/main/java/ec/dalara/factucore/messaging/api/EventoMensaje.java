@@ -13,7 +13,7 @@ public record EventoMensaje(
         tipo = Objects.requireNonNull(tipo, "tipo");
         version = Objects.requireNonNull(version, "version");
         fecha = Objects.requireNonNullElseGet(fecha, Instant::now);
-        correlationId = Objects.requireNonNullElseGet(correlationId, id);
+        correlationId = Objects.requireNonNullElse(correlationId, id);
         payload = Objects.requireNonNull(payload, "payload");
     }
 
