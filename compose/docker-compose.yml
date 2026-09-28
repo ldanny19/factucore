@@ -14,7 +14,7 @@ services:
     command: server
     volumes:
       - ${FACTUCORE_HOME}/vault/data:/vault/data
-      - ./vault/config:/vault/config:ro
+      - ${FACTUCORE_HOME}/vault/config:/vault/config:ro
     ports:
       - "${VAULT_PORT:-8200}:8200"
 
@@ -30,8 +30,8 @@ services:
       FACTUCORE_POSTGRES_PASSWORD: ${FACTUCORE_POSTGRES_PASSWORD:-}
       FACTUCORE_KEYCLOAK_ADMIN_PASSWORD: ${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}
     volumes:
-      - ./vault/scripts:/vault/scripts:ro
-      - ./vault/policy:/vault/policy:ro
+      - ${FACTUCORE_HOME}/vault/scripts:/vault/scripts:ro
+      - ${FACTUCORE_HOME}/vault/policy:/vault/policy:ro
       - ${FACTUCORE_HOME}/secrets:/vault/bootstrap-secrets
     entrypoint: ["/bin/sh", "-c"]
     command: /vault/scripts/bootstrap-vault.sh
@@ -47,7 +47,7 @@ services:
     environment:
       VAULT_ADDR: http://vault:8200
     volumes:
-      - ./vault/agent:/vault/agent:ro
+      - ${FACTUCORE_HOME}/vault/agent:/vault/agent:ro
       - type: bind
         source: ${FACTUCORE_HOME}/secrets/vault_agent_token.txt
         target: /run/secrets/vault_agent_token
