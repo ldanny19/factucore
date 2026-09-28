@@ -50,6 +50,6 @@ RUN chown factucore:factucore ${APP_HOME}/facturador.jar
 
 USER factucore
 
-EXPOSE 8080
+EXPOSE 8083
 
 ENTRYPOINT ["java", "-jar", "/app/facturador.jar", "--spring.config.additional-location=file:/app/config/", "--logging.config=file:/app/config/log4j2-spring.xml"]
