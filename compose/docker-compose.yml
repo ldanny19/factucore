@@ -11,11 +11,9 @@ services:
     environment:
       VAULT_ADDR: http://vault:8200
       SKIP_CHOWN: "true"
-    command: server -config=/vault/config/config.hcl
+    command: ["server", "-config=/vault/config/config.hcl"]
     volumes:
       - ${FACTUCORE_HOME}/vault/data:/vault/data
-      - ${FACTUCORE_HOME}/vault/file:/vault/file
-      - ${FACTUCORE_HOME}/vault/logs:/vault/logs
       - ${FACTUCORE_HOME}/vault/config:/vault/config:ro
     ports:
       - "${VAULT_PORT:-8200}:8200"
@@ -186,17 +184,5 @@ services:
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
-# Alternativa anterior: Docker Secrets para credenciales de PostgreSQL/Keycloak.
-# Se conserva comentada como alternativa y NO es la fuente activa.
-#
-# secrets:
-#   postgres_password:
-#     file: ${FACTUCORE_HOME}/secrets/postgres_password.txt
-#
-#   keycloak_bootstrap_admin_password:
-#     file: ${FACTUCORE_HOME}/secrets/keycloak_bootstrap_admin_password.txt
-#
-# El token del Agent se monta como archivo desde FACTUCORE_HOME/secrets/vault_agent_token.txt.
-# El bootstrap debe dejarlo allí.
 volumes:
   factucore_vault_secrets:
