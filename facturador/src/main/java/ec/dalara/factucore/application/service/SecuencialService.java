@@ -45,6 +45,15 @@ public class SecuencialService extends BaseService<Secuencial> {
 		return super.guardar(secuencial);
 	}
 
+	@Transactional
+	public Secuencial bloquearSecuencial(Long puntoEmisionId, String codigoDocumento) {
+		if (puntoEmisionId == null || codigoDocumento == null || codigoDocumento.isBlank()) {
+			throw new ApplicationException(MessageCodes.SECUENCIAL_DATOS_REQUERIDOS);
+		}
+		return secuencialRepository.findByPuntoEmisionIdAndCodigoDocumentoAndEstadoRegistro(puntoEmisionId, codigoDocumento, EstadoRegistro.ACTIVO)
+				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO, puntoEmisionId, codigoDocumento));
+	}
+
 	public Optional<Secuencial> obtenerPorPuntoEmisionYDocumento(Long puntoEmisionId, String codigoDocumento) {
 		if (puntoEmisionId == null || codigoDocumento == null || codigoDocumento.isBlank()) {
 			return Optional.empty();
