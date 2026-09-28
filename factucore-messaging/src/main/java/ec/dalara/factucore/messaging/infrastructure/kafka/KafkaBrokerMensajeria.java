@@ -13,7 +13,6 @@ import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.*;
 import org.springframework.util.backoff.FixedBackOff;
 import java.util.HashMap;
-import java.util.function.BiConsumer;
 
 @RequiredArgsConstructor
 public class KafkaBrokerMensajeria implements BrokerMensajeria {
@@ -38,14 +37,19 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
             (record, exception) -> new TopicPartition(
                 record.topic() + properties.getRetry().getSufijoDlq(), record.partition()));
 
-        BiConsumer<ConsumerRecord<?,?>, Exception> noOp = (record, exception) -> { };
-        var recovererHandler = properties.getRetry().isDlqHabilitada()
-            ? new DefaultErrorHandler(recoverer, new FixedBackOff(
-                properties.getRetry().getIntervaloMs(),
-                Math.max(0, properties.getRetry().getMaxIntentos() - 1)))
-            : new DefaultErrorHandler(noOp);
+        DefaultErrorHandler errorHandler;
+        if (properties.getRetry().isDlqHabilitada()) {
+            errorHandler = new DefaultErrorHandler(
+                recoverer,
+                new FixedBackOff(
+                    properties.getRetry().getIntervaloMs(),
+                    Math.max(0, properties.getRetry().getMaxIntentos() - 1)));
+        } else {
+            errorHandler = new DefaultErrorHandler(
+                (ConsumerRecord<?, ?> record, Exception exception) -> { });
+        }
 
-        container.setCommonErrorHandler(recovererHandler);
+        container.setCommonErrorHandler(errorHandler);
         container.setupMessageListener((ConsumerRecord<String,String> record) -> {
             try { consumidor.consumir(objectMapper.readValue(record.value(), EventoMensaje.class)); }
             catch (Exception e) { throw new IllegalStateException("No fue posible procesar el mensaje", e); }
