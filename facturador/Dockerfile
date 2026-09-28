@@ -6,15 +6,26 @@ FROM maven:3.9.11-eclipse-temurin-21 AS build
 
 WORKDIR /build
 
-COPY pom.xml .
+# Biblioteca compartida de mensajería de FactuCore.
+COPY factucore-messaging/pom.xml factucore-messaging/pom.xml
+COPY factucore-messaging/src factucore-messaging/src
 
-# Cache persistente de dependencias Maven
+# Instala la biblioteca en el repositorio Maven local de la imagen.
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -f factucore-messaging/pom.xml clean install -DskipTests -B
+
+# Proyecto Facturador.
+COPY facturador/pom.xml facturador/pom.xml
+
+WORKDIR /build/facturador
+
+# Cache persistente de dependencias Maven, incluyendo factucore-messaging local.
 RUN --mount=type=cache,target=/root/.m2 \
     mvn dependency:go-offline -B
 
-COPY src ./src
+COPY facturador/src ./src
 
-# Reutiliza el cache Maven
+# Reutiliza el cache Maven.
 RUN --mount=type=cache,target=/root/.m2 \
     mvn clean package -DskipTests -B
 
@@ -44,7 +55,7 @@ RUN mkdir -p \
       ${APP_HOME}/documentos \
     && chown -R factucore:factucore ${APP_HOME}
 
-COPY --from=build /build/target/*.jar ${APP_HOME}/facturador.jar
+COPY --from=build /build/facturador/target/*.jar ${APP_HOME}/facturador.jar
 
 RUN chown factucore:factucore ${APP_HOME}/facturador.jar
 
