@@ -40,10 +40,8 @@ RUN mkdir -p \
       ${APP_HOME}/config \
       ${APP_HOME}/logs \
     && chown -R factucore:factucore ${APP_HOME}
-	
 
 COPY --from=build /build/target/*.jar ${APP_HOME}/notificacion.jar
-COPY config ${APP_HOME}/config
 
 RUN chown factucore:factucore ${APP_HOME}/notificacion.jar
 
@@ -51,4 +49,4 @@ USER factucore
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/notificacion.jar"]
+ENTRYPOINT ["java", "-jar", "/app/notificacion.jar", "--spring.config.additional-location=file:/app/config/"]
