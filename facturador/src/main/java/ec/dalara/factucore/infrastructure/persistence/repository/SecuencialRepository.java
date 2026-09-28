@@ -16,4 +16,6 @@ public interface SecuencialRepository extends BaseRepository<Secuencial, Long> {
 			String codigoDocumento, String estadoRegistro);
 
 	boolean existsByPuntoEmisionIdAndCodigoDocumento(Long puntoEmisionId, String codigoDocumento);
+
+	boolean existsByPuntoEmisionIdAndCodigoDocumentoAndIdNot(Long puntoEmisionId, String codigoDocumento, Long id);
 }
