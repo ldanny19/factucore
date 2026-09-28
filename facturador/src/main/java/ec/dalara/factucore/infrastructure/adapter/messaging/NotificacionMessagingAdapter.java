@@ -102,7 +102,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 
             for (String clave : claves) {
                 if (clave.equalsIgnoreCase(dato.getKey())) {
-                    return dato.getValue();
+                    return String.valueOf(dato.getValue());
                 }
             }
         }
