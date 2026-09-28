@@ -3,6 +3,11 @@ spring:
     name: facturador
 
 factucore:
+  logging:
+    nivel: INFO
+    ruta: ./logs
+    archivo: factucore.log
+
   messaging:
     enabled: true
     broker: KAFKA
