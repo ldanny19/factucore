@@ -64,7 +64,6 @@ services:
       auth-server:
         condition: service_started
     environment:
-      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://db_factucore:5432/factucore
       SPRING_DATASOURCE_USERNAME: factucore
       SPRING_DATASOURCE_PASSWORD: factucore
@@ -72,7 +71,7 @@ services:
       FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: http://auth-server:8080/realms/factucore
       FACTUCORE_MESSAGING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
-      - ./facturador/config:/app/config:ro
+      - ./docker/config/facturador:/app/config:ro
       - factucore_documentos:/app/documentos
     ports:
       - "8081:8080"
@@ -87,14 +86,13 @@ services:
       kafka:
         condition: service_started
     environment:
-      SPRING_PROFILES_ACTIVE: dev
       FACTUCORE_MESSAGING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
-      - ./notificacion/config:/app/config:ro
+      - ./docker/config/notificacion:/app/config:ro
       - factucore_documentos:/app/documentos:ro
     ports:
       - "8082:8080"
 
 volumes:
   factucore_postgres_data:
-  factucore_documentos:
+  factucore_documentos
