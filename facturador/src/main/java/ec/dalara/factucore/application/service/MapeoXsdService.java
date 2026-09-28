@@ -83,7 +83,7 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 		entity.setAtributoXsd(atributo);
 
 		MapeoXsd guardado = guardar(entity);
-		return mapeoXsdMapper.toResponse(guardado);
+		return mapeoXsdMapper.toResponse(mapeoXsdEntityMapper.toModel(guardado));
 	}
 
 	@Transactional(readOnly = true)
