@@ -84,6 +84,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
   auth-server:
     image: keycloak/keycloak:26.7.4-0
     container_name: auth-server
@@ -126,9 +127,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
   facturador:
-    build:
-      context: ..
-      dockerfile: facturador/Dockerfile
+    # build:
+    #   context: ..
+    #   dockerfile: facturador/Dockerfile
+    # TODO: reemplazar por la imagen publicada en el Docker Registry.
+    image: factucore-facturador:local
     container_name: factucore-facturador
     restart: unless-stopped
     depends_on:
@@ -162,9 +165,11 @@ services:
       - "${FACTURADOR_PORT:-8081}:8083"
 
   notificacion:
-    build:
-      context: ..
-      dockerfile: notificacion/Dockerfile
+    # build:
+    #   context: ..
+    #   dockerfile: notificacion/Dockerfile
+    # TODO: reemplazar por la imagen publicada en el Docker Registry.
+    image: factucore-notificacion:local
     container_name: factucore-notificacion
     restart: unless-stopped
     depends_on:
