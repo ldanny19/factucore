@@ -2,3 +2,6 @@
 .env
 .env.*
 !.env.example
+
+# Secretos generados localmente por el bootstrap de Vault
+/secrets/
