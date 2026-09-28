@@ -2,6 +2,21 @@ name: factucore
 
 services:
 
+  vault:
+    image: hashicorp/vault:1.20
+    container_name: factucore-vault
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+    command: server -config=/vault/config/vault.hcl
+    volumes:
+      - ${FACTUCORE_HOME:-D:/factucore}/vault/data:/vault/data
+      - ${FACTUCORE_HOME:-D:/factucore}/vault/config:/vault/config:ro
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+
   db_factucore:
     image: postgres:17
     container_name: db_factucore
@@ -71,6 +86,8 @@ services:
       kafka:
         condition: service_started
       auth-server:
+        condition: service_started
+      vault:
         condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://db_factucore:5432/factucore}
