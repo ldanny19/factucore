@@ -48,12 +48,7 @@ services:
       VAULT_ADDR: http://vault:8200
     volumes:
       - ${FACTUCORE_HOME}/vault/agent:/vault/agent:ro
-      - type: bind
-        source: ${FACTUCORE_HOME}/secrets/vault_agent_token.txt
-        target: /run/secrets/vault_agent_token
-        read_only: true
-        bind:
-          create_host_path: false
+      - ${FACTUCORE_HOME}/secrets:/run/secrets:ro
       - factucore_vault_secrets:/vault/secrets
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/secrets/postgres_password && test -s /vault/secrets/keycloak_admin_password"]
