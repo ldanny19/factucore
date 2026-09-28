@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-factucore}
-      POSTGRES_USER: ${POSTGRES_USER:-factucore}
+      POSTGRES_USER: ${POSTGRES_USER:-usr_factucore}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     secrets:
       - postgres_password
@@ -17,7 +17,7 @@ services:
     volumes:
       - ${FACTUCORE_HOME:-D:/factucore}/data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U factucore -d factucore"]
+      test: ["CMD-SHELL", "pg_isready -U \\$POSTGRES_USER -d \\$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,7 +31,7 @@ services:
       - /bin/sh
       - -c
     command:
-      - exec /opt/keycloak/bin/kc.sh start-dev --http-port=8080 --bootstrap-admin-username="$$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="$$(cat /run/secrets/keycloak_bootstrap_admin_password)"
+      - exec /opt/keycloak/bin/kc.sh start-dev --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /run/secrets/keycloak_bootstrap_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
     secrets:
@@ -74,7 +74,7 @@ services:
         condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://db_factucore:5432/factucore}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-factucore}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-usr_factucore}
       SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
       FACTUCORE_SEGURIDAD_HABILITADA: ${FACTUCORE_SEGURIDAD_HABILITADA:-false}
       FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://auth-server:8080/realms/factucore}
@@ -89,7 +89,7 @@ services:
       - ${FACTUCORE_HOME:-D:/factucore}/certificados:/app/certificados:ro
       - ${FACTUCORE_HOME:-D:/factucore}/logs/facturador:/app/logs
     ports:
-      - "${FACTURADOR_PORT:-8081}:8080"
+      - "${FACTURADOR_PORT:-8081}:8083"
 
   notificacion:
     build:
