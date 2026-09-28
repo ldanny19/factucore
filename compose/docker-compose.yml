@@ -28,10 +28,9 @@ services:
     command: agent -config=/vault/agent/config.hcl
     environment:
       VAULT_ADDR: http://vault:8200
-    secrets:
-      - vault_agent_token
     volumes:
       - ./vault/agent:/vault/agent:ro
+      - ./vault/secrets:/run/secrets:ro
       - factucore_vault_secrets:/vault/secrets
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/secrets/postgres_password && test -s /vault/secrets/keycloak_admin_password"]
@@ -164,10 +163,7 @@ services:
 #   keycloak_bootstrap_admin_password:
 #     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/keycloak_bootstrap_admin_password.txt
 #
-# Fuente activa: Vault KV. El token Docker solo autentica al Vault Agent.
-secrets:
-  vault_agent_token:
-    file: ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt
-
+# El token del Agent se monta como archivo desde compose/vault/secrets/vault_agent_token.
+# El bootstrap debe dejarlo allí.
 volumes:
   factucore_vault_secrets:
