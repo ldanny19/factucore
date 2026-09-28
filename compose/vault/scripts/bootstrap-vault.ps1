@@ -1,7 +1,9 @@
 $ErrorActionPreference = "Stop"
 
 $VaultContainer = if ($env:FACTUCORE_VAULT_CONTAINER) { $env:FACTUCORE_VAULT_CONTAINER } else { "factucore-vault" }
-$SecretsDir = if ($env:FACTUCORE_HOME) { Join-Path $env:FACTUCORE_HOME "secrets" } else { Join-Path (Get-Location) "secrets" }
+$ScriptDir = $PSScriptRoot
+$ComposeDir = (Resolve-Path (Join-Path $ScriptDir "..\..")).Path
+$SecretsDir = if ($env:FACTUCORE_HOME) { Join-Path $env:FACTUCORE_HOME "secrets" } else { Join-Path (Split-Path $ComposeDir -Parent) "secrets" }
 $AgentTokenFile = Join-Path $SecretsDir "vault_agent_token.txt"
 
 function Invoke-Vault {
@@ -41,7 +43,11 @@ function Get-RequiredSecret {
 
 Write-Host "== FactuCore - Bootstrap de Vault =="
 
-Write-Host "[1/7] Verificando Vault..."
+Write-Host "[1/7] Levantando Vault..."
+& docker compose -f (Join-Path $ComposeDir "docker-compose.yml") up -d vault
+if ($LASTEXITCODE -ne 0) { throw "No se pudo levantar el servicio Vault." }
+
+Write-Host "[1/7] Esperando disponibilidad de Vault..."
 $status = & docker exec $VaultContainer vault status -format=json 2>$null
 if ($LASTEXITCODE -notin @(0, 2)) {
     throw "No se pudo consultar el estado de Vault. Verifica que el contenedor '$VaultContainer' este levantado."
@@ -52,7 +58,30 @@ if (-not $statusJson.initialized) {
     throw "Vault no esta inicializado. Ejecuta 'vault operator init' una sola vez y conserva las claves fuera del repositorio."
 }
 if ($statusJson.sealed) {
-    throw "Vault esta sellado. Haz unseal antes de ejecutar este bootstrap."
+    $threshold = [int]$statusJson.t
+    if ($threshold -lt 1) { $threshold = 1 }
+
+    Write-Host "Vault esta sellado; iniciando unseal interactivo..."
+    for ($i = 1; $i -le $threshold; $i++) {
+        $secureKey = Read-Host "Unseal Key $i/$threshold" -AsSecureString
+        $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
+        try {
+            $unsealKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+            & docker exec $VaultContainer vault operator unseal $unsealKey *> $null
+            if ($LASTEXITCODE -ne 0) {
+                throw "La clave de unseal $i no fue aceptada."
+            }
+        }
+        finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+        }
+    }
+
+    $status = & docker exec $VaultContainer vault status -format=json 2>$null
+    $statusJson = $status | ConvertFrom-Json
+    if ($statusJson.sealed) {
+        throw "Vault continua sellado. Verifica las claves de unseal."
+    }
 }
 
 Write-Host "[2/7] Obteniendo credenciales externas..."
@@ -92,7 +121,7 @@ if ($LASTEXITCODE -ne 0) { throw "No se pudo guardar el secreto de PostgreSQL." 
 if ($LASTEXITCODE -ne 0) { throw "No se pudo guardar el secreto de Keycloak." }
 
 Write-Host "[5/7] Creando/verificando policy del Vault Agent..."
-$policyPath = Join-Path $PSScriptRoot "..\policy\factucore-agent.hcl"
+$policyPath = Join-Path $ScriptDir "..\policy\factucore-agent.hcl"
 if (-not (Test-Path $policyPath)) {
     throw "No existe la policy: $policyPath"
 }
