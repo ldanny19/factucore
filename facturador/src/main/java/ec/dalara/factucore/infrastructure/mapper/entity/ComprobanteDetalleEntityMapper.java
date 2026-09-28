@@ -11,7 +11,7 @@ public interface ComprobanteDetalleEntityMapper {
 	default ComprobanteDetalleModel toModel(ComprobanteDetalle e) {
 		if (e == null)
 			return null;
-		return new ComprobanteDetalleModel(e.getOrden(), e.getCodigoPrincipal(), e.getCodigoAuxiliar(),
+		return new ComprobanteDetalleModel(e.getNumeroLinea(), e.getCodigoPrincipal(), e.getCodigoAuxiliar(),
 				e.getDescripcion(), e.getCantidad(), e.getPrecioUnitario(), e.getDescuento(),
 				e.getPrecioTotalSinImpuesto());
 	}
