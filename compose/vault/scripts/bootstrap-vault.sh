@@ -39,7 +39,7 @@ fi
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -o '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 if [[ -n "$SEALED" ]]; then
   [[ -f "$INIT_FILE" ]] || fail "Vault esta sellado y no existe $INIT_FILE."
-  THRESHOLD=$(sed -n 's/.*"secret_threshold"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$INIT_FILE" | head -1)
+  THRESHOLD=$(sed -n 's/.*"unseal_threshold"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$INIT_FILE" | head -1)
   [[ -n "$THRESHOLD" ]] || fail "No se pudo determinar el umbral de unseal desde $INIT_FILE."
   KEYS=$(sed -n '/\"unseal_keys_b64\"/,/]/p' "$INIT_FILE" | grep -o '"[^"]*"' | tail -n +2 | tr -d '"' | head -n "$THRESHOLD")
   KEY_COUNT=$(printf '%s\n' "$KEYS" | sed '/^$/d' | wc -l | tr -d ' ')
