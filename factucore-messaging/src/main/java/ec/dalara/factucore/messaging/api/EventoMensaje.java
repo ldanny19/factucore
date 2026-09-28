@@ -2,6 +2,7 @@ package ec.dalara.factucore.messaging.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 public record EventoMensaje(
