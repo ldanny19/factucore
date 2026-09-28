@@ -54,7 +54,9 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 
 			DSSDocument documentoFirmado = service.signDocument(documento, parameters, signatureValue);
 
-			return new String(documentoFirmado.getBytes(), StandardCharsets.UTF_8);
+			try (var input = documentoFirmado.openStream()) {
+				return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+			}
 
 		} catch (IOException e) {
 			throw new ApplicationException(MessageCodes.FIRMA_ELECTRONICA_CERTIFICADO_ACCESO_ERROR,
