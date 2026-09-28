@@ -14,6 +14,8 @@ public interface VersionDocumentoXsdRepository extends BaseRepository<VersionDoc
 
 	boolean existsByDocumentoXsdIdAndVersion(Long documentoXsdId, String version);
 
+	boolean existsByDocumentoXsdIdAndVersionAndIdNot(Long documentoXsdId, String version, Long id);
+
 	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
 			Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
