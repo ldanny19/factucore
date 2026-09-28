@@ -30,7 +30,7 @@ services:
       VAULT_ADDR: http://vault:8200
     volumes:
       - ./vault/agent:/vault/agent:ro
-      - ./vault/secrets:/run/secrets:ro
+      - ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt:/run/secrets/vault_agent_token:ro
       - factucore_vault_secrets:/vault/secrets
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/secrets/postgres_password && test -s /vault/secrets/keycloak_admin_password"]
@@ -163,7 +163,7 @@ services:
 #   keycloak_bootstrap_admin_password:
 #     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/keycloak_bootstrap_admin_password.txt
 #
-# El token del Agent se monta como archivo desde compose/vault/secrets/vault_agent_token.
+# El token del Agent se monta como archivo desde FACTUCORE_HOME/secrets/vault_agent_token.txt.
 # El bootstrap debe dejarlo allí.
 volumes:
   factucore_vault_secrets:
