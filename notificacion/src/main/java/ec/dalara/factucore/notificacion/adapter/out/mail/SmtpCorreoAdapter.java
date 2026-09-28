@@ -1,0 +1,7 @@
+package ec.dalara.factucore.notificacion.adapter.out.mail;
+import java.util.Objects; import org.springframework.core.io.ByteArrayResource; import org.springframework.mail.javamail.JavaMailSender; import org.springframework.mail.javamail.MimeMessageHelper; import org.springframework.stereotype.Component;
+import ec.dalara.factucore.notificacion.application.port.out.CorreoPort; import ec.dalara.factucore.notificacion.infrastructure.config.NotificacionProperties; import lombok.RequiredArgsConstructor;
+@Component @RequiredArgsConstructor
+public class SmtpCorreoAdapter implements CorreoPort { private final JavaMailSender mailSender; private final NotificacionProperties properties;
+ public void enviar(String destinatario,String asunto,String contenidoHtml,AdjuntoCorreo... adjuntos){try{var m=mailSender.createMimeMessage();var h=new MimeMessageHelper(m,true,"UTF-8");h.setFrom(Objects.requireNonNull(properties.getCorreo().getRemitente()));h.setTo(destinatario);h.setSubject(asunto);h.setText(contenidoHtml,true);if(adjuntos!=null)for(var a:adjuntos)h.addAttachment(a.nombre(),new ByteArrayResource(a.contenido()),a.tipoContenido());mailSender.send(m);}catch(Exception e){throw new IllegalStateException("No fue posible enviar el correo",e);}}
+}
