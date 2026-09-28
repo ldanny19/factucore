@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - factucore_postgres_data:/var/lib/postgresql/data
+      - ${FACTUCORE_HOME:?Debe definir FACTUCORE_HOME}/data/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U factucore -d factucore"]
       interval: 10s
@@ -52,7 +52,7 @@ services:
 
   facturador:
     build:
-      context: ./facturador
+      context: ../facturador
       dockerfile: Dockerfile
     container_name: factucore-facturador
     restart: unless-stopped
@@ -71,14 +71,16 @@ services:
       FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: http://auth-server:8080/realms/factucore
       FACTUCORE_MESSAGING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
-      - ./configuraciones/facturador:/app/config:ro
-      - factucore_documentos:/app/documentos
+      - ${FACTUCORE_HOME:?Debe definir FACTUCORE_HOME}/config/facturador:/app/config:ro
+      - ${FACTUCORE_HOME:?Debe definir FACTUCORE_HOME}/documentos:/app/documentos
+      - ${FACTUCORE_HOME}/certificados:/app/certificados:ro
+      - ${FACTUCORE_HOME}/logs/facturador:/app/logs
     ports:
       - "8081:8080"
 
   notificacion:
     build:
-      context: ./notificacion
+      context: ../notificacion
       dockerfile: Dockerfile
     container_name: factucore-notificacion
     restart: unless-stopped
@@ -88,11 +90,9 @@ services:
     environment:
       FACTUCORE_MESSAGING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
-      - ./configuraciones/notificacion:/app/config:ro
-      - factucore_documentos:/app/documentos:ro
+      - ${FACTUCORE_HOME:?Debe definir FACTUCORE_HOME}/config/notificacion:/app/config:ro
+      - ${FACTUCORE_HOME}/documentos:/app/documentos:ro
+      - ${FACTUCORE_HOME}/logs/notificacion:/app/logs
     ports:
       - "8082:8080"
 
-volumes:
-  factucore_postgres_data:
-  factucore_documentos:
