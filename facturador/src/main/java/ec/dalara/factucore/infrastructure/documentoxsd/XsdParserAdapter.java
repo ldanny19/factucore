@@ -243,8 +243,8 @@ public class XsdParserAdapter implements XsdParserPort {
         } else {
             Element sequence = firstChild(complexType, "sequence");
         if (sequence != null) {
-            parseParticle(sequence, parentPath, complexTypes, simpleTypes,
-                    elementos, atributos, enumeraciones);
+            parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements,
+                    elementos, atributos, enumeraciones, typeStack);
         }
         if (firstChild(complexType, "choice") != null) {
             throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
