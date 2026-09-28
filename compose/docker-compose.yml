@@ -43,15 +43,18 @@ services:
     image: quay.io/keycloak/keycloak:26
     container_name: auth-server
     restart: unless-stopped
+    depends_on:
+      vault-agent:
+        condition: service_healthy
     entrypoint:
       - /bin/sh
       - -c
     command:
-      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /run/secrets/keycloak_bootstrap_admin_password)"
+      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /vault/secrets/keycloak_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
-    secrets:
-      - keycloak_bootstrap_admin_password
+    volumes:
+      - factucore_vault_secrets:/vault/secrets:ro
     ports:
       - "${KEYCLOAK_PORT:-8180}:8080"
 
@@ -84,6 +87,8 @@ services:
       db_factucore:
         condition: service_healthy
         restart: true
+      vault-agent:
+        condition: service_healthy
       kafka:
         condition: service_started
       auth-server:
@@ -94,14 +99,13 @@ services:
       SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://db_factucore:5432/factucore}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-usr_factucore}
       SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
+      SPRING_DATASOURCE_PASSWORD_FILE: /vault/secrets/postgres_password
       FACTUCORE_SEGURIDAD_HABILITADA: ${FACTUCORE_SEGURIDAD_HABILITADA:-false}
       FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://auth-server:8080/realms/factucore}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       FACTUCORE_SRI_AMBIENTE: ${FACTUCORE_SRI_AMBIENTE:-PRUEBAS}
-    secrets:
-      - source: postgres_password
-        target: spring.datasource.password
     volumes:
+      - factucore_vault_secrets:/vault/secrets:ro
       - ${FACTUCORE_HOME:-D:/factucore}/config/facturador:/app/config:ro
       - ${FACTUCORE_HOME:-D:/factucore}/documentos:/app/documentos
       - ${FACTUCORE_HOME:-D:/factucore}/certificados:/app/certificados:ro
