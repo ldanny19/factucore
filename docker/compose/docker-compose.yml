@@ -58,7 +58,7 @@ services:
       DB_USERNAME: usr_factucore
       DB_PASSWORD: usr_factucore
     volumes:
-      - C:/factucore/facturador/config:/app/config
+      - ../config/facturador:/app/config
       - C:/factucore/facturador/logs:/app/logs
       - C:/factucore/facturador/certificados:/app/certificados
       - C:/factucore/facturador/jasper:/app/jasper
@@ -80,7 +80,7 @@ services:
     environment:
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
-      - C:/factucore/notificacion/config:/app/config
+      - ../config/notificacion:/app/config
     depends_on:
       db_factucore:
         condition: service_healthy
