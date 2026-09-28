@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: factucore-notificacion
+  messages:
+    basename: "file:${factucore.notificacion.path.config}/messages"
 
   mail:
     host: ${FACTUCORE_NOTIFICACION_SMTP_HOST}
@@ -36,6 +38,8 @@ factucore:
       virtual-host: ${FACTUCORE_MESSAGING_RABBITMQ_VIRTUAL_HOST:/}
 
   notificacion:
+    path:
+      config: __CONFIG__
     topico: ${FACTUCORE_NOTIFICACION_TOPICO:factucore.notificacion.comprobante}
     correo:
       remitente: ${FACTUCORE_NOTIFICACION_CORREO_REMITENTE}
