@@ -108,8 +108,8 @@ factucore:
 
   logging:
     nivel: INFO
-    ruta: ${FACTUCORE_LOGGING_RUTA:${factucore.path.logs}}
-    archivo: ${FACTUCORE_LOGGING_ARCHIVO:facturador.log}
+    ruta: ${factucore.path.logs}
+    archivo: facturador.log
 
   notificacion:
     topico: ${FACTUCORE_NOTIFICACION_TOPICO:factucore.notificacion.comprobante}
