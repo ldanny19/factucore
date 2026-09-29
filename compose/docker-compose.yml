@@ -204,7 +204,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -q --spider http://127.0.0.1:8083/actuator/health || exit 1"
+          "wget -q --spider http://127.0.0.1:8080/actuator/health || exit 1"
         ]
       interval: 10s
       timeout: 5s
