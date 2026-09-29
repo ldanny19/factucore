@@ -13,6 +13,16 @@ auto_auth {
 }
 
 template {
+  destination = "/vault/secrets/postgres_admin_password"
+  contents = <<EOT
+{{- with secret "secret/data/factucore/postgresql/admin" -}}
+{{ .Data.data.password }}
+{{- end }}
+EOT
+  error_on_missing_key = true
+}
+
+template {
   destination = "/vault/secrets/postgres_facturador_password"
   contents = <<EOT
 {{- with secret "secret/data/factucore/postgresql/facturador" -}}
