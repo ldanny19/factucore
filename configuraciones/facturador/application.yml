@@ -80,6 +80,10 @@ camel:
     routes-include-pattern: ${factucore.workflow.rutas.facturacion}
 
 factucore:
+  messaging:
+    enabled: ${FACTUCORE_MESSAGING_ENABLED:true}
+    broker: ${BROKER:KAFKA}
+
   path:
     base: ${FACTUCORE_PATH_BASE:/app}
     config: ${FACTUCORE_PATH_CONFIG:${factucore.path.base}/config}
