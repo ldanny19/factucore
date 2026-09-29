@@ -92,6 +92,8 @@ services:
       - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}" --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
+      KC_DB: ${KC_DB:-postgres}
     volumes:
       - factucore_vault_secrets:/vault/secrets:ro
     ports:
