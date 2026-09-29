@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 VAULT_ADDR="${VAULT_ADDR:-http://vault:8200}"
 export VAULT_ADDR
@@ -8,21 +9,6 @@ INIT_FILE="$SECRETS_DIR/vault-init.json"
 AGENT_TOKEN_FILE="${FACTUCORE_VAULT_AGENT_TOKEN_FILE:-/vault/secrets-persist/vault_agent_token.txt}"
 AGENT_TOKEN_RUNTIME_FILE="/vault/agent-token/vault_agent_token.txt"
 POLICY_FILE="/vault/policy/factucore-agent.hcl"
-LOG_DIR="${FACTUCORE_VAULT_LOG_DIR:-/vault/logs}"
-LOG_FILE="$LOG_DIR/bootstrap.log"
-
-# Crear el log antes de activar set -e para registrar tambien fallos tempranos.
-mkdir -p "$LOG_DIR" || exit 1
-touch "$LOG_FILE" || exit 1
-chmod 600 "$LOG_FILE" || exit 1
-exec >>"$LOG_FILE" 2>&1
-
-printf '\n==================================================\n'
-printf 'BOOTSTRAP VAULT - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
-printf 'LOG_FILE=%s\n' "$LOG_FILE"
-printf '==================================================\n'
-
-set -eu
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -33,13 +19,15 @@ fail() {
   exit 1
 }
 
+log "INICIO BOOTSTRAP DE VAULT"
+log "VAULT_ADDR=$VAULT_ADDR"
+log "SECRETS_DIR=$SECRETS_DIR"
+
 mkdir -p "$SECRETS_DIR"
 chmod 700 "$SECRETS_DIR"
 mkdir -p "$(dirname "$AGENT_TOKEN_RUNTIME_FILE")"
 
-log "INICIO BOOTSTRAP DE VAULT"
 log "Esperando disponibilidad de Vault"
-
 STATUS_RC=1
 for _ in $(seq 1 60); do
   set +e
@@ -58,7 +46,6 @@ INITIALIZED=$(grep -c '"initialized"[[:space:]]*:[[:space:]]*true' /tmp/vault-st
 
 if [ "$INITIALIZED" -eq 0 ]; then
   [ ! -f "$INIT_FILE" ] || fail "Vault no esta inicializado pero ya existe $INIT_FILE."
-
   log "Inicializando Vault por primera vez"
   vault operator init -format=json > "$INIT_FILE"
   chmod 600 "$INIT_FILE"
@@ -95,14 +82,12 @@ for _ in $(seq 1 30); do
   STATUS_JSON=$(vault status -format=json 2>/dev/null || true)
   SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
   INITIALIZED=$(printf '%s' "$STATUS_JSON" | grep -c '"initialized"[[:space:]]*:[[:space:]]*true' || true)
-
   if [ "$INITIALIZED" -eq 1 ] && [ "$SEALED" -eq 0 ]; then
     READY=1
     break
   fi
   sleep 1
 done
-
 [ "$READY" -eq 1 ] || fail "Vault no quedo inicializado y desellado dentro del tiempo esperado."
 
 ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
@@ -110,7 +95,6 @@ if [ -z "$ROOT_TOKEN" ] && [ -f "$INIT_FILE" ]; then
   ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | head -1 | cut -d '"' -f 4)
 fi
 [ -n "$ROOT_TOKEN" ] || fail "No se encontro el root token."
-
 export VAULT_TOKEN="$ROOT_TOKEN"
 
 log "Verificando KV v2"
@@ -152,6 +136,7 @@ fi
 
 if [ -n "$AGENT_TOKEN" ]; then
   if ! VAULT_TOKEN="$AGENT_TOKEN" vault token lookup >/dev/null 2>&1; then
+    log "Token persistente invalido; se generara uno nuevo."
     AGENT_TOKEN=""
   fi
 fi
@@ -179,7 +164,4 @@ VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/postgresql >/dev/null
 VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/keycloak >/dev/null
 
 rm -f /tmp/vault-status.json
-
-printf '\nBootstrap de Vault completado correctamente.\n'
-printf 'Vault esta inicializado, desellado y listo para Vault Agent.\n'
-log "FIN BOOTSTRAP DE VAULT"
+log "BOOTSTRAP DE VAULT COMPLETADO CORRECTAMENTE"
