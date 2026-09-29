@@ -127,3 +127,11 @@ factucore:
   kafka:
     topics:
       notificacion-comprobante: ${FACTUCORE_KAFKA_TOPIC_NOTIFICACION_COMPROBANTE:factucore.notificacion.comprobante}
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
