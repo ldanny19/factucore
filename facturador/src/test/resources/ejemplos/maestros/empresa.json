@@ -1,0 +1,9 @@
+{
+  "id": 1,
+  "ruc": "0999999999001",
+  "razonSocial": "EMPRESA DE PRUEBA S.A.",
+  "nombreComercial": "FactuCore Demo",
+  "direccionMatriz": "Av. Principal 123 y Calle Secundaria, Guayaquil, Ecuador",
+  "obligadoContabilidad": true,
+  "contribuyenteRimpe": false
+}
