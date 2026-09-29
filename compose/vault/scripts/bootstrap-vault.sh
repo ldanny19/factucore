@@ -1,5 +1,4 @@
 #!/bin/sh
-set -eu
 
 VAULT_ADDR="${VAULT_ADDR:-http://vault:8200}"
 export VAULT_ADDR
@@ -12,10 +11,18 @@ POLICY_FILE="/vault/policy/factucore-agent.hcl"
 LOG_DIR="${FACTUCORE_VAULT_LOG_DIR:-/vault/logs}"
 LOG_FILE="$LOG_DIR/bootstrap.log"
 
-mkdir -p "$LOG_DIR"
-touch "$LOG_FILE"
-chmod 600 "$LOG_FILE"
+# Crear el log antes de activar set -e para registrar tambien fallos tempranos.
+mkdir -p "$LOG_DIR" || exit 1
+touch "$LOG_FILE" || exit 1
+chmod 600 "$LOG_FILE" || exit 1
 exec >>"$LOG_FILE" 2>&1
+
+printf '\n==================================================\n'
+printf 'BOOTSTRAP VAULT - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
+printf 'LOG_FILE=%s\n' "$LOG_FILE"
+printf '==================================================\n'
+
+set -eu
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -31,8 +38,8 @@ chmod 700 "$SECRETS_DIR"
 mkdir -p "$(dirname "$AGENT_TOKEN_RUNTIME_FILE")"
 
 log "INICIO BOOTSTRAP DE VAULT"
-log "Log persistente: $LOG_FILE"
 log "Esperando disponibilidad de Vault"
+
 STATUS_RC=1
 for _ in $(seq 1 60); do
   set +e
@@ -50,7 +57,7 @@ done
 INITIALIZED=$(grep -c '"initialized"[[:space:]]*:[[:space:]]*true' /tmp/vault-status.json || true)
 
 if [ "$INITIALIZED" -eq 0 ]; then
-  [ ! -f "$INIT_FILE" ] || fail "Vault no esta inicializado pero ya existe $INIT_FILE. Elimina el estado de inicializacion anterior solo si este entorno debe comenzar desde cero."
+  [ ! -f "$INIT_FILE" ] || fail "Vault no esta inicializado pero ya existe $INIT_FILE."
 
   log "Inicializando Vault por primera vez"
   vault operator init -format=json > "$INIT_FILE"
@@ -61,10 +68,10 @@ STATUS_JSON=$(vault status -format=json 2>/dev/null || true)
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 
 if [ "$SEALED" -eq 1 ]; then
-  [ -f "$INIT_FILE" ] || fail "Vault esta inicializado y sellado, pero no existe $INIT_FILE. Recupera las claves de unseal de la instancia existente."
+  [ -f "$INIT_FILE" ] || fail "Vault esta inicializado y sellado, pero no existe $INIT_FILE."
 
   THRESHOLD=$(grep -o '"unseal_threshold"[[:space:]]*:[[:space:]]*[0-9][0-9]*' "$INIT_FILE" | head -1 | grep -o '[0-9][0-9]*$' || true)
-  [ -n "$THRESHOLD" ] || fail "No se pudo determinar el umbral de unseal desde $INIT_FILE."
+  [ -n "$THRESHOLD" ] || fail "No se pudo determinar el umbral de unseal."
 
   KEYS=$(sed -n '/"unseal_keys_b64"[[:space:]]*:/,/]/p' "$INIT_FILE" |
     grep -o '"[^"]*"' |
@@ -73,7 +80,7 @@ if [ "$SEALED" -eq 1 ]; then
     head -n "$THRESHOLD")
 
   KEY_COUNT=$(printf '%s\n' "$KEYS" | sed '/^$/d' | wc -l | tr -d ' ')
-  [ "$KEY_COUNT" -ge "$THRESHOLD" ] || fail "No se encontraron suficientes claves de unseal en $INIT_FILE."
+  [ "$KEY_COUNT" -ge "$THRESHOLD" ] || fail "No se encontraron suficientes claves de unseal."
 
   log "Desellando Vault"
   printf '%s\n' "$KEYS" | while IFS= read -r key; do
@@ -93,7 +100,6 @@ for _ in $(seq 1 30); do
     READY=1
     break
   fi
-
   sleep 1
 done
 
@@ -162,14 +168,11 @@ else
   log "Token persistente del Vault Agent ya existe; se reutiliza."
 fi
 
-# El token persistente es la fuente de verdad. En cada ejecucion del bootstrap
-# se sincroniza al volumen runtime para que Vault Agent pueda autenticarse,
-# incluso despues de recrear el contenedor o el volumen runtime.
 [ -s "$AGENT_TOKEN_FILE" ] || fail "No existe un token persistente valido: $AGENT_TOKEN_FILE"
 cp "$AGENT_TOKEN_FILE" "$AGENT_TOKEN_RUNTIME_FILE"
 chown 100:100 "$AGENT_TOKEN_RUNTIME_FILE"
 chmod 600 "$AGENT_TOKEN_RUNTIME_FILE"
-[ -s "$AGENT_TOKEN_RUNTIME_FILE" ] || fail "No se pudo copiar el token al volumen runtime: $AGENT_TOKEN_RUNTIME_FILE"
+[ -s "$AGENT_TOKEN_RUNTIME_FILE" ] || fail "No se pudo copiar el token al volumen runtime."
 
 log "Validando acceso del Vault Agent"
 VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/postgresql >/dev/null
@@ -177,7 +180,6 @@ VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/keycloak >/dev/null
 
 rm -f /tmp/vault-status.json
 
-echo
-echo "Bootstrap de Vault completado correctamente."
-echo "Vault esta inicializado, desellado y listo para Vault Agent."
+printf '\nBootstrap de Vault completado correctamente.\n'
+printf 'Vault esta inicializado, desellado y listo para Vault Agent.\n'
 log "FIN BOOTSTRAP DE VAULT"
