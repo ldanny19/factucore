@@ -13,9 +13,9 @@ auto_auth {
 }
 
 template {
-  destination = "/vault/secrets/postgres_password"
+  destination = "/vault/secrets/postgres_facturador_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql" -}}
+{{- with secret "secret/data/factucore/postgresql/facturador" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -23,9 +23,19 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/spring.datasource.password"
+  destination = "/vault/secrets/postgres_auth_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql" -}}
+{{- with secret "secret/data/factucore/postgresql/auth" -}}
+{{ .Data.data.password }}
+{{- end }}
+EOT
+  error_on_missing_key = true
+}
+
+template {
+  destination = "/vault/secrets/postgres_notificaciones_password"
+  contents = <<EOT
+{{- with secret "secret/data/factucore/postgresql/notificaciones" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
