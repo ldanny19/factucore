@@ -7,7 +7,7 @@ vault {
 auto_auth {
   method "token_file" {
     config = {
-      token_file_path = "/run/secrets-persist/vault_agent_token.txt"
+      token_file_path = "/run/secrets/vault_agent_token.txt"
     }
   }
 }
