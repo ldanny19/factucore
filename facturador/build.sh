@@ -11,28 +11,24 @@ FORCE="${3:-}"
 
 if [[ -z "${MODE}" || -z "${VERSION}" ]]; then
   echo "ERROR: debe indicar modo y version."
-  echo "Uso: ./build.sh skipTests <version> [force]"
+  echo "Uso: ./build.sh [skipTests] <version> [force]"
+  exit 1
+fi
+
+if [[ "${MODE}" != "skipTests" ]]; then
+  echo "ERROR: parametro invalido: ${MODE}"
+  echo "Uso: ./build.sh [skipTests] <version> [force]"
   exit 1
 fi
 
 if [[ -n "${FORCE}" && "${FORCE}" != "force" ]]; then
   echo "ERROR: parametro invalido: ${FORCE}"
-  echo "Uso: ./build.sh [skip-tests|tests] <version> [force]"
+  echo "Uso: ./build.sh [skipTests] <version> [force]"
   exit 1
 fi
 
-case "${MODE}" in
-  skipTests)
-    echo "==> Ejecutando Maven sin tests..."
-    mvn clean package -DskipTests
-    ;;
-  *)
-    echo "ERROR: modo invalido: ${MODE}"
-    echo "Uso: ./build.sh [skip-tests|tests] <version> [force]"
-    exit 1
-    ;;
-esac
-
+echo "==> Ejecutando Maven sin tests..."
+mvn clean package -DskipTests
 DOCKER_BUILD_ARGS=(
   --build-arg APP_VERSION="${VERSION}"
   -f Dockerfile
