@@ -60,20 +60,36 @@ if [ "$SEALED" -eq 1 ]; then
   THRESHOLD=$(grep -o '"unseal_threshold"[[:space:]]*:[[:space:]]*[0-9][0-9]*' "$INIT_FILE" | head -1 | grep -o '[0-9][0-9]*$' || true)
   [ -n "$THRESHOLD" ] || fail "No se pudo determinar el umbral de unseal."
 
-  KEYS=$(sed -n '/"unseal_keys_b64"[[:space:]]*:/,/]/p' "$INIT_FILE" |
-    grep -o '"[^"]*"' |
-    tail -n +2 |
-    tr -d '"' |
-    head -n "$THRESHOLD")
+  KEYS=$(awk '
+    /"unseal_keys_b64"[[:space:]]*:/ { inside=1; next }
+    inside && /]/ { exit }
+    inside {
+      line=$0
+      gsub(/^[[:space:]]*"/, "", line)
+      gsub(/",[[:space:]]*$/, "", line)
+      gsub(/"[,[:space:]]*$/, "", line)
+      if (line != "") print line
+    }
+  ' "$INIT_FILE" | head -n "$THRESHOLD")
 
   KEY_COUNT=$(printf '%s\n' "$KEYS" | sed '/^$/d' | wc -l | tr -d ' ')
   [ "$KEY_COUNT" -ge "$THRESHOLD" ] || fail "No se encontraron suficientes claves de unseal."
 
   log "Desellando Vault"
+  KEY_INDEX=0
   printf '%s\n' "$KEYS" | while IFS= read -r key; do
     [ -n "$key" ] || continue
-    vault operator unseal "$key" >/dev/null
+    KEY_INDEX=$((KEY_INDEX + 1))
+    log "Aplicando clave de unseal $KEY_INDEX de $THRESHOLD"
+    if ! vault operator unseal "$key" >/tmp/vault-unseal.json 2>&1; then
+      cat /tmp/vault-unseal.json >&2
+      fail "Vault rechazo la clave de unseal $KEY_INDEX."
+    fi
   done
+
+  STATUS_JSON=$(vault status -format=json 2>/dev/null || true)
+  SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
+  [ "$SEALED" -eq 0 ] || fail "Vault continua sellado despues de aplicar las claves de unseal."
 fi
 
 log "Esperando a que Vault quede completamente desellado"
