@@ -23,20 +23,20 @@ public interface ConfiguracionEmpresaRepository extends BaseRepository<Configura
 	boolean existsByEmpresaIdAndClaveAndFechaVigenciaDesdeAndIdNot(Long empresaId, String clave,
 			LocalDateTime fechaVigenciaDesde, Long id);
 
-\t@Query("""
-\t\t\tSELECT c
-\t\t\tFROM ConfiguracionEmpresa c
-\t\t\tWHERE c.empresa.id = :empresaId
-\t\t\t  AND c.clave = :clave
-\t\t\t  AND c.estadoRegistro = :estadoRegistro
-\t\t\t  AND c.fechaVigenciaDesde <= :fecha
-\t\t\t  AND c.fechaVigenciaHasta >= :fecha
-\t\t""")
-\tOptional<ConfiguracionEmpresa> findConfiguracionVigenteConFechaFin(
-\t\t\t@Param("empresaId") Long empresaId,
-\t\t\t@Param("clave") String clave,
-\t\t\t@Param("estadoRegistro") String estadoRegistro,
-\t\t\t@Param("fecha") LocalDateTime fecha);
+	@Query("""
+			SELECT c
+			FROM ConfiguracionEmpresa c
+			WHERE c.empresa.id = :empresaId
+			  AND c.clave = :clave
+			  AND c.estadoRegistro = :estadoRegistro
+			  AND c.fechaVigenciaDesde <= :fecha
+			  AND c.fechaVigenciaHasta >= :fecha
+		""")
+	Optional<ConfiguracionEmpresa> findConfiguracionVigenteConFechaFin(
+			@Param("empresaId") Long empresaId,
+			@Param("clave") String clave,
+			@Param("estadoRegistro") String estadoRegistro,
+			@Param("fecha") LocalDateTime fecha);
 
 	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(
 			Long empresaId, String clave, String estadoRegistro, LocalDateTime fecha);
