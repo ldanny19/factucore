@@ -76,7 +76,7 @@ services:
       - /bin/sh
       - -c
     command:
-      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\$\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\$\$(cat /vault/secrets/keycloak_admin_password)"
+      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\\$\\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\\$\\$(cat /vault/secrets/keycloak_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
     volumes:
@@ -101,7 +101,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
   facturador:
     build:
@@ -138,7 +137,17 @@ services:
       - ${FACTUCORE_HOME:-D:/factucore}/certificados:/app/certificados:ro
       - ${FACTUCORE_HOME:-D:/factucore}/logs/facturador:/app/logs
     ports:
-      - "${FACTURADOR_PORT:-8081}:8083"
+      - "${FACTURADOR_PORT:-8081}:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://127.0.0.1:8080/factucore-api/actuator/health || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
 
   notificacion:
     build:
@@ -159,17 +168,6 @@ services:
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
-# Alternativa anterior: Docker Secrets para credenciales de PostgreSQL/Keycloak.
-# Se conserva comentada como alternativa y NO es la fuente activa.
-#
-# secrets:
-#   postgres_password:
-#     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/postgres_password.txt
-#
-#   keycloak_bootstrap_admin_password:
-#     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/keycloak_bootstrap_admin_password.txt
-#
-# Fuente activa: Vault KV. El token Docker solo autentica al Vault Agent.
 secrets:
   vault_agent_token:
     file: ${FACTUCORE_HOME:-D:/factucore}/secrets/vault_agent_token.txt
