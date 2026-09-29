@@ -17,6 +17,14 @@ services:
       - ${FACTUCORE_HOME}/vault/config:/vault/config:ro
     ports:
       - "${VAULT_PORT:-8200}:8200"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'vault status -format=json >/dev/null 2>&1; rc=$$?; [ "$$rc" -eq 0 ] || [ "$$rc" -eq 1 ] || [ "$$rc" -eq 2 ]'
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
 
   vault-bootstrap:
     image: hashicorp/vault:1.20
@@ -24,7 +32,7 @@ services:
     restart: "no"
     depends_on:
       vault:
-        condition: service_started
+        condition: service_healthy
     environment:
       VAULT_ADDR: http://vault:8200
       FACTUCORE_POSTGRES_PASSWORD: ${FACTUCORE_POSTGRES_PASSWORD:-}
