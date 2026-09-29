@@ -19,7 +19,7 @@ fail() {
 }
 
 mkdir -p "$SECRETS_DIR"
-chmod 700 "$SECRETS_DIR"
+chmod 755 "$SECRETS_DIR"
 
 log "Esperando disponibilidad de Vault"
 STATUS_RC=1
@@ -134,7 +134,7 @@ if [ -z "$AGENT_TOKEN" ]; then
     cut -d '"' -f 4)
   [ -n "$AGENT_TOKEN" ] || fail "Vault no devolvio un client token."
   printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_FILE"
-  chmod 600 "$AGENT_TOKEN_FILE"
+  chmod 644 "$AGENT_TOKEN_FILE"
 fi
 
 log "Validando acceso del Vault Agent"
