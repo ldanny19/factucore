@@ -1,334 +1,442 @@
 # FactuCore
 
-Sistema genérico de facturación electrónica para Ecuador, orientado a la integración con el **Servicio de Rentas Internas (SRI)**.
+Motor empresarial de facturación electrónica para Ecuador, diseñado para integrar el ciclo de emisión de comprobantes electrónicos con el **Servicio de Rentas Internas (SRI)**.
 
-FactuCore será diseñado desde cero con una arquitectura modular, mantenible y preparada para adaptarse a cambios en las especificaciones técnicas de facturación electrónica.
+FactuCore está orientado a ser un producto genérico, multiempresa, multidocumento, versionable y configurable. El núcleo no conoce la estructura interna de ERP/POS de los clientes: cada cliente transforma sus datos al contrato canónico de FactuCore.
 
----
+## Estado actual
 
-## 🎯 Objetivo
+El proyecto se encuentra en construcción incremental sobre la rama `develop`.
 
-Desarrollar una plataforma de facturación electrónica que permita gestionar el ciclo completo de los comprobantes electrónicos y su comunicación con el SRI.
+Actualmente ya están definidos y/o implementados componentes de:
 
-El sistema estará diseñado como un producto **genérico y configurable**, evitando incorporar lógica específica de un cliente dentro del núcleo del sistema.
+- arquitectura modular y hexagonal;
+- Facturador;
+- Notification;
+- librería técnica de mensajería;
+- PostgreSQL y Flyway;
+- Keycloak/OAuth2/OIDC/JWT;
+- Vault para secretos técnicos;
+- Kafka como broker actual;
+- configuración externa;
+- Apache Camel XML DSL para workflow;
+- integración base con servicios del SRI;
+- firma electrónica;
+- generación/validación XML;
+- documentación OpenAPI/Swagger UI en Facturador.
 
----
+Las capacidades funcionales se incorporan progresivamente; el README no considera como terminada una capacidad que todavía esté en desarrollo.
 
-## 🧾 Funcionalidades principales
+## Arquitectura
 
-FactuCore tendrá como objetivo soportar:
+La arquitectura inicial evita una distribución innecesaria:
 
-- Facturas electrónicas.
-- Notas de crédito.
-- Notas de débito.
-- Comprobantes de retención.
-- Liquidaciones de compra.
-- Guías de remisión.
-- Gestión de numeración y secuencias.
-- Generación de XML.
-- Validación de comprobantes.
-- Firma electrónica.
-- Envío de comprobantes al SRI.
-- Consulta de recepción.
-- Consulta de autorización.
-- Gestión del estado de los comprobantes.
-- Generación de representación PDF.
-- Envío de comprobantes por correo electrónico.
-- Almacenamiento y consulta de documentos electrónicos.
-- Gestión de certificados de firma electrónica.
-- Configuración por contribuyente, establecimiento y punto de emisión.
+```text
+                         ┌─────────────────────┐
+                         │      Keycloak       │
+                         │ OAuth2 / OIDC / JWT │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+┌───────────────┐        ┌─────────────────────┐
+│ ERP / POS     │───────▶│     Facturador      │
+│ del cliente   │ JSON   │ Modular / Hexagonal │
+└───────────────┘        └──────┬──────┬───────┘
+                                │      │
+                         ┌──────▼──┐ ┌─▼────────────┐
+                         │PostgreSQL│ │    Vault     │
+                         └─────────┘ └──────────────┘
+                                │
+                                ▼
+                         ┌──────────────┐
+                         │    Kafka     │
+                         └──────┬───────┘
+                                │
+                                ▼
+                         ┌─────────────────────┐
+                         │    Notification     │
+                         │ correo / plantillas │
+                         └─────────────────────┘
+```
 
----
+**Facturador** y **Notification** son los microservicios iniciales. PostgreSQL, Keycloak, Vault y Kafka son infraestructura.
 
-## ⚙️ Motor XML configurable
+Dentro de Facturador, XML, XSD, validación, firma, SRI, autorización, RIDE/PDF, workflow, auditoría y evidencias permanecen en el mismo límite modular mientras no exista una razón arquitectónica real para separarlos.
 
-Uno de los objetivos principales de FactuCore es disponer de un motor de generación XML configurable.
+## Principios de diseño
 
-La intención es que los cambios normales en las estructuras de los comprobantes electrónicos del SRI puedan ser administrados mediante configuración, evitando modificar el código de negocio cada vez que cambie una versión del esquema.
+- Java 21 y Spring Boot 3.5.x.
+- Arquitectura Hexagonal.
+- DDD pragmático.
+- SOLID, alta cohesión y bajo acoplamiento.
+- Organización por dominio/feature/capacidad.
+- Inversión de dependencias mediante puertos e interfaces.
+- No se crean adapters específicos para SAP, Odoo, Dynamics u otros ERP.
+- No se crean microservicios por cada capacidad interna.
+- No se introducen Kafka, RabbitMQ, Redis, Elasticsearch, Kubernetes, CQRS, Event Sourcing u otras tecnologías distribuidas sin una necesidad real.
+- Las comunicaciones internas del monolito modular no utilizan REST.
+- Las configuraciones operativas deben permanecer externalizadas cuando corresponda.
 
-La configuración podrá contemplar, entre otros aspectos:
+## Contrato canónico
 
-- Tipo de comprobante.
-- Versión del XSD.
-- Estructura XML.
-- Elementos y atributos.
-- Orden de los elementos.
-- Campos obligatorios.
-- Cardinalidad.
-- Tipos de datos.
-- Origen de los datos.
-- Transformaciones.
-- Reglas de generación.
+FactuCore utiliza el concepto de un contrato canónico de entrada y salida, independiente del ERP y extensible a múltiples tipos de comprobantes.
 
-El código Java proporcionará los mecanismos de transformación y procesamiento, mientras que las reglas y estructuras configurables podrán mantenerse en la base de datos.
+El contrato no se diseña como un espejo del XSD:
 
----
+```text
+JSON canónico
+      │
+      ▼
+Validación
+      │
+      ▼
+DocumentDefinition
+      │
+      ▼
+Mapping
+      │
+      ▼
+XML
+      │
+      ▼
+XSD
+```
 
-## 🔐 Firma electrónica
+El modelo conceptual precede al diseño definitivo de los campos del API. El contrato contempla como preocupaciones arquitectónicas versionamiento, extensibilidad, idempotencia, errores, estados, workflow y snapshot histórico.
 
-FactuCore implementará la firma electrónica de los comprobantes de acuerdo con los requerimientos establecidos para facturación electrónica del SRI.
+## DocumentDefinition y XSD
 
-La arquitectura deberá permitir trabajar con:
+El motor electrónico utiliza:
 
-- Certificados PKCS#12 (`.p12`).
-- XAdES-BES.
-- XAdES 1.3.2.
-- Firmas XML de tipo ENVELOPED.
-- RSA 2048.
-- RSA-SHA1, cuando corresponda al perfil requerido por el SRI.
+- `DocumentDefinition`;
+- `DocumentDefinitionVersion`;
+- definición del tipo y versión del documento;
+- versión del XSD;
+- elementos, atributos, tipos y restricciones;
+- cardinalidad;
+- mappings;
+- reglas de negocio;
+- JSON Schema y ejemplos cuando corresponda;
+- vigencia y estado.
 
-La implementación será validada mediante pruebas con comprobantes reales y los servicios del SRI.
+El XSD no se almacena dentro de cada comprobante. El documento conserva la referencia/metadata de la definición utilizada y el motor puede resolverla mediante un `DefinitionProvider` y cache cuando corresponda.
 
----
+## Snapshot histórico
 
-## 🏛️ Arquitectura
+Un comprobante emitido conserva los valores necesarios para reconstruir históricamente la información utilizada durante la emisión, incluyendo emisor, receptor, establecimiento, punto de emisión, secuencial, detalles, impuestos, pagos, información adicional y demás datos necesarios para XML/RIDE.
 
-FactuCore será desarrollado utilizando:
+Los identificadores de las entidades maestras pueden mantenerse para trazabilidad, pero la reconstrucción histórica no depende de los valores actuales de dichas entidades.
 
-- **Domain-Driven Design (DDD)**.
-- **Arquitectura Hexagonal**.
-- Separación clara entre dominio, aplicación e infraestructura.
-- Principios de bajo acoplamiento.
-- Interfaces/puertos para las dependencias externas.
-- Adaptadores para tecnologías e integraciones externas.
+## Flujo de emisión
 
-El dominio no dependerá directamente de:
+```text
+JSON
+  │
+  ▼
+Validación
+  │
+  ▼
+DocumentDefinition
+  │
+  ▼
+Mapping
+  │
+  ▼
+XML
+  │
+  ▼
+XSD
+  │
+  ▼
+Firma electrónica
+  │
+  ▼
+SRI
+  │
+  ▼
+Autorización
+  │
+  ▼
+RIDE / PDF
+  │
+  ▼
+Notification
+```
 
-- Spring.
-- JPA/Hibernate.
-- PostgreSQL.
-- REST.
-- XML.
-- SRI.
-- Librerías de firma electrónica.
-- JasperReports.
-- Docker.
+El workflow está diseñado para ser persistente, trazable, reanudable e idempotente, permitiendo reintentos y continuación desde el último estado válido.
 
-Las tecnologías externas serán implementadas mediante adaptadores.
+## Facturador
 
----
+**Versión actual: 1.0.0**
 
-## 📦 Estructura del repositorio
+Facturador es el núcleo de emisión electrónica y concentra las capacidades relacionadas con:
 
-FactuCore utilizará un único repositorio Git:
+- empresas;
+- establecimientos;
+- puntos de emisión;
+- secuenciales;
+- configuración;
+- catálogos;
+- comprobantes;
+- DocumentDefinition;
+- XML;
+- XSD;
+- validación;
+- firma electrónica;
+- integración SRI;
+- autorización;
+- RIDE/PDF;
+- workflow;
+- auditoría;
+- evidencias.
+
+### OpenAPI
+
+Facturador incorpora **SpringDoc OpenAPI 2.9.1**, compatible con la línea Spring Boot 3.5.x utilizada actualmente. La dependencia genera la especificación OpenAPI y Swagger UI automáticamente para los endpoints REST existentes y futuros. urlSpringDoc OpenAPIhttps://springdoc.org/
+
+Con el contexto actual de la aplicación:
+
+- Swagger UI: `/factucore-api/swagger-ui.html`
+- OpenAPI JSON: `/factucore-api/v3/api-docs`
+- OpenAPI YAML: `/factucore-api/v3/api-docs.yaml`
+
+La documentación se irá completando mediante anotaciones OpenAPI en los controllers y contratos conforme se implementen los casos de uso.
+
+## Notification
+
+**Versión actual: 1.0.0**
+
+Microservicio responsable de:
+
+- consumo de eventos de notificación;
+- envío de correo;
+- plantillas;
+- adjuntos;
+- configuración SMTP;
+- reintentos mediante la infraestructura de mensajería;
+- notificación de comprobantes autorizados.
+
+La configuración operativa se mantiene externamente. Las credenciales sensibles, como la contraseña SMTP, son entregadas desde Vault mediante configtree.
+
+## FactuCore Messaging
+
+**Versión actual: 1.0.0**
+
+Librería técnica compartida para mensajería. Su responsabilidad es infraestructura y no lógica de negocio.
+
+Incluye:
+
+- API genérica de publicación y consumo;
+- selección de broker por configuración;
+- Kafka;
+- RabbitMQ;
+- serialización del contrato de evento;
+- consumidores;
+- reintentos;
+- DLQ/DLT cuando corresponda;
+- auto-configuración Spring Boot;
+- health checks dinámicos del broker seleccionado.
+
+El broker configurado actualmente en el entorno es **Kafka**.
+
+## Seguridad
+
+La autenticación y autorización se delegan a Keycloak mediante:
+
+- OAuth2;
+- OpenID Connect;
+- JWT;
+- Spring Security;
+- Resource Server.
+
+FactuCore no implementa autenticación propia ni almacena contraseñas de usuarios.
+
+## Secretos
+
+Vault centraliza secretos técnicos y funcionales sensibles.
+
+Entre ellos:
+
+- credenciales de PostgreSQL;
+- credencial administrativa de PostgreSQL;
+- credencial administrativa de Keycloak;
+- contraseña SMTP;
+- contraseña del certificado de firma electrónica.
+
+El archivo del certificado de firma permanece fuera de Vault; Vault administra su contraseña.
+
+Los secretos no deben almacenarse en `.env`, código fuente, SQL, YAML versionado ni Dockerfiles.
+
+## Persistencia
+
+PostgreSQL es la infraestructura de persistencia.
+
+Se utilizan:
+
+- JPA/Hibernate;
+- Flyway;
+- `ddl-auto=validate`;
+- migraciones versionadas;
+- nombres de tablas y columnas en español.
+
+Los estados de registro y los estados de workflow se mantienen conceptualmente separados:
+
+- `ESTADO_REGISTRO` para vigencia del registro;
+- `ESTADO_PROCESO` exclusivamente para workflow/proceso.
+
+La auditoría utiliza:
+
+```text
+ESTADO_REGISTRO
+USUARIO_CREACION
+USUARIO_MODIFICACION
+FECHA_CREACION
+FECHA_MODIFICACION
+OBSERVACION
+```
+
+## Firma electrónica
+
+Facturador incorpora la base técnica para firma electrónica utilizando DSS.
+
+La arquitectura contempla certificados PKCS#12 y perfiles de firma compatibles con los requerimientos aplicables del SRI. La implementación concreta se valida contra los XSD, especificaciones técnicas y servicios del SRI correspondientes a cada versión.
+
+## Integración SRI
+
+La integración con SRI se mantiene aislada como un adaptador externo.
+
+El flujo contempla:
+
+1. generación del comprobante;
+2. validación;
+3. firma;
+4. envío al servicio de recepción;
+5. consulta/gestión de recepción;
+6. consulta de autorización;
+7. persistencia de respuestas y evidencias;
+8. actualización del workflow.
+
+Las URLs de los ambientes de pruebas y producción se administran mediante configuración externa.
+
+## Workflow
+
+Apache Camel se utiliza como motor de workflow en Facturador.
+
+Las rutas se externalizan mediante XML, por ejemplo:
+
+```text
+/app/config/camel/facturacion.xml
+```
+
+Esto permite evolucionar el flujo sin convertir toda la orquestación en código Java.
+
+## Infraestructura local
+
+La composición actual incluye:
+
+- Vault;
+- Vault Agent;
+- PostgreSQL;
+- Keycloak;
+- Kafka;
+- Facturador;
+- Notification.
+
+La configuración sensible se entrega mediante volúmenes/configtree y Vault Agent.
+
+## Configuración externa
+
+Los archivos de configuración operativa no dependen exclusivamente del repositorio.
+
+En el entorno local se utilizan rutas externas bajo:
+
+```text
+C:\factucore\
+├── certificados
+├── documentos
+├── facturador\config
+├── notificacion\config
+├── vault
+├── postgres
+├── logs
+└── secrets
+```
+
+Esto permite separar configuración, secretos, certificados y datos persistentes del código fuente.
+
+## Estructura relevante del repositorio
 
 ```text
 factucore/
-│
-├── api/
-│   ├── domain/
-│   ├── application/
-│   ├── adapters/
-│   └── bootstrap/
-│
-├── web/
-│
-├── database/
-│
-├── docker/
-│
-└── docs/
+├── facturador/
+├── notificacion/
+├── factucore-messaging/
+├── configuraciones/
+│   ├── facturador/
+│   └── notificacion/
+├── compose/
+│   ├── postgres/
+│   └── vault/
+├── docs/
+└── README.md
 ```
 
-### `api/`
+## Versiones de módulos
 
-Backend de FactuCore.
+| Módulo | Versión |
+|---|---|
+| Facturador | 1.0.0 |
+| Notification | 1.0.0 |
+| FactuCore Messaging | 1.0.0 |
 
-Será desarrollado con Java y Spring Boot utilizando Maven y arquitectura DDD + Hexagonal.
+Las versiones de los módulos son independientes y se incrementarán cuando cambie funcionalmente cada módulo.
 
-### `web/`
+## Documentación por módulo
 
-Frontend de FactuCore.
+Cada módulo mantiene su propio CHANGELOG:
 
-Será desarrollado utilizando React y Node.js/npm.
+- `facturador/CHANGELOG.md`
+- `notificacion/CHANGELOG.md`
+- `factucore-messaging/CHANGELOG.md`
 
-### `database/`
+Esto evita mezclar la evolución funcional de módulos con ciclos de liberación diferentes.
 
-Scripts relacionados con PostgreSQL, incluyendo posteriormente:
+## Desarrollo
 
-- Migraciones.
-- Estructura de tablas.
-- Datos iniciales.
-- Configuraciones necesarias para la base de datos.
+La rama de trabajo principal para esta etapa es `develop`.
 
-### `docker/`
+Tecnologías base actuales:
 
-Configuraciones para ejecutar los diferentes componentes mediante Docker.
+- Java 21;
+- Spring Boot 3.5.16;
+- Maven;
+- PostgreSQL 17;
+- Hibernate/JPA;
+- Flyway;
+- Apache Camel 4.10.7;
+- Spring Security;
+- Keycloak 26.7.4;
+- Apache Kafka 4.0.2;
+- HashiCorp Vault 1.20;
+- SpringDoc OpenAPI 2.9.1 en Facturador;
+- EU DSS 6.5;
+- Apache PDFBox 3.0.5.
 
-### `docs/`
+## Principios para nuevas funcionalidades
 
-Documentación técnica y funcional del proyecto.
+Antes de agregar una funcionalidad se debe validar:
 
----
+1. modelo conceptual;
+2. bounded context y límite del módulo;
+3. reglas de negocio;
+4. versionamiento;
+5. idempotencia;
+6. errores y mensajes;
+7. workflow;
+8. snapshot histórico;
+9. persistencia;
+10. contrato API;
+11. DocumentDefinition/XSD;
+12. pruebas.
 
-## 🛠️ Tecnologías base
-
-La plataforma tendrá como base tecnológica:
-
-### Backend
-
-- Java 17 LTS.
-- Spring Boot 3.x.
-- Maven.
-- Spring Framework.
-- Hibernate/JPA.
-- PostgreSQL.
-- EU DSS para firma electrónica, sujeto a validación del perfil requerido por el SRI.
-- JasperReports para generación de documentos PDF.
-
-### Frontend
-
-- React.
-- Node.js LTS.
-- npm.
-
-### Infraestructura
-
-- PostgreSQL.
-- Docker.
-- Git.
-
----
-
-## 🔄 Flujo general de emisión
-
-El flujo principal previsto será:
-
-```text
-Solicitud de emisión
-        │
-        ▼
-Validación del comprobante
-        │
-        ▼
-Generación XML
-        │
-        ▼
-Firma electrónica
-        │
-        ▼
-Envío al SRI
-        │
-        ▼
-Recepción / validación
-        │
-        ▼
-Autorización
-        │
-        ▼
-Generación PDF
-        │
-        ▼
-Almacenamiento
-        │
-        ▼
-Envío al cliente
-```
-
----
-
-## 🧩 Diseño genérico
-
-FactuCore no estará diseñado exclusivamente para una empresa determinada.
-
-La configuración permitirá administrar diferentes:
-
-- Contribuyentes.
-- Establecimientos.
-- Puntos de emisión.
-- Certificados.
-- Ambientes.
-- Series y secuencias.
-- Clientes.
-- Productos.
-- Impuestos.
-- Tarifas.
-- Formas de pago.
-- Configuraciones de comprobantes.
-
-El objetivo es que el mismo producto pueda ser utilizado por diferentes empresas sin modificar el núcleo de negocio.
-
----
-
-## 🗄️ Persistencia
-
-La base de datos principal será PostgreSQL.
-
-La persistencia estará aislada mediante adaptadores para evitar que las reglas de negocio dependan directamente de PostgreSQL o de JPA/Hibernate.
-
----
-
-## 🌐 Integración con el SRI
-
-FactuCore tendrá una capa de integración con los servicios electrónicos del SRI.
-
-Esta integración será considerada un adaptador externo, permitiendo mantener aislado el dominio de las particularidades técnicas de los servicios del SRI.
-
-La integración contemplará el ciclo de:
-
-1. Recepción del comprobante.
-2. Generación del XML.
-3. Firma electrónica.
-4. Envío.
-5. Consulta de recepción.
-6. Consulta de autorización.
-7. Actualización del estado.
-8. Almacenamiento de respuestas.
-
----
-
-## 📚 Documentación
-
-La carpeta `docs/` contendrá progresivamente la documentación del proyecto:
-
-- Arquitectura.
-- DDD.
-- Bounded Contexts.
-- Agregados.
-- Casos de uso.
-- Puertos y adaptadores.
-- Modelo de datos.
-- Integración SRI.
-- Firma electrónica.
-- API REST.
-- Decisiones arquitectónicas.
-
----
-
-## 🚧 Estado del proyecto
-
-FactuCore se encuentra en **fase de diseño arquitectónico**.
-
-Antes de comenzar la implementación se definirán:
-
-1. Arquitectura general.
-2. Bounded Contexts.
-3. Modelo de dominio.
-4. Agregados.
-5. Reglas de negocio.
-6. Casos de uso.
-7. Puertos.
-8. Adaptadores.
-9. Módulos Maven.
-10. Modelo de base de datos.
-11. API REST.
-12. Frontend.
-
-La implementación se realizará progresivamente después de validar cada decisión arquitectónica.
-
----
-
-## 📌 Principios del proyecto
-
-FactuCore seguirá principalmente estos principios:
-
-- **DDD primero.**
-- **Separación de responsabilidades.**
-- **Dominio independiente de frameworks.**
-- **Bajo acoplamiento.**
-- **Alta cohesión.**
-- **Configuración sobre código cuando sea apropiado.**
-- **Integraciones externas aisladas mediante adaptadores.**
-- **Código genérico y reutilizable.**
-- **Preparado para evolución de las especificaciones del SRI.**
-- **Un único repositorio Git para todo el producto.**
+Las abstracciones y tecnologías nuevas deben introducirse solamente cuando exista una necesidad real.
