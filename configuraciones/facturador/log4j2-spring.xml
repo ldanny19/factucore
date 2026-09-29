@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="30">
 	<Properties>
+		<SpringProperty name="LOG_LEVEL" source="factucore.logging.nivel" defaultValue="INFO" />
+		<SpringProperty name="LOG_PATH" source="factucore.logging.ruta" defaultValue="/app/logs" />
+		<SpringProperty name="LOG_FILE" source="factucore.logging.archivo" defaultValue="facturador.log" />
 		<Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t]
 			%c{1.} - %msg%n</Property>
 	</Properties>
@@ -9,8 +12,8 @@
 			<PatternLayout pattern="${LOG_PATTERN}" />
 		</Console>
 		<RollingFile name="File"
-			fileName="${spring:spring.factucore.logging.ruta}/${spring:spring.factucore.logging.archivo}"
-			filePattern="${spring:spring.factucore.logging.ruta}/$${date:yyyy-MM}/factucore-%d{yyyy-MM-dd}-%i.log.gz">
+			fileName="${LOG_PATH}/${LOG_FILE}"
+			filePattern="${LOG_PATH}/${date:yyyy-MM}/factucore-%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="${LOG_PATTERN}" />
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" />
@@ -21,7 +24,7 @@
 	</Appenders>
 	<Loggers>
 		<Logger name="ec.dalara.factucore"
-			level="${spring:spring.factucore.logging.nivel}" additivity="false">
+			level="${LOG_LEVEL}" additivity="false">
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="File" />
 		</Logger>
