@@ -3,10 +3,7 @@ name: factucore
 services:
 
   vault:
-    build:
-      context: ./vault
-      dockerfile: Dockerfile
-    image: factucore-vault:1.20
+    image: hashicorp/vault:1.20
     container_name: factucore-vault
     restart: unless-stopped
     cap_add:
@@ -37,10 +34,7 @@ services:
       start_period: 5s
 
   vault-agent:
-    build:
-      context: ./vault/agent
-      dockerfile: Dockerfile
-    image: factucore-vault-agent:1.20
+    image: hashicorp/vault:1.20
     container_name: factucore-vault-agent
     restart: unless-stopped
     depends_on:
@@ -86,10 +80,7 @@ services:
       start_period: 20s
 
   auth-server:
-    build:
-      context: ./keycloak
-      dockerfile: Dockerfile
-    image: factucore-keycloak:26.7.4
+    image: keycloak/keycloak:26.7.4
     container_name: auth-server
     user: factucore
     restart: unless-stopped
