@@ -3,10 +3,7 @@ name: factucore
 services:
 
   vault:
-    build:
-      context: ./vault
-      dockerfile: Dockerfile
-    image: factucore-vault:1.20
+    image: hashicorp/vault:1.20
     container_name: factucore-vault
     user: factucore
     restart: unless-stopped
@@ -23,10 +20,7 @@ services:
       - "${VAULT_PORT:-8200}:8200"
 
   vault-agent:
-    build:
-      context: ./vault/agent
-      dockerfile: Dockerfile
-    image: factucore-vault-agent:1.20
+    image: hashicorp/vault:1.20
     container_name: factucore-vault-agent
     user: factucore
     restart: unless-stopped
@@ -71,10 +65,7 @@ services:
       retries: 5
       start_period: 20s
   auth-server:
-    build:
-      context: ./keycloak
-      dockerfile: Dockerfile
-    image: factucore-keycloak:26.7.4
+    image: quay.io/keycloak/keycloak:26
     container_name: auth-server
     user: factucore
     restart: unless-stopped
