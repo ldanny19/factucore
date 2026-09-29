@@ -81,3 +81,13 @@ template {
 EOT
   error_on_missing_key = true
 }
+
+template {
+  destination = "/vault/secrets/FACTUCORE_FIRMA_PASSWORD"
+  contents = <<EOT
+{{- with secret "secret/data/factucore/firma" -}}
+{{ .Data.data.password }}
+{{- end }}
+EOT
+  error_on_missing_key = true
+}
