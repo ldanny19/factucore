@@ -281,7 +281,7 @@ if vault kv get secret/factucore/postgresql/admin >/dev/null 2>&1; then
 else
 
   [ -n "$ADMIN_PASSWORD" ] ||
-    ADMIN_PASSWORD="Adm1nDB123"
+    fail "No se definio FACTUCORE_POSTGRES_ADMIN_PASSWORD."
 
   log "Creando credencial PostgreSQL de administrador"
 
