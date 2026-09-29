@@ -17,3 +17,7 @@ path "secret/data/factucore/postgresql/notificaciones" {
 path "secret/data/factucore/keycloak" {
   capabilities = ["read"]
 }
+
+path "secret/data/factucore/notificacion/smtp" {
+  capabilities = ["read"]
+}
