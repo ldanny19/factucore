@@ -34,7 +34,7 @@ services:
       - ${FACTUCORE_HOME}/vault/policy:/vault/policy:ro
       - ${FACTUCORE_HOME}/secrets:/vault/bootstrap-secrets
     entrypoint: ["/bin/sh", "-c"]
-    command: /vault/scripts/bootstrap-vault.sh
+    command: sh /vault/scripts/bootstrap-vault.sh
 
   vault-agent:
     image: hashicorp/vault:1.20
