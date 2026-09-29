@@ -16,6 +16,8 @@ public class BrokerAutoConfigurationEnvironmentPostProcessor implements Environm
     private static final String EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";
     private static final String ACTUATOR_INCLUDE_PROPERTY = "management.endpoints.web.exposure.include";
     private static final String ACTUATOR_EXCLUDE_PROPERTY = "management.endpoints.web.exposure.exclude";
+    private static final String RABBIT_HEALTH_PROPERTY = "management.health.rabbit.enabled";
+    private static final String KAFKA_HEALTH_PROPERTY = "management.health.kafka.enabled";
 
     private static final String RABBIT_AUTO_CONFIGURATION =
             "org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration";
@@ -81,9 +83,13 @@ public class BrokerAutoConfigurationEnvironmentPostProcessor implements Environm
         if (enabled) {
             environment.getSystemProperties().put(ACTUATOR_INCLUDE_PROPERTY, "health,info");
             environment.getSystemProperties().put(ACTUATOR_EXCLUDE_PROPERTY, "");
+            environment.getSystemProperties().put(RABBIT_HEALTH_PROPERTY, Boolean.toString(!kafka));
+            environment.getSystemProperties().put(KAFKA_HEALTH_PROPERTY, Boolean.toString(kafka));
         } else {
             environment.getSystemProperties().put(ACTUATOR_INCLUDE_PROPERTY, "");
             environment.getSystemProperties().put(ACTUATOR_EXCLUDE_PROPERTY, "*");
+            environment.getSystemProperties().put(RABBIT_HEALTH_PROPERTY, "false");
+            environment.getSystemProperties().put(KAFKA_HEALTH_PROPERTY, "false");
         }
 
         LOGGER.info(
