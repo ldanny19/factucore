@@ -265,10 +265,10 @@ generate_secret() {
 # Credenciales PostgreSQL
 # ---------------------------------------------------------------------------
 
-ADMIN_PASSWORD="${FACTUCORE_POSTGRES_ADMIN_PASSWORD:-}"
-FACTURADOR_PASSWORD="${FACTUCORE_POSTGRES_FACTURADOR_PASSWORD:-}"
-AUTH_PASSWORD="${FACTUCORE_POSTGRES_AUTH_PASSWORD:-}"
-NOTIFICACIONES_PASSWORD="${FACTUCORE_POSTGRES_NOTIFICACIONES_PASSWORD:-}"
+ADMIN_PASSWORD=$(generate_secret)
+FACTURADOR_PASSWORD=$(generate_secret)
+AUTH_PASSWORD=$(generate_secret)
+NOTIFICACIONES_PASSWORD=$(generate_secret)
 
 # ---------------------------------------------------------------------------
 # Credencial PostgreSQL - Administrador
@@ -279,9 +279,6 @@ if vault kv get secret/factucore/postgresql/admin >/dev/null 2>&1; then
   log "Credencial PostgreSQL de administrador ya existe; no se sobrescribe."
 
 else
-
-  [ -n "$ADMIN_PASSWORD" ] ||
-    fail "No se definio FACTUCORE_POSTGRES_ADMIN_PASSWORD."
 
   log "Creando credencial PostgreSQL de administrador"
 
@@ -303,9 +300,6 @@ if vault kv get secret/factucore/postgresql/facturador >/dev/null 2>&1; then
 
 else
 
-  [ -n "$FACTURADOR_PASSWORD" ] ||
-    FACTURADOR_PASSWORD=$(generate_secret)
-
   log "Creando credencial PostgreSQL de Facturador"
 
   vault kv put \
@@ -325,9 +319,6 @@ if vault kv get secret/factucore/postgresql/auth >/dev/null 2>&1; then
   log "Credencial PostgreSQL de Auth Server ya existe; no se sobrescribe."
 
 else
-
-  [ -n "$AUTH_PASSWORD" ] ||
-    AUTH_PASSWORD=$(generate_secret)
 
   log "Creando credencial PostgreSQL de Auth Server"
 
@@ -349,9 +340,6 @@ if vault kv get secret/factucore/postgresql/notificaciones >/dev/null 2>&1; then
 
 else
 
-  [ -n "$NOTIFICACIONES_PASSWORD" ] ||
-    NOTIFICACIONES_PASSWORD=$(generate_secret)
-
   log "Creando credencial PostgreSQL de Notificaciones"
 
   vault kv put \
@@ -363,19 +351,37 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Credencial SMTP - Notificaciones
+# ---------------------------------------------------------------------------
+
+if vault kv get secret/factucore/notificacion/smtp >/dev/null 2>&1; then
+
+  log "Credencial SMTP de Notificaciones ya existe; no se sobrescribe."
+
+else
+
+  SMTP_PASSWORD=$(generate_secret)
+
+  log "Creando credencial SMTP de Notificaciones"
+
+  vault kv put \
+    secret/factucore/notificacion/smtp \
+    password="$SMTP_PASSWORD" \
+    >/dev/null
+
+fi
+
+# ---------------------------------------------------------------------------
 # Credencial administrador Keycloak
 # ---------------------------------------------------------------------------
 
-KEYCLOAK_PASSWORD="${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}"
+KEYCLOAK_PASSWORD=$(generate_secret)
 
 if vault kv get secret/factucore/keycloak >/dev/null 2>&1; then
 
   log "Credencial de Keycloak ya existe; no se sobrescribe."
 
 else
-
-  [ -n "$KEYCLOAK_PASSWORD" ] ||
-    KEYCLOAK_PASSWORD=$(generate_secret)
 
   log "Creando credencial de Keycloak"
 
