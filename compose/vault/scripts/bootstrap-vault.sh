@@ -7,6 +7,7 @@ export VAULT_ADDR
 SECRETS_DIR="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}"
 INIT_FILE="$SECRETS_DIR/vault-init.json"
 AGENT_TOKEN_FILE="${FACTUCORE_VAULT_AGENT_TOKEN_FILE:-/vault/secrets-persist/vault_agent_token.txt}"
+AGENT_TOKEN_RUNTIME_FILE="/vault/agent-token/vault_agent_token.txt"
 POLICY_FILE="/vault/policy/factucore-agent.hcl"
 
 log() {
@@ -20,6 +21,7 @@ fail() {
 
 mkdir -p "$SECRETS_DIR"
 chmod 700 "$SECRETS_DIR"
+mkdir -p "$(dirname "$AGENT_TOKEN_RUNTIME_FILE")"
 
 log "Esperando disponibilidad de Vault"
 STATUS_RC=1
@@ -134,9 +136,11 @@ if [ -z "$AGENT_TOKEN" ]; then
     cut -d '"' -f 4)
   [ -n "$AGENT_TOKEN" ] || fail "Vault no devolvio un client token."
   printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_FILE"
-  chown 100:100 "$AGENT_TOKEN_FILE"
-  chmod 600 "$AGENT_TOKEN_FILE"
 fi
+
+printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_RUNTIME_FILE"
+chown 100:100 "$AGENT_TOKEN_RUNTIME_FILE"
+chmod 600 "$AGENT_TOKEN_RUNTIME_FILE"
 
 log "Validando acceso del Vault Agent"
 VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/postgresql >/dev/null
