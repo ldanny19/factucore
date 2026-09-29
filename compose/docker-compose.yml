@@ -223,7 +223,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
-      - ${FACTUCORE_HOME}/config/notificacion:/app/config:ro
+      - ${FACTUCORE_HOME}/notificacion/config:/app/config:ro
       - ${FACTUCORE_HOME}/documentos:/app/documentos
       - ${FACTUCORE_HOME}/logs/notificacion:/app/logs
     ports:
