@@ -40,7 +40,6 @@ services:
     depends_on:
       vault:
         condition: service_healthy
-    user: root
     entrypoint: ["/vault/agent/entrypoint.sh"]
     command: ["agent", "-config=/vault/agent/config.hcl"]
     environment:
@@ -82,7 +81,6 @@ services:
   auth-server:
     image: keycloak/keycloak:26.7.4
     container_name: auth-server
-    user: factucore
     restart: unless-stopped
     depends_on:
       vault-agent:
@@ -101,9 +99,6 @@ services:
 
   kafka:
     image: apache/kafka:4.0.2
-    depends_on:
-      vault-agent:
-        condition: service_healthy
     container_name: factucore-kafka
     restart: unless-stopped
     ports:
@@ -120,6 +115,12 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
 
   facturador:
     # build:
@@ -136,7 +137,7 @@ services:
       vault-agent:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
       auth-server:
         condition: service_started
       vault:
