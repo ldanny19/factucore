@@ -85,11 +85,13 @@ services:
     depends_on:
       vault-agent:
         condition: service_healthy
+      db_factucore:
+        condition: service_healthy
     entrypoint:
       - /bin/sh
       - -c
     command:
-      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}" --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
+      - export KC_DB_URL="jdbc:postgresql://db_factucore:5432/factucore"; export KC_DB_USERNAME="${POSTGRES_USER:-usr_factucore}"; export KC_DB_PASSWORD="$$(cat /vault/secrets/postgres_password)"; exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}" --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
       KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
