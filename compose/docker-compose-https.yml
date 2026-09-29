@@ -49,12 +49,8 @@ services:
       start_period: 10s
 
   db_factucore:
-    build:
-      context: ./postgresql
-      dockerfile: Dockerfile
-    image: factucore-postgresql:17
+    image: postgres:17
     container_name: db_factucore
-    user: factucore
     restart: unless-stopped
     depends_on:
       vault-agent:
@@ -98,12 +94,8 @@ services:
       - "${KEYCLOAK_PORT:-8180}:8080"
 
   kafka:
-    build:
-      context: ./kafka
-      dockerfile: Dockerfile
-    image: factucore-kafka:4.0.2
+    image: apache/kafka:4.0.1
     container_name: factucore-kafka
-    user: factucore
     restart: unless-stopped
     ports:
       - "${KAFKA_PORT:-9092}:9092"
