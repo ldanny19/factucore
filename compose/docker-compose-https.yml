@@ -3,8 +3,12 @@ name: factucore
 services:
 
   vault:
-    image: hashicorp/vault:1.20
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    image: factucore-vault:1.20
     container_name: factucore-vault
+    user: factucore
     restart: unless-stopped
     cap_add:
       - IPC_LOCK
@@ -19,8 +23,12 @@ services:
       - "${VAULT_PORT:-8200}:8200"
 
   vault-agent:
-    image: hashicorp/vault:1.20
+    build:
+      context: ./vault/agent
+      dockerfile: Dockerfile
+    image: factucore-vault-agent:1.20
     container_name: factucore-vault-agent
+    user: factucore
     restart: unless-stopped
     depends_on:
       vault:
@@ -41,8 +49,12 @@ services:
       start_period: 10s
 
   db_factucore:
-    image: postgres:17
+    build:
+      context: ./postgresql
+      dockerfile: Dockerfile
+    image: factucore-postgresql:17
     container_name: db_factucore
+    user: factucore
     restart: unless-stopped
     depends_on:
       vault-agent:
@@ -63,8 +75,12 @@ services:
       retries: 5
       start_period: 20s
   auth-server:
-    image: quay.io/keycloak/keycloak:26
+    build:
+      context: ./keycloak
+      dockerfile: Dockerfile
+    image: factucore-keycloak:26.7.4
     container_name: auth-server
+    user: factucore
     restart: unless-stopped
     depends_on:
       vault-agent:
@@ -82,8 +98,12 @@ services:
       - "${KEYCLOAK_PORT:-8180}:8080"
 
   kafka:
-    image: apache/kafka:4.0.1
+    build:
+      context: ./kafka
+      dockerfile: Dockerfile
+    image: factucore-kafka:4.0.2
     container_name: factucore-kafka
+    user: factucore
     restart: unless-stopped
     ports:
       - "${KAFKA_PORT:-9092}:9092"
@@ -105,6 +125,7 @@ services:
       context: ../facturador
       dockerfile: Dockerfile
     container_name: factucore-facturador
+    user: factucore
     restart: unless-stopped
     depends_on:
       db_factucore:
@@ -141,6 +162,7 @@ services:
       context: ../notificacion
       dockerfile: Dockerfile
     container_name: factucore-notificacion
+    user: factucore
     restart: unless-stopped
     depends_on:
       kafka:
