@@ -10,9 +10,9 @@ spring:
     basename: "file:${factucore.notificacion.path.config}/messages"
 
   mail:
-    host: smtp.example.com
+    host: REEMPLAZAR_SMTP_HOST
     port: 587
-    username: usuario@example.com
+    username: REEMPLAZAR_SMTP_USUARIO
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
