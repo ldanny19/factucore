@@ -81,8 +81,8 @@ camel:
 
 factucore:
   messaging:
-    enabled: ${FACTUCORE_MESSAGING_ENABLED:true}
-    broker: ${BROKER:KAFKA}
+    enabled: true
+    broker: KAFKA
 
   path:
     base: ${FACTUCORE_PATH_BASE:/app}
