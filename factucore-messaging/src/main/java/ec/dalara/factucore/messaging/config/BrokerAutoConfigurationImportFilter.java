@@ -8,6 +8,7 @@ import org.springframework.core.env.Environment;
 public class BrokerAutoConfigurationImportFilter
         implements AutoConfigurationImportFilter, EnvironmentAware {
 
+    private static final String ENABLED_PROPERTY = "factucore.messaging.enabled";
     private static final String BROKER_PROPERTY = "factucore.messaging.broker";
     private static final String KAFKA_BROKER = "KAFKA";
 
@@ -34,6 +35,7 @@ public class BrokerAutoConfigurationImportFilter
 
     @Override
     public boolean[] match(String[] autoConfigurationClasses, AutoConfigurationMetadata autoConfigurationMetadata) {
+        boolean enabled = environment.getProperty(ENABLED_PROPERTY, Boolean.class, true);
         String broker = environment.getProperty(BROKER_PROPERTY, KAFKA_BROKER);
 
         boolean kafka = KAFKA_BROKER.equalsIgnoreCase(broker);
@@ -43,7 +45,14 @@ public class BrokerAutoConfigurationImportFilter
         for (int i = 0; i < autoConfigurationClasses.length; i++) {
             String autoConfigurationClass = autoConfigurationClasses[i];
 
-            if (kafka) {
+            if (!enabled) {
+                matches[i] = !RABBIT_AUTO_CONFIGURATION.equals(autoConfigurationClass)
+                        && !RABBIT_HEALTH_AUTO_CONFIGURATION.equals(autoConfigurationClass)
+                        && !RABBIT_METRICS_AUTO_CONFIGURATION.equals(autoConfigurationClass)
+                        && !KAFKA_AUTO_CONFIGURATION.equals(autoConfigurationClass)
+                        && !KAFKA_HEALTH_AUTO_CONFIGURATION.equals(autoConfigurationClass)
+                        && !KAFKA_METRICS_AUTO_CONFIGURATION.equals(autoConfigurationClass);
+            } else if (kafka) {
                 matches[i] = !RABBIT_AUTO_CONFIGURATION.equals(autoConfigurationClass)
                         && !RABBIT_HEALTH_AUTO_CONFIGURATION.equals(autoConfigurationClass)
                         && !RABBIT_METRICS_AUTO_CONFIGURATION.equals(autoConfigurationClass);
