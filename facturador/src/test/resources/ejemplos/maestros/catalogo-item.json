@@ -1,0 +1,8 @@
+{
+  "id": 101,
+  "catalogoId": 1,
+  "codigo": "1",
+  "nombre": "Pruebas",
+  "descripcion": "Ambiente de pruebas del SRI.",
+  "orden": 1
+}
