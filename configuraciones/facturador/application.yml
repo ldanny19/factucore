@@ -4,6 +4,8 @@
 # ============================================================
 
 spring:
+  config:
+    import: "optional:configtree:/run/secrets/"
   application:
     name: facturador
 
@@ -18,7 +20,6 @@ spring:
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
-    password: ${DB_PASSWORD:usr_factucore}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: FactuCoreHikariCP
@@ -82,6 +83,9 @@ factucore:
     documentos-xml: ${FACTUCORE_PATH_DOCUMENTOS_XML:${factucore.path.documentos}/xml}
     documentos-pdf: ${FACTUCORE_PATH_DOCUMENTOS_PDF:${factucore.path.documentos}/pdf}
     logs: ${FACTUCORE_PATH_LOGS:${factucore.path.base}/logs}
+
+  firma:
+    password: ${FACTUCORE_FIRMA_PASSWORD}
 
   sri:
     ambiente: ${FACTUCORE_SRI_AMBIENTE:PRUEBAS}
