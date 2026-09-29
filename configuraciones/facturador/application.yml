@@ -74,9 +74,6 @@ management:
       probes:
         enabled: true
       show-details: never
-  health:
-    rabbit:
-      enabled: false
 
 camel:
   main:
