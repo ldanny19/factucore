@@ -21,3 +21,7 @@ path "secret/data/factucore/keycloak" {
 path "secret/data/factucore/notificacion/smtp" {
   capabilities = ["read"]
 }
+
+path "secret/data/factucore/firma" {
+  capabilities = ["read"]
+}
