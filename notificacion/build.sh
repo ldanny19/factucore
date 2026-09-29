@@ -11,7 +11,7 @@ FORCE="${3:-}"
 
 if [[ -z "${MODE}" || -z "${VERSION}" ]]; then
   echo "ERROR: debe indicar modo y version."
-  echo "Uso: ./build.sh [skip-tests|tests] <version> [force]"
+  echo "Uso: ./build.sh skipTests <version> [force]"
   exit 1
 fi
 
@@ -22,13 +22,9 @@ if [[ -n "${FORCE}" && "${FORCE}" != "force" ]]; then
 fi
 
 case "${MODE}" in
-  skip-tests)
+  skipTests)
     echo "==> Ejecutando Maven sin tests..."
     mvn clean package -DskipTests
-    ;;
-  tests)
-    echo "==> Ejecutando Maven con tests..."
-    mvn clean package
     ;;
   *)
     echo "ERROR: modo invalido: ${MODE}"
