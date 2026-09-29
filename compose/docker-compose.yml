@@ -58,7 +58,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "test -s /vault/secrets/postgres_admin_password && test -s /vault/secrets/postgres_facturador_password && test -s /vault/secrets/postgres_auth_password && test -s /vault/secrets/postgres_notificaciones_password && test -s /vault/secrets/keycloak_admin_password"
+          "test -s /vault/secrets/postgres_admin_password && test -s /vault/secrets/postgres_facturador_password && test -s /vault/secrets/postgres_auth_password && test -s /vault/secrets/postgres_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/FACTUCORE_NOTIFICACION_SMTP_PASSWORD"
         ]
       interval: 5s
       timeout: 3s
