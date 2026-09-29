@@ -10,12 +10,12 @@ spring:
     basename: "file:${factucore.notificacion.path.config}/messages"
 
   mail:
-    host: ${FACTUCORE_NOTIFICACION_SMTP_HOST}
-    port: ${FACTUCORE_NOTIFICACION_SMTP_PORT:587}
-    username: ${FACTUCORE_NOTIFICACION_SMTP_USERNAME}
+    host: smtp.example.com
+    port: 587
+    username: usuario@example.com
     properties:
-      mail.smtp.auth: ${FACTUCORE_NOTIFICACION_SMTP_AUTH:true}
-      mail.smtp.starttls.enable: ${FACTUCORE_NOTIFICACION_SMTP_STARTTLS:true}
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 factucore:
   logging:
@@ -24,10 +24,10 @@ factucore:
     archivo: ${FACTUCORE_LOGGING_ARCHIVO:factucore-notificacion.log}
 
   messaging:
-    enabled: ${FACTUCORE_MESSAGING_ENABLED:true}
-    broker: ${FACTUCORE_MESSAGING_BROKER:KAFKA}
+    enabled: true
+    broker: KAFKA
     kafka:
-      bootstrap-servers: ${FACTUCORE_MESSAGING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      bootstrap-servers: kafka:9092
       consumer:
         auto-offset-reset: earliest
         enable-auto-commit: false
@@ -48,8 +48,3 @@ factucore:
     plantilla:
       ruta: ${FACTUCORE_NOTIFICACION_PLANTILLA_RUTA:/app/config/plantillas/comprobante-autorizado.html}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
