@@ -14,6 +14,8 @@ public class BrokerAutoConfigurationEnvironmentPostProcessor implements Environm
     private static final String ENABLED_PROPERTY = "factucore.messaging.enabled";
     private static final String BROKER_PROPERTY = "factucore.messaging.broker";
     private static final String EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";
+    private static final String ACTUATOR_INCLUDE_PROPERTY = "management.endpoints.web.exposure.include";
+    private static final String ACTUATOR_EXCLUDE_PROPERTY = "management.endpoints.web.exposure.exclude";
 
     private static final String RABBIT_AUTO_CONFIGURATION =
             "org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration";
@@ -76,10 +78,23 @@ public class BrokerAutoConfigurationEnvironmentPostProcessor implements Environm
                     configuredExclusions + "," + exclusionsValue);
         }
 
+        if (enabled) {
+            environment.getSystemProperties().put(ACTUATOR_INCLUDE_PROPERTY, "health,info");
+            environment.getSystemProperties().put(ACTUATOR_EXCLUDE_PROPERTY, "");
+        } else {
+            environment.getSystemProperties().put(ACTUATOR_INCLUDE_PROPERTY, "");
+            environment.getSystemProperties().put(ACTUATOR_EXCLUDE_PROPERTY, "*");
+        }
+
         LOGGER.info(
                 "FACTUCORE-MESSAGING: enabled={}, broker={}, auto-configuracion excluida={}",
                 enabled,
                 broker,
                 exclusionsValue);
+
+        LOGGER.info(
+                "FACTUCORE-MESSAGING: actuator={}, health/info expuestos={}",
+                enabled,
+                enabled ? "health,info" : "ninguno");
     }
 }
