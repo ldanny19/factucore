@@ -117,7 +117,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 
 	private VersionDocumentoXsdModel crearVersionModel(VersionDocumentoXsd version) {
 		return new VersionDocumentoXsdModel(version.getId(), version.getDocumentoXsd().getId(), version.getVersion(),
-				version.getNombreArchivo(), version.getNamespaceXml(), version.getElementoRaiz(), version.getPlantillaJson(), version.getEsquemaJson(), version.getFechaInicio(), version.getFechaFin());
+				version.getNombreArchivo(), version.getNamespaceXml(), version.getElementoRaiz(),
+				version.getPlantillaJson(), version.getEsquemaJson(), version.getFechaInicio(), version.getFechaFin());
 	}
 
 	private ElementoXsdModel crearElementoModel(ElementoXsd elemento) {
@@ -126,7 +127,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 				elemento.getTipoDato(), elemento.getOrden(), elemento.getObligatorio(), elemento.getRepetible(),
 				elemento.getMinOcurrencias(), elemento.getMaxOcurrencias(), elemento.getLongitudMinima(),
 				elemento.getLongitudMaxima(), elemento.getDigitosTotales(), elemento.getDecimales(),
-				elemento.getValorMinimo(), elemento.getValorMaximo(), elemento.getPatron(), elemento.getFechaInicio(), elemento.getFechaFin());
+				elemento.getValorMinimo(), elemento.getValorMaximo(), elemento.getPatron(), elemento.getFechaInicio(),
+				elemento.getFechaFin());
 	}
 
 	private AtributoXsdModel crearAtributoModel(AtributoXsd atributo) {
@@ -136,8 +138,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 	}
 
 	private EnumeracionXsdModel crearEnumeracionModel(EnumeracionXsd enumeracion) {
-		return new EnumeracionXsdModel(enumeracion.getId(), enumeracion.getElementoXsd().getId(), enumeracion.getValor(),
-				enumeracion.getDescripcion(), enumeracion.getOrden());
+		return new EnumeracionXsdModel(enumeracion.getId(), enumeracion.getElementoXsd().getId(),
+				enumeracion.getValor(), enumeracion.getDescripcion(), enumeracion.getOrden());
 	}
 
 	private MapeoXsdModel crearMapeoModel(MapeoXsd mapeo) {

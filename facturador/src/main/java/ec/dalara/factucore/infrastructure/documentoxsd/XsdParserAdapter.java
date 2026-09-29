@@ -215,11 +215,10 @@ public class XsdParserAdapter implements XsdParserPort {
 		}
 	}
 
-	private void parseComplexType(Element complexType, String parentPath,
-			Map<String, Element> complexTypes, Map<String, Element> simpleTypes,
-			Map<String, Element> globalElements, List<XsdElementSource> elementos,
-			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones,
-			Set<String> typeStack, String typeNamespace, String typeName) {
+	private void parseComplexType(Element complexType, String parentPath, Map<String, Element> complexTypes,
+			Map<String, Element> simpleTypes, Map<String, Element> globalElements, List<XsdElementSource> elementos,
+			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones, Set<String> typeStack,
+			String typeNamespace, String typeName) {
 
 		String stackKey = key(typeNamespace, typeName);
 		if (typeName != null && !typeStack.add(stackKey)) {
@@ -238,19 +237,19 @@ public class XsdParserAdapter implements XsdParserPort {
 			String baseName = localTypeName(base);
 			Element baseType = findType(complexTypes, baseNamespace, baseName);
 			if (baseType != null) {
-				parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements,
-						elementos, atributos, enumeraciones, typeStack, baseNamespace, baseName);
+				parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
+						enumeraciones, typeStack, baseNamespace, baseName);
 			}
-			parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements,
-					elementos, atributos, enumeraciones, typeStack);
+			parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
+					enumeraciones, typeStack);
 			for (Element attribute : children(content, "attribute")) {
 				parseAttribute(attribute, parentPath, simpleTypes, atributos);
 			}
 		} else {
 			Element sequence = firstChild(complexType, "sequence");
 			if (sequence != null) {
-				parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements,
-						elementos, atributos, enumeraciones, typeStack);
+				parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
+						enumeraciones, typeStack);
 			}
 			if (firstChild(complexType, "choice") != null) {
 				throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);
@@ -263,16 +262,19 @@ public class XsdParserAdapter implements XsdParserPort {
 			}
 		}
 	}
+
 	private void parseParticle(Element particle, String parentPath, Map<String, Element> complexTypes,
 			Map<String, Element> simpleTypes, Map<String, Element> globalElements, List<XsdElementSource> elementos,
 			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones, Set<String> typeStack) {
 
 		int order = 1;
 		for (Element child : children(particle, "element")) {
-			parseElement(child, parentPath, order++, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones, typeStack);
+			parseElement(child, parentPath, order++, complexTypes, simpleTypes, globalElements, elementos, atributos,
+					enumeraciones, typeStack);
 		}
 		for (Element nested : children(particle, "sequence")) {
-			parseParticle(nested, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones, typeStack);
+			parseParticle(nested, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
+					enumeraciones, typeStack);
 		}
 		if (!children(particle, "choice").isEmpty()) {
 			throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);

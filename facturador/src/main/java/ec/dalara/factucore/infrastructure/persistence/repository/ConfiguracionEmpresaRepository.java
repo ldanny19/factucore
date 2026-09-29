@@ -24,18 +24,16 @@ public interface ConfiguracionEmpresaRepository extends BaseRepository<Configura
 			LocalDateTime fechaVigenciaDesde, Long id);
 
 	@Query("""
-			SELECT c
-			FROM ConfiguracionEmpresa c
-			WHERE c.empresa.id = :empresaId
-			  AND c.clave = :clave
-			  AND c.estadoRegistro = :estadoRegistro
-			  AND c.fechaVigenciaDesde <= :fecha
-			  AND c.fechaVigenciaHasta >= :fecha
-		""")
-	Optional<ConfiguracionEmpresa> findConfiguracionVigenteConFechaFin(
-			@Param("empresaId") Long empresaId,
-			@Param("clave") String clave,
-			@Param("estadoRegistro") String estadoRegistro,
+				SELECT c
+				FROM ConfiguracionEmpresa c
+				WHERE c.empresa.id = :empresaId
+				  AND c.clave = :clave
+				  AND c.estadoRegistro = :estadoRegistro
+				  AND c.fechaVigenciaDesde <= :fecha
+				  AND c.fechaVigenciaHasta >= :fecha
+			""")
+	Optional<ConfiguracionEmpresa> findConfiguracionVigenteConFechaFin(@Param("empresaId") Long empresaId,
+			@Param("clave") String clave, @Param("estadoRegistro") String estadoRegistro,
 			@Param("fecha") LocalDateTime fecha);
 
 	Optional<ConfiguracionEmpresa> findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaIsNull(

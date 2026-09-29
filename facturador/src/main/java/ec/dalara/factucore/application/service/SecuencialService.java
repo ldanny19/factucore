@@ -50,8 +50,11 @@ public class SecuencialService extends BaseService<Secuencial> {
 		if (puntoEmisionId == null || codigoDocumento == null || codigoDocumento.isBlank()) {
 			throw new ApplicationException(MessageCodes.SECUENCIAL_DATOS_REQUERIDOS);
 		}
-		return secuencialRepository.findByPuntoEmisionIdAndCodigoDocumentoAndEstadoRegistro(puntoEmisionId, codigoDocumento, EstadoRegistro.ACTIVO)
-				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO, puntoEmisionId, codigoDocumento));
+		return secuencialRepository
+				.findByPuntoEmisionIdAndCodigoDocumentoAndEstadoRegistro(puntoEmisionId, codigoDocumento,
+						EstadoRegistro.ACTIVO)
+				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO, puntoEmisionId,
+						codigoDocumento));
 	}
 
 	@Transactional

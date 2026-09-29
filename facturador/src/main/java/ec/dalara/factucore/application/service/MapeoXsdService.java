@@ -90,8 +90,7 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 	public List<MapeoXsdResponse> listarPorVersion(Long versionDocumentoXsdId) {
 		return mapeoXsdRepository
 				.findByVersionDocumentoXsdIdAndEstadoRegistro(versionDocumentoXsdId, EstadoRegistro.ACTIVO).stream()
-				.map(mapeoXsdEntityMapper::toModel)
-				.map(mapeoXsdMapper::toResponse).toList();
+				.map(mapeoXsdEntityMapper::toModel).map(mapeoXsdMapper::toResponse).toList();
 	}
 
 	private void validarDestino(MapeoXsdRequest request) {
