@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VAULT_ADDR="${VAULT_ADDR:-http://vault:8200}"
+VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 export VAULT_ADDR
 
 SECRETS_DIR="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}"
@@ -77,8 +77,7 @@ if [ "$SEALED" -eq 1 ]; then
 
   log "Desellando Vault"
   KEY_INDEX=0
-  printf '%s\n' "$KEYS" | while IFS= read -r key; do
-    [ -n "$key" ] || continue
+  for key in $KEYS; do
     KEY_INDEX=$((KEY_INDEX + 1))
     log "Aplicando clave de unseal $KEY_INDEX de $THRESHOLD"
     if ! vault operator unseal "$key" >/tmp/vault-unseal.json 2>&1; then
