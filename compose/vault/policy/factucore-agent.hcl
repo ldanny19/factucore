@@ -1,3 +1,7 @@
+path "secret/data/factucore/postgresql/admin" {
+  capabilities = ["read"]
+}
+
 path "secret/data/factucore/postgresql/facturador" {
   capabilities = ["read"]
 }
