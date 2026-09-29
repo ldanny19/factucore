@@ -1,1 +1,2 @@
 org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=ec.dalara.factucore.messaging.config.BrokerAutoConfigurationImportFilter
+org.springframework.boot.EnvironmentPostProcessor=ec.dalara.factucore.messaging.config.BrokerAutoConfigurationEnvironmentPostProcessor
