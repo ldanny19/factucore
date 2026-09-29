@@ -70,7 +70,7 @@ public class ConfiguracionEmpresaService extends BaseService<ConfiguracionEmpres
 		}
 
 		Optional<ConfiguracionEmpresa> configuracion = configuracionEmpresaRepository
-				.findByEmpresaIdAndClaveAndEstadoRegistroAndFechaVigenciaDesdeLessThanEqualAndFechaVigenciaHastaGreaterThanEqual(
+				.findConfiguracionVigenteConFechaFin(
 						empresaId, clave, EstadoRegistro.ACTIVO, fecha);
 
 		if (configuracion.isPresent()) {
