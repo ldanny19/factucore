@@ -425,6 +425,17 @@ if [ -n "$AGENT_TOKEN" ]; then
 
     AGENT_TOKEN=""
 
+  else
+
+    if ! VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/notificacion/smtp >/dev/null 2>&1 ||
+       ! VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/firma >/dev/null 2>&1; then
+
+      log "Token persistente sin permisos actualizados; se generara uno nuevo."
+
+      AGENT_TOKEN=""
+
+    fi
+
   fi
 
 fi
@@ -490,6 +501,12 @@ VAULT_TOKEN="$AGENT_TOKEN" \
 
 VAULT_TOKEN="$AGENT_TOKEN" \
   vault kv get secret/factucore/keycloak >/dev/null
+
+VAULT_TOKEN="$AGENT_TOKEN" \
+  vault kv get secret/factucore/notificacion/smtp >/dev/null
+
+VAULT_TOKEN="$AGENT_TOKEN" \
+  vault kv get secret/factucore/firma >/dev/null
 
 # ---------------------------------------------------------------------------
 # Limpieza
