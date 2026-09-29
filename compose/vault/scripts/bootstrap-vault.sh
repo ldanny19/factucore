@@ -136,11 +136,18 @@ if [ -z "$AGENT_TOKEN" ]; then
     cut -d '"' -f 4)
   [ -n "$AGENT_TOKEN" ] || fail "Vault no devolvio un client token."
   printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_FILE"
+else
+  log "Token persistente del Vault Agent ya existe; se reutiliza."
 fi
 
-printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_RUNTIME_FILE"
+# El token persistente es la fuente de verdad. En cada ejecucion del bootstrap
+# se sincroniza al volumen runtime para que Vault Agent pueda autenticarse,
+# incluso despues de recrear el contenedor o el volumen runtime.
+[ -s "$AGENT_TOKEN_FILE" ] || fail "No existe un token persistente valido: $AGENT_TOKEN_FILE"
+cp "$AGENT_TOKEN_FILE" "$AGENT_TOKEN_RUNTIME_FILE"
 chown 100:100 "$AGENT_TOKEN_RUNTIME_FILE"
 chmod 600 "$AGENT_TOKEN_RUNTIME_FILE"
+[ -s "$AGENT_TOKEN_RUNTIME_FILE" ] || fail "No se pudo copiar el token al volumen runtime: $AGENT_TOKEN_RUNTIME_FILE"
 
 log "Validando acceso del Vault Agent"
 VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/postgresql >/dev/null
