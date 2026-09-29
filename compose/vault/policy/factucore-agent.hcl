@@ -1,4 +1,12 @@
-path "secret/data/factucore/postgresql" {
+path "secret/data/factucore/postgresql/facturador" {
+  capabilities = ["read"]
+}
+
+path "secret/data/factucore/postgresql/auth" {
+  capabilities = ["read"]
+}
+
+path "secret/data/factucore/postgresql/notificaciones" {
   capabilities = ["read"]
 }
 

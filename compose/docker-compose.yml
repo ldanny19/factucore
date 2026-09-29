@@ -11,7 +11,9 @@ services:
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
       SKIP_CHOWN: "true"
-      FACTUCORE_POSTGRES_PASSWORD: ${FACTUCORE_POSTGRES_PASSWORD:-}
+      FACTUCORE_POSTGRES_FACTURADOR_PASSWORD: ${FACTUCORE_POSTGRES_FACTURADOR_PASSWORD:-}
+      FACTUCORE_POSTGRES_AUTH_PASSWORD: ${FACTUCORE_POSTGRES_AUTH_PASSWORD:-}
+      FACTUCORE_POSTGRES_NOTIFICACIONES_PASSWORD: ${FACTUCORE_POSTGRES_NOTIFICACIONES_PASSWORD:-}
       FACTUCORE_KEYCLOAK_ADMIN_PASSWORD: ${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}
     entrypoint: ["/vault/scripts/entrypoint.sh"]
     command: ["-config=/vault/config/vault.hcl"]
@@ -52,8 +54,16 @@ services:
       - ${FACTUCORE_HOME}/vault/agent:/vault/agent:ro
       - factucore_vault_agent_token:/run/secrets:ro
       - factucore_vault_secrets:/vault/secrets
+      - type: tmpfs
+        target: /vault/logs
+      - type: tmpfs
+        target: /vault/file
     healthcheck:
-      test: ["CMD-SHELL", "test -s /vault/secrets/postgres_password && test -s /vault/secrets/keycloak_admin_password"]
+      test:
+        [
+          "CMD-SHELL",
+          "test -s /vault/secrets/postgres_facturador_password && test -s /vault/secrets/postgres_auth_password && test -s /vault/secrets/postgres_notificaciones_password && test -s /vault/secrets/keycloak_admin_password"
+        ]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -67,16 +77,21 @@ services:
       vault-agent:
         condition: service_healthy
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-factucore}
-      POSTGRES_USER: ${POSTGRES_USER:-usr_factucore}
-      POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_password
+      #POSTGRES_DB: db_factucore
+      POSTGRES_USER: usr_factucore
+      POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_facturador_password
     volumes:
       - ${FACTUCORE_HOME}/data/postgres:/var/lib/postgresql/data
       - factucore_vault_secrets:/vault/secrets:ro
+      - ${FACTUCORE_HOME}/postgres/init:/docker-entrypoint-initdb.d:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U usr_factucore -d db_factucore"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -95,7 +110,14 @@ services:
       - /bin/sh
       - -c
     command:
-      - export KC_DB_URL="jdbc:postgresql://db_factucore:5432/factucore"; export KC_DB_USERNAME="${POSTGRES_USER:-usr_factucore}"; export KC_DB_PASSWORD="$$(cat /vault/secrets/postgres_password)"; exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}" --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
+      - >
+        export KC_DB_URL="jdbc:postgresql://db_factucore:5432/db_auth";
+        export KC_DB_USERNAME="usr_auth";
+        export KC_DB_PASSWORD="$$(cat /vault/secrets/postgres_auth_password)";
+        exec /opt/keycloak/bin/kc.sh start
+        --http-port=8080
+        --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}"
+        --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
       KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
@@ -107,7 +129,11 @@ services:
     ports:
       - "${KEYCLOAK_PORT:-8180}:8080"
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '200' <&3"]
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '200' <&3"
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -132,16 +158,17 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 15s
 
   facturador:
-    # build:
-    #   context: ..
-    #   dockerfile: facturador/Dockerfile
     image: factucore-facturador:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
     container_name: factucore-facturador
     user: factucore
@@ -156,36 +183,35 @@ services:
         condition: service_healthy
       auth-server:
         condition: service_healthy
-      vault:
-        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://db_factucore:5432/factucore}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-usr_factucore}
+      SPRING_DATASOURCE_URL: ${DB_FACTURADOR_URL:-jdbc:postgresql://db_factucore:5432/db_factucore}
+      SPRING_DATASOURCE_USERNAME: ${DB_FACTURADOR_USERNAME:-usr_factucore}
       SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
-      SPRING_DATASOURCE_PASSWORD_FILE: /vault/secrets/postgres_password
+      SPRING_DATASOURCE_PASSWORD_FILE: /vault/secrets/postgres_facturador_password
       FACTUCORE_SEGURIDAD_HABILITADA: ${FACTUCORE_SEGURIDAD_HABILITADA:-false}
       FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://auth-server:8080/realms/factucore}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       FACTUCORE_SRI_AMBIENTE: ${FACTUCORE_SRI_AMBIENTE:-PRUEBAS}
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
-      - ${FACTUCORE_HOME}/config/facturador:/app/config:ro
+      - ${FACTUCORE_HOME}/facturador/config:/app/config:ro
       - ${FACTUCORE_HOME}/documentos:/app/documentos
       - ${FACTUCORE_HOME}/certificados:/app/certificados:ro
       - ${FACTUCORE_HOME}/logs/facturador:/app/logs
     ports:
-      - "${FACTURADOR_PORT:-8081}:8083"
+      - "${FACTURADOR_PORT:-8081}:8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8083/actuator/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://127.0.0.1:8083/actuator/health || exit 1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 60s
 
   notificacion:
-    # build:
-    #   context: ..
-    #   dockerfile: notificacion/Dockerfile
     image: factucore-notificacion:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
     container_name: factucore-notificacion
     user: factucore
