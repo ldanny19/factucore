@@ -265,9 +265,33 @@ generate_secret() {
 # Credenciales PostgreSQL
 # ---------------------------------------------------------------------------
 
+ADMIN_PASSWORD="${FACTUCORE_POSTGRES_ADMIN_PASSWORD:-}"
 FACTURADOR_PASSWORD="${FACTUCORE_POSTGRES_FACTURADOR_PASSWORD:-}"
 AUTH_PASSWORD="${FACTUCORE_POSTGRES_AUTH_PASSWORD:-}"
 NOTIFICACIONES_PASSWORD="${FACTUCORE_POSTGRES_NOTIFICACIONES_PASSWORD:-}"
+
+# ---------------------------------------------------------------------------
+# Credencial PostgreSQL - Administrador
+# ---------------------------------------------------------------------------
+
+if vault kv get secret/factucore/postgresql/admin >/dev/null 2>&1; then
+
+  log "Credencial PostgreSQL de administrador ya existe; no se sobrescribe."
+
+else
+
+  [ -n "$ADMIN_PASSWORD" ] ||
+    ADMIN_PASSWORD="Adm1nDB123"
+
+  log "Creando credencial PostgreSQL de administrador"
+
+  vault kv put \
+    secret/factucore/postgresql/admin \
+    username="postgres" \
+    password="$ADMIN_PASSWORD" \
+    >/dev/null
+
+fi
 
 # ---------------------------------------------------------------------------
 # Credencial PostgreSQL - Facturador
@@ -445,6 +469,9 @@ chmod 600 "$AGENT_TOKEN_RUNTIME_FILE"
 # ---------------------------------------------------------------------------
 
 log "Validando acceso del Vault Agent"
+
+VAULT_TOKEN="$AGENT_TOKEN" \
+  vault kv get secret/factucore/postgresql/admin >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
   vault kv get secret/factucore/postgresql/facturador >/dev/null
