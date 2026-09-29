@@ -73,7 +73,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/FACTUCORE_NOTIFICACION_SMTP_PASSWORD"
+  destination = "/vault/secrets/spring.mail.password"
   contents = <<EOT
 {{- with secret "secret/data/factucore/notificacion/smtp" -}}
 {{ .Data.data.password }}
