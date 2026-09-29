@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="30">
 	<Properties>
-		<SpringProperty name="LOG_LEVEL" source="factucore.logging.nivel" defaultValue="INFO" />
 		<SpringProperty name="LOG_PATH" source="factucore.logging.ruta" defaultValue="/app/logs" />
-		<SpringProperty name="LOG_FILE" source="factucore.logging.archivo" defaultValue="facturador.log" />
+		<Property name="LOG_FILE">facturador.log</Property>
 		<Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t]
 			%c{1.} - %msg%n</Property>
 	</Properties>
@@ -24,14 +23,14 @@
 	</Appenders>
 	<Loggers>
 		<Logger name="ec.dalara.factucore"
-			level="${LOG_LEVEL}" additivity="false">
+			level="INFO" additivity="false">
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="File" />
 		</Logger>
 		<Logger name="org.springframework" level="WARN" />
 		<Logger name="org.hibernate" level="WARN" />
 		<Logger name="org.apache.camel" level="INFO" />
-		<Root level="${spring:spring.factucore.logging.nivel}">
+		<Root level="INFO">
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="File" />
 		</Root>
