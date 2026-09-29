@@ -4,9 +4,9 @@ set -eu
 VAULT_ADDR="${VAULT_ADDR:-http://vault:8200}"
 export VAULT_ADDR
 
-SECRETS_DIR="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/bootstrap-secrets-persist}"
+SECRETS_DIR="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}"
 INIT_FILE="$SECRETS_DIR/vault-init.json"
-AGENT_TOKEN_FILE="${FACTUCORE_VAULT_AGENT_TOKEN_FILE:-/vault/agent-token/vault_agent_token.txt}"
+AGENT_TOKEN_FILE="${FACTUCORE_VAULT_AGENT_TOKEN_FILE:-/vault/secrets-persist/vault_agent_token.txt}"
 POLICY_FILE="/vault/policy/factucore-agent.hcl"
 
 log() {
