@@ -19,7 +19,7 @@ fail() {
 }
 
 mkdir -p "$SECRETS_DIR"
-chmod 755 "$SECRETS_DIR"
+chmod 700 "$SECRETS_DIR"
 
 log "Esperando disponibilidad de Vault"
 STATUS_RC=1
@@ -75,7 +75,7 @@ STATUS_JSON=$(vault status -format=json 2>/dev/null) || fail "No se pudo verific
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 [ "$SEALED" -eq 0 ] || fail "Vault continua sellado."
 
-ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-${VAULT_TOKEN:-}}"
+ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
 if [ -z "$ROOT_TOKEN" ] && [ -f "$INIT_FILE" ]; then
   ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | head -1 | cut -d '"' -f 4)
 fi
@@ -134,7 +134,7 @@ if [ -z "$AGENT_TOKEN" ]; then
     cut -d '"' -f 4)
   [ -n "$AGENT_TOKEN" ] || fail "Vault no devolvio un client token."
   printf '%s\n' "$AGENT_TOKEN" > "$AGENT_TOKEN_FILE"
-  chmod 644 "$AGENT_TOKEN_FILE"
+  chmod 600 "$AGENT_TOKEN_FILE"
 fi
 
 log "Validando acceso del Vault Agent"
