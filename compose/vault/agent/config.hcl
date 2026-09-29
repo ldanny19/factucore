@@ -71,3 +71,13 @@ template {
 EOT
   error_on_missing_key = true
 }
+
+template {
+  destination = "/vault/secrets/FACTUCORE_NOTIFICACION_SMTP_PASSWORD"
+  contents = <<EOT
+{{- with secret "secret/data/factucore/notificacion/smtp" -}}
+{{ .Data.data.password }}
+{{- end }}
+EOT
+  error_on_missing_key = true
+}
