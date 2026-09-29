@@ -9,6 +9,13 @@ INIT_FILE="$SECRETS_DIR/vault-init.json"
 AGENT_TOKEN_FILE="${FACTUCORE_VAULT_AGENT_TOKEN_FILE:-/vault/secrets-persist/vault_agent_token.txt}"
 AGENT_TOKEN_RUNTIME_FILE="/vault/agent-token/vault_agent_token.txt"
 POLICY_FILE="/vault/policy/factucore-agent.hcl"
+LOG_DIR="${FACTUCORE_VAULT_LOG_DIR:-/vault/logs}"
+LOG_FILE="$LOG_DIR/bootstrap.log"
+
+mkdir -p "$LOG_DIR"
+touch "$LOG_FILE"
+chmod 600 "$LOG_FILE"
+exec >>"$LOG_FILE" 2>&1
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -23,6 +30,8 @@ mkdir -p "$SECRETS_DIR"
 chmod 700 "$SECRETS_DIR"
 mkdir -p "$(dirname "$AGENT_TOKEN_RUNTIME_FILE")"
 
+log "INICIO BOOTSTRAP DE VAULT"
+log "Log persistente: $LOG_FILE"
 log "Esperando disponibilidad de Vault"
 STATUS_RC=1
 for _ in $(seq 1 60); do
@@ -171,3 +180,4 @@ rm -f /tmp/vault-status.json
 echo
 echo "Bootstrap de Vault completado correctamente."
 echo "Vault esta inicializado, desellado y listo para Vault Agent."
+log "FIN BOOTSTRAP DE VAULT"
