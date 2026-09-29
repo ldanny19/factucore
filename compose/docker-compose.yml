@@ -40,7 +40,9 @@ services:
     depends_on:
       vault:
         condition: service_healthy
-    command: agent -config=/vault/agent/config.hcl
+    user: root
+    entrypoint: ["/vault/agent/entrypoint.sh"]
+    command: ["agent", "-config=/vault/agent/config.hcl"]
     environment:
       VAULT_ADDR: http://vault:8200
     volumes:
