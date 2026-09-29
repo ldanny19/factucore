@@ -11,8 +11,10 @@ services:
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
       SKIP_CHOWN: "true"
+      FACTUCORE_POSTGRES_PASSWORD: ${FACTUCORE_POSTGRES_PASSWORD:-}
+      FACTUCORE_KEYCLOAK_ADMIN_PASSWORD: ${FACTUCORE_KEYCLOAK_ADMIN_PASSWORD:-}
     entrypoint: ["/vault/scripts/entrypoint.sh"]
-    command: ["server", "-config=/vault/config/vault.hcl"]
+    command: ["-config=/vault/config/vault.hcl"]
     volumes:
       - ${FACTUCORE_HOME}/vault/data:/vault/data
       - ${FACTUCORE_HOME}/vault/config:/vault/config:ro
