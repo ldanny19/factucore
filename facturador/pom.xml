@@ -54,6 +54,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Web / REST -->
@@ -211,6 +217,12 @@
 			<groupId>ec.dalara.factucore</groupId>
 			<artifactId>factucore-messaging</artifactId>
 			<version>1.0.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Log4j2 -->
@@ -306,8 +318,7 @@
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok-mapstruct-binding</artifactId>
 							<version>0.2.0</version>
-						</path>
-					</annotationProcessorPaths>
+						</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 
