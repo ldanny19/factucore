@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: optional:configtree:/run/secrets/
   application:
     name: factucore-notificacion
   messages:
@@ -11,7 +13,6 @@ spring:
     host: ${FACTUCORE_NOTIFICACION_SMTP_HOST}
     port: ${FACTUCORE_NOTIFICACION_SMTP_PORT:587}
     username: ${FACTUCORE_NOTIFICACION_SMTP_USERNAME}
-    password: ${FACTUCORE_NOTIFICACION_SMTP_PASSWORD}
     properties:
       mail.smtp.auth: ${FACTUCORE_NOTIFICACION_SMTP_AUTH:true}
       mail.smtp.starttls.enable: ${FACTUCORE_NOTIFICACION_SMTP_STARTTLS:true}
