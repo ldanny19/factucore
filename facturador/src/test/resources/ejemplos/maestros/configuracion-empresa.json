@@ -1,0 +1,8 @@
+{
+  "empresaId": 1,
+  "clave": "AMBIENTE_SRI",
+  "valor": "PRUEBAS",
+  "tipoDato": "STRING",
+  "fechaVigenciaDesde": "2026-01-01T00:00:00",
+  "fechaVigenciaHasta": null
+}
