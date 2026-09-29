@@ -12,8 +12,16 @@ for file in "$FACTURADOR_PASSWORD_FILE" "$AUTH_PASSWORD_FILE" "$NOTIFICACIONES_P
   fi
 done
 
+FACTURADOR_PASSWORD="$(cat "$FACTURADOR_PASSWORD_FILE")"
 AUTH_PASSWORD="$(cat "$AUTH_PASSWORD_FILE")"
 NOTIFICACIONES_PASSWORD="$(cat "$NOTIFICACIONES_PASSWORD_FILE")"
+
+echo "==> Creando rol usr_factucore"
+if ! psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'usr_factucore'" | grep -q 1; then
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres \
+    -v facturador_password="$FACTURADOR_PASSWORD" \
+    -c "CREATE ROLE usr_factucore LOGIN PASSWORD :'facturador_password';"
+fi
 
 echo "==> Creando rol usr_auth"
 if ! psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'usr_auth'" | grep -q 1; then
