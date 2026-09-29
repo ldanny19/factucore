@@ -41,6 +41,7 @@ services:
       - ${FACTUCORE_HOME}/vault/scripts:/vault/scripts:ro
       - ${FACTUCORE_HOME}/vault/policy:/vault/policy:ro
       - ${FACTUCORE_HOME}/secrets:/vault/secrets-persist
+      - ${FACTUCORE_HOME}/vault/logs:/vault/logs
       - factucore_vault_agent_token:/vault/agent-token
     entrypoint: ["/bin/sh", "-c"]
     command: sh /vault/scripts/bootstrap-vault.sh
