@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "empresaId": 1,
+  "nombreArchivo": "certificado-pruebas.p12",
+  "rutaCertificado": "/app/certificados/certificado-pruebas.p12",
+  "fechaInicio": "2026-01-01T00:00:00",
+  "fechaFin": "2027-01-01T00:00:00"
+}
