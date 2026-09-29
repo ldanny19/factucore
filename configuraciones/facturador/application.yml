@@ -64,13 +64,6 @@ server:
   servlet:
     context-path: /factucore-api
 
-logging:
-  level:
-    root: INFO
-    ec.dalara.factucore: INFO
-    org.flywaydb: INFO
-    org.hibernate.SQL: INFO
-
 camel:
   main:
     routes-include-pattern: ${factucore.workflow.rutas.facturacion}
@@ -107,9 +100,7 @@ factucore:
       espera-consulta-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_CONSULTA_MS:5000}
 
   logging:
-    nivel: INFO
     ruta: ${factucore.path.logs}
-    archivo: facturador.log
 
   notificacion:
     topico: ${FACTUCORE_NOTIFICACION_TOPICO:factucore.notificacion.comprobante}
