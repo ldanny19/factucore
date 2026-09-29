@@ -90,7 +90,7 @@ services:
       - /bin/sh
       - -c
     command:
-      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="\\$\\$KC_BOOTSTRAP_ADMIN_USERNAME" --bootstrap-admin-password="\\$\\$(cat /vault/secrets/keycloak_admin_password)"
+      - exec /opt/keycloak/bin/kc.sh start --http-port=8080 --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}" --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
     volumes:
@@ -106,7 +106,7 @@ services:
     container_name: factucore-kafka
     restart: unless-stopped
     ports:
-      - "${KAFKA_PORT:-9092}:9092"
+      - "${KAFKA_PORT:-9092}:9092
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
