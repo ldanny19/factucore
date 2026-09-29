@@ -64,17 +64,6 @@ server:
   servlet:
     context-path: /factucore-api
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      probes:
-        enabled: true
-      show-details: never
-
 camel:
   main:
     routes-include-pattern: ${factucore.workflow.rutas.facturacion}
