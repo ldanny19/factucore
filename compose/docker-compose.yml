@@ -22,6 +22,10 @@ services:
       - ${FACTUCORE_HOME}/vault/policy:/vault/policy:ro
       - ${FACTUCORE_HOME}/secrets:/vault/secrets-persist
       - factucore_vault_agent_token:/vault/agent-token
+      - type: tmpfs
+        target: /vault/logs
+      - type: tmpfs
+        target: /vault/file
     ports:
       - "${VAULT_PORT:-8200}:8200"
     healthcheck:
