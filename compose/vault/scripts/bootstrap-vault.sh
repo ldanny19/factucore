@@ -39,7 +39,7 @@ done
 INITIALIZED=$(grep -c '"initialized"[[:space:]]*:[[:space:]]*true' /tmp/vault-status.json || true)
 
 if [ "$INITIALIZED" -eq 0 ]; then
-  [ ! -f "$INIT_FILE" ] || fail "Vault no esta inicializado pero ya existe $INIT_FILE. Revisa la consistencia del almacenamiento antes de continuar."
+  [ ! -f "$INIT_FILE" ] || fail "Vault no esta inicializado pero ya existe $INIT_FILE. Elimina el estado de inicializacion anterior solo si este entorno debe comenzar desde cero."
 
   log "Inicializando Vault por primera vez"
   vault operator init -format=json > "$INIT_FILE"
@@ -50,7 +50,7 @@ STATUS_JSON=$(vault status -format=json 2>/dev/null || true)
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 
 if [ "$SEALED" -eq 1 ]; then
-  [ -f "$INIT_FILE" ] || fail "Vault esta sellado y no existe $INIT_FILE."
+  [ -f "$INIT_FILE" ] || fail "Vault esta inicializado y sellado, pero no existe $INIT_FILE. Recupera las claves de unseal de la instancia existente."
 
   THRESHOLD=$(grep -o '"unseal_threshold"[[:space:]]*:[[:space:]]*[0-9][0-9]*' "$INIT_FILE" | head -1 | grep -o '[0-9][0-9]*$' || true)
   [ -n "$THRESHOLD" ] || fail "No se pudo determinar el umbral de unseal desde $INIT_FILE."
@@ -75,7 +75,7 @@ STATUS_JSON=$(vault status -format=json 2>/dev/null) || fail "No se pudo verific
 SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
 [ "$SEALED" -eq 0 ] || fail "Vault continua sellado."
 
-ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
+ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-${VAULT_TOKEN:-}}"
 if [ -z "$ROOT_TOKEN" ] && [ -f "$INIT_FILE" ]; then
   ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | head -1 | cut -d '"' -f 4)
 fi
