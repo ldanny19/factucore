@@ -73,9 +73,22 @@ if [ "$SEALED" -eq 1 ]; then
   done
 fi
 
-STATUS_JSON=$(vault status -format=json 2>/dev/null) || fail "No se pudo verificar el estado final de Vault."
-SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
-[ "$SEALED" -eq 0 ] || fail "Vault continua sellado."
+log "Esperando a que Vault quede completamente desellado"
+READY=0
+for _ in $(seq 1 30); do
+  STATUS_JSON=$(vault status -format=json 2>/dev/null || true)
+  SEALED=$(printf '%s' "$STATUS_JSON" | grep -c '"sealed"[[:space:]]*:[[:space:]]*true' || true)
+  INITIALIZED=$(printf '%s' "$STATUS_JSON" | grep -c '"initialized"[[:space:]]*:[[:space:]]*true' || true)
+
+  if [ "$INITIALIZED" -eq 1 ] && [ "$SEALED" -eq 0 ]; then
+    READY=1
+    break
+  fi
+
+  sleep 1
+done
+
+[ "$READY" -eq 1 ] || fail "Vault no quedo inicializado y desellado dentro del tiempo esperado."
 
 ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
 if [ -z "$ROOT_TOKEN" ] && [ -f "$INIT_FILE" ]; then
