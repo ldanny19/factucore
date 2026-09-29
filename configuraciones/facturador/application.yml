@@ -60,7 +60,7 @@ spring:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
 
 server:
-  port: 8083
+  port: 8080
   servlet:
     context-path: /factucore-api
 
