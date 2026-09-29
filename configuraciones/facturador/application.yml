@@ -107,7 +107,7 @@ factucore:
       espera-consulta-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_CONSULTA_MS:5000}
 
   logging:
-    nivel: ${FACTUCORE_LOGGING_NIVEL:INFO}
+    nivel: INFO
     ruta: ${FACTUCORE_LOGGING_RUTA:${factucore.path.logs}}
     archivo: ${FACTUCORE_LOGGING_ARCHIVO:facturador.log}
 
