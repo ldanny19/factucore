@@ -36,6 +36,8 @@ public class SeguridadConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers(RECURSOS_PUBLICOS).permitAll();
 
