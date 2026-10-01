@@ -1,9 +1,9 @@
 {
   "id": 1,
-  "ruc": "0999999999001",
-  "razonSocial": "EMPRESA DE PRUEBA S.A.",
-  "nombreComercial": "FactuCore Demo",
-  "direccionMatriz": "Av. Principal 123 y Calle Secundaria, Guayaquil, Ecuador",
+  "ruc": "0925880270001",
+  "razonSocial": "CRISTHIAN WILLIAN JUCA TOALA",
+  "nombreComercial": "JUCARSA",
+  "direccionMatriz": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez",
   "obligadoContabilidad": true,
   "contribuyenteRimpe": false
 }

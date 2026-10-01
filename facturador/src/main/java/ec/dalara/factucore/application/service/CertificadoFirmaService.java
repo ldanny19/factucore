@@ -42,8 +42,8 @@ public class CertificadoFirmaService extends BaseService<CertificadoFirma> {
 		if (empresaId == null || fecha == null) {
 			return Optional.empty();
 		}
-		Optional<CertificadoFirma> certificado = certificadoFirmaRepository
-				.findCertificadoVigenteConFechaFin(empresaId, EstadoRegistro.ACTIVO, fecha);
+		Optional<CertificadoFirma> certificado = certificadoFirmaRepository.findCertificadoVigenteConFechaFin(empresaId,
+				EstadoRegistro.ACTIVO, fecha);
 
 		if (certificado.isPresent()) {
 			return certificado;

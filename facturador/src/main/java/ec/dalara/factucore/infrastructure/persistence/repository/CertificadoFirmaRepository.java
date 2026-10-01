@@ -14,10 +14,8 @@ public interface CertificadoFirmaRepository extends BaseRepository<CertificadoFi
 	List<CertificadoFirma> findByEmpresaId(Long empresaId);
 
 	@Query("SELECT c FROM CertificadoFirma c WHERE c.empresa.id = :empresaId AND c.estadoRegistro = :estadoRegistro AND c.fechaInicio <= :fecha AND c.fechaFin >= :fecha")
-	Optional<CertificadoFirma> findCertificadoVigenteConFechaFin(
-			@Param("empresaId") Long empresaId,
-			@Param("estadoRegistro") String estadoRegistro,
-			@Param("fecha") LocalDateTime fecha);
+	Optional<CertificadoFirma> findCertificadoVigenteConFechaFin(@Param("empresaId") Long empresaId,
+			@Param("estadoRegistro") String estadoRegistro, @Param("fecha") LocalDateTime fecha);
 
 	Optional<CertificadoFirma> findByEmpresaIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
 			Long empresaId, String estadoRegistro, LocalDateTime fecha);
