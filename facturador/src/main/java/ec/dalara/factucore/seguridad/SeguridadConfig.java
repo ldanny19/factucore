@@ -10,12 +10,12 @@ import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Configuración de seguridad del API FactuCore.
+ * Configuración obligatoria de seguridad del API FactuCore.
  *
- * <p>La seguridad se habilita mediante FACTUCORE_SEGURIDAD_HABILITADA.
- * Cuando está habilitada, el API valida Bearer JWT emitidos por Keycloak.
- * Cuando está deshabilitada, se permite el acceso para facilitar el desarrollo
- * local sin eliminar la implementación real de seguridad.</p>
+ * <p>Facturador actúa exclusivamente como OAuth2 Resource Server.
+ * La autenticación se realiza en Keycloak y el frontend envía el Bearer JWT.
+ * Facturador no implementa login, formulario, HTTP Basic ni gestión de
+ * credenciales de usuario.</p>
  */
 @Configuration
 public class SeguridadConfig {
@@ -30,42 +30,22 @@ public class SeguridadConfig {
     };
 
     @Bean
-    SecurityFilterChain seguridadFilterChain(
-            HttpSecurity http,
-            @Value("${factucore.seguridad.habilitada:false}") boolean seguridadHabilitada) throws Exception {
-
+    SecurityFilterChain seguridadFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
-                .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers(RECURSOS_PUBLICOS).permitAll();
-
-                    if (seguridadHabilitada) {
-                        authorize.anyRequest().authenticated();
-                    } else {
-                        authorize.anyRequest().permitAll();
-                    }
-                });
-
-        if (seguridadHabilitada) {
-            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-        }
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(RECURSOS_PUBLICOS).permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
 
     @Bean
     JwtDecoder jwtDecoder(
-            @Value("${factucore.seguridad.habilitada:false}") boolean seguridadHabilitada,
             @Value("${factucore.seguridad.oauth2.issuer-uri}") String issuerUri) {
-
-        if (!seguridadHabilitada) {
-            return token -> {
-                throw new IllegalStateException("JWT decoder no disponible con seguridad deshabilitada");
-            };
-        }
-
         return JwtDecoders.fromIssuerLocation(issuerUri);
     }
 }
