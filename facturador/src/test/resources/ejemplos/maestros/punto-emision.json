@@ -1,5 +1,11 @@
 {
-  "idEstablecimiento": 1,
-  "codigo": "001",
-  "nombre": "Punto de emisión principal"
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idEstablecimiento": {{idEstablecimientoActual}},
+    "codigo": "001",
+    "nombre": "Punto de emisión principal"
+  }
 }
