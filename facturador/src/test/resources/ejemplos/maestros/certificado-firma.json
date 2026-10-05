@@ -1,6 +1,5 @@
 {
-  "id": 1,
-  "empresaId": 1,
+  "idEmpresa": 1,
   "nombreArchivo": "CRISTHIAN WILLIAM JUCA TOALA.p12",
   "rutaCertificado": "/app/certificados/CRISTHIAN WILLIAM JUCA TOALA.p12",
   "fechaInicio": "2026-01-01T00:00:00",
