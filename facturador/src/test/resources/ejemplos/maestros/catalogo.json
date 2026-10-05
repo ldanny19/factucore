@@ -1,5 +1,11 @@
 {
-  "codigo": "AMBIENTE",
-  "nombre": "Ambiente",
-  "descripcion": "Ambientes definidos por el SRI para comprobantes electrónicos."
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "codigo": "AMBIENTE",
+    "nombre": "Ambiente",
+    "descripcion": "Ambientes definidos por el SRI para comprobantes electrónicos."
+  }
 }
