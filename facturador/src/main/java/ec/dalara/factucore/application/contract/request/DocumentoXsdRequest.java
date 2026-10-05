@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.contract.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,4 +33,8 @@ public class DocumentoXsdRequest {
 	@NotBlank
 	@Size(max = 20)
 	private String prefijoArchivo;
+
+	@NotNull
+	@Valid
+	private VersionDocumentoXsdRequest version;
 }
