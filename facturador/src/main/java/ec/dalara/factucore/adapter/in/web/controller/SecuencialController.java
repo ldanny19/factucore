@@ -31,6 +31,7 @@ public class SecuencialController {
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<SecuencialResponse>> crear(
 			@Valid @RequestBody AdministracionRequest<SecuencialRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarSecuencial(null, request.getDatos())));
 	}
@@ -38,6 +39,7 @@ public class SecuencialController {
 	@PutMapping("/{id}")
 	public ResponseEntity<AdministracionResponse<SecuencialResponse>> actualizar(@PathVariable Long id,
 			@Valid @RequestBody AdministracionRequest<SecuencialRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarSecuencial(id, request.getDatos())));
 	}
