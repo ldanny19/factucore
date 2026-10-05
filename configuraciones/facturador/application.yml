@@ -70,6 +70,9 @@ camel:
     routes-include-pattern: ${factucore.workflow.rutas.facturacion}
 
 factucore:
+  configuracion:
+    zona-horaria: ${FACTUCORE_CONFIGURACION_ZONA_HORARIA:America/Guayaquil}
+
   messaging:
     enabled: true
     broker: KAFKA
