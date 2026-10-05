@@ -34,6 +34,10 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 			throw new WorkflowException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
 		}
 
+		if (EstadoProceso.ENVIADO_SRI.name().equals(contexto.getComprobante().getEstadoProceso())) {
+			esperar(sriProperties.getAutorizacion().getEsperaInicialMs());
+		}
+
 		SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
 		contexto.setEstadoSri(respuesta.estado());
 
@@ -49,7 +53,7 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 		}
 
 		if ("EN PROCESO".equalsIgnoreCase(respuesta.estado())) {
-			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaConsultaMs(), 1000);
+			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1000);
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
 			contexto.getComprobante()
 					.setFechaProximoReproceso(java.time.LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
@@ -65,5 +69,15 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 				mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: mensaje.identificador(),
 				mensaje == null ? null : mensaje.mensaje());
+	}
+
+	private void esperar(long esperaMs) {
+		if (esperaMs <= 0) return;
+		try {
+			Thread.sleep(esperaMs);
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+			throw new WorkflowException(MessageCodes.SRI_ERROR_COMUNICACION);
+		}
 	}
 }
