@@ -1,6 +1,5 @@
 {
-  "id": 1,
-  "puntoEmisionId": 1,
+  "idPuntoEmision": 1,
   "codigoDocumento": "01",
   "ultimoSecuencial": 0
 }
