@@ -1,9 +1,12 @@
 package ec.dalara.factucore.application.service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
@@ -26,6 +29,7 @@ import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
+import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.Establecimiento;
 import ec.dalara.factucore.infrastructure.persistence.entity.PuntoEmision;
@@ -46,6 +50,10 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final CertificadoFirmaService certificadoFirmaService;
 	private final DocumentoXsdService documentoXsdService;
+	private final VersionDocumentoXsdService versionDocumentoXsdService;
+
+	@Value("${factucore.path.documentos}")
+	private String rutaDocumentos;
 	private final EmpresaRepository empresaRepository;
 	private final EstablecimientoRepository establecimientoRepository;
 	private final PuntoEmisionRepository puntoEmisionRepository;
@@ -223,8 +231,40 @@ public class AdministracionApplicationService implements AdministracionPort {
 	}
 
 	public DocumentoXsdResponse guardarDocumentoXsd(Long id, DocumentoXsdRequest r) {
-		DocumentoXsd e = id == null ? null : documentoXsdService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
+		if (id != null)
+			return guardarDocumentoXsdExistente(id, r);
+
+		Path rutaXsd = validarRutaXsd(r);
+		DocumentoXsd documento = documentoXsdService.guardar(AdministracionMapper.toEntity(r, null));
+
+		VersionDocumentoXsd version = AdministracionMapper.toEntity(r.getVersion(), null);
+		version.setDocumentoXsd(documento);
+
+		if (version.getNombreArchivo() == null || version.getNombreArchivo().isBlank())
+			version.setNombreArchivo(rutaXsd.getFileName().toString());
+
+		versionDocumentoXsdService.guardar(version);
+		return AdministracionMapper.toResponse(documento);
+	}
+
+	private DocumentoXsdResponse guardarDocumentoXsdExistente(Long id, DocumentoXsdRequest r) {
+		DocumentoXsd e = documentoXsdService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
 		return AdministracionMapper.toResponse(documentoXsdService.guardar(AdministracionMapper.toEntity(r, e)));
+	}
+
+	private Path validarRutaXsd(DocumentoXsdRequest r) {
+		String rutaSolicitada = r.getVersion().getRutaXsd();
+		Path base = Path.of(rutaDocumentos).toAbsolutePath().normalize();
+		Path ruta = Path.of(rutaSolicitada);
+		if (!ruta.isAbsolute())
+			ruta = base.resolve(ruta).normalize();
+		else
+			ruta = ruta.toAbsolutePath().normalize();
+
+		if (!ruta.startsWith(base) || !Files.isRegularFile(ruta))
+			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_INVALIDA, rutaSolicitada);
+
+		return ruta;
 	}
 
 	public DocumentoXsdResponse obtenerDocumentoXsd(Long id) {
