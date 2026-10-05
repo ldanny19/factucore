@@ -3,13 +3,13 @@ package ec.dalara.factucore.adapter.in.web.exception;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,15 +21,12 @@ import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionRe
 import ec.dalara.factucore.domain.shared.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
     private static final String ENDPOINT_COMPROBANTES = "/api/v1/comprobantes";
-    private static final DateTimeFormatter FECHA_ADMINISTRACION =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     private final MessageResolver messageResolver;
     private final ObjectMapper objectMapper;
@@ -71,47 +68,68 @@ public class GlobalExceptionHandler {
                 parametros);
 
         JsonNode body = obtenerBody(request);
-        String idTransaccion = obtenerTexto(body, "idTransaccion");
-        String fechaInicioTexto = obtenerTexto(body, "fechaInicio");
+
+        String idTransaccion = texto(body, "idTransaccion");
 
         if (esEndpointComprobantes(request)) {
-            OffsetDateTime fechaInicio = convertirOffsetDateTime(fechaInicioTexto);
-
-            ComprobanteGeneracionResponse respuesta = ComprobanteGeneracionResponse.builder()
-                    .idTransaccion(idTransaccion)
-                    .fechaInicio(fechaInicio)
-                    .fechaFin(OffsetDateTime.now(factuCoreClock))
-                    .exitoso(false)
-                    .codigo(codigo)
-                    .mensaje(mensaje)
-                    .resultado(null)
-                    .claveAcceso(null)
-                    .numeroComprobante(null)
-                    .tipoDocumento(null)
-                    .estadoSri(null)
-                    .archivoPdf(null)
-                    .build();
-
-            return ResponseEntity.status(estado).body(respuesta);
+            return construirRespuestaComprobante(
+                    body, idTransaccion, codigo, mensaje, estado);
         }
 
-        LocalDateTime fechaInicio = convertirLocalDateTime(fechaInicioTexto);
+        return construirRespuestaAdministracion(
+                body, idTransaccion, codigo, mensaje, estado);
+    }
 
-        AdministracionResponse<Object> respuesta = AdministracionResponse.builder()
-                .idTransaccion(idTransaccion)
-                .fechaInicio(fechaInicio)
-                .fechaFin(LocalDateTime.now(factuCoreClock))
-                .exitoso(false)
-                .codigo(codigo)
-                .mensaje(mensaje)
-                .datos(null)
-                .build();
+    private ResponseEntity<ComprobanteGeneracionResponse> construirRespuestaComprobante(
+            JsonNode body,
+            String idTransaccion,
+            String codigo,
+            String mensaje,
+            HttpStatus estado) {
+
+        ComprobanteGeneracionResponse respuesta =
+                ComprobanteGeneracionResponse.builder()
+                        .idTransaccion(idTransaccion)
+                        .fechaInicio(fechaOffset(body, "fechaInicio"))
+                        .fechaFin(OffsetDateTime.now(factuCoreClock))
+                        .exitoso(false)
+                        .codigo(codigo)
+                        .mensaje(mensaje)
+                        .resultado(null)
+                        .claveAcceso(null)
+                        .numeroComprobante(null)
+                        .tipoDocumento(texto(body, "tipoDocumento"))
+                        .estadoSri(null)
+                        .archivoPdf(null)
+                        .build();
+
+        return ResponseEntity.status(estado).body(respuesta);
+    }
+
+    private ResponseEntity<AdministracionResponse<JsonNode>> construirRespuestaAdministracion(
+            JsonNode body,
+            String idTransaccion,
+            String codigo,
+            String mensaje,
+            HttpStatus estado) {
+
+        AdministracionResponse<JsonNode> respuesta =
+                AdministracionResponse.<JsonNode>builder()
+                        .idTransaccion(idTransaccion)
+                        .fechaInicio(fechaLocal(body, "fechaInicio"))
+                        .fechaFin(LocalDateTime.now(factuCoreClock))
+                        .exitoso(false)
+                        .codigo(codigo)
+                        .mensaje(mensaje)
+                        .datos(body.get("datos"))
+                        .build();
 
         return ResponseEntity.status(estado).body(respuesta);
     }
 
     private boolean esEndpointComprobantes(HttpServletRequest request) {
         String uri = request.getRequestURI();
+
         return ENDPOINT_COMPROBANTES.equals(uri)
                 || (uri != null && uri.equals(ENDPOINT_COMPROBANTES + "/"));
     }
@@ -122,6 +140,7 @@ public class GlobalExceptionHandler {
         }
 
         byte[] contenido = wrapper.getContentAsByteArray();
+
         if (contenido.length == 0) {
             return objectMapper.createObjectNode();
         }
@@ -133,30 +152,32 @@ public class GlobalExceptionHandler {
         }
     }
 
-    private String obtenerTexto(JsonNode body, String campo) {
+    private String texto(JsonNode body, String campo) {
         JsonNode nodo = body.get(campo);
         return nodo == null || nodo.isNull() ? null : nodo.asText();
     }
 
-    private LocalDateTime convertirLocalDateTime(String valor) {
-        if (valor == null || valor.isBlank()) {
+    private LocalDateTime fechaLocal(JsonNode body, String campo) {
+        JsonNode nodo = body.get(campo);
+        if (nodo == null || nodo.isNull()) {
             return null;
         }
 
         try {
-            return LocalDateTime.parse(valor, FECHA_ADMINISTRACION);
+            return objectMapper.treeToValue(nodo, LocalDateTime.class);
         } catch (Exception exception) {
             return null;
         }
     }
 
-    private OffsetDateTime convertirOffsetDateTime(String valor) {
-        if (valor == null || valor.isBlank()) {
+    private OffsetDateTime fechaOffset(JsonNode body, String campo) {
+        JsonNode nodo = body.get(campo);
+        if (nodo == null || nodo.isNull()) {
             return null;
         }
 
         try {
-            return OffsetDateTime.parse(valor);
+            return objectMapper.treeToValue(nodo, OffsetDateTime.class);
         } catch (Exception exception) {
             return null;
         }
