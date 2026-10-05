@@ -1,6 +1,5 @@
 {
-  "id": 1,
-  "empresaId": 1,
+  "idEmpresa": 1,
   "codigo": "001",
   "nombre": "Matriz",
   "direccion": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez"
