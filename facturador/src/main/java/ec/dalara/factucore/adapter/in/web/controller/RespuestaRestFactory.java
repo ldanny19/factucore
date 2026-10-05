@@ -21,10 +21,6 @@ public class RespuestaRestFactory {
 	public <T> AdministracionResponse<T> exito(String id, LocalDateTime inicio, T datos) {
 		LocalDateTime fin = ahora();
 
-		if (inicio.isAfter(fin)) {
-			throw new ApplicationException(MessageCodes.OPERACION_FECHA_INICIO_FUTURA, inicio);
-		}
-
 		return AdministracionResponse.<T>builder()
 				.idTransaccion(id)
 				.fechaInicio(inicio)
@@ -47,6 +43,12 @@ public class RespuestaRestFactory {
 				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA))
 				.datos(datos)
 				.build();
+	}
+
+	public void validarFechaInicio(LocalDateTime inicio) {
+		if (inicio.isAfter(ahora())) {
+			throw new ApplicationException(MessageCodes.OPERACION_FECHA_INICIO_FUTURA, inicio);
+		}
 	}
 
 	private LocalDateTime ahora() {
