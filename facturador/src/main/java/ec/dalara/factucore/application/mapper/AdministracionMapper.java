@@ -3,6 +3,7 @@ package ec.dalara.factucore.application.mapper;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
+import ec.dalara.factucore.application.contract.request.VersionDocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
 import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
@@ -17,6 +18,7 @@ import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
+import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.Establecimiento;
 import ec.dalara.factucore.infrastructure.persistence.entity.PuntoEmision;
@@ -143,6 +145,20 @@ public final class AdministracionMapper {
 		e.setDescripcion(r.getDescripcion());
 		e.setTipoDocumento(r.getTipoDocumento());
 		e.setPrefijoArchivo(r.getPrefijoArchivo());
+		return e;
+	}
+
+	public static VersionDocumentoXsd toEntity(VersionDocumentoXsdRequest r, VersionDocumentoXsd e) {
+		if (e == null)
+			e = new VersionDocumentoXsd();
+		e.setVersion(r.getVersion());
+		e.setNombreArchivo(r.getNombreArchivo());
+		e.setNamespaceXml(r.getNamespaceXml());
+		e.setElementoRaiz(r.getElementoRaiz());
+		e.setPlantillaJson(r.getPlantillaJson());
+		e.setEsquemaJson(r.getEsquemaJson());
+		e.setFechaInicio(r.getFechaInicio());
+		e.setFechaFin(r.getFechaFin());
 		return e;
 	}
 
