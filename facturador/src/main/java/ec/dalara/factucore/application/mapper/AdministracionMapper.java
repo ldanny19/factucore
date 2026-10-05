@@ -1,17 +1,20 @@
 package ec.dalara.factucore.application.mapper;
 
+import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
 import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
+import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
 import ec.dalara.factucore.application.contract.response.EstablecimientoResponse;
 import ec.dalara.factucore.application.contract.response.PuntoEmisionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;
+import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
@@ -91,6 +94,25 @@ public final class AdministracionMapper {
 				.estadoRegistro(e.getEstadoRegistro()).usuarioCreacion(e.getUsuarioCreacion())
 				.usuarioModificacion(e.getUsuarioModificacion()).fechaCreacion(e.getFechaCreacion())
 				.fechaModificacion(e.getFechaModificacion()).observacion(e.getObservacion()).build();
+	}
+
+	public static CertificadoFirma toEntity(CertificadoFirmaRequest r, CertificadoFirma e) {
+		if (e == null)
+			e = new CertificadoFirma();
+		e.setNombreArchivo(r.getNombreArchivo());
+		e.setRutaCertificado(r.getRutaCertificado());
+		e.setFechaInicio(r.getFechaInicio());
+		e.setFechaFin(r.getFechaFin());
+		return e;
+	}
+
+	public static CertificadoFirmaResponse toResponse(CertificadoFirma e) {
+		return CertificadoFirmaResponse.builder().id(e.getId()).idEmpresa(e.getEmpresa().getId())
+				.nombreArchivo(e.getNombreArchivo()).rutaCertificado(e.getRutaCertificado())
+				.fechaInicio(e.getFechaInicio()).fechaFin(e.getFechaFin()).estadoRegistro(e.getEstadoRegistro())
+				.usuarioCreacion(e.getUsuarioCreacion()).usuarioModificacion(e.getUsuarioModificacion())
+				.fechaCreacion(e.getFechaCreacion()).fechaModificacion(e.getFechaModificacion())
+				.observacion(e.getObservacion()).build();
 	}
 
 	public static ConfiguracionEmpresa toEntity(ConfiguracionEmpresaRequest r, ConfiguracionEmpresa e) {
