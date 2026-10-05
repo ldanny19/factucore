@@ -21,9 +21,9 @@ public class ComprobanteGeneracionResponse {
 
 	private Boolean exitoso;
 
-	private String estado;
+	private String codigo;
 
-	private ResultadoResponse resultado;
+	private String mensaje;
 
 	private String claveAcceso;
 
