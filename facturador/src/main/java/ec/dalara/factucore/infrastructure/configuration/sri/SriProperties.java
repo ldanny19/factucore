@@ -35,17 +35,17 @@ public class SriProperties {
 
 		private int maxIntentos;
 
-		private long esperaMs;
+		private long esperaReintentoMs;
 	}
 
 	@Getter
 	@Setter
 	public static class AutorizacionProperties {
 
-		private long esperaMs;
+		private long esperaInicialMs;
 
 		private int maxIntentos;
 
-		private long esperaConsultaMs;
+		private long esperaReintentoMs;
 	}
 }
