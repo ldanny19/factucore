@@ -23,7 +23,7 @@ public class AdministracionResponse<T> {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
 	private LocalDateTime fechaFin;
 
-	private String estado;
+	private Boolean exitoso;
 
 	private String codigo;
 
