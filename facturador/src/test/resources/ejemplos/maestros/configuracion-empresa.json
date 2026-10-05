@@ -1,5 +1,5 @@
 {
-  "empresaId": 1,
+  "idEmpresa": 1,
   "clave": "AMBIENTE_SRI",
   "valor": "PRUEBAS",
   "tipoDato": "STRING",
