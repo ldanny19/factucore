@@ -15,31 +15,31 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class RespuestaRestFactory {
-	private final MessageResolver messageResolver;
-	private final Clock factuCoreClock;
+    private final MessageResolver messageResolver;
+    private final Clock factuCoreClock;
 
-	public <T> AdministracionResponse<T> exito(String id, LocalDateTime inicio, T datos) {
-		LocalDateTime fin = ahora();
+    public <T> AdministracionResponse<T> exito(String id, LocalDateTime inicio, T datos) {
+        LocalDateTime fin = ahora();
 
-		return AdministracionResponse.<T>builder().idTransaccion(id).fechaInicio(inicio).fechaFin(fin).estado("OK")
-				.codigo(MessageCodes.OPERACION_EXITOSA)
-				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA)).datos(datos).build();
-	}
+        return AdministracionResponse.<T>builder().idTransaccion(id).fechaInicio(inicio).fechaFin(fin).exitoso(true)
+                .codigo(MessageCodes.OPERACION_EXITOSA)
+                .mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA)).datos(datos).build();
+    }
 
-	public <T> AdministracionResponse<T> exitoConsulta(T datos) {
-		LocalDateTime ahora = ahora();
-		return AdministracionResponse.<T>builder().idTransaccion(UUID.randomUUID().toString()).fechaInicio(ahora)
-				.fechaFin(ahora).estado("OK").codigo(MessageCodes.OPERACION_EXITOSA)
-				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA)).datos(datos).build();
-	}
+    public <T> AdministracionResponse<T> exitoConsulta(T datos) {
+        LocalDateTime ahora = ahora();
+        return AdministracionResponse.<T>builder().idTransaccion(UUID.randomUUID().toString()).fechaInicio(ahora)
+                .fechaFin(ahora).exitoso(true).codigo(MessageCodes.OPERACION_EXITOSA)
+                .mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA)).datos(datos).build();
+    }
 
-	public void validarFechaInicio(LocalDateTime inicio) {
-		if (inicio.isAfter(ahora())) {
-			throw new ApplicationException(MessageCodes.OPERACION_FECHA_INICIO_FUTURA, inicio);
-		}
-	}
+    public void validarFechaInicio(LocalDateTime inicio) {
+        if (inicio.isAfter(ahora())) {
+            throw new ApplicationException(MessageCodes.OPERACION_FECHA_INICIO_FUTURA, inicio);
+        }
+    }
 
-	private LocalDateTime ahora() {
-		return LocalDateTime.now(factuCoreClock);
-	}
+    private LocalDateTime ahora() {
+        return LocalDateTime.now(factuCoreClock);
+    }
 }
