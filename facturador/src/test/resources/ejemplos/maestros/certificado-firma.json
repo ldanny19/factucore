@@ -1,7 +1,13 @@
 {
-  "idEmpresa": 1,
-  "nombreArchivo": "CRISTHIAN WILLIAM JUCA TOALA.p12",
-  "rutaCertificado": "/app/certificados/CRISTHIAN WILLIAM JUCA TOALA.p12",
-  "fechaInicio": "2026-01-01T00:00:00",
-  "fechaFin": "2027-01-01T00:00:00"
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idEmpresa": {{idEmpresaActual}},
+    "nombreArchivo": "CRISTHIAN WILLIAN JUCA TOALA.p12",
+    "rutaCertificado": "/app/certificados/CRISTHIAN WILLIAN JUCA TOALA.p12",
+    "fechaInicio": "2026-01-01T00:00:00",
+    "fechaFin": "2027-01-01T00:00:00"
+  }
 }
