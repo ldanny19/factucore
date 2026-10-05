@@ -38,7 +38,7 @@ spring:
       hibernate:
         format_sql: true
         jdbc:
-          time_zone: America/Guayaquil
+          time_zone: ${factucore.configuracion.zona-horaria}
 
   flyway:
     enabled: true
