@@ -32,6 +32,7 @@ public class EstablecimientoController {
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<EstablecimientoResponse>> crear(
 			@Valid @RequestBody AdministracionRequest<EstablecimientoRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarEstablecimiento(null, request.getDatos())));
 	}
@@ -39,6 +40,7 @@ public class EstablecimientoController {
 	@PutMapping("/{id}")
 	public ResponseEntity<AdministracionResponse<EstablecimientoResponse>> actualizar(@PathVariable Long id,
 			@Valid @RequestBody AdministracionRequest<EstablecimientoRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarEstablecimiento(id, request.getDatos())));
 	}
