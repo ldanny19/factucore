@@ -1,8 +1,14 @@
 {
-  "idEmpresa": 1,
-  "clave": "AMBIENTE_SRI",
-  "valor": "PRUEBAS",
-  "tipoDato": "STRING",
-  "fechaVigenciaDesde": "2026-01-01T00:00:00",
-  "fechaVigenciaHasta": null
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idEmpresa": {{idEmpresaActual}},
+    "clave": "AMBIENTE_SRI",
+    "valor": "PRUEBAS",
+    "tipoDato": "STRING",
+    "fechaVigenciaDesde": "2026-01-01T00:00:00",
+    "fechaVigenciaHasta": null
+  }
 }
