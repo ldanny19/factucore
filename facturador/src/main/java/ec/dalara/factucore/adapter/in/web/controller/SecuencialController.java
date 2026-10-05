@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
 import ec.dalara.factucore.application.contract.request.AdministracionRequest;
-import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
-import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;

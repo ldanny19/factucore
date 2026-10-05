@@ -21,28 +21,16 @@ public class RespuestaRestFactory {
 	public <T> AdministracionResponse<T> exito(String id, LocalDateTime inicio, T datos) {
 		LocalDateTime fin = ahora();
 
-		return AdministracionResponse.<T>builder()
-				.idTransaccion(id)
-				.fechaInicio(inicio)
-				.fechaFin(fin)
-				.estado("OK")
+		return AdministracionResponse.<T>builder().idTransaccion(id).fechaInicio(inicio).fechaFin(fin).estado("OK")
 				.codigo(MessageCodes.OPERACION_EXITOSA)
-				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA))
-				.datos(datos)
-				.build();
+				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA)).datos(datos).build();
 	}
 
 	public <T> AdministracionResponse<T> exitoConsulta(T datos) {
 		LocalDateTime ahora = ahora();
-		return AdministracionResponse.<T>builder()
-				.idTransaccion(UUID.randomUUID().toString())
-				.fechaInicio(ahora)
-				.fechaFin(ahora)
-				.estado("OK")
-				.codigo(MessageCodes.OPERACION_EXITOSA)
-				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA))
-				.datos(datos)
-				.build();
+		return AdministracionResponse.<T>builder().idTransaccion(UUID.randomUUID().toString()).fechaInicio(ahora)
+				.fechaFin(ahora).estado("OK").codigo(MessageCodes.OPERACION_EXITOSA)
+				.mensaje(messageResolver.resolver(MessageCodes.OPERACION_EXITOSA)).datos(datos).build();
 	}
 
 	public void validarFechaInicio(LocalDateTime inicio) {

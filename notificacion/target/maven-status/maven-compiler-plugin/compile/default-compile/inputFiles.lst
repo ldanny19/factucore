@@ -1,0 +1,10 @@
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\adapter\in\messaging\ComprobanteAutorizadoConsumidor.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\adapter\out\mail\SmtpCorreoAdapter.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\application\port\out\CorreoPort.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\application\service\NotificacionService.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\infrastructure\config\NotificacionConfiguration.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\infrastructure\config\NotificacionProperties.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\infrastructure\message\MessageCodes.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\infrastructure\message\MessageResolver.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\infrastructure\template\PlantillaCorreoService.java
+C:\WORKSPACE\factucore\notificacion\src\main\java\ec\dalara\factucore\notificacion\NotificacionApplication.java
