@@ -31,6 +31,7 @@ public class DocumentoXsdController {
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> crear(
 			@Valid @RequestBody AdministracionRequest<DocumentoXsdRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarDocumentoXsd(null, request.getDatos())));
 	}
@@ -38,6 +39,7 @@ public class DocumentoXsdController {
 	@PutMapping("/{id}")
 	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> actualizar(@PathVariable Long id,
 			@Valid @RequestBody AdministracionRequest<DocumentoXsdRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarDocumentoXsd(id, request.getDatos())));
 	}
