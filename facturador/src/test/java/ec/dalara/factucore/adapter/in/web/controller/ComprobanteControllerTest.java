@@ -38,7 +38,7 @@ class ComprobanteControllerTest {
 				.tipoDocumento("01").build();
 
 		var expected = ComprobanteGeneracionResponse.builder().idTransaccion("TX-001").exitoso(true)
-				.estado("AUTORIZADO").claveAcceso("1234567890").build();
+				.claveAcceso("1234567890").build();
 
 		when(workflowPort.procesar(request)).thenReturn(expected);
 
@@ -50,14 +50,13 @@ class ComprobanteControllerTest {
 	}
 
 	@Test
-	void reprocesar_debeDelegarAlWorkflowYRetornarEstado() {
+	void reprocesar_debeDelegarAlWorkflowYRetornarExito() {
 		Long comprobanteId = 10L;
 
 		ResponseEntity<ComprobanteGeneracionResponse> response = controller.reprocesar(comprobanteId);
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().getExitoso());
-		assertEquals("REPROCESADO", response.getBody().getEstado());
 		verify(workflowPort).reprocesar(comprobanteId);
 	}
 }
