@@ -1,8 +1,14 @@
 {
-  "ruc": "0925880270001",
-  "razonSocial": "CRISTHIAN WILLIAN JUCA TOALA",
-  "nombreComercial": "JUCARSA",
-  "direccionMatriz": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez",
-  "obligadoContabilidad": true,
-  "contribuyenteRimpe": false
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": null,
+  "datos": {
+    "ruc": "0925880270001",
+    "razonSocial": "CRISTHIAN WILLIAN JUCA TOALA",
+    "nombreComercial": "JUCARSA",
+    "direccionMatriz": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez",
+    "obligadoContabilidad": true,
+    "contribuyenteRimpe": false
+  }
 }
