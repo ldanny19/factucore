@@ -1,7 +1,13 @@
 {
-  "idCatalogo": 1,
-  "codigo": "1",
-  "nombre": "Pruebas",
-  "descripcion": "Ambiente de pruebas del SRI.",
-  "orden": 1
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idCatalogo": 1,
+    "codigo": "1",
+    "nombre": "Pruebas",
+    "descripcion": "Ambiente de pruebas del SRI.",
+    "orden": 1
+  }
 }
