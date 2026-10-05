@@ -1,5 +1,11 @@
 {
-  "idPuntoEmision": 1,
-  "codigoDocumento": "01",
-  "ultimoSecuencial": 0
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idPuntoEmision": {{idPuntoEmisionActual}},
+    "codigoDocumento": "01",
+    "ultimoSecuencial": 0
+  }
 }
