@@ -193,9 +193,9 @@ services:
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/facturador/config:/app/config:ro
-      - ${FACTUCORE_HOME}/documentos:/app/documentos
-      - ${FACTUCORE_HOME}/certificados:/app/certificados:ro
-      - ${FACTUCORE_HOME}/logs/facturador:/app/logs
+      - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
+      - ${FACTUCORE_HOME}/facturador/certificados:/app/certificados:ro
+      - ${FACTUCORE_HOME}/facturador/logs:/app/logs
     ports:
       - "${FACTURADOR_PORT:-8081}:8080"
     healthcheck:
@@ -226,8 +226,8 @@ services:
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/notificacion/config:/app/config:ro
-      - ${FACTUCORE_HOME}/documentos:/app/documentos
-      - ${FACTUCORE_HOME}/logs/notificacion:/app/logs
+      - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
+      - ${FACTUCORE_HOME}/notificacion/logs:/app/logs
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
