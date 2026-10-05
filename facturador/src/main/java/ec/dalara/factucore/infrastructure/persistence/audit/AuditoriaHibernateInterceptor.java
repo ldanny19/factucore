@@ -1,5 +1,6 @@
 package ec.dalara.factucore.infrastructure.persistence.audit;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -21,6 +22,12 @@ public class AuditoriaHibernateInterceptor implements Interceptor, HibernateProp
     private static final String FECHA_MODIFICACION = "fechaModificacion";
     private static final String ESTADO_ACTIVO = "A";
 
+    private final Clock factuCoreClock;
+
+    public AuditoriaHibernateInterceptor(Clock factuCoreClock) {
+        this.factuCoreClock = factuCoreClock;
+    }
+
     @Override
     public void customize(Map<String, Object> hibernateProperties) {
         hibernateProperties.put("hibernate.session_factory.interceptor", this);
@@ -34,7 +41,7 @@ public class AuditoriaHibernateInterceptor implements Interceptor, HibernateProp
             String[] propertyNames,
             Type[] types) {
 
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(factuCoreClock);
         String usuario = usuarioAutenticado();
 
         boolean auditado = false;
@@ -67,7 +74,7 @@ public class AuditoriaHibernateInterceptor implements Interceptor, HibernateProp
                 || hasProperty(propertyNames, FECHA_MODIFICACION)) {
 
             String usuario = usuarioAutenticado();
-            LocalDateTime ahora = LocalDateTime.now();
+            LocalDateTime ahora = LocalDateTime.now(factuCoreClock);
 
             auditado |= setProperty(currentState, propertyNames, USUARIO_MODIFICACION, usuario);
             auditado |= setProperty(currentState, propertyNames, FECHA_MODIFICACION, ahora);
