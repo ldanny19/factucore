@@ -25,6 +25,8 @@ public class ComprobanteGeneracionResponse {
 
 	private String mensaje;
 
+	private ResultadoResponse resultado;
+
 	private String claveAcceso;
 
 	private String numeroComprobante;
