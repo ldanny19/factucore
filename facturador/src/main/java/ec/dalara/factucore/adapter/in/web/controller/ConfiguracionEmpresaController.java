@@ -32,6 +32,7 @@ public class ConfiguracionEmpresaController {
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<ConfiguracionEmpresaResponse>> crear(
 			@Valid @RequestBody AdministracionRequest<ConfiguracionEmpresaRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarConfiguracion(null, request.getDatos())));
 	}
@@ -39,6 +40,7 @@ public class ConfiguracionEmpresaController {
 	@PutMapping("/{id}")
 	public ResponseEntity<AdministracionResponse<ConfiguracionEmpresaResponse>> actualizar(@PathVariable Long id,
 			@Valid @RequestBody AdministracionRequest<ConfiguracionEmpresaRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarConfiguracion(id, request.getDatos())));
 	}
