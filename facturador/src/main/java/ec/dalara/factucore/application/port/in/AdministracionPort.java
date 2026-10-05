@@ -2,12 +2,14 @@ package ec.dalara.factucore.application.port.in;
 
 import java.util.List;
 
+import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
 import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
+import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
@@ -75,6 +77,18 @@ public interface AdministracionPort {
 	void reactivarConfiguracion(Long id);
 
 	void eliminarConfiguracion(Long id);
+
+	CertificadoFirmaResponse guardarCertificadoFirma(Long id, CertificadoFirmaRequest r);
+
+	CertificadoFirmaResponse obtenerCertificadoFirma(Long id);
+
+	List<CertificadoFirmaResponse> listarCertificadosFirma(Long idEmpresa);
+
+	void inactivarCertificadoFirma(Long id);
+
+	void reactivarCertificadoFirma(Long id);
+
+	void eliminarCertificadoFirma(Long id);
 
 	DocumentoXsdResponse guardarDocumentoXsd(Long id, DocumentoXsdRequest r);
 
