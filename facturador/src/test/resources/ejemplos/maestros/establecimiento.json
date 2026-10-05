@@ -1,6 +1,12 @@
 {
-  "idEmpresa": 1,
-  "codigo": "001",
-  "nombre": "Matriz",
-  "direccion": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez"
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idEmpresa": {{idEmpresaActual}},
+    "codigo": "001",
+    "nombre": "Matriz",
+    "direccion": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez"
+  }
 }
