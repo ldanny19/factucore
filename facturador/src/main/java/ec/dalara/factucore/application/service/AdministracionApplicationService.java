@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
 import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
+import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
@@ -21,6 +23,7 @@ import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.application.mapper.AdministracionMapper;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
+import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
@@ -41,6 +44,7 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final PuntoEmisionService puntoEmisionService;
 	private final SecuencialService secuencialService;
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
+	private final CertificadoFirmaService certificadoFirmaService;
 	private final DocumentoXsdService documentoXsdService;
 	private final EmpresaRepository empresaRepository;
 	private final EstablecimientoRepository establecimientoRepository;
@@ -187,6 +191,35 @@ public class AdministracionApplicationService implements AdministracionPort {
 
 	public void eliminarConfiguracion(Long id) {
 		configuracionEmpresaService.eliminar(id);
+	}
+
+	public CertificadoFirmaResponse guardarCertificadoFirma(Long id, CertificadoFirmaRequest r) {
+		CertificadoFirma e = id == null ? null
+				: certificadoFirmaService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
+		e = AdministracionMapper.toEntity(r, e);
+		e.setEmpresa(empresaRepository.findById(r.getIdEmpresa()).orElseThrow(() -> noEncontrado(r.getIdEmpresa())));
+		return AdministracionMapper.toResponse(certificadoFirmaService.guardar(e));
+	}
+
+	public CertificadoFirmaResponse obtenerCertificadoFirma(Long id) {
+		return certificadoFirmaService.obtenerPorId(id).map(AdministracionMapper::toResponse)
+				.orElseThrow(() -> noEncontrado(id));
+	}
+
+	public List<CertificadoFirmaResponse> listarCertificadosFirma(Long idEmpresa) {
+		return certificadoFirmaService.listarPorEmpresa(idEmpresa).stream().map(AdministracionMapper::toResponse).toList();
+	}
+
+	public void inactivarCertificadoFirma(Long id) {
+		certificadoFirmaService.inactivar(id);
+	}
+
+	public void reactivarCertificadoFirma(Long id) {
+		certificadoFirmaService.reactivar(id);
+	}
+
+	public void eliminarCertificadoFirma(Long id) {
+		certificadoFirmaService.eliminar(id);
 	}
 
 	public DocumentoXsdResponse guardarDocumentoXsd(Long id, DocumentoXsdRequest r) {
