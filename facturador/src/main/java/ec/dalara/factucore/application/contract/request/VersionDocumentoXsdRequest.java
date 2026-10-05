@@ -16,12 +16,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VersionDocumentoXsdRequest {
 
-	@NotNull
-	private Long idDocumentoXsd;
-
 	@NotBlank
 	@Size(max = 20)
 	private String version;
+
+	@NotBlank
+	@Size(max = 1000)
+	private String rutaXsd;
 
 	@Size(max = 300)
 	private String nombreArchivo;
