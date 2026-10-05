@@ -32,6 +32,7 @@ public class PuntoEmisionController {
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<PuntoEmisionResponse>> crear(
 			@Valid @RequestBody AdministracionRequest<PuntoEmisionRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarPuntoEmision(null, request.getDatos())));
 	}
@@ -39,6 +40,7 @@ public class PuntoEmisionController {
 	@PutMapping("/{id}")
 	public ResponseEntity<AdministracionResponse<PuntoEmisionResponse>> actualizar(@PathVariable Long id,
 			@Valid @RequestBody AdministracionRequest<PuntoEmisionRequest> request) {
+		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
 				port.guardarPuntoEmision(id, request.getDatos())));
 	}
