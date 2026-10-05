@@ -117,6 +117,7 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
       KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
+      KC_HOSTNAME: ${KC_HOSTNAME:-auth.factucore.local:8180}
       KC_DB: ${KC_DB:-postgres}
       KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
       KC_HEALTH_ENABLED: "true"
