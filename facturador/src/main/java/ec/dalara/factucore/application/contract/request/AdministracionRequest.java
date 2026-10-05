@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.contract.request;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +22,8 @@ public class AdministracionRequest<T> {
 	private String idTransaccion;
 
 	@NotNull
-	private OffsetDateTime fechaInicio;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+	private LocalDateTime fechaInicio;
 
 	@NotBlank
 	private String canal;
