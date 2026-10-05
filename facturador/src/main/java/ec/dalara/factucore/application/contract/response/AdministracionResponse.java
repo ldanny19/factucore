@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.contract.response;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,9 +17,11 @@ public class AdministracionResponse<T> {
 
 	private String idTransaccion;
 
-	private OffsetDateTime fechaInicio;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+	private LocalDateTime fechaInicio;
 
-	private OffsetDateTime fechaFin;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+	private LocalDateTime fechaFin;
 
 	private String estado;
 
