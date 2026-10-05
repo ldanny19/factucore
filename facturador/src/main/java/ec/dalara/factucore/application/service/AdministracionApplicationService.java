@@ -1,7 +1,5 @@
 package ec.dalara.factucore.application.service;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -9,7 +7,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
@@ -26,7 +23,6 @@ import ec.dalara.factucore.application.contract.response.EmpresaResponse;
 import ec.dalara.factucore.application.contract.response.EstablecimientoResponse;
 import ec.dalara.factucore.application.contract.response.PuntoEmisionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;
-import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportRequest;
 import ec.dalara.factucore.application.mapper.AdministracionMapper;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -54,7 +50,7 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final CertificadoFirmaService certificadoFirmaService;
 	private final DocumentoXsdService documentoXsdService;
-	private final XsdImportService xsdImportService;
+	private final VersionDocumentoXsdService versionDocumentoXsdService;
 
 	@Value("${factucore.path.documentos}")
 	private String rutaDocumentos;
@@ -239,24 +235,15 @@ public class AdministracionApplicationService implements AdministracionPort {
 			return guardarDocumentoXsdExistente(id, r);
 
 		Path rutaXsd = validarRutaXsd(r);
-		String usuario = SecurityContextHolder.getContext().getAuthentication().getName();
-		String nombreArchivo = r.getVersion().getNombreArchivo();
-		if (nombreArchivo == null || nombreArchivo.isBlank()) {
-			nombreArchivo = rutaXsd.getFileName().toString();
-		}
+		DocumentoXsd documento = documentoXsdService.guardar(AdministracionMapper.toEntity(r, null));
 
-		try (InputStream inputStream = Files.newInputStream(rutaXsd)) {
-			xsdImportService.importar(inputStream, rutaXsd.toUri().toString(),
-					new XsdImportRequest(r.getCodigo(), r.getNombre(), r.getDescripcion(), r.getTipoDocumento(),
-							r.getVersion().getVersion(), nombreArchivo, r.getVersion().getFechaInicio(),
-						r.getVersion().getFechaFin(), usuario, null));
-		} catch (IOException exception) {
-			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_INVALIDA, exception,
-					r.getVersion().getRutaXsd());
-		}
+		VersionDocumentoXsd version = AdministracionMapper.toEntity(r.getVersion(), null);
+		version.setDocumentoXsd(documento);
 
-		DocumentoXsd documento = documentoXsdService.obtenerPorCodigo(r.getCodigo())
-				.orElseThrow(() -> new ApplicationException(MessageCodes.REGISTRO_NO_ENCONTRADO, r.getCodigo()));
+		if (version.getNombreArchivo() == null || version.getNombreArchivo().isBlank())
+			version.setNombreArchivo(rutaXsd.getFileName().toString());
+
+		versionDocumentoXsdService.guardar(version);
 		return AdministracionMapper.toResponse(documento);
 	}
 

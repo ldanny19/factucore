@@ -236,59 +236,59 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 	}
 
-\tprivate ObjectNode esquemaElemento(XsdElementSource source, boolean tieneHijos,
-\t\t\tXsdDefinitionSource definition) {
-\t\tObjectNode base = objectMapper.createObjectNode();
+	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneHijos,
+			XsdDefinitionSource definition) {
+		ObjectNode base = objectMapper.createObjectNode();
 
-\t\tif (source.esRepetible()) {
-\t\t\tbase.put("type", "array");
-\t\t\tif (source.minOcurrencias() != null) {
-\t\t\t\tbase.put("minItems", source.minOcurrencias());
-\t\t\t}
-\t\t\tif (source.maxOcurrencias() != null) {
-\t\t\t\tbase.put("maxItems", source.maxOcurrencias());
-\t\t\t}
-\t\t\tObjectNode items = base.putObject("items");
-\t\t\tconstruirTipo(items, source, tieneHijos, definition);
-\t\t\taplicarRestricciones(items, source, definition);
-\t\t} else {
-\t\t\tconstruirTipo(base, source, tieneHijos, definition);
-\t\t\taplicarRestricciones(base, source, definition);
-\t\t}
+		if (source.esRepetible()) {
+			base.put("type", "array");
+			if (source.minOcurrencias() != null) {
+				base.put("minItems", source.minOcurrencias());
+			}
+			if (source.maxOcurrencias() != null) {
+				base.put("maxItems", source.maxOcurrencias());
+			}
+			ObjectNode items = base.putObject("items");
+			construirTipo(items, source, tieneHijos, definition);
+			aplicarRestricciones(items, source, definition);
+		} else {
+			construirTipo(base, source, tieneHijos, definition);
+			aplicarRestricciones(base, source, definition);
+		}
 
-\t\treturn base;
-\t}
+		return base;
+	}
 
-\tprivate void aplicarRestricciones(ObjectNode target, XsdElementSource source, XsdDefinitionSource definition) {
-\t\tif (source.longitudMinima() != null) {
-\t\t\ttarget.put("minLength", source.longitudMinima());
-\t\t}
-\t\tif (source.longitudMaxima() != null) {
-\t\t\ttarget.put("maxLength", source.longitudMaxima());
-\t\t}
-\t\tif (source.digitosTotales() != null) {
-\t\t\ttarget.put("totalDigits", source.digitosTotales());
-\t\t}
-\t\tif (source.decimales() != null) {
-\t\t\ttarget.put("fractionDigits", source.decimales());
-\t\t}
-\t\tif (source.valorMinimo() != null) {
-\t\t\ttarget.put("minimum", source.valorMinimo());
-\t\t}
-\t\tif (source.valorMaximo() != null) {
-\t\t\ttarget.put("maximum", source.valorMaximo());
-\t\t}
-\t\tif (source.patron() != null) {
-\t\t\ttarget.put("pattern", source.patron());
-\t\t}
+	private void aplicarRestricciones(ObjectNode target, XsdElementSource source, XsdDefinitionSource definition) {
+		if (source.longitudMinima() != null) {
+			target.put("minLength", source.longitudMinima());
+		}
+		if (source.longitudMaxima() != null) {
+			target.put("maxLength", source.longitudMaxima());
+		}
+		if (source.digitosTotales() != null) {
+			target.put("totalDigits", source.digitosTotales());
+		}
+		if (source.decimales() != null) {
+			target.put("fractionDigits", source.decimales());
+		}
+		if (source.valorMinimo() != null) {
+			target.put("minimum", source.valorMinimo());
+		}
+		if (source.valorMaximo() != null) {
+			target.put("maximum", source.valorMaximo());
+		}
+		if (source.patron() != null) {
+			target.put("pattern", source.patron());
+		}
 
-\t\tList<XsdEnumerationSource> enumeraciones = definition.enumeraciones().stream()
-\t\t\t\t.filter(e -> source.ruta().equals(e.rutaElemento())).toList();
-\t\tif (!enumeraciones.isEmpty()) {
-\t\t\tArrayNode enumeration = target.putArray("enum");
-\t\t\tenumeraciones.forEach(e -> enumeration.add(e.valor()));
-\t\t}
-\t}
+		List<XsdEnumerationSource> enumeraciones = definition.enumeraciones().stream()
+				.filter(e -> source.ruta().equals(e.rutaElemento())).toList();
+		if (!enumeraciones.isEmpty()) {
+			ArrayNode enumeration = target.putArray("enum");
+			enumeraciones.forEach(e -> enumeration.add(e.valor()));
+		}
+	}
 
 	private void construirTipo(ObjectNode target, XsdElementSource source, boolean tieneHijos,
 			XsdDefinitionSource definition) {
