@@ -30,6 +30,7 @@ public class SriService {
 				if (intento == maxIntentos) {
 					throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
 				}
+				esperar(properties.getEnvio().getEsperaReintentoMs());
 			}
 		}
 		throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
@@ -48,8 +49,19 @@ public class SriService {
 				if (intento == maxIntentos) {
 					throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
 				}
+				esperar(properties.getAutorizacion().getEsperaReintentoMs());
 			}
 		}
 		throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
+	}
+
+	private void esperar(long esperaMs) {
+		if (esperaMs <= 0) return;
+		try {
+			Thread.sleep(esperaMs);
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+			throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception.getMessage());
+		}
 	}
 }
