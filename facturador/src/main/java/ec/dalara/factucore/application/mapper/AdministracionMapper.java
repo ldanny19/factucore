@@ -3,11 +3,11 @@ package ec.dalara.factucore.application.mapper;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
-import ec.dalara.factucore.application.contract.request.VersionDocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
 import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
+import ec.dalara.factucore.application.contract.request.VersionDocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
@@ -18,11 +18,11 @@ import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
-import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.Establecimiento;
 import ec.dalara.factucore.infrastructure.persistence.entity.PuntoEmision;
 import ec.dalara.factucore.infrastructure.persistence.entity.Secuencial;
+import ec.dalara.factucore.infrastructure.persistence.entity.VersionDocumentoXsd;
 
 public final class AdministracionMapper {
 	private AdministracionMapper() {

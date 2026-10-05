@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,10 +20,10 @@ import ec.dalara.factucore.application.contract.request.AdministracionRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
+import ec.dalara.factucore.application.port.in.AdministracionPort;
 import ec.dalara.factucore.application.service.XsdConsultaService;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.VersionDocumentoXsdModel;
-import ec.dalara.factucore.application.port.in.AdministracionPort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -63,7 +62,8 @@ public class DocumentoXsdController {
 	}
 
 	@GetMapping("/{id}/versiones")
-	public ResponseEntity<AdministracionResponse<List<VersionDocumentoXsdModel>>> listarVersiones(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<List<VersionDocumentoXsdModel>>> listarVersiones(
+			@PathVariable Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(consulta.listarVersiones(id)));
 	}
 

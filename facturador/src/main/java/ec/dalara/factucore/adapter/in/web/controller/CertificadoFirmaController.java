@@ -53,8 +53,7 @@ public class CertificadoFirmaController {
 	}
 
 	@GetMapping
-	public ResponseEntity<AdministracionResponse<List<CertificadoFirmaResponse>>> listar(
-			@RequestParam Long idEmpresa) {
+	public ResponseEntity<AdministracionResponse<List<CertificadoFirmaResponse>>> listar(@RequestParam Long idEmpresa) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.listarCertificadosFirma(idEmpresa)));
 	}
 

@@ -14,9 +14,9 @@ public interface VersionDocumentoXsdMapper {
 			return null;
 		}
 
-		return new VersionDocumentoXsdModel(null, null, request.getVersion(),
-				request.getNombreArchivo(), request.getNamespaceXml(), request.getElementoRaiz(),
-				request.getPlantillaJson(), request.getEsquemaJson(), request.getFechaInicio(), request.getFechaFin());
+		return new VersionDocumentoXsdModel(null, null, request.getVersion(), request.getNombreArchivo(),
+				request.getNamespaceXml(), request.getElementoRaiz(), request.getPlantillaJson(),
+				request.getEsquemaJson(), request.getFechaInicio(), request.getFechaFin());
 	}
 
 	VersionDocumentoXsdResponse toResponse(VersionDocumentoXsdModel model);

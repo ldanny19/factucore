@@ -61,14 +61,12 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 				.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
 				.observacion(request.observacion()).build());
 
-		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento)
-				.version(request.version()).nombreArchivo(request.nombreArchivo())
-				.namespaceXml(definition.namespaceXml()).elementoRaiz(definition.elementoRaiz())
-				.plantillaJson(generarPlantillaJson(definition))
-				.esquemaJson(generarEsquemaJson(definition))
-				.fechaInicio(request.fechaInicio()).fechaFin(request.fechaFin())
-				.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
-				.observacion(request.observacion()).build();
+		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
+				.nombreArchivo(request.nombreArchivo()).namespaceXml(definition.namespaceXml())
+				.elementoRaiz(definition.elementoRaiz()).plantillaJson(generarPlantillaJson(definition))
+				.esquemaJson(generarEsquemaJson(definition)).fechaInicio(request.fechaInicio())
+				.fechaFin(request.fechaFin()).estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario())
+				.fechaCreacion(ahora).observacion(request.observacion()).build();
 
 		version = versionRepository.save(version);
 
@@ -138,7 +136,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 				JsonNode padre = nodos.get(rutaPadre);
 				if (padre == null) {
-					throw new InfrastructureException("FACTUCORE.XSD.IMPORTACION.RUTA_ELEMENTO.NO_ENCONTRADA", rutaPadre);
+					throw new InfrastructureException("FACTUCORE.XSD.IMPORTACION.RUTA_ELEMENTO.NO_ENCONTRADA",
+							rutaPadre);
 				}
 
 				ObjectNode objetoPadre = objetoContenedor(padre);
@@ -187,9 +186,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		if (tipo.contains("boolean")) {
 			return objectMapper.getNodeFactory().booleanNode(false);
 		}
-		if (tipo.contains("decimal") || tipo.contains("double") || tipo.contains("float")
-				|| tipo.contains("integer") || tipo.contains("int") || tipo.contains("long")
-				|| tipo.contains("short") || tipo.contains("byte")) {
+		if (tipo.contains("decimal") || tipo.contains("double") || tipo.contains("float") || tipo.contains("integer")
+				|| tipo.contains("int") || tipo.contains("long") || tipo.contains("short") || tipo.contains("byte")) {
 			return objectMapper.getNodeFactory().numberNode(0);
 		}
 
@@ -236,8 +234,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 	}
 
-	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneHijos,
-			XsdDefinitionSource definition) {
+	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneHijos, XsdDefinitionSource definition) {
 		ObjectNode base = objectMapper.createObjectNode();
 
 		if (source.esRepetible()) {
@@ -338,8 +335,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		if (tipo.contains("decimal") || tipo.contains("double") || tipo.contains("float")) {
 			return "number";
 		}
-		if (tipo.contains("integer") || tipo.contains("int") || tipo.contains("long")
-				|| tipo.contains("short") || tipo.contains("byte")) {
+		if (tipo.contains("integer") || tipo.contains("int") || tipo.contains("long") || tipo.contains("short")
+				|| tipo.contains("byte")) {
 			return "integer";
 		}
 		return "string";

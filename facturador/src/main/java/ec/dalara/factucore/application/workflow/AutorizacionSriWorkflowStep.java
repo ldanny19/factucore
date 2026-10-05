@@ -72,7 +72,8 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 	}
 
 	private void esperar(long esperaMs) {
-		if (esperaMs <= 0) return;
+		if (esperaMs <= 0)
+			return;
 		try {
 			Thread.sleep(esperaMs);
 		} catch (InterruptedException exception) {
