@@ -2,6 +2,9 @@ package ec.dalara.factucore.adapter.in.web.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +21,9 @@ import ec.dalara.factucore.application.contract.request.AdministracionRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
+import ec.dalara.factucore.application.service.XsdConsultaService;
+import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
+import ec.dalara.factucore.domain.documentoxsd.VersionDocumentoXsdModel;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class DocumentoXsdController {
 	private final AdministracionPort port;
 	private final RespuestaRestFactory respuestas;
+	private final XsdConsultaService consulta;
 
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> crear(
@@ -53,6 +60,28 @@ public class DocumentoXsdController {
 	@GetMapping
 	public ResponseEntity<AdministracionResponse<List<DocumentoXsdResponse>>> listar() {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.listarDocumentosXsd()));
+	}
+
+	@GetMapping("/{id}/versiones")
+	public ResponseEntity<AdministracionResponse<List<VersionDocumentoXsdModel>>> listarVersiones(@PathVariable Long id) {
+		return ResponseEntity.ok(respuestas.exitoConsulta(consulta.listarVersiones(id)));
+	}
+
+	@GetMapping("/versiones/{id}")
+	public ResponseEntity<AdministracionResponse<DocumentDefinitionModel>> obtenerDefinicion(@PathVariable Long id) {
+		return ResponseEntity.ok(respuestas.exitoConsulta(consulta.obtenerDefinicion(id)));
+	}
+
+	@GetMapping(value = "/versiones/{id}/plantilla-json", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> descargarPlantilla(@PathVariable Long id) {
+		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=plantilla.json")
+				.contentType(MediaType.APPLICATION_JSON).body(consulta.obtenerPlantilla(id));
+	}
+
+	@GetMapping(value = "/versiones/{id}/esquema-json", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> descargarEsquema(@PathVariable Long id) {
+		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=esquema.json")
+				.contentType(MediaType.APPLICATION_JSON).body(consulta.obtenerEsquema(id));
 	}
 
 	@PatchMapping("/{id}/inactivar")
