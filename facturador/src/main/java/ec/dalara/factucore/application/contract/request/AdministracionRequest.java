@@ -23,9 +23,6 @@ public class AdministracionRequest<T> {
 	private OffsetDateTime fechaInicio;
 
 	@NotBlank
-	private String usuario;
-
-	@NotBlank
 	private String canal;
 
 	@NotNull
