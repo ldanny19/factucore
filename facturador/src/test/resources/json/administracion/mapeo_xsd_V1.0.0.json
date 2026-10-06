@@ -31,7 +31,7 @@
     {
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "FACTUCORE",
-      "origen": "empresa.razon_social",
+      "origen": "empresa.razonSocial",
       "idElementoXsd": 5,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"
@@ -39,7 +39,7 @@
     {
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "FACTUCORE",
-      "origen": "empresa.nombre_comercial",
+      "origen": "empresa.nombreComercial",
       "idElementoXsd": 6,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"
@@ -95,7 +95,7 @@
     {
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "FACTUCORE",
-      "origen": "empresa.direccion_matriz",
+      "origen": "empresa.direccionMatriz",
       "idElementoXsd": 13,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"
@@ -111,7 +111,7 @@
     {
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "FACTUCORE",
-      "origen": "empresa.contribuyente_rimpe",
+      "origen": "empresa.contribuyenteRimpe",
       "idElementoXsd": 15,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"
@@ -151,7 +151,7 @@
     {
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "FACTUCORE",
-      "origen": "empresa.obligado_contabilidad",
+      "origen": "empresa.obligadoContabilidad",
       "idElementoXsd": 20,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"

@@ -19,7 +19,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ec.dalara.factucore.application.ApplicationException;
-import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
+import ec.dalara.factucore.application.port.out.FactuCoreSourcePort;\nimport ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
@@ -29,7 +29,7 @@ import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
 	@Override
-	public String generar(DocumentDefinitionModel definition, Map<String, Object> datos) {
+	public String generar(DocumentDefinitionModel definition, Map<String, Object> datos, Map<String, Object> contexto) {
 		if (definition == null) {
 			throw new ApplicationException("FACTUCORE.XML.DEFINITION.REQUERIDA");
 		}
@@ -49,7 +49,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
 			String namespaceXml = definition.getVersion().getNamespaceXml();
 
-			Element elementoRaiz = crearElemento(document, raiz, datos, definition, datos, namespaceXml);
+			Element elementoRaiz = crearElemento(document, raiz, datos, definition, datos, contexto, namespaceXml);
 
 			document.appendChild(elementoRaiz);
 
@@ -85,10 +85,10 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 	}
 
 	private Element crearElemento(Document document, ElementoXsdModel definicion, Object valor,
-			DocumentDefinitionModel definition, Map<String, Object> contexto, String namespaceXml) {
+			DocumentDefinitionModel definition, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml) {
 		Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
 
-		aplicarAtributos(elemento, definicion, definition, contexto);
+		aplicarAtributos(elemento, definicion, definition, contextoJson, contextoFactuCore);
 
 		if (esValorSimple(valor)) {
 			if (valor != null) {
@@ -110,13 +110,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 				continue;
 			}
 
-			Object valorHijo = obtenerValor(contextoLocal, contexto, mapeo.getOrigen());
+			Object valorHijo = obtenerValor(contextoLocal, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(), mapeo.getOrigen());
 
 			if (valorHijo == null) {
 				continue;
 			}
 
-			agregarHijo(document, elemento, hijo, valorHijo, definition, contexto, namespaceXml);
+			agregarHijo(document, elemento, hijo, valorHijo, definition, contextoJson, contextoFactuCore, namespaceXml);
 		}
 
 		return elemento;
@@ -132,12 +132,12 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 	}
 
 	private void agregarHijo(Document document, Element padre, ElementoXsdModel definicion, Object valor,
-			DocumentDefinitionModel definition, Map<String, Object> contexto, String namespaceXml) {
+			DocumentDefinitionModel definition, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml) {
 		if (valor instanceof Iterable<?> iterable) {
 
 			for (Object item : iterable) {
 
-				Element hijo = crearElemento(document, definicion, item, definition, contexto, namespaceXml);
+				Element hijo = crearElemento(document, definicion, item, definition, contextoJson, contextoFactuCore, namespaceXml);
 
 				padre.appendChild(hijo);
 			}
@@ -145,7 +145,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 			return;
 		}
 
-		Element hijo = crearElemento(document, definicion, valor, definition, contexto, namespaceXml);
+		Element hijo = crearElemento(document, definicion, valor, definition, contextoJson, contextoFactuCore, namespaceXml);
 
 		padre.appendChild(hijo);
 	}
@@ -166,7 +166,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 			Map<String, Object> contexto) {
 		definition.getAtributos().stream()
 				.filter(atributo -> Objects.equals(atributo.getElementoXsdId(), definicion.getId()))
-				.forEach(atributo -> aplicarAtributo(elemento, atributo, definition, contexto));
+				.forEach(atributo -> aplicarAtributo(elemento, atributo, definition, contextoJson, contextoFactuCore));
 	}
 
 	private void aplicarAtributo(Element elemento, AtributoXsdModel atributo, DocumentDefinitionModel definition,
@@ -177,7 +177,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		Object valor = null;
 
 		if (mapeo != null) {
-			valor = obtenerRuta(contexto, mapeo.getOrigen());
+			valor = obtenerValor(contextoJson, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(), mapeo.getOrigen());
 		}
 
 		if (valor != null) {
@@ -191,7 +191,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		}
 	}
 
-	private Object obtenerValor(Map<String, Object> contextoLocal, Map<String, Object> contextoGlobal, String ruta) {
+	private Object obtenerValor(Map<String, Object> contextoLocal, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String tipoOrigen, String ruta) {
 		if (ruta == null || ruta.isBlank()) {
 			return null;
 		}

@@ -67,7 +67,7 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 				.obtenerDefinicionVigente(documento.getCodigo(), solicitud.getFechaInicio().toLocalDateTime())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
-		String ambiente = resolverAmbiente(sriProperties.getAmbiente());
+		String ambiente = resolverAmbiente(sriProperties.getAmbiente());\n\n\t\tcontexto.setValorGenerado("ambiente", ambiente);\n\t\tcontexto.setValorGenerado("tipoEmision", TIPO_EMISION_NORMAL);\n\t\tcontexto.setValorGenerado("tipoDocumento", documento.getTipoDocumento());
 
 		var datos = new ClaveAccesoDatos(LocalDate.from(solicitud.getFechaInicio()),
 				definition.getDocumento().getCodigo(), empresa.getRuc(), ambiente,

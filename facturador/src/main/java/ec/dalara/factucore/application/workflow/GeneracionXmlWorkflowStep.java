@@ -60,7 +60,7 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 			datos.put("secuencial", contexto.getSecuencial());
 		}
 
-		String xml = xmlGenerator.generar(definition, datos);
+		String xml = xmlGenerator.generar(definition, datos, contexto.getValoresGenerados());
 		contexto.setXml(xml);
 		evidenciaPort.guardarXmlGenerado(contexto.getComprobanteId(), xml, solicitud.getUsuario());
 
