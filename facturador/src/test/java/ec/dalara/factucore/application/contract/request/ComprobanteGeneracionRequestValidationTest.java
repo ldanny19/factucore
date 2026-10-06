@@ -33,9 +33,9 @@ class ComprobanteGeneracionRequestValidationTest {
 
 	@Test
 	void requestValido_noDebeTenerViolaciones() {
-		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001").fechaInicio(OffsetDateTime.now())
-				.usuario("usuario").canal("API").idEmpresa(1L).codigoEstablecimiento("001").puntoEmision("001")
-				.tipoDocumento("01").build();
+		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
+				.fechaInicio(OffsetDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		assertTrue(validator.validate(request).isEmpty());
 	}
@@ -80,7 +80,7 @@ class ComprobanteGeneracionRequestValidationTest {
 	void idTransaccionExcedeLongitud_debeDetectarViolacion() {
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("A".repeat(101))
 				.fechaInicio(OffsetDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
-				.codigoEstablecimiento("001").puntoEmision("001").tipoDocumento("01").build();
+				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		assertTrue(validator.validate(request).stream()
 				.anyMatch(v -> "idTransaccion".equals(v.getPropertyPath().toString())));

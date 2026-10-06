@@ -33,9 +33,9 @@ class ComprobanteControllerTest {
 
 	@Test
 	void generar_debeDelegarAlWorkflowYRetornarRespuesta() {
-		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001").fechaInicio(OffsetDateTime.now())
-				.usuario("usuario").canal("API").idEmpresa(1L).codigoEstablecimiento("001").puntoEmision("001")
-				.tipoDocumento("01").build();
+		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
+				.fechaInicio(OffsetDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		var expected = ComprobanteGeneracionResponse.builder().idTransaccion("TX-001").exitoso(true)
 				.claveAcceso("1234567890").build();
