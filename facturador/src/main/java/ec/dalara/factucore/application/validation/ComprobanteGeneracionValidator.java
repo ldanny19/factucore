@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
-import ec.dalara.factucore.application.contract.request.DatoComprobanteRequest;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -23,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 	private final MessageResolver messageResolver;
+	private final ObjectMapper objectMapper;
 	private final DocumentoDefinitionProvider documentoDefinitionProvider;
 	private final DocumentDefinitionDataValidator documentDefinitionDataValidator;
 
@@ -64,43 +68,13 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 	}
 
 	private void validarDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
-		List<DatoComprobanteRequest> datos = request.getDatos();
+		JsonNode datos = request.getDatos();
 
-		if (datos == null || datos.isEmpty()) {
-
+		if (datos == null || datos.isNull() || !datos.isObject() || datos.isEmpty()) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS, "datos");
-
-			return;
-		}
-
-		Set<String> claves = new HashSet<>();
-
-		for (int i = 0; i < datos.size(); i++) {
-
-			DatoComprobanteRequest dato = datos.get(i);
-
-			String campo = "datos[" + i + "]";
-
-			if (dato == null) {
-
-				resultado.agregarError(MessageCodes.COMPROBANTE_DATO_KEY_REQUERIDA, campo);
-
-				continue;
-			}
-
-			if (dato.getKey() == null || dato.getKey().isBlank()) {
-
-				resultado.agregarError(MessageCodes.COMPROBANTE_DATO_KEY_REQUERIDA, campo + ".key");
-
-				continue;
-			}
-
-			if (!claves.add(dato.getKey())) {
-
-				resultado.agregarError(MessageCodes.COMPROBANTE_DATO_DUPLICADO, campo + ".key", dato.getKey());
-			}
 		}
 	}
+
 
 	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		OffsetDateTime fechaInicio = request.getFechaInicio();
@@ -129,14 +103,13 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 		documentDefinitionDataValidator.validar(definicion, datos, resultado);
 	}
 
-	private Map<String, Object> convertirDatos(List<DatoComprobanteRequest> datos) {
-		Map<String, Object> resultado = new LinkedHashMap<>();
-
-		for (DatoComprobanteRequest dato : datos) {
-			resultado.put(dato.getKey(), dato.getValue());
+	private Map<String, Object> convertirDatos(JsonNode datos) {
+		if (datos == null || !datos.isObject()) {
+			return Map.of();
 		}
 
-		return resultado;
+		return objectMapper.convertValue(datos, new TypeReference<Map<String, Object>>() {
+		});
 	}
 
 	private LocalDateTime convertirFecha(OffsetDateTime fecha) {
