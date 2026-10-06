@@ -248,7 +248,7 @@ public class AdministracionApplicationService implements AdministracionPort {
 		try (InputStream inputStream = Files.newInputStream(rutaXsd)) {
 			xsdImportService.importar(inputStream, rutaXsd.toUri().toString(),
 					new XsdImportRequest(r.getCodigo(), r.getNombre(), r.getDescripcion(), r.getTipoDocumento(),
-							r.getVersion().getVersion(), nombreArchivo, r.getVersion().getFechaInicio(),
+							r.getPrefijoArchivo(), r.getVersion().getVersion(), nombreArchivo, r.getVersion().getFechaInicio(),
 							r.getVersion().getFechaFin(), usuario, null));
 		} catch (IOException exception) {
 			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_INVALIDA, exception,
