@@ -72,9 +72,9 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 			}
 		}
 
-		if (mapeoXsdRepository.existsByVersionDocumentoXsdIdAndRutaOrigen(request.getIdVersionDocumentoXsd(),
-				request.getRutaOrigen())) {
-			throw new DomainException(MessageCodes.MAPEO_XSD_RUTA_ORIGEN_DUPLICADA);
+		if (mapeoXsdRepository.existsByVersionDocumentoXsdIdAndOrigen(request.getIdVersionDocumentoXsd(),
+				request.getOrigen())) {
+			throw new DomainException(MessageCodes.MAPEO_XSD_ORIGEN_DUPLICADO);
 		}
 
 		MapeoXsd entity = mapeoXsdEntityMapper.toEntity(mapeoXsdMapper.toModel(request));
