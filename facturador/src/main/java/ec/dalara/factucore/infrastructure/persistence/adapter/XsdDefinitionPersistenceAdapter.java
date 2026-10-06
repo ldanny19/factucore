@@ -124,7 +124,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			ObjectNode root = objectMapper.createObjectNode();
 			Map<String, JsonNode> nodos = new HashMap<>();
 
-			for (XsdElementSource source : definition.elementos()) {
+			for (XsdElementSource source : elementosEntrada(definition)) {
 				JsonNode valor = valorPlantilla(source, definition);
 				String rutaPadre = rutaPadre(source.ruta());
 
@@ -146,6 +146,9 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			}
 
 			for (XsdAttributeSource attribute : definition.atributos()) {
+				if (esSeccionFactuCore(attribute.rutaElemento(), definition)) {
+					continue;
+				}
 				JsonNode elemento = nodos.get(attribute.rutaElemento());
 				if (elemento == null) {
 					throw new InfrastructureException("FACTUCORE.XSD.IMPORTACION.RUTA_ELEMENTO.NO_ENCONTRADA",
@@ -168,7 +171,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 		if (tieneEstructuraObjeto) {
 			ObjectNode objeto = objectMapper.createObjectNode();
-			if (!tieneHijos(source.ruta(), definition.elementos())) {
+			if (!tieneHijos(source.ruta(), definition)) {
 				objeto.set("valor", valorEjemplo(source.tipoDato()));
 			}
 			valor = objeto;
@@ -209,7 +212,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			ObjectNode rootProperties = schema.putObject("properties");
 			Set<String> rootRequired = new HashSet<>();
 
-			for (XsdElementSource source : definition.elementos()) {
+			for (XsdElementSource source : elementosEntrada(definition)) {
 				if (rutaPadre(source.ruta()) != null) {
 					continue;
 				}
@@ -308,7 +311,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 		Set<String> required = new HashSet<>();
 
-		for (XsdElementSource child : definition.elementos()) {
+		for (XsdElementSource child : elementosEntrada(definition)) {
 			if (!source.ruta().equals(rutaPadre(child.ruta()))) {
 				continue;
 			}
@@ -316,7 +319,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 
 		for (XsdAttributeSource attribute : definition.atributos()) {
-			if (!source.ruta().equals(attribute.rutaElemento())) {
+			if (esSeccionFactuCore(attribute.rutaElemento(), definition)
+					|| !source.ruta().equals(attribute.rutaElemento())) {
 				continue;
 			}
 			ObjectNode attributeSchema = objectMapper.createObjectNode();
@@ -353,13 +357,28 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private boolean tieneEstructuraObjeto(XsdElementSource source, XsdDefinitionSource definition) {
-		return tieneHijos(source.ruta(), definition.elementos())
-				|| definition.atributos().stream().anyMatch(a -> source.ruta().equals(a.rutaElemento()));
+		return tieneHijos(source.ruta(), definition)
+				|| definition.atributos().stream()
+						.anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)
+								&& source.ruta().equals(a.rutaElemento()));
 	}
 
-	private boolean tieneHijos(String ruta, List<XsdElementSource> elementos) {
+	private boolean tieneHijos(String ruta, XsdDefinitionSource definition) {
 		String prefijo = ruta + ".";
-		return elementos.stream().anyMatch(e -> e.ruta().startsWith(prefijo));
+		return elementosEntrada(definition).stream().anyMatch(e -> e.ruta().startsWith(prefijo));
+	}
+
+	private List<XsdElementSource> elementosEntrada(XsdDefinitionSource definition) {
+		return definition.elementos().stream()
+				.filter(source -> !esSeccionFactuCore(source.ruta(), definition))
+				.toList();
+	}
+
+	private boolean esSeccionFactuCore(String ruta, XsdDefinitionSource definition) {
+		String raiz = definition.elementoRaiz();
+		return "factura".equals(raiz)
+				&& (ruta.equals(raiz + ".infoTributaria")
+						|| ruta.startsWith(raiz + ".infoTributaria."));
 	}
 
 	private ObjectNode objetoContenedor(JsonNode nodo) {
