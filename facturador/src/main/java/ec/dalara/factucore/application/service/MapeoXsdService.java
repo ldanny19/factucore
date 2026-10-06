@@ -40,6 +40,11 @@ public class MapeoXsdService extends BaseService<MapeoXsd> {
 	}
 
 	@Transactional
+	public List<MapeoXsdResponse> crear(List<MapeoXsdRequest> requests) {
+		return requests.stream().map(this::crear).toList();
+	}
+
+	@Transactional
 	public MapeoXsdResponse crear(MapeoXsdRequest request) {
 		validarDestino(request);
 
