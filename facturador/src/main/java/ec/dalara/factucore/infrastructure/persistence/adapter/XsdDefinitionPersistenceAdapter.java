@@ -50,16 +50,23 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	@Override
 	@Transactional
 	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition) {
-		if (documentoRepository.existsByCodigo(request.codigo())) {
-			throw new InfrastructureException("FACTUCORE.XSD.IMPORTACION.DOCUMENTO.EXISTENTE", request.codigo());
-		}
-
 		LocalDateTime ahora = LocalDateTime.now();
 
-		DocumentoXsd documento = documentoRepository.save(DocumentoXsd.builder().codigo(request.codigo())
-				.nombre(request.nombre()).descripcion(request.descripcion()).tipoDocumento(request.tipoDocumento())
-				.prefijoArchivo(request.prefijoArchivo()).estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
-				.observacion(request.observacion()).build());
+		DocumentoXsd documento = documentoRepository.findByCodigo(request.codigo()).orElseGet(() -> documentoRepository
+				.save(DocumentoXsd.builder().codigo(request.codigo()).nombre(request.nombre()).descripcion(request.descripcion())
+						.tipoDocumento(request.tipoDocumento()).prefijoArchivo(request.prefijoArchivo())
+						.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
+						.observacion(request.observacion()).build()));
+
+		if (versionRepository.existsByDocumentoXsdIdAndVersion(documento.getId(), request.version())) {
+			throw new InfrastructureException("FACTUCORE.VERSION_DOCUMENTO_XSD.DUPLICADA", request.version());
+		}
+
+		if (versionRepository.existsByDocumentoXsdIdAndEstadoRegistroAndRangoFechas(documento.getId(),
+				EstadoRegistro.ACTIVO, request.fechaInicio(), request.fechaFin())) {
+			throw new InfrastructureException("FACTUCORE.VERSION_DOCUMENTO_XSD.RANGO_FECHAS.INVALIDO",
+					request.version(), request.fechaInicio(), request.fechaFin());
+		}
 
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
 				.nombreArchivo(request.nombreArchivo()).namespaceXml(definition.namespaceXml())
