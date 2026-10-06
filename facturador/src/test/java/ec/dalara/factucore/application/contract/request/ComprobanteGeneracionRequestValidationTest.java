@@ -1,5 +1,6 @@
 package ec.dalara.factucore.application.contract.request;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.OffsetDateTime;
@@ -7,6 +8,8 @@ import java.time.OffsetDateTime;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -35,6 +38,35 @@ class ComprobanteGeneracionRequestValidationTest {
 				.tipoDocumento("01").build();
 
 		assertTrue(validator.validate(request).isEmpty());
+	}
+
+	@Test
+	void requestConDatosJson_aceptaEstructuraJerarquica() throws Exception {
+		var datos = new ObjectMapper().readTree("""
+				{
+				  "factura": {
+				    "infoFactura": {
+				      "razonSocialComprador": "CLIENTE DEMO"
+				    },
+				    "detalles": {
+				      "detalle": [
+				        {
+				          "codigoPrincipal": "PROD001",
+				          "cantidad": 2
+				        }
+				      ]
+				    }
+				  }
+				}
+				""");
+
+		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
+				.fechaInicio(OffsetDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.codigoEstablecimiento("001").puntoEmision("001").tipoDocumento("01").datos(datos).build();
+
+		assertTrue(validator.validate(request).isEmpty());
+		assertNotNull(request.getDatos().get("factura"));
+		assertTrue(request.getDatos().get("factura").get("detalles").get("detalle").isArray());
 	}
 
 	@Test
