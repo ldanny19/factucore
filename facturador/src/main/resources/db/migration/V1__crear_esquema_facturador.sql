@@ -303,7 +303,7 @@ CREATE TABLE mapeo_xsd (
     CONSTRAINT ck_mapeo_xsd_tipo
         CHECK (tipo_mapeo IN ('ELEMENTO', 'ATRIBUTO')),
     CONSTRAINT ck_mapeo_xsd_tipo_origen
-        CHECK (tipo_origen IN ('FACTUCORE', 'REQUEST')),
+        CHECK (tipo_origen IN ('JSON', 'FACTUCORE', 'GENERADO')),
     CONSTRAINT uk_mapeo_xsd_origen
         UNIQUE (version_documento_xsd_id, origen)
 );
