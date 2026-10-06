@@ -1,6 +1,7 @@
 package ec.dalara.factucore.domain.documentoxsd;
 
 import ec.dalara.factucore.domain.shared.DomainException;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 
 public final class MapeoXsdModel {
 
@@ -15,13 +16,13 @@ public final class MapeoXsdModel {
     public MapeoXsdModel(Long id, Long versionDocumentoXsdId, String tipoOrigen, String origen,
             Long elementoXsdId, Long atributoXsdId, String tipoMapeo) {
         if (versionDocumentoXsdId == null) {
-            throw new DomainException("FACTUCORE.MAPEO_XSD.VERSION.REQUERIDA");
+            throw new DomainException(MessageCodes.MAPEO_XSD_VERSION_REQUERIDA);
         }
         if (tipoOrigen == null || tipoOrigen.isBlank()) {
-            throw new DomainException("FACTUCORE.MAPEO_XSD.TIPO_ORIGEN.REQUERIDO");
+            throw new DomainException(MessageCodes.MAPEO_XSD_TIPO_ORIGEN_REQUERIDO);
         }
-        if (!"FACTUCORE".equals(tipoOrigen) && !"REQUEST".equals(tipoOrigen)) {
-            throw new DomainException("FACTUCORE.MAPEO_XSD.TIPO_ORIGEN.INVALIDO");
+        if (!"FACTUCORE".equals(tipoOrigen) && !"JSON".equals(tipoOrigen) && !"GENERADO".equals(tipoOrigen)) {
+            throw new DomainException(MessageCodes.MAPEO_XSD_TIPO_ORIGEN_INVALIDO);
         }
         if (origen == null || origen.isBlank()) {
             throw new DomainException("FACTUCORE.MAPEO_XSD.ORIGEN.REQUERIDO");
@@ -33,7 +34,7 @@ public final class MapeoXsdModel {
             throw new DomainException("FACTUCORE.MAPEO_XSD.DESTINO.INVALIDO");
         }
         if (tipoMapeo == null || tipoMapeo.isBlank()) {
-            throw new DomainException("FACTUCORE.MAPEO_XSD.TIPO.REQUERIDO");
+            throw new DomainException(MessageCodes.MAPEO_XSD_TIPO_REQUERIDO);
         }
         if ("ELEMENTO".equals(tipoMapeo) && !elemento) {
             throw new DomainException("FACTUCORE.MAPEO_XSD.TIPO.DESTINO_INVALIDO");
