@@ -2,6 +2,9 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
@@ -18,6 +21,7 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 	private final DocumentoDefinitionProvider definitionProvider;
 	private final XmlGeneratorPort xmlGenerator;
 	private final ComprobanteEvidenciaPort evidenciaPort;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public EtapaWorkflow etapa() {
@@ -37,8 +41,10 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 			contexto.setDefinicionDocumento(definition);
 		}
 
-		var datos = solicitud.getDatos().stream().collect(java.util.stream.Collectors.toMap(item -> item.getKey(),
-				item -> item.getValue(), (primero, segundo) -> segundo, java.util.LinkedHashMap::new));
+		var datos = solicitud.getDatos() == null || solicitud.getDatos().isNull() || !solicitud.getDatos().isObject()
+				? new java.util.LinkedHashMap<String, Object>()
+				: objectMapper.convertValue(solicitud.getDatos(),
+						new TypeReference<java.util.LinkedHashMap<String, Object>>() {});
 
 		if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
 			throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);

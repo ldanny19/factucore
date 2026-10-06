@@ -2,7 +2,6 @@ package ec.dalara.factucore.application.workflow;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -109,10 +108,8 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 	private String serializarDatos(
 			ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest solicitud) {
 		try {
-			var datos = solicitud.getDatos() == null ? new LinkedHashMap<>()
-					: solicitud.getDatos().stream().collect(Collectors.toMap(item -> item.getKey(),
-							item -> item.getValue(), (primero, segundo) -> segundo, LinkedHashMap::new));
-			return objectMapper.writeValueAsString(datos);
+			var datos = solicitud.getDatos();
+			return objectMapper.writeValueAsString(datos == null ? objectMapper.createObjectNode() : datos);
 		} catch (JsonProcessingException exception) {
 			throw new WorkflowException(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS);
 		}

@@ -110,7 +110,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 				continue;
 			}
 
-			Object valorHijo = obtenerValor(contextoLocal, contexto, mapeo.getRutaOrigen());
+			Object valorHijo = obtenerValor(contextoLocal, contexto, mapeo.getOrigen());
 
 			if (valorHijo == null) {
 				continue;
@@ -177,7 +177,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		Object valor = null;
 
 		if (mapeo != null) {
-			valor = obtenerRuta(contexto, mapeo.getRutaOrigen());
+			valor = obtenerRuta(contexto, mapeo.getOrigen());
 		}
 
 		if (valor != null) {

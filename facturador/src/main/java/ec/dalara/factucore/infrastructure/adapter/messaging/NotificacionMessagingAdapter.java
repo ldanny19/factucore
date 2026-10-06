@@ -2,6 +2,8 @@ package ec.dalara.factucore.infrastructure.adapter.messaging;
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.application.port.out.NotificacionPort;
@@ -75,18 +77,37 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 			return null;
 		}
 
-		for (var dato : contexto.getSolicitud().getDatos()) {
-			if (dato == null || dato.getKey() == null || dato.getValue() == null) {
-				continue;
-			}
+		JsonNode datos = contexto.getSolicitud().getDatos();
+		return buscarDato(datos, claves);
+	}
 
-			for (String clave : claves) {
-				if (clave.equalsIgnoreCase(dato.getKey())) {
-					return String.valueOf(dato.getValue());
+	private String buscarDato(JsonNode nodo, String... claves) {
+		if (nodo == null || nodo.isNull()) {
+			return null;
+		}
+		if (nodo.isObject()) {
+			var campos = nodo.fields();
+			while (campos.hasNext()) {
+				var campo = campos.next();
+				for (String clave : claves) {
+					if (clave.equalsIgnoreCase(campo.getKey()) && !campo.getValue().isContainerNode()) {
+						return campo.getValue().asText();
+					}
+				}
+				String encontrado = buscarDato(campo.getValue(), claves);
+				if (encontrado != null) {
+					return encontrado;
 				}
 			}
 		}
-
+		if (nodo.isArray()) {
+			for (JsonNode item : nodo) {
+				String encontrado = buscarDato(item, claves);
+				if (encontrado != null) {
+					return encontrado;
+				}
+			}
+		}
 		return null;
 	}
 }

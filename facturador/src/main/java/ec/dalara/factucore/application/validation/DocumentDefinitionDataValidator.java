@@ -74,9 +74,9 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 					continue;
 				}
 
-				Object valor = obtenerValor(datos, mapeo.getRutaOrigen());
+				Object valor = obtenerValor(datos, mapeo.getOrigen());
 
-				validarElemento(elemento, valor, mapeo.getRutaOrigen(), definition, resultado);
+				validarElemento(elemento, valor, mapeo.getOrigen(), definition, resultado);
 
 				continue;
 			}
@@ -89,9 +89,9 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 					continue;
 				}
 
-				Object valor = obtenerValor(datos, mapeo.getRutaOrigen());
+				Object valor = obtenerValor(datos, mapeo.getOrigen());
 
-				validarAtributo(atributo, valor, mapeo.getRutaOrigen(), resultado);
+				validarAtributo(atributo, valor, mapeo.getOrigen(), resultado);
 			}
 		}
 	}

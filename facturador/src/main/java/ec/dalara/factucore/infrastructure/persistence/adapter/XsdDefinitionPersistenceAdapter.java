@@ -304,7 +304,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 		target.put("type", "object");
 		ObjectNode properties = target.putObject("properties");
-		if (!tieneHijos(source.ruta(), definition.elementos())) {
+		if (!tieneHijos(source.ruta(), definition)) {
 			ObjectNode valorSchema = objectMapper.createObjectNode();
 			valorSchema.put("type", tipoJson(source.tipoDato()));
 			properties.set("valor", valorSchema);
