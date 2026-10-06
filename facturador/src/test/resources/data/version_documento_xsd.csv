@@ -1,0 +1,1689 @@
+"id","documento_xsd_id","version","nombre_archivo","namespace_xml","elemento_raiz","plantilla_json","esquema_json","fecha_inicio","fecha_fin","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,1,"1.0.0","factura_V1.0.0.xsd",NULL,"factura","{
+  ""factura"" : {
+    ""infoFactura"" : {
+      ""fechaEmision"" : """",
+      ""dirEstablecimiento"" : """",
+      ""contribuyenteEspecial"" : """",
+      ""obligadoContabilidad"" : """",
+      ""comercioExterior"" : """",
+      ""incoTermFactura"" : """",
+      ""lugarIncoTerm"" : """",
+      ""paisOrigen"" : """",
+      ""puertoEmbarque"" : """",
+      ""puertoDestino"" : """",
+      ""paisDestino"" : """",
+      ""paisAdquisicion"" : """",
+      ""tipoIdentificacionComprador"" : """",
+      ""guiaRemision"" : """",
+      ""razonSocialComprador"" : """",
+      ""identificacionComprador"" : """",
+      ""direccionComprador"" : """",
+      ""totalSinImpuestos"" : """",
+      ""totalSubsidio"" : """",
+      ""incoTermTotalSinImpuestos"" : """",
+      ""totalDescuento"" : """",
+      ""codDocReembolso"" : """",
+      ""totalComprobantesReembolso"" : """",
+      ""totalBaseImponibleReembolso"" : """",
+      ""totalImpuestoReembolso"" : """",
+      ""totalConImpuestos"" : {
+        ""totalImpuesto"" : [ {
+          ""codigo"" : """",
+          ""codigoPorcentaje"" : """",
+          ""descuentoAdicional"" : """",
+          ""baseImponible"" : """",
+          ""tarifa"" : """",
+          ""valor"" : """",
+          ""valorDevolucionIva"" : """"
+        } ]
+      },
+      ""compensaciones"" : {
+        ""compensacion"" : [ {
+          ""codigo"" : """",
+          ""tarifa"" : """",
+          ""valor"" : """"
+        } ]
+      },
+      ""propina"" : """",
+      ""fleteInternacional"" : 0,
+      ""seguroInternacional"" : 0,
+      ""gastosAduaneros"" : """",
+      ""gastosTransporteOtros"" : """",
+      ""importeTotal"" : """",
+      ""moneda"" : """",
+      ""placa"" : """",
+      ""pagos"" : {
+        ""pago"" : [ {
+          ""formaPago"" : """",
+          ""total"" : """",
+          ""plazo"" : """",
+          ""unidadTiempo"" : """"
+        } ]
+      },
+      ""valorRetIva"" : """",
+      ""valorRetRenta"" : """"
+    },
+    ""detalles"" : {
+      ""detalle"" : [ {
+        ""codigoPrincipal"" : """",
+        ""codigoAuxiliar"" : """",
+        ""descripcion"" : """",
+        ""unidadMedida"" : """",
+        ""cantidad"" : """",
+        ""precioUnitario"" : """",
+        ""precioSinSubsidio"" : """",
+        ""descuento"" : """",
+        ""precioTotalSinImpuesto"" : """",
+        ""detallesAdicionales"" : {
+          ""detAdicional"" : [ {
+            ""valor"" : """",
+            ""nombre"" : """"
+          } ]
+        },
+        ""impuestos"" : {
+          ""impuesto"" : [ {
+            ""codigo"" : """",
+            ""codigoPorcentaje"" : """",
+            ""tarifa"" : """",
+            ""baseImponible"" : """",
+            ""valor"" : """"
+          } ]
+        }
+      } ]
+    },
+    ""reembolsos"" : {
+      ""reembolsoDetalle"" : [ {
+        ""tipoIdentificacionProveedorReembolso"" : """",
+        ""identificacionProveedorReembolso"" : """",
+        ""codPaisPagoProveedorReembolso"" : """",
+        ""tipoProveedorReembolso"" : """",
+        ""codDocReembolso"" : """",
+        ""estabDocReembolso"" : """",
+        ""ptoEmiDocReembolso"" : """",
+        ""secuencialDocReembolso"" : """",
+        ""fechaEmisionDocReembolso"" : """",
+        ""numeroautorizacionDocReemb"" : """",
+        ""detalleImpuestos"" : {
+          ""detalleImpuesto"" : [ {
+            ""codigo"" : """",
+            ""codigoPorcentaje"" : """",
+            ""tarifa"" : """",
+            ""baseImponibleReembolso"" : """",
+            ""impuestoReembolso"" : """"
+          } ]
+        },
+        ""compensacionesReembolso"" : {
+          ""compensacionReembolso"" : [ {
+            ""codigo"" : """",
+            ""tarifa"" : """",
+            ""valor"" : """"
+          } ]
+        }
+      } ]
+    },
+    ""tipoNegociable"" : {
+      ""correo"" : """"
+    },
+    ""maquinaFiscal"" : {
+      ""marca"" : 0,
+      ""modelo"" : 0,
+      ""serie"" : 0
+    },
+    ""infoAdicional"" : {
+      ""campoAdicional"" : [ {
+        ""valor"" : """",
+        ""nombre"" : """"
+      } ]
+    },
+    ""Signature"" : """",
+    ""id"" : """",
+    ""version"" : """"
+  }
+}","{
+  ""$schema"" : ""https://json-schema.org/draft/2020-12/schema"",
+  ""title"" : ""factura"",
+  ""type"" : ""object"",
+  ""properties"" : {
+    ""factura"" : {
+      ""type"" : ""object"",
+      ""properties"" : {
+        ""infoFactura"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""fechaEmision"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/20[0-9][0-9]""
+            },
+            ""dirEstablecimiento"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""contribuyenteEspecial"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 3,
+              ""maxLength"" : 13,
+              ""pattern"" : ""([A-Za-z0-9])*""
+            },
+            ""obligadoContabilidad"" : {
+              ""type"" : ""string"",
+              ""enum"" : [ ""SI"", ""NO"" ]
+            },
+            ""comercioExterior"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""EXPORTADOR""
+            },
+            ""incoTermFactura"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 10,
+              ""pattern"" : ""([A-Z])*""
+            },
+            ""lugarIncoTerm"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""paisOrigen"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}""
+            },
+            ""puertoEmbarque"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""puertoDestino"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""paisDestino"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}""
+            },
+            ""paisAdquisicion"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}""
+            },
+            ""tipoIdentificacionComprador"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0][4-8]""
+            },
+            ""guiaRemision"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}-[0-9]{3}-[0-9]{9}""
+            },
+            ""razonSocialComprador"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""identificacionComprador"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 20,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""direccionComprador"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""totalSinImpuestos"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalSubsidio"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""incoTermTotalSinImpuestos"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 10,
+              ""pattern"" : ""([A-Z])*""
+            },
+            ""totalDescuento"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2
+            },
+            ""codDocReembolso"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{2,3}""
+            },
+            ""totalComprobantesReembolso"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalBaseImponibleReembolso"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalImpuestoReembolso"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalConImpuestos"" : {
+              ""type"" : ""object"",
+              ""properties"" : {
+                ""totalImpuesto"" : {
+                  ""type"" : ""array"",
+                  ""minItems"" : 1,
+                  ""items"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""codigo"" : {
+                        ""type"" : ""string"",
+                        ""minLength"" : 1,
+                        ""maxLength"" : 1,
+                        ""pattern"" : ""[235]""
+                      },
+                      ""codigoPorcentaje"" : {
+                        ""type"" : ""string"",
+                        ""minLength"" : 1,
+                        ""maxLength"" : 4,
+                        ""pattern"" : ""[0-9]+""
+                      },
+                      ""descuentoAdicional"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2
+                      },
+                      ""baseImponible"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""tarifa"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 4,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""valor"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""valorDevolucionIva"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      }
+                    },
+                    ""required"" : [ ""codigoPorcentaje"", ""codigo"", ""valor"", ""baseImponible"" ]
+                  }
+                }
+              },
+              ""required"" : [ ""totalImpuesto"" ]
+            },
+            ""compensaciones"" : {
+              ""type"" : ""object"",
+              ""properties"" : {
+                ""compensacion"" : {
+                  ""type"" : ""array"",
+                  ""minItems"" : 1,
+                  ""items"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""codigo"" : {
+                        ""type"" : ""string"",
+                        ""pattern"" : ""1""
+                      },
+                      ""tarifa"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 4,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""valor"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      }
+                    },
+                    ""required"" : [ ""tarifa"", ""codigo"", ""valor"" ]
+                  }
+                }
+              },
+              ""required"" : [ ""compensacion"" ]
+            },
+            ""propina"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""fleteInternacional"" : {
+              ""type"" : ""integer"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""seguroInternacional"" : {
+              ""type"" : ""integer"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""gastosAduaneros"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""gastosTransporteOtros"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""importeTotal"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""moneda"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 15,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""placa"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 20,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""pagos"" : {
+              ""type"" : ""object"",
+              ""properties"" : {
+                ""pago"" : {
+                  ""type"" : ""array"",
+                  ""minItems"" : 1,
+                  ""items"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""formaPago"" : {
+                        ""type"" : ""string"",
+                        ""pattern"" : ""[0][1-9]""
+                      },
+                      ""total"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""plazo"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""unidadTiempo"" : {
+                        ""type"" : ""string"",
+                        ""minLength"" : 1,
+                        ""maxLength"" : 10,
+                        ""pattern"" : ""[^\\n]*""
+                      }
+                    },
+                    ""required"" : [ ""total"", ""formaPago"" ]
+                  }
+                }
+              },
+              ""required"" : [ ""pago"" ]
+            },
+            ""valorRetIva"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""valorRetRenta"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            }
+          },
+          ""required"" : [ ""tipoIdentificacionComprador"", ""importeTotal"", ""totalDescuento"", ""identificacionComprador"", ""totalConImpuestos"", ""razonSocialComprador"", ""fechaEmision"", ""totalSinImpuestos"" ]
+        },
+        ""detalles"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""detalle"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""codigoPrincipal"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 25,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""codigoAuxiliar"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 25,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""descripcion"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 300,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""unidadMedida"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 50,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""cantidad"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""precioUnitario"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""precioSinSubsidio"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""descuento"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""precioTotalSinImpuesto"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""detallesAdicionales"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""detAdicional"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""maxItems"" : 3,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""valor"" : {
+                              ""type"" : ""string""
+                            },
+                            ""nombre"" : {
+                              ""type"" : ""string""
+                            }
+                          },
+                          ""required"" : [ ""valor"", ""nombre"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""detAdicional"" ]
+                  },
+                  ""impuestos"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""impuesto"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""codigo"" : {
+                              ""type"" : ""string"",
+                              ""minLength"" : 1,
+                              ""maxLength"" : 1,
+                              ""pattern"" : ""[235]""
+                            },
+                            ""codigoPorcentaje"" : {
+                              ""type"" : ""string"",
+                              ""minLength"" : 1,
+                              ""maxLength"" : 4,
+                              ""pattern"" : ""[0-9]+""
+                            },
+                            ""tarifa"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 4,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""baseImponible"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""valor"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            }
+                          },
+                          ""required"" : [ ""codigoPorcentaje"", ""tarifa"", ""codigo"", ""valor"", ""baseImponible"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""impuesto"" ]
+                  }
+                },
+                ""required"" : [ ""descripcion"", ""precioUnitario"", ""precioTotalSinImpuesto"", ""descuento"", ""impuestos"", ""cantidad"" ]
+              }
+            }
+          },
+          ""required"" : [ ""detalle"" ]
+        },
+        ""reembolsos"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""reembolsoDetalle"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""tipoIdentificacionProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0][4-8]""
+                  },
+                  ""identificacionProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 20,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""codPaisPagoProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{3}""
+                  },
+                  ""tipoProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0][12]""
+                  },
+                  ""codDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{2,3}""
+                  },
+                  ""estabDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{3}""
+                  },
+                  ""ptoEmiDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{3}""
+                  },
+                  ""secuencialDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{9}""
+                  },
+                  ""fechaEmisionDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/20[0-9][0-9]""
+                  },
+                  ""numeroautorizacionDocReemb"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 10,
+                    ""maxLength"" : 49,
+                    ""pattern"" : ""[0-9]{10,49}""
+                  },
+                  ""detalleImpuestos"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""detalleImpuesto"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""codigo"" : {
+                              ""type"" : ""string"",
+                              ""pattern"" : ""[235]""
+                            },
+                            ""codigoPorcentaje"" : {
+                              ""type"" : ""string"",
+                              ""pattern"" : ""[0-9]{1,4}""
+                            },
+                            ""tarifa"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 4,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""baseImponibleReembolso"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""impuestoReembolso"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            }
+                          },
+                          ""required"" : [ ""codigoPorcentaje"", ""tarifa"", ""baseImponibleReembolso"", ""codigo"", ""impuestoReembolso"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""detalleImpuesto"" ]
+                  },
+                  ""compensacionesReembolso"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""compensacionReembolso"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""codigo"" : {
+                              ""type"" : ""string"",
+                              ""pattern"" : ""1""
+                            },
+                            ""tarifa"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 4,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""valor"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            }
+                          },
+                          ""required"" : [ ""tarifa"", ""codigo"", ""valor"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""compensacionReembolso"" ]
+                  }
+                },
+                ""required"" : [ ""tipoProveedorReembolso"", ""fechaEmisionDocReembolso"", ""ptoEmiDocReembolso"", ""secuencialDocReembolso"", ""codDocReembolso"", ""estabDocReembolso"", ""tipoIdentificacionProveedorReembolso"", ""identificacionProveedorReembolso"", ""detalleImpuestos"", ""numeroautorizacionDocReemb"" ]
+              }
+            }
+          },
+          ""required"" : [ ""reembolsoDetalle"" ]
+        },
+        ""tipoNegociable"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""correo"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 100,
+              ""pattern"" : ""[^\\n]*""
+            }
+          },
+          ""required"" : [ ""correo"" ]
+        },
+        ""maquinaFiscal"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""marca"" : {
+              ""type"" : ""integer"",
+              ""minLength"" : 1,
+              ""maxLength"" : 30,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""modelo"" : {
+              ""type"" : ""integer"",
+              ""minLength"" : 1,
+              ""maxLength"" : 30,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""serie"" : {
+              ""type"" : ""integer"",
+              ""minLength"" : 1,
+              ""maxLength"" : 30,
+              ""pattern"" : ""[^\\n]*""
+            }
+          },
+          ""required"" : [ ""marca"", ""serie"", ""modelo"" ]
+        },
+        ""infoAdicional"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""campoAdicional"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""maxItems"" : 15,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""valor"" : {
+                    ""type"" : ""string""
+                  },
+                  ""nombre"" : {
+                    ""type"" : ""string""
+                  }
+                },
+                ""required"" : [ ""nombre"" ],
+                ""minLength"" : 1,
+                ""maxLength"" : 300
+              }
+            }
+          },
+          ""required"" : [ ""campoAdicional"" ]
+        },
+        ""Signature"" : {
+          ""type"" : ""string""
+        },
+        ""id"" : {
+          ""type"" : ""string""
+        },
+        ""version"" : {
+          ""type"" : ""string""
+        }
+      },
+      ""required"" : [ ""detalles"", ""infoFactura"" ]
+    }
+  },
+  ""required"" : [ ""factura"" ]
+}","2025-12-31 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-06 08:11:35.491978",NULL,NULL
+2,1,"1.1.0","factura_V1.1.0.xsd",NULL,"factura","{
+  ""factura"" : {
+    ""infoFactura"" : {
+      ""fechaEmision"" : """",
+      ""dirEstablecimiento"" : """",
+      ""contribuyenteEspecial"" : """",
+      ""obligadoContabilidad"" : """",
+      ""comercioExterior"" : """",
+      ""incoTermFactura"" : """",
+      ""lugarIncoTerm"" : """",
+      ""paisOrigen"" : """",
+      ""puertoEmbarque"" : """",
+      ""puertoDestino"" : """",
+      ""paisDestino"" : """",
+      ""paisAdquisicion"" : """",
+      ""tipoIdentificacionComprador"" : """",
+      ""guiaRemision"" : """",
+      ""razonSocialComprador"" : """",
+      ""identificacionComprador"" : """",
+      ""direccionComprador"" : """",
+      ""totalSinImpuestos"" : """",
+      ""totalSubsidio"" : """",
+      ""incoTermTotalSinImpuestos"" : """",
+      ""totalDescuento"" : """",
+      ""codDocReembolso"" : """",
+      ""totalComprobantesReembolso"" : """",
+      ""totalBaseImponibleReembolso"" : """",
+      ""totalImpuestoReembolso"" : """",
+      ""totalConImpuestos"" : {
+        ""totalImpuesto"" : [ {
+          ""codigo"" : """",
+          ""codigoPorcentaje"" : """",
+          ""descuentoAdicional"" : """",
+          ""baseImponible"" : """",
+          ""tarifa"" : """",
+          ""valor"" : """",
+          ""valorDevolucionIva"" : """"
+        } ]
+      },
+      ""compensaciones"" : {
+        ""compensacion"" : [ {
+          ""codigo"" : """",
+          ""tarifa"" : """",
+          ""valor"" : """"
+        } ]
+      },
+      ""propina"" : """",
+      ""fleteInternacional"" : 0,
+      ""seguroInternacional"" : 0,
+      ""gastosAduaneros"" : """",
+      ""gastosTransporteOtros"" : """",
+      ""importeTotal"" : """",
+      ""moneda"" : """",
+      ""placa"" : """",
+      ""pagos"" : {
+        ""pago"" : [ {
+          ""formaPago"" : """",
+          ""total"" : """",
+          ""plazo"" : """",
+          ""unidadTiempo"" : """"
+        } ]
+      },
+      ""valorRetIva"" : """",
+      ""valorRetRenta"" : """"
+    },
+    ""detalles"" : {
+      ""detalle"" : [ {
+        ""codigoPrincipal"" : """",
+        ""codigoAuxiliar"" : """",
+        ""descripcion"" : """",
+        ""unidadMedida"" : """",
+        ""cantidad"" : """",
+        ""precioUnitario"" : """",
+        ""precioSinSubsidio"" : """",
+        ""descuento"" : """",
+        ""precioTotalSinImpuesto"" : """",
+        ""detallesAdicionales"" : {
+          ""detAdicional"" : [ {
+            ""valor"" : """",
+            ""nombre"" : """"
+          } ]
+        },
+        ""impuestos"" : {
+          ""impuesto"" : [ {
+            ""codigo"" : """",
+            ""codigoPorcentaje"" : """",
+            ""tarifa"" : """",
+            ""baseImponible"" : """",
+            ""valor"" : """"
+          } ]
+        }
+      } ]
+    },
+    ""reembolsos"" : {
+      ""reembolsoDetalle"" : [ {
+        ""tipoIdentificacionProveedorReembolso"" : """",
+        ""identificacionProveedorReembolso"" : """",
+        ""codPaisPagoProveedorReembolso"" : """",
+        ""tipoProveedorReembolso"" : """",
+        ""codDocReembolso"" : """",
+        ""estabDocReembolso"" : """",
+        ""ptoEmiDocReembolso"" : """",
+        ""secuencialDocReembolso"" : """",
+        ""fechaEmisionDocReembolso"" : """",
+        ""numeroautorizacionDocReemb"" : """",
+        ""detalleImpuestos"" : {
+          ""detalleImpuesto"" : [ {
+            ""codigo"" : """",
+            ""codigoPorcentaje"" : """",
+            ""tarifa"" : """",
+            ""baseImponibleReembolso"" : """",
+            ""impuestoReembolso"" : """"
+          } ]
+        },
+        ""compensacionesReembolso"" : {
+          ""compensacionReembolso"" : [ {
+            ""codigo"" : """",
+            ""tarifa"" : """",
+            ""valor"" : """"
+          } ]
+        }
+      } ]
+    },
+    ""retenciones"" : {
+      ""retencion"" : [ {
+        ""codigo"" : """",
+        ""codigoPorcentaje"" : """",
+        ""tarifa"" : """",
+        ""valor"" : """"
+      } ]
+    },
+    ""tipoNegociable"" : {
+      ""correo"" : """"
+    },
+    ""maquinaFiscal"" : {
+      ""marca"" : 0,
+      ""modelo"" : 0,
+      ""serie"" : 0
+    },
+    ""infoAdicional"" : {
+      ""campoAdicional"" : [ {
+        ""valor"" : """",
+        ""nombre"" : """"
+      } ]
+    },
+    ""Signature"" : """",
+    ""id"" : """",
+    ""version"" : """"
+  }
+}","{
+  ""$schema"" : ""https://json-schema.org/draft/2020-12/schema"",
+  ""title"" : ""factura"",
+  ""type"" : ""object"",
+  ""properties"" : {
+    ""factura"" : {
+      ""type"" : ""object"",
+      ""properties"" : {
+        ""infoFactura"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""fechaEmision"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/20[0-9][0-9]""
+            },
+            ""dirEstablecimiento"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""contribuyenteEspecial"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 3,
+              ""maxLength"" : 13,
+              ""pattern"" : ""([A-Za-z0-9])*""
+            },
+            ""obligadoContabilidad"" : {
+              ""type"" : ""string"",
+              ""enum"" : [ ""SI"", ""NO"" ]
+            },
+            ""comercioExterior"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""EXPORTADOR""
+            },
+            ""incoTermFactura"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 10,
+              ""pattern"" : ""([A-Z])*""
+            },
+            ""lugarIncoTerm"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""paisOrigen"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}""
+            },
+            ""puertoEmbarque"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""puertoDestino"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""paisDestino"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}""
+            },
+            ""paisAdquisicion"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}""
+            },
+            ""tipoIdentificacionComprador"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0][4-8]""
+            },
+            ""guiaRemision"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{3}-[0-9]{3}-[0-9]{9}""
+            },
+            ""razonSocialComprador"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""identificacionComprador"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 20,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""direccionComprador"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 300,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""totalSinImpuestos"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalSubsidio"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""incoTermTotalSinImpuestos"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 10,
+              ""pattern"" : ""([A-Z])*""
+            },
+            ""totalDescuento"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2
+            },
+            ""codDocReembolso"" : {
+              ""type"" : ""string"",
+              ""pattern"" : ""[0-9]{2,3}""
+            },
+            ""totalComprobantesReembolso"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalBaseImponibleReembolso"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalImpuestoReembolso"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""totalConImpuestos"" : {
+              ""type"" : ""object"",
+              ""properties"" : {
+                ""totalImpuesto"" : {
+                  ""type"" : ""array"",
+                  ""minItems"" : 1,
+                  ""items"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""codigo"" : {
+                        ""type"" : ""string"",
+                        ""minLength"" : 1,
+                        ""maxLength"" : 1,
+                        ""pattern"" : ""[235]""
+                      },
+                      ""codigoPorcentaje"" : {
+                        ""type"" : ""string"",
+                        ""minLength"" : 1,
+                        ""maxLength"" : 4,
+                        ""pattern"" : ""[0-9]+""
+                      },
+                      ""descuentoAdicional"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2
+                      },
+                      ""baseImponible"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""tarifa"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 4,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""valor"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""valorDevolucionIva"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      }
+                    },
+                    ""required"" : [ ""codigoPorcentaje"", ""codigo"", ""valor"", ""baseImponible"" ]
+                  }
+                }
+              },
+              ""required"" : [ ""totalImpuesto"" ]
+            },
+            ""compensaciones"" : {
+              ""type"" : ""object"",
+              ""properties"" : {
+                ""compensacion"" : {
+                  ""type"" : ""array"",
+                  ""minItems"" : 1,
+                  ""items"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""codigo"" : {
+                        ""type"" : ""string"",
+                        ""pattern"" : ""1""
+                      },
+                      ""tarifa"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 4,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""valor"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      }
+                    },
+                    ""required"" : [ ""tarifa"", ""codigo"", ""valor"" ]
+                  }
+                }
+              },
+              ""required"" : [ ""compensacion"" ]
+            },
+            ""propina"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""fleteInternacional"" : {
+              ""type"" : ""integer"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""seguroInternacional"" : {
+              ""type"" : ""integer"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""gastosAduaneros"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""gastosTransporteOtros"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""importeTotal"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""moneda"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 15,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""placa"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 20,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""pagos"" : {
+              ""type"" : ""object"",
+              ""properties"" : {
+                ""pago"" : {
+                  ""type"" : ""array"",
+                  ""minItems"" : 1,
+                  ""items"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""formaPago"" : {
+                        ""type"" : ""string"",
+                        ""pattern"" : ""[0][1-9]""
+                      },
+                      ""total"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""plazo"" : {
+                        ""type"" : ""string"",
+                        ""totalDigits"" : 14,
+                        ""fractionDigits"" : 2,
+                        ""minimum"" : 0
+                      },
+                      ""unidadTiempo"" : {
+                        ""type"" : ""string"",
+                        ""minLength"" : 1,
+                        ""maxLength"" : 10,
+                        ""pattern"" : ""[^\\n]*""
+                      }
+                    },
+                    ""required"" : [ ""total"", ""formaPago"" ]
+                  }
+                }
+              },
+              ""required"" : [ ""pago"" ]
+            },
+            ""valorRetIva"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            },
+            ""valorRetRenta"" : {
+              ""type"" : ""string"",
+              ""totalDigits"" : 14,
+              ""fractionDigits"" : 2,
+              ""minimum"" : 0
+            }
+          },
+          ""required"" : [ ""tipoIdentificacionComprador"", ""importeTotal"", ""totalDescuento"", ""identificacionComprador"", ""totalConImpuestos"", ""razonSocialComprador"", ""fechaEmision"", ""totalSinImpuestos"" ]
+        },
+        ""detalles"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""detalle"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""codigoPrincipal"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 25,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""codigoAuxiliar"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 25,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""descripcion"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 300,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""unidadMedida"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 50,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""cantidad"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 18,
+                    ""fractionDigits"" : 6,
+                    ""minimum"" : 0
+                  },
+                  ""precioUnitario"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 18,
+                    ""fractionDigits"" : 6,
+                    ""minimum"" : 0
+                  },
+                  ""precioSinSubsidio"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 18,
+                    ""fractionDigits"" : 6,
+                    ""minimum"" : 0
+                  },
+                  ""descuento"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""precioTotalSinImpuesto"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""detallesAdicionales"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""detAdicional"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""maxItems"" : 3,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""valor"" : {
+                              ""type"" : ""string""
+                            },
+                            ""nombre"" : {
+                              ""type"" : ""string""
+                            }
+                          },
+                          ""required"" : [ ""valor"", ""nombre"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""detAdicional"" ]
+                  },
+                  ""impuestos"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""impuesto"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""codigo"" : {
+                              ""type"" : ""string"",
+                              ""minLength"" : 1,
+                              ""maxLength"" : 1,
+                              ""pattern"" : ""[235]""
+                            },
+                            ""codigoPorcentaje"" : {
+                              ""type"" : ""string"",
+                              ""minLength"" : 1,
+                              ""maxLength"" : 4,
+                              ""pattern"" : ""[0-9]+""
+                            },
+                            ""tarifa"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 4,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""baseImponible"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""valor"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            }
+                          },
+                          ""required"" : [ ""codigoPorcentaje"", ""tarifa"", ""codigo"", ""valor"", ""baseImponible"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""impuesto"" ]
+                  }
+                },
+                ""required"" : [ ""descripcion"", ""precioUnitario"", ""precioTotalSinImpuesto"", ""descuento"", ""impuestos"", ""cantidad"" ]
+              }
+            }
+          },
+          ""required"" : [ ""detalle"" ]
+        },
+        ""reembolsos"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""reembolsoDetalle"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""tipoIdentificacionProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0][4-8]""
+                  },
+                  ""identificacionProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 1,
+                    ""maxLength"" : 20,
+                    ""pattern"" : ""[^\\n]*""
+                  },
+                  ""codPaisPagoProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{3}""
+                  },
+                  ""tipoProveedorReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0][12]""
+                  },
+                  ""codDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{2,3}""
+                  },
+                  ""estabDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{3}""
+                  },
+                  ""ptoEmiDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{3}""
+                  },
+                  ""secuencialDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{9}""
+                  },
+                  ""fechaEmisionDocReembolso"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/20[0-9][0-9]""
+                  },
+                  ""numeroautorizacionDocReemb"" : {
+                    ""type"" : ""string"",
+                    ""minLength"" : 10,
+                    ""maxLength"" : 49,
+                    ""pattern"" : ""[0-9]{10,49}""
+                  },
+                  ""detalleImpuestos"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""detalleImpuesto"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""codigo"" : {
+                              ""type"" : ""string"",
+                              ""pattern"" : ""[235]""
+                            },
+                            ""codigoPorcentaje"" : {
+                              ""type"" : ""string"",
+                              ""pattern"" : ""[0-9]{1,4}""
+                            },
+                            ""tarifa"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 4,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""baseImponibleReembolso"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""impuestoReembolso"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            }
+                          },
+                          ""required"" : [ ""codigoPorcentaje"", ""tarifa"", ""baseImponibleReembolso"", ""codigo"", ""impuestoReembolso"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""detalleImpuesto"" ]
+                  },
+                  ""compensacionesReembolso"" : {
+                    ""type"" : ""object"",
+                    ""properties"" : {
+                      ""compensacionReembolso"" : {
+                        ""type"" : ""array"",
+                        ""minItems"" : 1,
+                        ""items"" : {
+                          ""type"" : ""object"",
+                          ""properties"" : {
+                            ""codigo"" : {
+                              ""type"" : ""string"",
+                              ""pattern"" : ""1""
+                            },
+                            ""tarifa"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 4,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            },
+                            ""valor"" : {
+                              ""type"" : ""string"",
+                              ""totalDigits"" : 14,
+                              ""fractionDigits"" : 2,
+                              ""minimum"" : 0
+                            }
+                          },
+                          ""required"" : [ ""tarifa"", ""codigo"", ""valor"" ]
+                        }
+                      }
+                    },
+                    ""required"" : [ ""compensacionReembolso"" ]
+                  }
+                },
+                ""required"" : [ ""tipoProveedorReembolso"", ""fechaEmisionDocReembolso"", ""ptoEmiDocReembolso"", ""secuencialDocReembolso"", ""codDocReembolso"", ""estabDocReembolso"", ""tipoIdentificacionProveedorReembolso"", ""identificacionProveedorReembolso"", ""detalleImpuestos"", ""numeroautorizacionDocReemb"" ]
+              }
+            }
+          },
+          ""required"" : [ ""reembolsoDetalle"" ]
+        },
+        ""retenciones"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""retencion"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""codigo"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[4]{1}""
+                  },
+                  ""codigoPorcentaje"" : {
+                    ""type"" : ""string"",
+                    ""pattern"" : ""[0-9]{1,3}""
+                  },
+                  ""tarifa"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 5,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  },
+                  ""valor"" : {
+                    ""type"" : ""string"",
+                    ""totalDigits"" : 14,
+                    ""fractionDigits"" : 2,
+                    ""minimum"" : 0
+                  }
+                },
+                ""required"" : [ ""codigoPorcentaje"", ""tarifa"", ""codigo"", ""valor"" ]
+              }
+            }
+          },
+          ""required"" : [ ""retencion"" ]
+        },
+        ""tipoNegociable"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""correo"" : {
+              ""type"" : ""string"",
+              ""minLength"" : 1,
+              ""maxLength"" : 100,
+              ""pattern"" : ""[^\\n]*""
+            }
+          },
+          ""required"" : [ ""correo"" ]
+        },
+        ""maquinaFiscal"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""marca"" : {
+              ""type"" : ""integer"",
+              ""minLength"" : 1,
+              ""maxLength"" : 30,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""modelo"" : {
+              ""type"" : ""integer"",
+              ""minLength"" : 1,
+              ""maxLength"" : 30,
+              ""pattern"" : ""[^\\n]*""
+            },
+            ""serie"" : {
+              ""type"" : ""integer"",
+              ""minLength"" : 1,
+              ""maxLength"" : 30,
+              ""pattern"" : ""[^\\n]*""
+            }
+          },
+          ""required"" : [ ""marca"", ""serie"", ""modelo"" ]
+        },
+        ""infoAdicional"" : {
+          ""type"" : ""object"",
+          ""properties"" : {
+            ""campoAdicional"" : {
+              ""type"" : ""array"",
+              ""minItems"" : 1,
+              ""maxItems"" : 15,
+              ""items"" : {
+                ""type"" : ""object"",
+                ""properties"" : {
+                  ""valor"" : {
+                    ""type"" : ""string""
+                  },
+                  ""nombre"" : {
+                    ""type"" : ""string""
+                  }
+                },
+                ""required"" : [ ""nombre"" ],
+                ""minLength"" : 1,
+                ""maxLength"" : 300
+              }
+            }
+          },
+          ""required"" : [ ""campoAdicional"" ]
+        },
+        ""Signature"" : {
+          ""type"" : ""string""
+        },
+        ""id"" : {
+          ""type"" : ""string""
+        },
+        ""version"" : {
+          ""type"" : ""string""
+        }
+      },
+      ""required"" : [ ""detalles"", ""infoFactura"" ]
+    }
+  },
+  ""required"" : [ ""factura"" ]
+}","2026-04-30 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-06 09:49:40.067047",NULL,NULL

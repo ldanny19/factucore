@@ -1,0 +1,11 @@
+"id","elemento_xsd_id","nombre","tipo_dato","obligatorio","valor_predeterminado","patron","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,84,"nombre",NULL,True,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 08:11:35.743711",NULL,NULL
+2,84,"valor",NULL,True,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 08:11:35.746518",NULL,NULL
+3,123,"nombre","nombre",True,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 08:11:35.748785",NULL,NULL
+4,1,"id",NULL,False,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 08:11:35.750484",NULL,NULL
+5,1,"version",NULL,False,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 08:11:35.753138",NULL,NULL
+6,208,"nombre",NULL,True,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 09:49:47.470146",NULL,NULL
+7,208,"valor",NULL,True,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 09:49:47.503712",NULL,NULL
+8,253,"nombre","nombre",True,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 09:49:47.537139",NULL,NULL
+9,125,"id",NULL,False,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 09:49:47.570398",NULL,NULL
+10,125,"version",NULL,False,NULL,NULL,"A","jucarsa",NULL,"2026-10-06 09:49:47.604006",NULL,NULL

@@ -1,0 +1,5 @@
+"id","elemento_xsd_id","valor","descripcion","orden","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,20,"SI",NULL,1,"A","jucarsa",NULL,"2026-10-06 08:11:35.756105",NULL,NULL
+2,20,"NO",NULL,2,"A","jucarsa",NULL,"2026-10-06 08:11:35.758199",NULL,NULL
+3,144,"SI",NULL,1,"A","jucarsa",NULL,"2026-10-06 09:49:47.638291",NULL,NULL
+4,144,"NO",NULL,2,"A","jucarsa",NULL,"2026-10-06 09:49:47.671537",NULL,NULL
