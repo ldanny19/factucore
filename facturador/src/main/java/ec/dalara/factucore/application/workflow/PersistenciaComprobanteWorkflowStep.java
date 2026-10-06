@@ -51,11 +51,14 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 		var solicitud = contexto.getSolicitud();
 		var empresa = empresaService.obtenerPorId(solicitud.getIdEmpresa())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
-		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getCodigoEstablecimiento(),
-				solicitud.getPuntoEmision());
+		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
+				solicitud.getIdPuntoEmision());
+
+		var documentoSolicitado = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
+				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var definition = definitionProvider
-				.obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
+				.obtenerDefinicionVigente(documentoSolicitado.getCodigo(), solicitud.getFechaInicio().toLocalDateTime())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		contexto.setDefinicionDocumento(definition);

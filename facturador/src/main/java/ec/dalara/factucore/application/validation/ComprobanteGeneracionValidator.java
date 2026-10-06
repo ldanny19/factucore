@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
+import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 	private final MessageResolver messageResolver;
 	private final ObjectMapper objectMapper;
 	private final DocumentoDefinitionProvider documentoDefinitionProvider;
+	private final DocumentoXsdService documentoXsdService;
 	private final DocumentDefinitionDataValidator documentDefinitionDataValidator;
 
 	@Override
@@ -54,9 +56,8 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 	}
 
 	private void validarTipoDocumento(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
-		if (request.getTipoDocumento() == null || request.getTipoDocumento().isBlank()) {
-
-			resultado.agregarError(MessageCodes.COMPROBANTE_TIPO_DOCUMENTO_REQUERIDO, "tipoDocumento");
+		if (request.getIdTipoDocumento() == null) {
+			resultado.agregarError(MessageCodes.COMPROBANTE_TIPO_DOCUMENTO_REQUERIDO, "idTipoDocumento");
 		}
 	}
 
@@ -85,14 +86,17 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 		LocalDateTime fechaEmision = convertirFecha(fechaInicio);
 
-		var definicionOptional = documentoDefinitionProvider.obtenerDefinicionVigente(request.getTipoDocumento(),
-				fechaEmision);
+		var documentoOptional = documentoXsdService.obtenerPorId(request.getIdTipoDocumento());
+		if (documentoOptional.isEmpty()) {
+			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento", request.getIdTipoDocumento());
+			return;
+		}
+
+		var codigoDocumento = documentoOptional.get().getCodigo();
+		var definicionOptional = documentoDefinitionProvider.obtenerDefinicionVigente(codigoDocumento, fechaEmision);
 
 		if (definicionOptional.isEmpty()) {
-
-			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "tipoDocumento",
-					request.getTipoDocumento());
-
+			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento", request.getIdTipoDocumento());
 			return;
 		}
 

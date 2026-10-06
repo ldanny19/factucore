@@ -62,7 +62,7 @@ class ComprobanteGeneracionRequestValidationTest {
 
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
 				.fechaInicio(OffsetDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
-				.codigoEstablecimiento("001").puntoEmision("001").tipoDocumento("01").datos(datos).build();
+				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).datos(datos).build();
 
 		assertTrue(validator.validate(request).isEmpty());
 		assertNotNull(request.getDatos().get("factura"));
@@ -73,7 +73,7 @@ class ComprobanteGeneracionRequestValidationTest {
 	void requestSinCamposObligatorios_debeDetectarViolaciones() {
 		var request = ComprobanteGeneracionRequest.builder().build();
 
-		assertTrue(validator.validate(request).size() >= 7);
+		assertTrue(validator.validate(request).size() >= 8);
 	}
 
 	@Test

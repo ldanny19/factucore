@@ -34,14 +34,14 @@ public class ComprobanteGeneracionRequest {
 	@NotNull
 	private Long idEmpresa;
 
-	@NotBlank
-	private String codigoEstablecimiento;
+	@NotNull
+	private Long idEstablecimiento;
 
-	@NotBlank
-	private String puntoEmision;
+	@NotNull
+	private Long idPuntoEmision;
 
-	@NotBlank
-	private String tipoDocumento;
+	@NotNull
+	private Long idTipoDocumento;
 
 	private JsonNode datos;
 }

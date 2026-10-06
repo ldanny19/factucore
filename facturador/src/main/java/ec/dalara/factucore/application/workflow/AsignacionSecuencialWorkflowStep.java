@@ -4,8 +4,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.service.ComprobanteService;
-import ec.dalara.factucore.application.service.EstablecimientoService;
-import ec.dalara.factucore.application.service.PuntoEmisionService;
+import ec.dalara.factucore.application.service.DocumentoXsdService;
+import ec.dalara.factucore.application.service.EmisionService;
 import ec.dalara.factucore.application.service.SecuencialService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -19,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AsignacionSecuencialWorkflowStep implements WorkflowStep {
 
-	private final EstablecimientoService establecimientoService;
-	private final PuntoEmisionService puntoEmisionService;
+	private final EmisionService emisionService;
+	private final DocumentoXsdService documentoXsdService;
 	private final SecuencialService secuencialService;
 	private final ComprobanteService comprobanteService;
 
@@ -34,15 +34,13 @@ public class AsignacionSecuencialWorkflowStep implements WorkflowStep {
 	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
 		var solicitud = contexto.getSolicitud();
 
-		Establecimiento establecimiento = establecimientoService
-				.obtenerPorEmpresaYCodigo(solicitud.getIdEmpresa(), solicitud.getCodigoEstablecimiento())
+		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
+				solicitud.getIdPuntoEmision());
+
+		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
 
-		PuntoEmision puntoEmision = puntoEmisionService
-				.obtenerPorEstablecimientoYCodigo(establecimiento.getId(), solicitud.getPuntoEmision())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
-
-		var secuencial = secuencialService.bloquearSecuencial(puntoEmision.getId(), solicitud.getTipoDocumento());
+		var secuencial = secuencialService.bloquearSecuencial(emision.puntoEmision().getId(), documento.getCodigo());
 
 		var existente = comprobanteService.obtenerPorEmpresaEIdTransaccion(solicitud.getIdEmpresa(),
 				solicitud.getIdTransaccion());

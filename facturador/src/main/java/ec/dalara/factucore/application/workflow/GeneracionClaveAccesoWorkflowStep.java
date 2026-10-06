@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.service.ClaveAccesoService;
 import ec.dalara.factucore.application.service.EmisionService;
+import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.application.service.EmpresaService;
 import ec.dalara.factucore.domain.claveacceso.ClaveAccesoDatos;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -26,6 +27,7 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 	private final EmpresaService empresaService;
 	private final EmisionService emisionService;
 	private final DocumentoDefinitionProvider definitionProvider;
+	private final DocumentoXsdService documentoXsdService;
 	private final SriProperties sriProperties;
 
 	@Override
@@ -55,11 +57,14 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 		var empresa = empresaService.obtenerPorId(solicitud.getIdEmpresa())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
 
-		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getCodigoEstablecimiento(),
-				solicitud.getPuntoEmision());
+		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
+				solicitud.getIdPuntoEmision());
+
+		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
+				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var definition = definitionProvider
-				.obtenerDefinicionVigente(solicitud.getTipoDocumento(), solicitud.getFechaInicio().toLocalDateTime())
+				.obtenerDefinicionVigente(documento.getCodigo(), solicitud.getFechaInicio().toLocalDateTime())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		String ambiente = resolverAmbiente(sriProperties.getAmbiente());

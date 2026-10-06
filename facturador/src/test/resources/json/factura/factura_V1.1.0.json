@@ -4,9 +4,9 @@
   "usuario": "usuario.prueba",
   "canal": "WEB",
   "idEmpresa": 1,
-  "codigoEstablecimiento": "001",
-  "puntoEmision": "001",
-  "tipoDocumento": "01",
+  "idEstablecimiento": 1,
+  "idPuntoEmision": 1,
+  "idTipoDocumento": 1,
   "datos": {
     "factura": {
       "infoFactura": {
