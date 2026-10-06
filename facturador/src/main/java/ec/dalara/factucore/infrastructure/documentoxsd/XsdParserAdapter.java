@@ -225,7 +225,8 @@ public class XsdParserAdapter implements XsdParserPort {
 			throw new InfrastructureException("FACTUCORE.XSD.TIPO.CICLICO", typeName);
 		}
 
-		Element complexContent = firstChild(complexType, "complexContent");
+		try {
+			Element complexContent = firstChild(complexType, "complexContent");
 		Element content = complexContent == null ? null : firstChild(complexContent, "extension");
 		if (content == null && complexContent != null) {
 			content = firstChild(complexContent, "restriction");
@@ -259,6 +260,11 @@ public class XsdParserAdapter implements XsdParserPort {
 			}
 			for (Element attribute : children(complexType, "attribute")) {
 				parseAttribute(attribute, parentPath, simpleTypes, atributos);
+			}
+		}
+		} finally {
+			if (typeName != null) {
+				typeStack.remove(stackKey);
 			}
 		}
 	}
