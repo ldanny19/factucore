@@ -167,7 +167,7 @@ public class CamelWorkflowStepExecutor {
 				.fechaInicio(contexto.getFechaInicio().atOffset(ZoneOffset.UTC))
 				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC)).exitoso(exitoso)
 				.resultado(ResultadoResponse.builder().build()).claveAcceso(contexto.getClaveAcceso())
-				.numeroComprobante(numeroComprobante).tipoDocumento(request == null ? null : request.getTipoDocumento())
+				.numeroComprobante(numeroComprobante).tipoDocumento(request == null ? null : comprobante.getCodigoDocumento())
 				.estadoSri(contexto.getEstadoSri()).archivoPdf(contexto.getRide()).build();
 	}
 

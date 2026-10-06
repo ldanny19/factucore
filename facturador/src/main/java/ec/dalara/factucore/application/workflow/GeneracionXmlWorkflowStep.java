@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
+import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
 	private final DocumentoDefinitionProvider definitionProvider;
+	private final DocumentoXsdService documentoXsdService;
 	private final XmlGeneratorPort xmlGenerator;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final ObjectMapper objectMapper;
@@ -34,8 +36,11 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 		var definition = contexto.getDefinicionDocumento();
 
 		if (definition == null) {
-			definition = definitionProvider
-					.obtenerDefinicionVigente(solicitud.getTipoDocumento(),
+			var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
+					.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+
+				definition = definitionProvider
+					.obtenerDefinicionVigente(documento.getCodigo(),
 							solicitud.getFechaInicio().toLocalDateTime())
 					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 			contexto.setDefinicionDocumento(definition);
