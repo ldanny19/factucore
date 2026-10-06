@@ -125,7 +125,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			Map<String, JsonNode> nodos = new HashMap<>();
 
 			for (XsdElementSource source : definition.elementos()) {
-				JsonNode valor = valorPlantilla(source, tieneHijos(source.ruta(), definition.elementos()));
+				JsonNode valor = valorPlantilla(source, definition);
 				String rutaPadre = rutaPadre(source.ruta());
 
 				if (rutaPadre == null) {
@@ -162,11 +162,16 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 	}
 
-	private JsonNode valorPlantilla(XsdElementSource source, boolean tieneHijos) {
+	private JsonNode valorPlantilla(XsdElementSource source, XsdDefinitionSource definition) {
+		boolean tieneEstructuraObjeto = tieneEstructuraObjeto(source, definition);
 		JsonNode valor;
 
-		if (tieneHijos) {
-			valor = objectMapper.createObjectNode();
+		if (tieneEstructuraObjeto) {
+			ObjectNode objeto = objectMapper.createObjectNode();
+			if (!tieneHijos(source.ruta(), definition.elementos())) {
+				objeto.set("valor", valorEjemplo(source.tipoDato()));
+			}
+			valor = objeto;
 		} else {
 			valor = valorEjemplo(source.tipoDato());
 		}
@@ -224,8 +229,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 	private void agregarEsquemaElemento(ObjectNode properties, Set<String> required, XsdElementSource source,
 			XsdDefinitionSource definition) {
-		boolean tieneHijos = tieneHijos(source.ruta(), definition.elementos());
-		ObjectNode elementoSchema = esquemaElemento(source, tieneHijos, definition);
+		boolean tieneEstructuraObjeto = tieneEstructuraObjeto(source, definition);
+		ObjectNode elementoSchema = esquemaElemento(source, tieneEstructuraObjeto, definition);
 
 		properties.set(source.nombre(), elementoSchema);
 
@@ -234,7 +239,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 	}
 
-	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneHijos, XsdDefinitionSource definition) {
+	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneEstructuraObjeto, XsdDefinitionSource definition) {
 		ObjectNode base = objectMapper.createObjectNode();
 
 		if (source.esRepetible()) {
@@ -246,10 +251,10 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 				base.put("maxItems", source.maxOcurrencias());
 			}
 			ObjectNode items = base.putObject("items");
-			construirTipo(items, source, tieneHijos, definition);
+			construirTipo(items, source, tieneEstructuraObjeto, definition);
 			aplicarRestricciones(items, source, definition);
 		} else {
-			construirTipo(base, source, tieneHijos, definition);
+			construirTipo(base, source, tieneEstructuraObjeto, definition);
 			aplicarRestricciones(base, source, definition);
 		}
 
@@ -287,15 +292,20 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 	}
 
-	private void construirTipo(ObjectNode target, XsdElementSource source, boolean tieneHijos,
+	private void construirTipo(ObjectNode target, XsdElementSource source, boolean tieneEstructuraObjeto,
 			XsdDefinitionSource definition) {
-		if (!tieneHijos) {
+		if (!tieneEstructuraObjeto) {
 			target.put("type", tipoJson(source.tipoDato()));
 			return;
 		}
 
 		target.put("type", "object");
 		ObjectNode properties = target.putObject("properties");
+		if (!tieneHijos(source.ruta(), definition.elementos())) {
+			ObjectNode valorSchema = objectMapper.createObjectNode();
+			valorSchema.put("type", tipoJson(source.tipoDato()));
+			properties.set("valor", valorSchema);
+		}
 		Set<String> required = new HashSet<>();
 
 		for (XsdElementSource child : definition.elementos()) {
@@ -340,6 +350,11 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			return "integer";
 		}
 		return "string";
+	}
+
+	private boolean tieneEstructuraObjeto(XsdElementSource source, XsdDefinitionSource definition) {
+		return tieneHijos(source.ruta(), definition.elementos())
+				|| definition.atributos().stream().anyMatch(a -> source.ruta().equals(a.rutaElemento()));
 	}
 
 	private boolean tieneHijos(String ruta, List<XsdElementSource> elementos) {
