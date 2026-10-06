@@ -58,7 +58,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 		DocumentoXsd documento = documentoRepository.save(DocumentoXsd.builder().codigo(request.codigo())
 				.nombre(request.nombre()).descripcion(request.descripcion()).tipoDocumento(request.tipoDocumento())
-				.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
+				.prefijoArchivo(request.prefijoArchivo()).estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
 				.observacion(request.observacion()).build());
 
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
