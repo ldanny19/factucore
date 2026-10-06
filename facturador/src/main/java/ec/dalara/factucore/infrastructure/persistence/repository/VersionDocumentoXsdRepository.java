@@ -16,6 +16,17 @@ public interface VersionDocumentoXsdRepository extends BaseRepository<VersionDoc
 
 	boolean existsByDocumentoXsdIdAndVersionAndIdNot(Long documentoXsdId, String version, Long id);
 
+	@Query("""
+			select case when count(v) > 0 then true else false end
+			from VersionDocumentoXsd v
+			where v.documentoXsd.id = :documentoXsdId
+			and v.estadoRegistro = :estadoRegistro
+			and (:fechaFin is null or v.fechaInicio <= :fechaFin)
+			and (v.fechaFin is null or v.fechaFin >= :fechaInicio)
+			""")
+	boolean existsByDocumentoXsdIdAndEstadoRegistroAndRangoFechas(
+				Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
 	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
 			Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
