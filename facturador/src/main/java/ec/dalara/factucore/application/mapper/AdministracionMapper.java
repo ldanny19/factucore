@@ -163,7 +163,11 @@ public final class AdministracionMapper {
 	}
 
 	public static DocumentoXsdResponse toResponse(DocumentoXsd e) {
-		return DocumentoXsdResponse.builder().id(e.getId()).codigo(e.getCodigo()).nombre(e.getNombre())
+		return toResponse(e, null);
+	}
+
+	public static DocumentoXsdResponse toResponse(DocumentoXsd e, Long idVersionDocumentoXsd) {
+		return DocumentoXsdResponse.builder().id(e.getId()).idVersionDocumentoXsd(idVersionDocumentoXsd).codigo(e.getCodigo()).nombre(e.getNombre())
 				.descripcion(e.getDescripcion()).tipoDocumento(e.getTipoDocumento())
 				.prefijoArchivo(e.getPrefijoArchivo()).estadoRegistro(e.getEstadoRegistro())
 				.usuarioCreacion(e.getUsuarioCreacion()).usuarioModificacion(e.getUsuarioModificacion())
