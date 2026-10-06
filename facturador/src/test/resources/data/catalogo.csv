@@ -1,0 +1,7 @@
+"id","codigo","nombre","descripcion","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,"AMBIENTE","Ambiente","Ambientes definidos por el SRI para comprobantes electrónicos.","ACTIVO","FLYWAY",NULL,"2026-09-29 23:52:12.935712",NULL,NULL
+2,"TIPO_EMISION","Tipo de emisión","Tipos de emisión definidos por el SRI.","ACTIVO","FLYWAY",NULL,"2026-09-29 23:52:12.935712",NULL,NULL
+3,"TIPO_DOCUMENTO","Tipo de documento","Tipos de comprobantes electrónicos soportados por FactuCore.","ACTIVO","FLYWAY",NULL,"2026-09-29 23:52:12.935712",NULL,NULL
+4,"TIPO_IDENTIFICACION","Tipo de identificación","Tipos de identificación del receptor definidos por el SRI.","ACTIVO","FLYWAY",NULL,"2026-09-29 23:52:12.935712",NULL,NULL
+5,"FORMA_PAGO","Forma de pago","Formas de pago definidas por el SRI.","ACTIVO","FLYWAY",NULL,"2026-09-29 23:52:12.935712",NULL,NULL
+6,"CODIGO_IMPUESTO","Código de impuesto","Códigos de impuesto utilizados en comprobantes electrónicos.","ACTIVO","FLYWAY",NULL,"2026-09-29 23:52:12.935712",NULL,NULL
