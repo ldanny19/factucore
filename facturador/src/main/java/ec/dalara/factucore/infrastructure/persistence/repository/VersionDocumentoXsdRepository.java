@@ -24,7 +24,7 @@ public interface VersionDocumentoXsdRepository extends BaseRepository<VersionDoc
 			from VersionDocumentoXsd v
 			where v.documentoXsd.id = :documentoXsdId
 			and v.estadoRegistro = :estadoRegistro
-			and (:fechaFin is null or v.fechaInicio <= :fechaFin)
+			and v.fechaInicio <= coalesce(:fechaFin, v.fechaInicio)
 			and (v.fechaFin is null or v.fechaFin >= :fechaInicio)
 			""")
 	boolean existsByDocumentoXsdIdAndEstadoRegistroAndRangoFechas(
