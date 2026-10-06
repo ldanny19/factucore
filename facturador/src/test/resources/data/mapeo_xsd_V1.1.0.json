@@ -1,0 +1,1048 @@
+{
+  "idTransaccion": "PRUEBA-MAPEO-FACTURA-1-1-0",
+  "fechaInicio": "2026-10-06 09:00:00.000",
+  "canal": "WEB",
+  "idEmpresa": 1,
+  "datos": [
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoTributaria",
+      "idElementoXsd": 126,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "catalogo_item.AMBIENTE.codigo",
+      "idElementoXsd": 127,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "catalogo_item.TIPO_EMISION.codigo",
+      "idElementoXsd": 128,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "empresa.razon_social",
+      "idElementoXsd": 129,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "empresa.nombre_comercial",
+      "idElementoXsd": 130,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "empresa.ruc",
+      "idElementoXsd": 131,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "GENERADO",
+      "origen": "claveAcceso",
+      "idElementoXsd": 132,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "catalogo_item.TIPO_DOCUMENTO.codigo",
+      "idElementoXsd": 133,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "establecimiento.codigo",
+      "idElementoXsd": 134,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "punto_emision.codigo",
+      "idElementoXsd": 135,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "GENERADO",
+      "origen": "secuencial",
+      "idElementoXsd": 136,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "empresa.direccion_matriz",
+      "idElementoXsd": 137,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "configuracion_empresa.agente_retencion",
+      "idElementoXsd": 138,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "empresa.contribuyente_rimpe",
+      "idElementoXsd": 139,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura",
+      "idElementoXsd": 140,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.fechaEmision",
+      "idElementoXsd": 141,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "establecimiento.direccion",
+      "idElementoXsd": 142,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.contribuyenteEspecial",
+      "idElementoXsd": 143,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "FACTUCORE",
+      "origen": "empresa.obligado_contabilidad",
+      "idElementoXsd": 144,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.comercioExterior",
+      "idElementoXsd": 145,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.incoTermFactura",
+      "idElementoXsd": 146,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.lugarIncoTerm",
+      "idElementoXsd": 147,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.paisOrigen",
+      "idElementoXsd": 148,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.puertoEmbarque",
+      "idElementoXsd": 149,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.puertoDestino",
+      "idElementoXsd": 150,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.paisDestino",
+      "idElementoXsd": 151,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.paisAdquisicion",
+      "idElementoXsd": 152,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.tipoIdentificacionComprador",
+      "idElementoXsd": 153,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.guiaRemision",
+      "idElementoXsd": 154,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.razonSocialComprador",
+      "idElementoXsd": 155,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.identificacionComprador",
+      "idElementoXsd": 156,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.direccionComprador",
+      "idElementoXsd": 157,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalSinImpuestos",
+      "idElementoXsd": 158,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalSubsidio",
+      "idElementoXsd": 159,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.incoTermTotalSinImpuestos",
+      "idElementoXsd": 160,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalDescuento",
+      "idElementoXsd": 161,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.codDocReembolso",
+      "idElementoXsd": 162,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalComprobantesReembolso",
+      "idElementoXsd": 163,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalBaseImponibleReembolso",
+      "idElementoXsd": 164,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalImpuestoReembolso",
+      "idElementoXsd": 165,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos",
+      "idElementoXsd": 166,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto",
+      "idElementoXsd": 167,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.codigo",
+      "idElementoXsd": 168,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.codigoPorcentaje",
+      "idElementoXsd": 169,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.descuentoAdicional",
+      "idElementoXsd": 170,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.baseImponible",
+      "idElementoXsd": 171,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.tarifa",
+      "idElementoXsd": 172,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.valor",
+      "idElementoXsd": 173,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.totalConImpuestos.totalImpuesto.valorDevolucionIva",
+      "idElementoXsd": 174,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.compensaciones",
+      "idElementoXsd": 175,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.compensaciones.compensacion",
+      "idElementoXsd": 176,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.compensaciones.compensacion.codigo",
+      "idElementoXsd": 177,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.compensaciones.compensacion.tarifa",
+      "idElementoXsd": 178,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.compensaciones.compensacion.valor",
+      "idElementoXsd": 179,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.propina",
+      "idElementoXsd": 180,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.fleteInternacional",
+      "idElementoXsd": 181,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.seguroInternacional",
+      "idElementoXsd": 182,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.gastosAduaneros",
+      "idElementoXsd": 183,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.gastosTransporteOtros",
+      "idElementoXsd": 184,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.importeTotal",
+      "idElementoXsd": 185,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.moneda",
+      "idElementoXsd": 186,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.placa",
+      "idElementoXsd": 187,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.pagos",
+      "idElementoXsd": 188,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.pagos.pago",
+      "idElementoXsd": 189,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.pagos.pago.formaPago",
+      "idElementoXsd": 190,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.pagos.pago.total",
+      "idElementoXsd": 191,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.pagos.pago.plazo",
+      "idElementoXsd": 192,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.pagos.pago.unidadTiempo",
+      "idElementoXsd": 193,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.valorRetIva",
+      "idElementoXsd": 194,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoFactura.valorRetRenta",
+      "idElementoXsd": 195,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles",
+      "idElementoXsd": 196,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle",
+      "idElementoXsd": 197,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.codigoPrincipal",
+      "idElementoXsd": 198,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.codigoAuxiliar",
+      "idElementoXsd": 199,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.descripcion",
+      "idElementoXsd": 200,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.unidadMedida",
+      "idElementoXsd": 201,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.cantidad",
+      "idElementoXsd": 202,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.precioUnitario",
+      "idElementoXsd": 203,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.precioSinSubsidio",
+      "idElementoXsd": 204,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.descuento",
+      "idElementoXsd": 205,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.precioTotalSinImpuesto",
+      "idElementoXsd": 206,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.detallesAdicionales",
+      "idElementoXsd": 207,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos",
+      "idElementoXsd": 209,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos.impuesto",
+      "idElementoXsd": 210,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos.impuesto.codigo",
+      "idElementoXsd": 211,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos.impuesto.codigoPorcentaje",
+      "idElementoXsd": 212,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos.impuesto.tarifa",
+      "idElementoXsd": 213,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos.impuesto.baseImponible",
+      "idElementoXsd": 214,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.impuestos.impuesto.valor",
+      "idElementoXsd": 215,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos",
+      "idElementoXsd": 216,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle",
+      "idElementoXsd": 217,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.tipoIdentificacionProveedorReembolso",
+      "idElementoXsd": 218,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.identificacionProveedorReembolso",
+      "idElementoXsd": 219,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.codPaisPagoProveedorReembolso",
+      "idElementoXsd": 220,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.tipoProveedorReembolso",
+      "idElementoXsd": 221,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.codDocReembolso",
+      "idElementoXsd": 222,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.estabDocReembolso",
+      "idElementoXsd": 223,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.ptoEmiDocReembolso",
+      "idElementoXsd": 224,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.secuencialDocReembolso",
+      "idElementoXsd": 225,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.fechaEmisionDocReembolso",
+      "idElementoXsd": 226,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.numeroautorizacionDocReemb",
+      "idElementoXsd": 227,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos",
+      "idElementoXsd": 228,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos.detalleImpuesto",
+      "idElementoXsd": 229,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos.detalleImpuesto.codigo",
+      "idElementoXsd": 230,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos.detalleImpuesto.codigoPorcentaje",
+      "idElementoXsd": 231,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos.detalleImpuesto.tarifa",
+      "idElementoXsd": 232,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos.detalleImpuesto.baseImponibleReembolso",
+      "idElementoXsd": 233,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.detalleImpuestos.detalleImpuesto.impuestoReembolso",
+      "idElementoXsd": 234,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.compensacionesReembolso",
+      "idElementoXsd": 235,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.compensacionesReembolso.compensacionReembolso",
+      "idElementoXsd": 236,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.compensacionesReembolso.compensacionReembolso.codigo",
+      "idElementoXsd": 237,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.compensacionesReembolso.compensacionReembolso.tarifa",
+      "idElementoXsd": 238,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.reembolsos.reembolsoDetalle.compensacionesReembolso.compensacionReembolso.valor",
+      "idElementoXsd": 239,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.retenciones",
+      "idElementoXsd": 240,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.retenciones.retencion",
+      "idElementoXsd": 241,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.retenciones.retencion.codigo",
+      "idElementoXsd": 242,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.retenciones.retencion.codigoPorcentaje",
+      "idElementoXsd": 243,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.retenciones.retencion.tarifa",
+      "idElementoXsd": 244,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.retenciones.retencion.valor",
+      "idElementoXsd": 245,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.tipoNegociable",
+      "idElementoXsd": 246,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.tipoNegociable.correo",
+      "idElementoXsd": 247,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.maquinaFiscal",
+      "idElementoXsd": 248,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.maquinaFiscal.marca",
+      "idElementoXsd": 249,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.maquinaFiscal.modelo",
+      "idElementoXsd": 250,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.maquinaFiscal.serie",
+      "idElementoXsd": 251,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoAdicional",
+      "idElementoXsd": 252,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.Signature",
+      "idElementoXsd": 254,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.detallesAdicionales.detAdicional.nombre",
+      "idElementoXsd": null,
+      "idAtributoXsd": 6,
+      "tipoMapeo": "ATRIBUTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.detalles.detalle.detallesAdicionales.detAdicional.valor",
+      "idElementoXsd": null,
+      "idAtributoXsd": 7,
+      "tipoMapeo": "ATRIBUTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoAdicional.campoAdicional.nombre",
+      "idElementoXsd": null,
+      "idAtributoXsd": 8,
+      "tipoMapeo": "ATRIBUTO"
+    }
+  ]
+}
