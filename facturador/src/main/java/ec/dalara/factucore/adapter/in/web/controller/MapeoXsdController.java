@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/mapeos-xsd")
+@RequestMapping("/api/v1/mapeos-xsd")
 @RequiredArgsConstructor
 @Validated
 public class MapeoXsdController {
