@@ -274,7 +274,8 @@ CREATE TABLE enumeracion_xsd (
 CREATE TABLE mapeo_xsd (
     id BIGINT PRIMARY KEY,
     version_documento_xsd_id BIGINT NOT NULL,
-    ruta_origen VARCHAR(1000) NOT NULL,
+    tipo_origen VARCHAR(20) NOT NULL,
+    origen VARCHAR(1000) NOT NULL,
     elemento_xsd_id BIGINT,
     atributo_xsd_id BIGINT,
     tipo_mapeo VARCHAR(20) NOT NULL,
@@ -301,8 +302,10 @@ CREATE TABLE mapeo_xsd (
         ),
     CONSTRAINT ck_mapeo_xsd_tipo
         CHECK (tipo_mapeo IN ('ELEMENTO', 'ATRIBUTO')),
+    CONSTRAINT ck_mapeo_xsd_tipo_origen
+        CHECK (tipo_origen IN ('FACTUCORE', 'REQUEST')),
     CONSTRAINT uk_mapeo_xsd_origen
-        UNIQUE (version_documento_xsd_id, ruta_origen)
+        UNIQUE (version_documento_xsd_id, origen)
 );
 
 CREATE TABLE comprobante (
