@@ -177,9 +177,22 @@ public class XsdParserAdapter implements XsdParserPort {
 
 		String ref = attr(element, "ref");
 		if (ref != null) {
-			Element referenced = globalElements.get(key(namespaceForQName(element, ref), localTypeName(ref)));
+			String referenceNamespace = namespaceForQName(element, ref);
+			Element referenced = globalElements.get(key(referenceNamespace, localTypeName(ref)));
 			if (referenced == null)
 				throw new InfrastructureException("FACTUCORE.XSD.REFERENCIA.NO_ENCONTRADA", ref);
+
+			if ("http://www.w3.org/2000/09/xmldsig#".equals(referenceNamespace)) {
+				String name = localTypeName(ref);
+				String path = parentPath.isBlank() ? name : parentPath + "." + name;
+				Integer min = integerAttr(element, "minOccurs", 1);
+				Integer max = maxOccurs(element);
+				String typeName = localTypeName(attr(referenced, "type"));
+
+				elementos.add(new XsdElementSource(path, name, typeName, order, min, max, null, null, null, null, null,
+						null, null));
+				return;
+			}
 			element = referenced;
 		}
 
