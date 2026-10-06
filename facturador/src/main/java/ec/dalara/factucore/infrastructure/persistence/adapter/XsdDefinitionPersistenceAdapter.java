@@ -62,7 +62,6 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			throw new InfrastructureException("FACTUCORE.VERSION_DOCUMENTO_XSD.DUPLICADA", request.version());
 		}
 
-
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
 				.nombreArchivo(request.nombreArchivo()).namespaceXml(definition.namespaceXml())
 				.elementoRaiz(definition.elementoRaiz()).plantillaJson(generarPlantillaJson(definition))
@@ -148,7 +147,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			}
 
 			for (XsdAttributeSource attribute : definition.atributos()) {
-				if (esSeccionFactuCore(attribute.rutaElemento(), definition)) {
+				if (esSeccionFactuCore(attribute.rutaElemento(), definition)
+						|| esAtributoTecnico(attribute, definition)) {
 					continue;
 				}
 				JsonNode elemento = nodos.get(attribute.rutaElemento());
@@ -322,6 +322,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 		for (XsdAttributeSource attribute : definition.atributos()) {
 			if (esSeccionFactuCore(attribute.rutaElemento(), definition)
+					|| esAtributoTecnico(attribute, definition)
 					|| !source.ruta().equals(attribute.rutaElemento())) {
 				continue;
 			}
@@ -362,6 +363,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		return tieneHijos(source.ruta(), definition)
 				|| definition.atributos().stream()
 						.anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)
+								&& !esAtributoTecnico(a, definition)
 								&& source.ruta().equals(a.rutaElemento()));
 	}
 
@@ -373,6 +375,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	private List<XsdElementSource> elementosEntrada(XsdDefinitionSource definition) {
 		return definition.elementos().stream()
 				.filter(source -> !esSeccionFactuCore(source.ruta(), definition))
+				.filter(source -> !esElementoTecnico(source, definition))
 				.toList();
 	}
 
@@ -381,6 +384,19 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		return "factura".equals(raiz)
 				&& (ruta.equals(raiz + ".infoTributaria")
 						|| ruta.startsWith(raiz + ".infoTributaria."));
+	}
+
+	private boolean esElementoTecnico(XsdElementSource source, XsdDefinitionSource definition) {
+		return "factura".equals(definition.elementoRaiz())
+				&& source.ruta().equals(definition.elementoRaiz() + ".Signature");
+	}
+
+	private boolean esAtributoTecnico(XsdAttributeSource attribute, XsdDefinitionSource definition) {
+		if (!"factura".equals(definition.elementoRaiz())
+				|| !definition.elementoRaiz().equals(attribute.rutaElemento())) {
+			return false;
+		}
+		return "id".equals(attribute.nombre()) || "version".equals(attribute.nombre());
 	}
 
 	private ObjectNode objetoContenedor(JsonNode nodo) {
