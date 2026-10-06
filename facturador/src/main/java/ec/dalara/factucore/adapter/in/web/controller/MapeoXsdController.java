@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ec.dalara.factucore.application.contract.request.AdministracionRequest;
 import ec.dalara.factucore.application.contract.request.MapeoXsdRequest;
+import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.MapeoXsdResponse;
+import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
 import ec.dalara.factucore.application.service.MapeoXsdService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +27,19 @@ import lombok.RequiredArgsConstructor;
 public class MapeoXsdController {
 
     private final MapeoXsdService mapeoXsdService;
+    private final RespuestaRestFactory respuestas;
 
     @PostMapping
-    public ResponseEntity<MapeoXsdResponse> crear(@Valid @RequestBody MapeoXsdRequest request) {
-        return ResponseEntity.ok(mapeoXsdService.crear(request));
+    public ResponseEntity<AdministracionResponse<MapeoXsdResponse>> crear(
+            @Valid @RequestBody AdministracionRequest<MapeoXsdRequest> request) {
+        respuestas.validarFechaInicio(request.getFechaInicio());
+        return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
+                mapeoXsdService.crear(request.getDatos())));
     }
 
     @GetMapping("/version/{versionDocumentoXsdId}")
-    public ResponseEntity<List<MapeoXsdResponse>> listarPorVersion(
+    public ResponseEntity<AdministracionResponse<List<MapeoXsdResponse>>> listarPorVersion(
             @PathVariable Long versionDocumentoXsdId) {
-        return ResponseEntity.ok(mapeoXsdService.listarPorVersion(versionDocumentoXsdId));
+        return ResponseEntity.ok(respuestas.exitoConsulta(mapeoXsdService.listarPorVersion(versionDocumentoXsdId)));
     }
 }
