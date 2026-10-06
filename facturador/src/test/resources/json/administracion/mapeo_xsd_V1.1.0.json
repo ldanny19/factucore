@@ -1,8 +1,8 @@
 {
-  "idTransaccion": "PRUEBA-MAPEO-FACTURA-1-1-0",
-  "fechaInicio": "2026-10-06 09:00:00.000",
-  "canal": "WEB",
-  "idEmpresa": 1,
+"idTransaccion": "{{idTransaccion}}",
+"fechaInicio": "{{fechaInicioActual}}",
+"canal": "WEB",
+"idEmpresa": {{idEmpresaActual}},
   "datos": [
     {
       "idVersionDocumentoXsd": 2,
