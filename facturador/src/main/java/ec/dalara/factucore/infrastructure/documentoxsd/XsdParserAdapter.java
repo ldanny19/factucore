@@ -214,6 +214,18 @@ public class XsdParserAdapter implements XsdParserPort {
 		if (simpleType == null)
 			simpleType = findType(simpleTypes, typeNamespace, typeName);
 
+		if (complexType != null && typeName == null) {
+			Element simpleContent = firstChild(complexType, "simpleContent");
+			Element content = simpleContent == null ? null : firstChild(simpleContent, "extension");
+			if (content == null && simpleContent != null)
+				content = firstChild(simpleContent, "restriction");
+			if (content != null) {
+				typeName = localTypeName(attr(content, "base"));
+				typeNamespace = namespaceForQName(content, attr(content, "base"));
+				simpleType = findType(simpleTypes, typeNamespace, typeName);
+			}
+		}
+
 		Restriction restriction = resolveRestriction(simpleType, simpleTypes);
 
 		elementos.add(new XsdElementSource(path, name, typeName, order, min, max, restriction.minLength,
