@@ -52,7 +52,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition) {
 		LocalDateTime ahora = LocalDateTime.now();
 
-		DocumentoXsd documento = documentoRepository.findByCodigo(request.codigo()).orElseGet(() -> documentoRepository
+		DocumentoXsd documento = documentoRepository.findByCodigoForUpdate(request.codigo()).orElseGet(() -> documentoRepository
 				.save(DocumentoXsd.builder().codigo(request.codigo()).nombre(request.nombre()).descripcion(request.descripcion())
 						.tipoDocumento(request.tipoDocumento()).prefijoArchivo(request.prefijoArchivo())
 						.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
@@ -62,11 +62,6 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			throw new InfrastructureException("FACTUCORE.VERSION_DOCUMENTO_XSD.DUPLICADA", request.version());
 		}
 
-		if (versionRepository.existsByDocumentoXsdIdAndEstadoRegistroAndRangoFechas(documento.getId(),
-				EstadoRegistro.ACTIVO, request.fechaInicio(), request.fechaFin())) {
-			throw new InfrastructureException("FACTUCORE.VERSION_DOCUMENTO_XSD.RANGO_FECHAS.INVALIDO",
-					request.version(), request.fechaInicio(), request.fechaFin());
-		}
 
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
 				.nombreArchivo(request.nombreArchivo()).namespaceXml(definition.namespaceXml())
