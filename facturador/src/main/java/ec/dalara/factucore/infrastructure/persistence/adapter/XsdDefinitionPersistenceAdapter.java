@@ -23,7 +23,6 @@ import ec.dalara.factucore.domain.documentoxsd.importacion.XsdEnumerationSource;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportRequest;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportResult;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
-import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.InfrastructureException;
 import ec.dalara.factucore.infrastructure.persistence.entity.AtributoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
@@ -51,23 +50,16 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	@Override
 	@Transactional
 	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition) {
+		if (documentoRepository.existsByCodigo(request.codigo())) {
+			throw new InfrastructureException("FACTUCORE.XSD.IMPORTACION.DOCUMENTO.EXISTENTE", request.codigo());
+		}
+
 		LocalDateTime ahora = LocalDateTime.now();
 
-		DocumentoXsd documento = documentoRepository.findByCodigoForUpdate(request.codigo()).orElseGet(() -> documentoRepository
-				.save(DocumentoXsd.builder().codigo(request.codigo()).nombre(request.nombre())
-					.descripcion(request.descripcion()).tipoDocumento(request.tipoDocumento())
-					.prefijoArchivo(request.prefijoArchivo()).estadoRegistro(EstadoRegistro.ACTIVO)
-					.usuarioCreacion(request.usuario()).fechaCreacion(ahora).observacion(request.observacion()).build()));
-
-		if (versionRepository.existsByDocumentoXsdIdAndVersion(documento.getId(), request.version())) {
-			throw new InfrastructureException(MessageCodes.VERSION_DOCUMENTO_XSD_DUPLICADA, request.version());
-		}
-
-		if (versionRepository.existsByDocumentoXsdIdAndEstadoRegistroAndRangoFechas(documento.getId(),
-				EstadoRegistro.ACTIVO, request.fechaInicio(), request.fechaFin())) {
-			throw new InfrastructureException(MessageCodes.VERSION_DOCUMENTO_XSD_RANGO_FECHAS_INVALIDO,
-					request.version(), request.fechaInicio(), request.fechaFin());
-		}
+		DocumentoXsd documento = documentoRepository.save(DocumentoXsd.builder().codigo(request.codigo())
+				.nombre(request.nombre()).descripcion(request.descripcion()).tipoDocumento(request.tipoDocumento())
+				.prefijoArchivo(request.prefijoArchivo()).estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
+				.observacion(request.observacion()).build());
 
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
 				.nombreArchivo(request.nombreArchivo()).namespaceXml(definition.namespaceXml())
