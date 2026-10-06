@@ -15,6 +15,8 @@ public class DocumentoXsdResponse {
 
 	private Long id;
 
+	private Long idVersionDocumentoXsd;
+
 	private String codigo;
 
 	private String nombre;
