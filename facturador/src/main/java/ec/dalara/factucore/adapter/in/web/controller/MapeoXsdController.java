@@ -1,4 +1,4 @@
-package ec.dalara.factucore.application.controller;
+package ec.dalara.factucore.adapter.in.web.controller;
 
 import java.util.List;
 
