@@ -29,6 +29,7 @@ import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.application.mapper.AdministracionMapper;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportRequest;
+import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportResult;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
@@ -245,8 +246,9 @@ public class AdministracionApplicationService implements AdministracionPort {
 			nombreArchivo = rutaXsd.getFileName().toString();
 		}
 
+		XsdImportResult resultado;
 		try (InputStream inputStream = Files.newInputStream(rutaXsd)) {
-			xsdImportService.importar(inputStream, rutaXsd.toUri().toString(),
+			resultado = xsdImportService.importar(inputStream, rutaXsd.toUri().toString(),
 					new XsdImportRequest(r.getCodigo(), r.getNombre(), r.getDescripcion(), r.getTipoDocumento(),
 							r.getPrefijoArchivo(), r.getVersion().getVersion(), nombreArchivo, r.getVersion().getFechaInicio(),
 							r.getVersion().getFechaFin(), usuario, null));
@@ -257,7 +259,7 @@ public class AdministracionApplicationService implements AdministracionPort {
 
 		DocumentoXsd documento = documentoXsdService.obtenerPorCodigo(r.getCodigo())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.REGISTRO_NO_ENCONTRADO, r.getCodigo()));
-		return AdministracionMapper.toResponse(documento);
+		return AdministracionMapper.toResponse(documento, resultado.versionDocumentoXsdId());
 	}
 
 	private DocumentoXsdResponse guardarDocumentoXsdExistente(Long id, DocumentoXsdRequest r) {
