@@ -26,6 +26,7 @@ import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.Establecimiento;
 import ec.dalara.factucore.infrastructure.persistence.entity.PuntoEmision;
+import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 
 class GeneracionClaveAccesoWorkflowStepTest {
 
@@ -48,11 +49,14 @@ class GeneracionClaveAccesoWorkflowStepTest {
 		when(emisionService.resolver(10L, 20L, 30L))
 				.thenReturn(new EmisionService.ResultadoEmision(establecimiento, puntoEmision));
 
-		var documento = new DocumentoXsdModel("01", "Factura", null, "FACTURA", "factura");
+		var documento = DocumentoXsd.builder().id(40L).codigo("FACTURA").nombre("Factura").tipoDocumento("01")
+				.prefijoArchivo("factura").build();
 		when(documentoXsdService.obtenerPorId(40L)).thenReturn(Optional.of(documento));
 
+		var documentoModelo = new DocumentoXsdModel("01", "Factura", null, "FACTURA", "factura");
+
 		var definition = mock(DocumentDefinitionModel.class);
-		when(definition.getDocumento()).thenReturn(documento);
+		when(definition.getDocumento()).thenReturn(documentoModelo);
 		when(definitionProvider.obtenerDefinicionVigente(any(), any())).thenReturn(Optional.of(definition));
 
 		var clave = mock(ClaveAccesoModel.class);
