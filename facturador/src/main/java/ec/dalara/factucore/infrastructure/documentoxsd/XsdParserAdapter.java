@@ -68,7 +68,6 @@ public class XsdParserAdapter implements XsdParserPort {
 			parseElement(root, "", 1, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones,
 					new HashSet<>());
 
-			normalizarRutasDesdeRaiz(elementos, attr(root, "name"));
 
 			Element rootSchema = validarSchema(rootDocument);
 			return new XsdDefinitionSource(attr(rootSchema, "targetNamespace"), attr(root, "name"), elementos,
@@ -169,23 +168,6 @@ public class XsdParserAdapter implements XsdParserPort {
 			Element previous = target.putIfAbsent(key(attr(schema, "targetNamespace"), name), child);
 			if (previous != null && previous != child) {
 				throw new InfrastructureException("FACTUCORE.XSD.TIPO.DUPLICADO", name);
-			}
-		}
-	}
-
-	private void normalizarRutasDesdeRaiz(List<XsdElementSource> elementos, String nombreRaiz) {
-		if (nombreRaiz == null || nombreRaiz.isBlank()) {
-			return;
-		}
-
-		String prefijo = nombreRaiz + ".";
-		for (int i = 0; i < elementos.size(); i++) {
-			XsdElementSource elemento = elementos.get(i);
-			if (elemento.ruta().startsWith(prefijo)) {
-				elementos.set(i, new XsdElementSource(elemento.ruta().substring(prefijo.length()), elemento.nombre(),
-						elemento.tipoDato(), elemento.orden(), elemento.minOcurrencias(), elemento.maxOcurrencias(),
-						elemento.longitudMinima(), elemento.longitudMaxima(), elemento.digitosTotales(),
-						elemento.decimales(), elemento.valorMinimo(), elemento.valorMaximo(), elemento.patron()));
 			}
 		}
 	}
