@@ -53,7 +53,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             ElementoXsdModel raiz = obtenerRaiz(definition);
             String namespaceXml = definition.getVersion().getNamespaceXml();
 
-            Element elementoRaiz = crearElemento(document, raiz, datos, definition, datos, contexto, namespaceXml, null);
+            Element elementoRaiz = crearRaiz(document, raiz, definition, datos, contexto, namespaceXml);
             document.appendChild(elementoRaiz);
 
             return serializar(document);
@@ -82,6 +82,30 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         }
 
         return raices.get(0);
+    }
+
+    private Element crearRaiz(Document document, ElementoXsdModel definicion, DocumentDefinitionModel definition,
+            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml) {
+
+        MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
+        Object valor = mapeo == null ? contextoJson
+                : resolverValor(mapeo, contextoJson, contextoJson, contextoFactuCore, null);
+
+        Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
+
+        Object contextoLocal = valor == null ? contextoJson : valor;
+        aplicarAtributos(elemento, definicion, definition, contextoLocal, contextoJson, contextoFactuCore,
+                obtenerRutaOrigen(mapeo, null));
+
+        if (mapeo != null && esValorSimple(valor) && valor != null) {
+            elemento.setTextContent(convertirValor(valor));
+        }
+
+        Map<String, Object> mapaHijos = convertirMapa(contextoLocal);
+        agregarHijos(document, elemento, definicion, mapaHijos, definition, contextoJson, contextoFactuCore,
+                namespaceXml, obtenerRutaOrigen(mapeo, null));
+
+        return elemento;
     }
 
     private Element crearElemento(Document document, ElementoXsdModel definicion, Object contextoActual,
