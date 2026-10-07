@@ -17,6 +17,10 @@ public class ComprobanteAuditoriaResponse {
 
 	private Long idComprobante;
 
+	private String etapa;
+
+	private String resultado;
+
 	private String estadoAnterior;
 
 	private String estadoNuevo;
@@ -24,6 +28,12 @@ public class ComprobanteAuditoriaResponse {
 	private String codigoError;
 
 	private String mensajeError;
+
+	private LocalDateTime fechaInicio;
+
+	private LocalDateTime fechaFin;
+
+	private Integer intento;
 
 	private String estadoRegistro;
 
