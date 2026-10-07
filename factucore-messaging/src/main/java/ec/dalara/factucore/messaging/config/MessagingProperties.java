@@ -83,7 +83,6 @@ public class MessagingProperties {
         public int getConcurrency() { return concurrency; }
     public void setConcurrency(int v) { concurrency = v; }
     }
-    }
 
     public static class RabbitmqProperties {
         private String addresses = "localhost:5672";
