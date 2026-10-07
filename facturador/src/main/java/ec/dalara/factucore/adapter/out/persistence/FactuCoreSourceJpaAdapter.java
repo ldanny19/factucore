@@ -1,9 +1,6 @@
 package ec.dalara.factucore.adapter.out.persistence;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -19,7 +16,6 @@ import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
 
 @Component
 public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
@@ -35,6 +31,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 	public ValorOrigen resolver(String origen, Map<String, Object> contexto) {
 		OrigenPartes partes = parsear(origen);
 		EntityType<?> entidad = buscarEntidad(partes.entidad());
+
 		if (entidad == null) {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.FUENTE.NO_ENCONTRADA", origen);
 		}
@@ -44,20 +41,26 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		}
 
 		SingularAttribute<?, ?> atributo = atributoBasico(entidad, partes.campo());
+
 		if (atributo == null) {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CAMPO.NO_ENCONTRADO", origen);
 		}
 
 		String columna = nombreColumna(entidad.getJavaType(), partes.campo());
 		Object id = contexto.get(nombreId(entidad.getJavaType()));
+
 		if (id == null) {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CONTEXTO.ID.NO_ENCONTRADO", origen);
 		}
 
 		String tabla = nombreTabla(entidad.getJavaType());
-		String sql = "select e."" + columna + "" from "" + tabla + "" e where e."id" = :id";
+		String sql = "select e."" + columna + "" from "" + tabla
+				+ "" e where e."id" = :id";
 
-		Object resultado = entityManager.createNativeQuery(sql).setParameter("id", id).getResultStream().findFirst()
+		Object resultado = entityManager.createNativeQuery(sql)
+				.setParameter("id", id)
+				.getResultStream()
+				.findFirst()
 				.orElse(null);
 
 		return new ValorOrigen(resultado, tipoDato(atributo.getJavaType()));
@@ -71,6 +74,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		String columnaValor = nombreColumna(entidad.getJavaType(), "valor");
 
 		Object idEmpresa = contexto.get("idEmpresa");
+
 		if (idEmpresa == null) {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CONTEXTO.ID.NO_ENCONTRADO", partes.origen());
 		}
@@ -95,7 +99,8 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 			return new ValorOrigen(fila, "String");
 		}
 
-		return new ValorOrigen(valores[0], valores[1] == null ? "String" : String.valueOf(valores[1]));
+		return new ValorOrigen(valores[0],
+				valores[1] == null ? "String" : String.valueOf(valores[1]));
 	}
 
 	private boolean esConfiguracionClave(EntityType<?> entidad, OrigenPartes partes) {
@@ -107,10 +112,12 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 	private SingularAttribute<?, ?> atributoBasico(EntityType<?> entidad, String nombre) {
 		Attribute<?, ?> atributo = atributo(entidad, nombre);
+
 		if (atributo instanceof SingularAttribute<?, ?> singular
 				&& singular.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
 			return singular;
 		}
+
 		return null;
 	}
 
@@ -124,6 +131,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 	private EntityType<?> buscarEntidad(String tabla) {
 		Metamodel metamodel = entityManager.getMetamodel();
+
 		return metamodel.getEntities().stream()
 				.filter(entidad -> tabla.equals(nombreTabla(entidad.getJavaType())))
 				.findFirst()
@@ -132,23 +140,31 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 	private String nombreTabla(Class<?> tipo) {
 		Table table = tipo.getAnnotation(Table.class);
+
 		if (table == null || table.name().isBlank()) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.TABLA.NO_CONFIGURADA", tipo.getSimpleName());
+			throw new ApplicationException("FACTUCORE.MAPEO_XSD.TABLA.NO_CONFIGURADA",
+					tipo.getSimpleName());
 		}
+
 		return table.name();
 	}
 
 	private String nombreColumna(Class<?> tipo, String campo) {
 		Field field = buscarCampo(tipo, campo);
+
 		if (field == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CAMPO.NO_ENCONTRADO", tipo.getSimpleName() + "." + campo);
+			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CAMPO.NO_ENCONTRADO",
+					tipo.getSimpleName() + "." + campo);
 		}
+
 		Column column = field.getAnnotation(Column.class);
+
 		return column != null && !column.name().isBlank() ? column.name() : campo;
 	}
 
 	private Field buscarCampo(Class<?> tipo, String nombre) {
 		Class<?> actual = tipo;
+
 		while (actual != null) {
 			try {
 				return actual.getDeclaredField(nombre);
@@ -156,6 +172,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 				actual = actual.getSuperclass();
 			}
 		}
+
 		return null;
 	}
 
@@ -164,23 +181,20 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 	}
 
 	private String tipoDato(Class<?> tipo) {
-		if (tipo == null) {
-			return "Object";
-		}
-		if (Number.class.isAssignableFrom(tipo) || tipo.isPrimitive()) {
-			return tipo.getSimpleName();
-		}
-		return tipo.getSimpleName();
+		return tipo == null ? "Object" : tipo.getSimpleName();
 	}
 
 	private OrigenPartes parsear(String origen) {
 		if (origen == null || origen.isBlank()) {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.ORIGEN.REQUERIDO");
 		}
+
 		String[] partes = origen.split("\\.", -1);
+
 		if (partes.length != 2 || partes[0].isBlank() || partes[1].isBlank()) {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.ORIGEN.FORMATO_INVALIDO", origen);
 		}
+
 		return new OrigenPartes(partes[0], partes[1], origen);
 	}
 

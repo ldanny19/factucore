@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.service.ClaveAccesoService;
-import ec.dalara.factucore.application.service.EmisionService;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
+import ec.dalara.factucore.application.service.EmisionService;
 import ec.dalara.factucore.application.service.EmpresaService;
 import ec.dalara.factucore.domain.claveacceso.ClaveAccesoDatos;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -67,7 +67,11 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 				.obtenerDefinicionVigente(documento.getCodigo(), solicitud.getFechaInicio().toLocalDateTime())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
-		String ambiente = resolverAmbiente(sriProperties.getAmbiente());\n\n\t\tcontexto.setValorGenerado("ambiente", ambiente);\n\t\tcontexto.setValorGenerado("tipoEmision", TIPO_EMISION_NORMAL);\n\t\tcontexto.setValorGenerado("tipoDocumento", documento.getTipoDocumento());
+		String ambiente = resolverAmbiente(sriProperties.getAmbiente());
+
+		contexto.setValorGenerado("ambiente", ambiente);
+		contexto.setValorGenerado("tipoEmision", TIPO_EMISION_NORMAL);
+		contexto.setValorGenerado("tipoDocumento", documento.getTipoDocumento());
 
 		var datos = new ClaveAccesoDatos(LocalDate.from(solicitud.getFechaInicio()),
 				definition.getDocumento().getCodigo(), empresa.getRuc(), ambiente,
@@ -76,6 +80,9 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 
 		var resultado = claveAccesoService.generarConCodigoNumerico(datos);
 		contexto.setClaveAcceso(resultado.getClave());
+
+		contexto.setValorGenerado("claveAcceso", resultado.getClave());
+		contexto.setValorGenerado("secuencial", contexto.getSecuencial());
 
 		if (contexto.getComprobante() != null) {
 			contexto.getComprobante().setClaveAcceso(resultado.getClave());
