@@ -1,6 +1,8 @@
 package ec.dalara.factucore.notificacion.adapter.in.messaging;
 
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
@@ -27,8 +29,12 @@ public class ComprobanteAutorizadoConsumidor implements ConsumidorMensajes {
     public String grupo() { return "factucore-notificacion"; }
 
     @Override
+    public Set<String> tiposEvento() {
+        return Set.of(TIPO_EVENTO);
+    }
+
+    @Override
     public void consumir(EventoMensaje evento) {
-        if (!TIPO_EVENTO.equals(evento.tipo())) return;
         try {
             service.notificar(objectMapper.treeToValue(evento.payload(), ComprobanteAutorizado.class));
         } catch (Exception e) {
