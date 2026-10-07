@@ -4,7 +4,7 @@
   "canal": "WEB",
   "idEmpresa": {{idEmpresaActual}},
   "datos": {
-    "codigo": "FACTURA",
+    "codigo": "01",
     "nombre": "Factura electrónica",
     "descripcion": "Definición XSD para factura electrónica",
     "tipoDocumento": "01",

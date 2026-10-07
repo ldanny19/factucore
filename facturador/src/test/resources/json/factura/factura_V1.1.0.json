@@ -1,6 +1,7 @@
 {
 	"idTransaccion": "{{idTransaccion}}",
 	"fechaInicio": "{{fechaInicioActual}}",
+	"versionXsd": "1.1.0",
 	"usuario": "jucarsa",
 	"canal": "WEB",
 	"idEmpresa": {{idEmpresaActual}},
