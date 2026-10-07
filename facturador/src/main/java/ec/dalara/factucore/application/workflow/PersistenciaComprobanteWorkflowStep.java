@@ -5,8 +5,6 @@ import java.util.LinkedHashMap;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
@@ -35,7 +33,6 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 	private final DocumentoXsdService documentoXsdService;
 	private final VersionDocumentoXsdService versionDocumentoXsdService;
 	private final SriProperties sriProperties;
-	private final ObjectMapper objectMapper;
 
 	@Override
 	public EtapaWorkflow etapa() {
@@ -88,7 +85,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 				.razonSocialEmisor(empresa.getRazonSocial()).nombreComercialEmisor(empresa.getNombreComercial())
 				.rucEmisor(empresa.getRuc()).direccionMatrizEmisor(empresa.getDireccionMatriz())
 				.direccionEstablecimientoEmisor(emision.establecimiento().getDireccion())
-				.estadoProceso(EstadoProceso.CLAVE_ACCESO_GENERADA.name()).datosComprobante(serializarDatos(solicitud))
+				.estadoProceso(EstadoProceso.CLAVE_ACCESO_GENERADA.name())
 				.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(solicitud.getUsuario())
 				.fechaCreacion(LocalDateTime.now()).build();
 
@@ -108,13 +105,4 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 		throw new WorkflowException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
 	}
 
-	private String serializarDatos(
-			ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest solicitud) {
-		try {
-			var datos = solicitud.getDatos();
-			return objectMapper.writeValueAsString(datos == null ? objectMapper.createObjectNode() : datos);
-		} catch (JsonProcessingException exception) {
-			throw new WorkflowException(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS);
-		}
-	}
 }
