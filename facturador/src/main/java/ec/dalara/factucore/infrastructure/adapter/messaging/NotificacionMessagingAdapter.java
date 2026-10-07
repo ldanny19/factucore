@@ -60,7 +60,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		var evento = EventoMensaje.crear(properties.getTipoEvento(), properties.getVersionEvento(),
 				comprobante.getIdTransaccion(), objectMapper.valueToTree(payload));
 
-		publicadorMensajes.publicar(properties.getTopico(), evento);
+		publicadorMensajes.publicar(evento);
 	}
 
 	private String obtenerNombreEmpresa(ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
