@@ -51,14 +51,14 @@ class XsdParserAdapterTest {
 
 		assertEquals("urn:test", definition.namespaceXml());
 		assertEquals("factura", definition.elementoRaiz());
-		assertEquals(4, definition.elementos().size());
+		assertEquals(5, definition.elementos().size());
 
 		var factura = definition.elementos().get(0);
 		assertEquals("factura", factura.nombre());
 		assertEquals(1, factura.minOcurrencias());
 		assertEquals(1, factura.maxOcurrencias());
 
-		var detalle = definition.elementos().get(3);
+		var detalle = definition.elementos().get(4);
 		assertEquals("detalles.detalle", detalle.ruta());
 		assertTrue(detalle.esRepetible());
 		assertEquals(1, detalle.minOcurrencias());
