@@ -19,14 +19,13 @@ import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
-import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 
-	private final ComprobanteRepository comprobanteRepository;
+	private final ComprobanteService comprobanteService;
 	private final EmpresaService empresaService;
 	private final EmisionService emisionService;
 	private final DocumentoDefinitionProvider definitionProvider;
@@ -69,7 +68,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 			throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
 		}
 
-		var existente = comprobanteRepository.findByClaveAcceso(contexto.getClaveAcceso())
+		var existente = comprobanteService.obtenerPorClaveAcceso(contexto.getClaveAcceso())
 				.filter(c -> !EstadoRegistro.ELIMINADO.equals(c.getEstadoRegistro()));
 
 		if (existente.isPresent()) {
@@ -89,7 +88,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 				.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(solicitud.getUsuario())
 				.fechaCreacion(LocalDateTime.now()).build();
 
-		comprobante = comprobanteRepository.save(comprobante);
+		comprobante = comprobanteService.guardar(comprobante);
 		contexto.asignarComprobante(comprobante);
 
 		return ResultadoEtapa.exitosa(etapa(), "REGISTRADO");
