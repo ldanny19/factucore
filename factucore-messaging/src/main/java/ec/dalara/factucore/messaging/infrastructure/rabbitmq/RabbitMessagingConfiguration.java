@@ -14,9 +14,7 @@ import org.springframework.context.annotation.Bean;
 public class RabbitMessagingConfiguration {
 
     @Bean
-    BrokerMensajeria rabbitBrokerMensajeria(
-            MessagingProperties properties,
-            ObjectMapper objectMapper) {
+    BrokerMensajeria rabbitBrokerMensajeria(MessagingProperties properties, ObjectMapper objectMapper) {
         return new RabbitBrokerMensajeria(properties, objectMapper);
     }
 }
