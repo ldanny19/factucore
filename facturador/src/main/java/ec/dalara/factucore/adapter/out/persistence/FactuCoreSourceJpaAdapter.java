@@ -60,7 +60,8 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		String tabla = nombreTabla(entidad.getJavaType());
 		String columna = nombreColumna(entidad.getJavaType(), partes.campo());
 
-		String sql = "select e."" + columna + "" from "" + tabla + "" e where e."id" = :id";
+		String sql = "select e.\"" + columna + "\" from \"" + tabla
+				+ "\" e where e.\"id\" = :id";
 
 		Object resultado = entityManager.createNativeQuery(sql).setParameter("id", id).getResultStream().findFirst()
 				.orElse(null);
@@ -82,12 +83,12 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		String tablaItem = nombreTabla(entidad.getJavaType());
 		String columnaItem = nombreColumna(entidad.getJavaType(), partes.campo());
 		String columnaCatalogo = nombreColumna(entidad.getJavaType(), "catalogo");
-		String tablaCatalogo = "catalogo";
 
-		String sql = "select i."" + columnaItem + "" " + "from "" + tablaItem + "" i "
-				+ "join "" + tablaCatalogo + "" c on c."id" = i."" + columnaCatalogo + "" "
-				+ "where c."codigo" = :catalogo and c."estado_registro" = 'ACTIVO' "
-				+ "and i."estado_registro" = 'ACTIVO' " + "order by i."orden" asc, i."id" asc limit 1";
+		String sql = "select i.\"" + columnaItem + "\" from \"" + tablaItem + "\" i "
+				+ "join \"catalogo\" c on c.\"id\" = i.\"" + columnaCatalogo + "\" "
+				+ "where c.\"codigo\" = :catalogo and c.\"estado_registro\" = 'ACTIVO' "
+				+ "and i.\"estado_registro\" = 'ACTIVO' "
+				+ "order by i.\"orden\" asc, i.\"id\" asc limit 1";
 
 		Object resultado = entityManager.createNativeQuery(sql).setParameter("catalogo", partes.claveCatalogo())
 				.getResultStream().findFirst().orElse(null);
@@ -108,12 +109,12 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CONTEXTO.ID.NO_ENCONTRADO", partes.origen());
 		}
 
-		String sql = "select e."" + columnaValor + "", e."tipo_dato" from "" + tabla + "" e where e.""
-				+ columnaEmpresa + "" = :idEmpresa and e."" + columnaClave
-				+ "" = :clave and e."estado_registro" = 'ACTIVO' "
-				+ "and (e."fecha_vigencia_hasta" is null or e."fecha_vigencia_hasta" >= CURRENT_TIMESTAMP) "
-				+ "and e."fecha_vigencia_desde" <= CURRENT_TIMESTAMP "
-				+ "order by e."fecha_vigencia_desde" desc limit 1";
+		String sql = "select e.\"" + columnaValor + "\", e.\"tipo_dato\" from \"" + tabla
+				+ "\" e where e.\"" + columnaEmpresa + "\" = :idEmpresa and e.\"" + columnaClave
+				+ "\" = :clave and e.\"estado_registro\" = 'ACTIVO' "
+				+ "and (e.\"fecha_vigencia_hasta\" is null or e.\"fecha_vigencia_hasta\" >= CURRENT_TIMESTAMP) "
+				+ "and e.\"fecha_vigencia_desde\" <= CURRENT_TIMESTAMP "
+				+ "order by e.\"fecha_vigencia_desde\" desc limit 1";
 
 		Object fila = entityManager.createNativeQuery(sql).setParameter("idEmpresa", idEmpresa)
 				.setParameter("clave", partes.campo()).getResultStream().findFirst().orElse(null);
@@ -220,7 +221,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.ORIGEN.REQUERIDO");
 		}
 
-		String[] partes = origen.split("\.", -1);
+		String[] partes = origen.split("\\.", -1);
 
 		if (partes.length == 2 && !partes[0].isBlank() && !partes[1].isBlank()) {
 			return new OrigenPartes(partes[0], null, partes[1], origen);
