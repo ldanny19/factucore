@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class ComprobanteControllerTest {
 	@Test
 	void generar_debeDelegarAlWorkflowYRetornarRespuesta() {
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
-				.fechaInicio(OffsetDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.fechaInicio(LocalDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
 				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		var expected = ComprobanteGeneracionResponse.builder().idTransaccion("TX-001").exitoso(true)
