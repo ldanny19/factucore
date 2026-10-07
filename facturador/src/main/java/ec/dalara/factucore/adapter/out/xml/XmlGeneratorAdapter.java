@@ -16,6 +16,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -30,6 +32,8 @@ import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 @Component
 public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(XmlGeneratorAdapter.class);
+
     private final FactuCoreSourcePort factuCoreSourcePort;
 
     public XmlGeneratorAdapter(FactuCoreSourcePort factuCoreSourcePort) {
@@ -37,11 +41,12 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     @Override
-    public String generar(DocumentDefinitionModel definition, Map<String, Object> datos, Map<String, Object> contexto) {
+    public String generar(DocumentDefinitionModel definition, Map<String, Object> contextoJson,
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado) {
         if (definition == null) {
             throw new ApplicationException("FACTUCORE.XML.DEFINITION.REQUERIDA");
         }
-        if (datos == null) {
+        if (contextoJson == null) {
             throw new ApplicationException("FACTUCORE.XML.DATOS.REQUERIDOS");
         }
 
@@ -53,7 +58,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             ElementoXsdModel raiz = obtenerRaiz(definition);
             String namespaceXml = definition.getVersion().getNamespaceXml();
 
-            Element elementoRaiz = crearRaiz(document, raiz, definition, datos, contexto, namespaceXml);
+            Element elementoRaiz = crearRaiz(document, raiz, definition, contextoJson, contextoFactuCore, contextoGenerado, namespaceXml);
             document.appendChild(elementoRaiz);
 
             return serializar(document);
@@ -85,17 +90,18 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     private Element crearRaiz(Document document, ElementoXsdModel definicion, DocumentDefinitionModel definition,
-            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml) {
-        return crearElemento(document, definicion, contextoJson, definition, contextoJson, contextoFactuCore,
+            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String namespaceXml) {
+        return crearElemento(document, definicion, contextoJson, definition, contextoJson, contextoFactuCore, contextoGenerado,
                 namespaceXml, null);
     }
 
     private Element crearElemento(Document document, ElementoXsdModel definicion, Object contextoActual,
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String namespaceXml,
+            String rutaOrigenPadre) {
 
         List<Element> elementos = crearElementos(document, definicion, contextoActual, definition, contextoJson,
-                contextoFactuCore, namespaceXml, rutaOrigenPadre);
+                contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre);
 
         return elementos.isEmpty() ? null : elementos.get(0);
     }
@@ -113,7 +119,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
             for (Object item : convertirIterable(iterable)) {
                 Element elemento = crearElementoConValor(document, definicion, item, definition, contextoJson,
-                        contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), item);
+                        contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), item);
 
                 if (elemento != null) {
                     elementos.add(elemento);
@@ -126,15 +132,15 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         }
 
         Element elemento = crearElementoConValor(document, definicion, valor, definition, contextoJson,
-                contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
+                contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
 
         return elemento == null ? List.of() : List.of(elemento);
     }
 
     private Element crearElementoConValor(Document document, ElementoXsdModel definicion, Object valor,
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre,
-            Object contextoActual) {
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
+            String namespaceXml, String rutaOrigenPadre, Object contextoActual) {
 
         if (valor == null && !tieneHijos(definicion, definition)) {
             return null;
@@ -142,7 +148,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
 
-        aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore,
+        aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
                 rutaOrigenPadre);
 
         if (esValorSimple(valor)) {
@@ -161,8 +167,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
     private void agregarHijos(Document document, Element padre, ElementoXsdModel definicion,
             Map<String, Object> contextoLocal, DocumentDefinitionModel definition,
-            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml,
-            String rutaOrigenPadre) {
+            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+            Map<String, Object> contextoGenerado, String namespaceXml, String rutaOrigenPadre) {
 
         for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
             List<Element> elementosHijo = crearElementos(document, hijo, contextoLocal, definition,
@@ -175,7 +181,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     private Object resolverValor(MapeoXsdModel mapeo, Object contextoActual, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, String rutaOrigenPadre) {
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String rutaOrigenPadre) {
 
         if (mapeo == null || mapeo.getOrigen() == null || mapeo.getOrigen().isBlank()) {
             return null;
@@ -184,26 +190,30 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         String tipoOrigen = mapeo.getTipoOrigen();
         String origen = mapeo.getOrigen();
 
+        LOGGER.info("Resolviendo valor XML: tipoOrigen={}, origen={}, contextoActual={}",
+                tipoOrigen, origen, contextoActual);
+
+        Object valor;
+
         if ("FACTUCORE".equalsIgnoreCase(tipoOrigen)) {
-            return factuCoreSourcePort.resolver(origen, contextoFactuCore).resultado();
-        }
+            valor = factuCoreSourcePort.resolver(origen, contextoFactuCore).resultado();
+        } else if ("GENERADO".equalsIgnoreCase(tipoOrigen)) {
+            valor = obtenerRuta(contextoGenerado, origen);
+        } else if ("JSON".equalsIgnoreCase(tipoOrigen)) {
+            String rutaRelativa = obtenerRutaRelativa(origen, rutaOrigenPadre);
+            valor = obtenerRuta(convertirMapa(contextoActual), rutaRelativa);
 
-        if ("GENERADO".equalsIgnoreCase(tipoOrigen)) {
-            return obtenerRuta(contextoFactuCore, origen);
-        }
-
-        if (!"JSON".equalsIgnoreCase(tipoOrigen)) {
+            if (valor == null) {
+                valor = obtenerRuta(contextoJson, origen);
+            }
+        } else {
             throw new ApplicationException("FACTUCORE.MAPEO_XSD.TIPO_ORIGEN_INVALIDO");
         }
 
-        String rutaRelativa = obtenerRutaRelativa(origen, rutaOrigenPadre);
-        Object valor = obtenerRuta(convertirMapa(contextoActual), rutaRelativa);
+        LOGGER.info("Valor XML resuelto: tipoOrigen={}, origen={}, valor={}",
+                tipoOrigen, origen, valor);
 
-        if (valor != null) {
-            return valor;
-        }
-
-        return obtenerRuta(contextoJson, origen);
+        return valor;
     }
 
     private String obtenerRutaOrigenActual(ElementoXsdModel definicion, DocumentDefinitionModel definition,
@@ -272,7 +282,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 .forEach(atributo -> {
                     MapeoXsdModel mapeo = obtenerMapeoAtributo(atributo, definition);
                     Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore,
-                            rutaOrigenPadre);
+                            contextoGenerado, rutaOrigenPadre);
 
                     if (valor != null) {
                         elemento.setAttribute(atributo.getNombre(), convertirValor(valor));
