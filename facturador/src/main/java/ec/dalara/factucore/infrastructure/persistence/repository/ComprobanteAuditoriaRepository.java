@@ -7,4 +7,6 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteAuditori
 public interface ComprobanteAuditoriaRepository extends BaseRepository<ComprobanteAuditoria, Long> {
 
 	List<ComprobanteAuditoria> findByComprobanteIdOrderByFechaCreacionDesc(Long comprobanteId);
+
+	List<ComprobanteAuditoria> findByComprobanteIdAndEtapaOrderByIntentoDesc(Long comprobanteId, String etapa);
 }
