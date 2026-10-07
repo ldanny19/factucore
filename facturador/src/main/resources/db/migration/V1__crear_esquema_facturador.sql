@@ -460,10 +460,15 @@ CREATE TABLE comprobante_informacion_adicional (
 CREATE TABLE comprobante_auditoria (
     id BIGINT PRIMARY KEY,
     comprobante_id BIGINT NOT NULL,
+    etapa VARCHAR(50) NOT NULL,
+    resultado VARCHAR(20) NOT NULL,
     estado_anterior VARCHAR(50),
     estado_nuevo VARCHAR(50),
     codigo_error VARCHAR(100),
     mensaje_error VARCHAR(2000),
+    fecha_inicio TIMESTAMP NOT NULL,
+    fecha_fin TIMESTAMP,
+    intento INTEGER NOT NULL,
     estado_registro VARCHAR(20) NOT NULL,
     usuario_creacion VARCHAR(100) NOT NULL,
     usuario_modificacion VARCHAR(100),
@@ -471,7 +476,9 @@ CREATE TABLE comprobante_auditoria (
     fecha_modificacion TIMESTAMP,
     observacion VARCHAR(500),
     CONSTRAINT fk_comprobante_auditoria_comprobante
-        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id)
+        FOREIGN KEY (comprobante_id) REFERENCES comprobante(id),
+    CONSTRAINT ck_comprobante_auditoria_intento
+        CHECK (intento > 0)
 );
 
 CREATE INDEX idx_establecimiento_empresa
@@ -554,6 +561,9 @@ CREATE INDEX idx_comprobante_informacion_adicional_comprobante
 
 CREATE INDEX idx_comprobante_auditoria_comprobante
     ON comprobante_auditoria (comprobante_id);
+
+CREATE INDEX idx_comprobante_auditoria_comprobante_etapa
+    ON comprobante_auditoria (comprobante_id, etapa, intento DESC);
 CREATE TABLE comprobante_evidencia (
     id BIGINT PRIMARY KEY,
     comprobante_id BIGINT NOT NULL,
