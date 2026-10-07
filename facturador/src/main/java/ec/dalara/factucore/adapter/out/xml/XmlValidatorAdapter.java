@@ -12,6 +12,8 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
 
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import ec.dalara.factucore.application.ApplicationException;
@@ -26,16 +28,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class XmlValidatorAdapter implements XmlValidatorPort {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(XmlValidatorAdapter.class);
+
 	private final XsdSchemaBuilder schemaBuilder;
 
 	@Override
 	public void validar(String xml, DocumentDefinitionModel definition) {
 		if (xml == null || xml.isBlank()) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.XML.REQUERIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.XML.REQUERIDO", null, null);
 		}
 
 		if (definition == null) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.DEFINITION.REQUERIDA");
+			registrarError("FACTUCORE.XML.VALIDACION.DEFINITION.REQUERIDA", null, null);
 		}
 
 		try {
@@ -93,7 +97,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		if (!Objects.equals(
 				elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(),
 				raiz.getNombre())) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.RAIZ.INVALIDA");
+			registrarError("FACTUCORE.XML.VALIDACION.RAIZ.INVALIDA", elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(), null);
 		}
 
 		String namespaceEsperado = definition.getVersion().getNamespaceXml();
@@ -101,7 +105,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		if (namespaceEsperado != null && !namespaceEsperado.isBlank()
 				&& !Objects.equals(namespaceEsperado, elementoRaiz.getNamespaceURI())) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.NAMESPACE.INVALIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.NAMESPACE.INVALIDO", elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(), null);
 		}
 	}
 
@@ -110,7 +114,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		ElementoXsdModel definicion = buscarDefinicionElemento(elementoXml, definicionPadre, definition);
 
 		if (definicion == null) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_DEFINIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_DEFINIDO", elementoXml.getLocalName() != null ? elementoXml.getLocalName() : elementoXml.getNodeName(), null);
 		}
 
 		validarValorElemento(elementoXml, definicion, definition);
@@ -121,7 +125,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			List<org.w3c.dom.Element> hijosXml = obtenerHijosXml(elementoXml, hijoDefinido.getNombre());
 
-			validarOcurrencias(hijoDefinido, hijosXml.size());
+			validarOcurrencias(hijoDefinido, hijosXml.size(), definition);
 
 			for (org.w3c.dom.Element hijoXml : hijosXml) {
 
@@ -166,33 +170,33 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 					.anyMatch(elemento -> Objects.equals(elemento.getNombre(), nombre));
 
 			if (!definido) {
-				throw new ApplicationException("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_DEFINIDO");
+				registrarError("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_DEFINIDO", nombre, null);
 			}
 		}
 	}
 
-	private void validarOcurrencias(ElementoXsdModel definicion, int cantidad) {
+	private void validarOcurrencias(ElementoXsdModel definicion, int cantidad, DocumentDefinitionModel definition) {
 		Integer minimo = definicion.getMinOcurrencias();
 
 		Integer maximo = definicion.getMaxOcurrencias();
 
 		if (minimo != null && cantidad < minimo) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.OCURRENCIA.MINIMA");
+			registrarError("FACTUCORE.XML.VALIDACION.OCURRENCIA.MINIMA", definicion, definition, cantidad, minimo);
 		}
 
 		if (maximo != null && cantidad > maximo) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.OCURRENCIA.MAXIMA");
+			registrarError("FACTUCORE.XML.VALIDACION.OCURRENCIA.MAXIMA", definicion, definition, cantidad, maximo);
 		}
 
 		if (Boolean.TRUE.equals(definicion.getObligatorio()) && cantidad == 0) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ELEMENTO.REQUERIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.ELEMENTO.REQUERIDO", definicion, definition, cantidad);
 		}
 
 		if (!Boolean.TRUE.equals(definicion.getRepetible()) && cantidad > 1) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_REPETIBLE");
+			registrarError("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_REPETIBLE", definicion, definition, cantidad);
 		}
 	}
 
@@ -224,12 +228,12 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 	private void validarLongitud(String valor, ElementoXsdModel definicion) {
 		if (definicion.getLongitudMinima() != null && valor.length() < definicion.getLongitudMinima()) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.LONGITUD.MINIMA");
+			registrarError("FACTUCORE.XML.VALIDACION.LONGITUD.MINIMA", definicion, definition, definicion.getLongitudMinima());
 		}
 
 		if (definicion.getLongitudMaxima() != null && valor.length() > definicion.getLongitudMaxima()) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.LONGITUD.MAXIMA");
+			registrarError("FACTUCORE.XML.VALIDACION.LONGITUD.MAXIMA", definicion, definition, definicion.getLongitudMaxima());
 		}
 	}
 
@@ -282,7 +286,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			}
 
 		} catch (Exception exception) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.TIPO.INVALIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.TIPO.INVALIDO", definicion, definition, valor);
 		}
 	}
 
@@ -298,17 +302,17 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		try {
 			numero = new BigDecimal(valor);
 		} catch (Exception exception) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.NUMERICO.INVALIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.NUMERICO.INVALIDO", definicion, definition, valor);
 		}
 
 		if (definicion.getValorMinimo() != null && numero.compareTo(definicion.getValorMinimo()) < 0) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.VALOR.MINIMO");
+			registrarError("FACTUCORE.XML.VALIDACION.VALOR.MINIMO", definicion, definition, definicion.getValorMinimo());
 		}
 
 		if (definicion.getValorMaximo() != null && numero.compareTo(definicion.getValorMaximo()) > 0) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.VALOR.MAXIMO");
+			registrarError("FACTUCORE.XML.VALIDACION.VALOR.MAXIMO", definicion, definition, definicion.getValorMaximo());
 		}
 
 		if (definicion.getDigitosTotales() != null) {
@@ -317,7 +321,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			if (digitos > definicion.getDigitosTotales()) {
 
-				throw new ApplicationException("FACTUCORE.XML.VALIDACION.DIGITOS.TOTALES");
+				registrarError("FACTUCORE.XML.VALIDACION.DIGITOS.TOTALES", definicion, definition, definicion.getDigitosTotales());
 			}
 		}
 
@@ -327,7 +331,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			if (decimales > definicion.getDecimales()) {
 
-				throw new ApplicationException("FACTUCORE.XML.VALIDACION.DECIMALES");
+				registrarError("FACTUCORE.XML.VALIDACION.DECIMALES", definicion, definition, definicion.getDecimales());
 			}
 		}
 	}
@@ -344,7 +348,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		}
 
 		if (!valor.matches(patron)) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.PATRON.INVALIDO");
+			registrarError("FACTUCORE.XML.VALIDACION.PATRON.INVALIDO", definicion, definition);
 		}
 	}
 
@@ -355,7 +359,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 		if (!valoresPermitidos.isEmpty() && !valoresPermitidos.contains(valor)) {
 
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ENUMERACION.INVALIDA");
+			registrarError("FACTUCORE.XML.VALIDACION.ENUMERACION.INVALIDA", definicion, definition, valor);
 		}
 	}
 
@@ -379,7 +383,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			if (Boolean.TRUE.equals(atributo.getObligatorio()) && !existe
 					&& atributo.getValorPredeterminado() == null) {
 
-				throw new ApplicationException("FACTUCORE.XML.VALIDACION.ATRIBUTO.REQUERIDO");
+				registrarErrorAtributo("FACTUCORE.XML.VALIDACION.ATRIBUTO.REQUERIDO", definicion, definition, atributo.getNombre());
 			}
 
 			if (!existe) {
@@ -388,15 +392,16 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			String valor = elementoXml.getAttribute(atributo.getNombre());
 
-			validarAtributoTipo(valor, atributo);
+			validarAtributoTipo(valor, atributo, definicion, definition);
 
-			validarAtributoPatron(valor, atributo);
+			validarAtributoPatron(valor, atributo, definicion, definition);
 		}
 
-		validarAtributosNoDefinidos(elementoXml, atributos);
+		validarAtributosNoDefinidos(elementoXml, atributos, definicion, definition);
 	}
 
-	private void validarAtributosNoDefinidos(org.w3c.dom.Element elementoXml, List<AtributoXsdModel> atributos) {
+	private void validarAtributosNoDefinidos(org.w3c.dom.Element elementoXml, List<AtributoXsdModel> atributos,
+			ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		org.w3c.dom.NamedNodeMap atributosXml = elementoXml.getAttributes();
 
 		for (int i = 0; i < atributosXml.getLength(); i++) {
@@ -413,12 +418,12 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 					.anyMatch(atributo -> Objects.equals(atributo.getNombre(), atributoXml.getNodeName()));
 
 			if (!definido) {
-				throw new ApplicationException("FACTUCORE.XML.VALIDACION.ATRIBUTO.NO_DEFINIDO");
+				registrarErrorAtributo("FACTUCORE.XML.VALIDACION.ATRIBUTO.NO_DEFINIDO", definicion, null, atributoXml.getNodeName());
 			}
 		}
 	}
 
-	private void validarAtributoTipo(String valor, AtributoXsdModel atributo) {
+	private void validarAtributoTipo(String valor, AtributoXsdModel atributo, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		String tipo = atributo.getTipoDato();
 
 		if (tipo == null || tipo.isBlank()) {
@@ -458,18 +463,53 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			}
 
 		} catch (Exception exception) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ATRIBUTO.TIPO.INVALIDO");
+			registrarErrorAtributo("FACTUCORE.XML.VALIDACION.ATRIBUTO.TIPO.INVALIDO", definicion, definition, atributo.getNombre(), valor);
 		}
 	}
 
-	private void validarAtributoPatron(String valor, AtributoXsdModel atributo) {
+	private void validarAtributoPatron(String valor, AtributoXsdModel atributo, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		if (atributo.getPatron() == null || atributo.getPatron().isBlank()) {
 			return;
 		}
 
 		if (!valor.matches(atributo.getPatron())) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ATRIBUTO.PATRON.INVALIDO");
+			registrarErrorAtributo("FACTUCORE.XML.VALIDACION.ATRIBUTO.PATRON.INVALIDO", definicion, definition, atributo.getNombre(), valor);
 		}
+	}
+
+	private ApplicationException registrarError(String codigo, String tag, String ruta) {
+		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}", codigo, tag, ruta);
+		throw new ApplicationException(codigo);
+	}
+
+	private ApplicationException registrarError(String codigo, ElementoXsdModel definicion,
+			DocumentDefinitionModel definition, Object... parametros) {
+		String ruta = obtenerRuta(definicion, definition);
+		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, parametros={}", codigo,
+				definicion.getNombre(), ruta, java.util.Arrays.toString(parametros));
+		throw new ApplicationException(codigo, parametros);
+	}
+
+	private ApplicationException registrarErrorAtributo(String codigo, ElementoXsdModel definicion,
+			DocumentDefinitionModel definition, Object... parametros) {
+		String ruta = obtenerRuta(definicion, definition);
+		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, atributo={}", codigo,
+				definicion.getNombre(), ruta, parametros.length > 0 ? parametros[0] : null);
+		throw new ApplicationException(codigo, parametros);
+	}
+
+	private String obtenerRuta(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+		if (elemento == null) {
+			return null;
+		}
+		if (elemento.getElementoPadreId() == null) {
+			return elemento.getNombre();
+		}
+		return definition.getElementos().stream()
+				.filter(padre -> Objects.equals(padre.getId(), elemento.getElementoPadreId()))
+				.findFirst()
+				.map(padre -> obtenerRuta(padre, definition) + "." + elemento.getNombre())
+				.orElse(elemento.getNombre());
 	}
 
 	private ElementoXsdModel obtenerRaiz(DocumentDefinitionModel definition) {
