@@ -14,9 +14,7 @@ import org.springframework.context.annotation.Bean;
 public class KafkaMessagingConfiguration {
 
     @Bean
-    BrokerMensajeria kafkaBrokerMensajeria(
-            MessagingProperties properties,
-            ObjectMapper objectMapper) {
+    BrokerMensajeria kafkaBrokerMensajeria(MessagingProperties properties, ObjectMapper objectMapper) {
         return new KafkaBrokerMensajeria(properties, objectMapper);
     }
 }
