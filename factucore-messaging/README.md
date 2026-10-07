@@ -7,87 +7,135 @@ Librería técnica genérica para publicación y consumo de eventos mediante Kaf
 La librería únicamente resuelve infraestructura de mensajería:
 
 - API genérica de publicación y consumo.
-- Selección del broker mediante configuración.
-- Conexiones y clientes del broker.
-- Enrutamiento por tipo de evento.
-- Registro de múltiples consumidores.
+- Múltiples conexiones de mensajería dentro del mismo microservicio.
+- Múltiples destinos lógicos.
+- Selección de Kafka o RabbitMQ por conexión.
+- Reutilización de clientes por conexión.
 - Reintentos.
 - Dead Letter Queue/Topic.
 - Serialización del contrato `EventoMensaje`.
 - Auto-configuración Spring Boot.
 
-No contiene lógica de negocio ni conoce Facturador, Notification, ERP o dominios funcionales.
+No contiene lógica de negocio ni conoce Facturador, Notification, Auditoría, ERP o dominios funcionales.
 
 ## Configuración
 
-El productor no recibe el tópico desde cada microservicio. El destino se resuelve centralizadamente mediante el tipo de evento. Un tipo puede tener uno o varios destinos.
+Se separan dos conceptos:
+
+- **conexión**: define cómo conectarse al broker.
+- **destino**: define qué conexión utilizar y cuál es el tópico/cola físico.
+
+Un evento se publica a **un único destino lógico por llamada**. La librería no hace fan-out automático por tipo de evento.
 
 Kafka:
 
 ```yaml
 factucore:
   messaging:
-    broker: KAFKA
-    kafka:
-      bootstrap-servers: localhost:9092
-    rutas:
-      REGISTRO_AUDITORIA_HTTP:
-        - factucore.auditoria.peticion
-      COMPROBANTE_AUTORIZADO:
-        - factucore.notificacion.comprobante
+    enabled: true
+
+    conexiones:
+      kafka-principal:
+        tipo: KAFKA
+        kafka:
+          bootstrap-servers: localhost:9092
+
+    destinos:
+      auditoria:
+        conexion: kafka-principal
+        nombre: auditoria
+
+      notificacion:
+        conexion: kafka-principal
+        nombre: notificacion
 ```
 
-RabbitMQ:
+En este ejemplo ambos destinos utilizan el mismo servidor Kafka, pero son tópicos diferentes:
+
+```text
+Kafka localhost:9092
+├── auditoria
+└── notificacion
+```
+
+También pueden utilizar conexiones diferentes:
 
 ```yaml
 factucore:
   messaging:
-    broker: RABBITMQ
-    rabbitmq:
-      addresses: localhost:5672
-      username: guest
-      password: guest
-      virtual-host: /
-    rutas:
-      REGISTRO_AUDITORIA_HTTP:
-        - factucore.auditoria.peticion
+    conexiones:
+      kafka-auditoria:
+        tipo: KAFKA
+        kafka:
+          bootstrap-servers: kafka-auditoria:9092
+
+      kafka-notificacion:
+        tipo: KAFKA
+        kafka:
+          bootstrap-servers: kafka-notificacion:9092
+
+    destinos:
+      auditoria:
+        conexion: kafka-auditoria
+        nombre: auditoria
+
+      notificacion:
+        conexion: kafka-notificacion
+        nombre: notificacion
 ```
 
-La misma definición de rutas funciona para ambos brokers. El broker seleccionado se encarga de traducir el destino lógico a tópico/exchange/routing key según su implementación.
+RabbitMQ utiliza el mismo modelo:
+
+```yaml
+factucore:
+  messaging:
+    conexiones:
+      rabbit-principal:
+        tipo: RABBITMQ
+        rabbitmq:
+          addresses: localhost:5672
+          username: guest
+          password: guest
+          virtual-host: /
+
+    destinos:
+      auditoria:
+        conexion: rabbit-principal
+        nombre: auditoria
+```
 
 ## Publicar
 
-Un microservicio inyecta `PublicadorMensajes`, crea un `EventoMensaje` y publica el evento sin conocer Kafka, RabbitMQ ni el destino físico:
+El microservicio selecciona explícitamente el destino lógico:
 
 ```java
-publicadorMensajes.publicar(evento);
+publicadorMensajes.publicar("auditoria", evento);
 ```
 
-La librería obtiene `evento.tipo()`, busca sus destinos configurados y publica en todos ellos.
+o:
 
-Si un tipo de evento no tiene una ruta válida, la publicación falla para evitar pérdida silenciosa de mensajes.
+```java
+publicadorMensajes.publicar("notificacion", evento);
+```
+
+El microservicio no conoce Kafka, RabbitMQ ni la implementación concreta del productor.
 
 ## Consumir
 
-Un microservicio implementa `ConsumidorMensajes`:
+Un microservicio implementa `ConsumidorMensajes` indicando el destino lógico:
 
 ```java
 @Component
 public class MiConsumidor implements ConsumidorMensajes {
 
     @Override
-    public String topico() {
-        return "factucore.notificacion.comprobante";
+    public String destino() {
+        return "auditoria";
     }
 
     @Override
     public String grupo() {
-        return "notification";
-    }
-
-    @Override
-    public Set<String> tiposEvento() {
-        return Set.of("COMPROBANTE_AUTORIZADO");
+        return "factucore-auditoria";
     }
 
     @Override
@@ -97,13 +145,11 @@ public class MiConsumidor implements ConsumidorMensajes {
 }
 ```
 
-El consumidor se registra automáticamente en el broker seleccionado. Se pueden registrar N consumidores, cada uno con su tópico/origen, grupo y tipos de evento.
-
-Si `tiposEvento()` devuelve un conjunto vacío, el consumidor acepta cualquier tipo de evento del origen configurado.
+La librería resuelve automáticamente la conexión y el broker asociados al destino.
 
 ## Resiliencia
 
-Los consumidores tienen reintentos configurables y DLQ/DLT cuando están habilitados.
+Los consumidores tienen reintentos configurables y DLQ/DLT cuando están habilitados:
 
 ```yaml
 factucore:
@@ -114,5 +160,3 @@ factucore:
       dlq-habilitada: true
       sufijo-dlq: .DLQ
 ```
-
-La librería no implementa pools de conexión artificiales comunes a ambos brokers: utiliza los mecanismos nativos de cada tecnología para reutilización, concurrencia y recuperación de conexiones.
