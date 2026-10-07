@@ -75,7 +75,6 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 		}
 	}
 
-
 	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		LocalDateTime fechaInicio = request.getFechaInicio();
 
@@ -87,15 +86,18 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 		var documentoOptional = documentoXsdService.obtenerPorId(request.getIdTipoDocumento());
 		if (documentoOptional.isEmpty()) {
-			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento", request.getIdTipoDocumento());
+			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento",
+					request.getIdTipoDocumento());
 			return;
 		}
 
 		var codigoDocumento = documentoOptional.get().getCodigo();
-		var definicionOptional = documentoDefinitionProvider.obtenerDefinicionVigente(codigoDocumento, fechaEmision);
+		var definicionOptional = documentoDefinitionProvider.obtenerDefinicion(codigoDocumento, request.getVersionXsd(),
+				fechaEmision);
 
 		if (definicionOptional.isEmpty()) {
-			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento", request.getIdTipoDocumento());
+			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento",
+					request.getIdTipoDocumento());
 			return;
 		}
 

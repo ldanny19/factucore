@@ -39,9 +39,8 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 			var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
 					.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
-				definition = definitionProvider
-					.obtenerDefinicionVigente(documento.getCodigo(),
-							solicitud.getFechaInicio())
+			definition = definitionProvider
+					.obtenerDefinicion(documento.getCodigo(), solicitud.getVersionXsd(), solicitud.getFechaInicio())
 					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 			contexto.setDefinicionDocumento(definition);
 		}
@@ -49,7 +48,8 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 		var datos = solicitud.getDatos() == null || solicitud.getDatos().isNull() || !solicitud.getDatos().isObject()
 				? new java.util.LinkedHashMap<String, Object>()
 				: objectMapper.convertValue(solicitud.getDatos(),
-						new TypeReference<java.util.LinkedHashMap<String, Object>>() {});
+						new TypeReference<java.util.LinkedHashMap<String, Object>>() {
+						});
 
 		if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
 			throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
