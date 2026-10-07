@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuditoriaPeticionMessagingAdapter implements AuditoriaPeticionPort {
 
+    private static final String DESTINO_AUDITORIA = "auditoria";
+
     private final PublicadorMensajes publicadorMensajes;
     private final ObjectMapper objectMapper;
     private final AuditoriaPeticionMessagingProperties properties;
@@ -31,6 +33,6 @@ public class AuditoriaPeticionMessagingAdapter implements AuditoriaPeticionPort 
                 objectMapper.valueToTree(peticion)
         );
 
-        publicadorMensajes.publicar(evento);
+        publicadorMensajes.publicar(DESTINO_AUDITORIA, evento);
     }
 }
