@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificacionMessagingAdapter implements NotificacionPort {
 
+	private static final String DESTINO_NOTIFICACION = "notificacion";
+
 	private static final String XML_AUTORIZADO = "XML_AUTORIZADO";
 	private static final String RIDE = "RIDE";
 
@@ -60,7 +62,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		var evento = EventoMensaje.crear(properties.getTipoEvento(), properties.getVersionEvento(),
 				comprobante.getIdTransaccion(), objectMapper.valueToTree(payload));
 
-		publicadorMensajes.publicar(evento);
+		publicadorMensajes.publicar(DESTINO_NOTIFICACION, evento);
 	}
 
 	private String obtenerNombreEmpresa(ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
