@@ -17,10 +17,9 @@ public class MessagingDiagnosticsAutoConfiguration {
     @Bean
     ApplicationRunner messagingConfigurationLogger(MessagingProperties properties) {
         return args -> LOGGER.info(
-                "FACTUCORE-MESSAGING: configuracion efectiva -> enabled={}, broker={}, kafkaBootstrap={}, rabbitAddresses={}",
+                "FACTUCORE-MESSAGING: enabled={}, conexiones={}, destinos={}",
                 properties.isEnabled(),
-                properties.getBroker(),
-                properties.getKafka().getBootstrapServers(),
-                properties.getRabbitmq().getAddresses());
+                properties.getConexiones().keySet(),
+                properties.getDestinos().keySet());
     }
 }
