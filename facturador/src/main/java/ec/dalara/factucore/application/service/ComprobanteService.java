@@ -67,8 +67,6 @@ public class ComprobanteService extends BaseService<Comprobante> {
 			throw new ApplicationException(MessageCodes.COMPROBANTE_FECHA_EMISION_REQUERIDA);
 		if (e.getEstadoProceso() == null || e.getEstadoProceso().isBlank())
 			throw new ApplicationException(MessageCodes.COMPROBANTE_ESTADO_PROCESO_REQUERIDO);
-		if (e.getDatosComprobante() == null || e.getDatosComprobante().isBlank())
-			throw new ApplicationException(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS);
 	}
 
 	public Optional<Comprobante> obtenerPorEmpresaEIdTransaccion(Long empresaId, String idTransaccion) {
