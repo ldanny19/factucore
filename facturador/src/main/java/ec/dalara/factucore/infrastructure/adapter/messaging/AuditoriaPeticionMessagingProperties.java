@@ -11,7 +11,6 @@ import lombok.Setter;
 public class AuditoriaPeticionMessagingProperties {
 
     private boolean habilitada = false;
-    private String topico = "factucore.auditoria.peticion";
     private String tipoEvento = "PETICION_AUDITADA";
     private String versionEvento = "1.0";
 }
