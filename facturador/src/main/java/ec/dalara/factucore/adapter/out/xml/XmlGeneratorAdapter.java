@@ -174,7 +174,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
             List<Element> elementosHijo = crearElementos(document, hijo, contextoLocal, definition,
-                    contextoJson, contextoFactuCore, namespaceXml, rutaOrigenPadre);
+                    contextoJson, contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre);
 
             for (Element elementoHijo : elementosHijo) {
                 padre.appendChild(elementoHijo);
@@ -192,8 +192,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         String tipoOrigen = mapeo.getTipoOrigen();
         String origen = mapeo.getOrigen();
 
-        LOGGER.info("Resolviendo valor XML: tipoOrigen={}, origen={}, contextoActual={}",
-                tipoOrigen, origen, contextoActual);
+        LOGGER.info("Resolviendo valor XML: tipoOrigen={}, origen={}, contextoJson={}, contextoFactuCore={}, contextoGenerado={}, contextoActual={}",
+                tipoOrigen, origen, contextoJson, contextoFactuCore, contextoGenerado, contextoActual);
 
         Object valor;
 
