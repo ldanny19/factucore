@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
@@ -41,12 +42,14 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 	private final MapeoXsdRepository mapeoXsdRepository;
 
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<VersionDocumentoXsdModel> obtenerVersion(String codigoDocumento, String versionXsd,
 			LocalDateTime fechaEmision) {
 		return obtenerEntidadVersion(codigoDocumento, versionXsd, fechaEmision).map(this::crearVersionModel);
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<DocumentDefinitionModel> obtenerDefinicion(String codigoDocumento, String versionXsd,
 			LocalDateTime fechaEmision) {
 		Optional<VersionDocumentoXsd> versionOptional = obtenerEntidadVersion(codigoDocumento, versionXsd,
