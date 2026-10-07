@@ -4,5 +4,5 @@ import ec.dalara.factucore.messaging.api.auditoria.RegistroAuditoriaHttp;
 
 public interface AuditoriaPeticionPort {
 
-    void publicar(PeticionAuditada peticion);
+    void publicar(RegistroAuditoriaHttp peticion);
 }
