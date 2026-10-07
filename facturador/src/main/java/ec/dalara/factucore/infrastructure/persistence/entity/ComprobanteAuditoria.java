@@ -37,6 +37,12 @@ public class ComprobanteAuditoria implements EstadoRegistroEntity {
 	@JoinColumn(name = "comprobante_id", nullable = false)
 	private Comprobante comprobante;
 
+	@Column(name = "etapa", nullable = false, length = 50)
+	private String etapa;
+
+	@Column(name = "resultado", nullable = false, length = 20)
+	private String resultado;
+
 	@Column(name = "estado_anterior", length = 50)
 	private String estadoAnterior;
 
@@ -48,6 +54,15 @@ public class ComprobanteAuditoria implements EstadoRegistroEntity {
 
 	@Column(name = "mensaje_error", length = 2000)
 	private String mensajeError;
+
+	@Column(name = "fecha_inicio", nullable = false)
+	private LocalDateTime fechaInicio;
+
+	@Column(name = "fecha_fin")
+	private LocalDateTime fechaFin;
+
+	@Column(name = "intento", nullable = false)
+	private Integer intento;
 
 	@Column(name = "estado_registro", nullable = false, length = 20)
 	private String estadoRegistro;
