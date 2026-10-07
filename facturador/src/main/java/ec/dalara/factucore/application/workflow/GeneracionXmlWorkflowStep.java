@@ -74,9 +74,14 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
         contextoFactuCore.put("versionXsd", solicitud.getVersionXsd());
         contextoFactuCore.put("usuario", solicitud.getUsuario());
         contextoFactuCore.put("canal", solicitud.getCanal());
-        contextoFactuCore.putAll(contexto.getValoresGenerados());
 
-        String xml = xmlGenerator.generar(definition, datos, contextoFactuCore);
+        Map<String, Object> contextoGenerado = new LinkedHashMap<>(contexto.getValoresGenerados());
+
+        String xml = xmlGenerator.generar(
+                definition,
+                datos,
+                contextoFactuCore,
+                contextoGenerado);
         contexto.setXml(xml);
 
         LOGGER.info("XML generado antes de validacion XSD:\n{}", xml);
