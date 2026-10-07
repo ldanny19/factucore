@@ -1,10 +1,14 @@
 spring:
   application:
     name: factucore-auditoria
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
 factucore:
+  messaging:
+    enabled: true
+    broker: KAFKA
+    kafka:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
   auditoria:
     peticion:
       topico: ${FACTUCORE_AUDITORIA_PETICION_TOPICO:factucore.auditoria.peticion}
