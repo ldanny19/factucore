@@ -11,28 +11,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GenericPublicadorMensajes implements PublicadorMensajes {
 
-    private final BrokerMensajeria broker;
+    private final List<BrokerMensajeria> brokers;
     private final MessagingProperties properties;
-
-    @Override
-    public void publicar(EventoMensaje evento) {
-        if (evento == null) {
-            throw new IllegalArgumentException("El evento es requerido");
-        }
-
-        List<String> destinos = properties.getRutas().getOrDefault(evento.tipo(), List.of())
-                .stream()
-                .filter(destino -> destino != null && !destino.isBlank())
-                .distinct()
-                .toList();
-
-        if (destinos.isEmpty()) {
-            throw new IllegalStateException(
-                    "No existe una ruta de mensajería configurada para el tipo de evento: " + evento.tipo());
-        }
-
-        destinos.forEach(destino -> broker.publicar(destino, evento));
-    }
 
     @Override
     public void publicar(String destino, EventoMensaje evento) {
@@ -42,6 +22,19 @@ public class GenericPublicadorMensajes implements PublicadorMensajes {
         if (evento == null) {
             throw new IllegalArgumentException("El evento es requerido");
         }
+
+        var configuracion = properties.getDestinos().get(destino);
+        if (configuracion == null) {
+            throw new IllegalStateException(
+                    "No existe el destino de mensajería configurado: " + destino);
+        }
+
+        var broker = brokers.stream()
+                .filter(b -> b.soporta(destino))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "No existe un broker configurado para el destino: " + destino));
+
         broker.publicar(destino, evento);
     }
 }
