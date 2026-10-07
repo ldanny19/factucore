@@ -2,6 +2,11 @@ package ec.dalara.factucore.messaging.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @ConfigurationProperties(prefix = "factucore.messaging")
 public class MessagingProperties {
 
@@ -10,6 +15,7 @@ public class MessagingProperties {
     private KafkaProperties kafka = new KafkaProperties();
     private RabbitmqProperties rabbitmq = new RabbitmqProperties();
     private RetryProperties retry = new RetryProperties();
+    private Map<String, List<String>> rutas = new HashMap<>();
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
@@ -21,6 +27,8 @@ public class MessagingProperties {
     public void setRabbitmq(RabbitmqProperties rabbitmq) { this.rabbitmq = rabbitmq; }
     public RetryProperties getRetry() { return retry; }
     public void setRetry(RetryProperties retry) { this.retry = retry; }
+    public Map<String, List<String>> getRutas() { return rutas; }
+    public void setRutas(Map<String, List<String>> rutas) { this.rutas = rutas; }
 
     public static class KafkaProperties {
         private String bootstrapServers = "localhost:9092";
