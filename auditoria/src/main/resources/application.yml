@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: factucore-auditoria
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+factucore:
+  auditoria:
+    peticion:
+      topico: ${FACTUCORE_AUDITORIA_PETICION_TOPICO:factucore.auditoria.peticion}
+      grupo-consumidor: ${FACTUCORE_AUDITORIA_PETICION_GRUPO:factucore-auditoria}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
