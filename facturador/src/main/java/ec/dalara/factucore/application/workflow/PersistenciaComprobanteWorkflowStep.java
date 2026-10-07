@@ -78,7 +78,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 		}
 
 		Comprobante comprobante = Comprobante.builder().empresa(empresa).establecimiento(emision.establecimiento())
-				.puntoEmision(emision.puntoEmision()).documentoXsd(documentoXsd).versionDocumentoXsd(versionXsd)
+				.puntoEmision(emision.puntoEmision()).documentoXsd(documentoXsd).versionDocumentoXsd(versionXsd).idTransaccion(solicitud.getIdTransaccion())
 				.ambiente(resolverAmbiente(sriProperties.getAmbiente())).tipoEmision("1")
 				.codigoDocumento(definition.getDocumento().getCodigo()).secuencial(contexto.getSecuencial())
 				.claveAcceso(contexto.getClaveAcceso()).fechaEmision(solicitud.getFechaInicio().toLocalDate())
