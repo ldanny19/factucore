@@ -4,7 +4,7 @@ import java.util.Set;
 
 public interface ConsumidorMensajes {
 
-    String topico();
+    String destino();
 
     String grupo();
 
