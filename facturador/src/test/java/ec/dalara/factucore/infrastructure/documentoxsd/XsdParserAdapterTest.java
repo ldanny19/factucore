@@ -59,7 +59,7 @@ class XsdParserAdapterTest {
 		assertEquals(1, factura.maxOcurrencias());
 
 		var detalle = definition.elementos().get(4);
-		assertEquals("detalles.detalle", detalle.ruta());
+		assertEquals("factura.detalles.detalle", detalle.ruta());
 		assertTrue(detalle.esRepetible());
 		assertEquals(1, detalle.minOcurrencias());
 		assertNull(detalle.maxOcurrencias());
