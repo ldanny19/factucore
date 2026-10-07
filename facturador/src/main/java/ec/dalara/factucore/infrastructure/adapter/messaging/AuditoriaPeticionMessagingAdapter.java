@@ -19,7 +19,7 @@ public class AuditoriaPeticionMessagingAdapter implements AuditoriaPeticionPort 
     private final AuditoriaPeticionMessagingProperties properties;
 
     @Override
-    public void publicar(PeticionAuditada peticion) {
+    public void publicar(RegistroAuditoriaHttp peticion) {
         if (!properties.isHabilitada() || peticion == null) {
             return;
         }
