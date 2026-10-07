@@ -20,16 +20,18 @@ public class GenericPublicadorMensajes implements PublicadorMensajes {
             throw new IllegalArgumentException("El evento es requerido");
         }
 
-        List<String> destinos = properties.getRutas().getOrDefault(evento.tipo(), List.of());
+        List<String> destinos = properties.getRutas().getOrDefault(evento.tipo(), List.of())
+                .stream()
+                .filter(destino -> destino != null && !destino.isBlank())
+                .distinct()
+                .toList();
 
         if (destinos.isEmpty()) {
             throw new IllegalStateException(
                     "No existe una ruta de mensajería configurada para el tipo de evento: " + evento.tipo());
         }
 
-        destinos.stream()
-                .filter(destino -> destino != null && !destino.isBlank())
-                .forEach(destino -> broker.publicar(destino, evento));
+        destinos.forEach(destino -> broker.publicar(destino, evento));
     }
 
     @Override
