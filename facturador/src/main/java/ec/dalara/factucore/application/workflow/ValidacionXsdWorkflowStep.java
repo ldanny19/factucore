@@ -2,6 +2,7 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.XmlValidatorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ValidacionXsdWorkflowStep implements WorkflowStep {
 	private final XmlValidatorPort xmlValidator;
+	private final ComprobanteEvidenciaPort evidenciaPort;
 
 	@Override
 	public EtapaWorkflow etapa() {
@@ -29,6 +31,8 @@ public class ValidacionXsdWorkflowStep implements WorkflowStep {
 			throw new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA);
 		}
 		xmlValidator.validar(contexto.getXml(), definition);
+		evidenciaPort.guardarXmlGenerado(contexto.getComprobanteId(), contexto.getXml(),
+				contexto.getSolicitud().getUsuario());
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION_XSD, "VALIDADO");
 	}
 }
