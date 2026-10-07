@@ -91,7 +91,7 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
                     configuracion.getNombre());
 
             container.setAdviceChain(RetryInterceptorBuilder.stateless()
-                    .maxAttempts((int) properties.getRetry().getMaxIntentos())
+                    .maxAttempts(Math.toIntExact(properties.getRetry().getMaxIntentos()))
                     .backOffOptions(
                             properties.getRetry().getIntervaloMs(),
                             2.0,
