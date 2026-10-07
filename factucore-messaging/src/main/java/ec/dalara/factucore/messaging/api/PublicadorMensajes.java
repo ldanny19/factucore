@@ -2,5 +2,7 @@ package ec.dalara.factucore.messaging.api;
 
 public interface PublicadorMensajes {
 
-    void publicar(String topico, EventoMensaje evento);
+    void publicar(EventoMensaje evento);
+
+    void publicar(String destino, EventoMensaje evento);
 }
