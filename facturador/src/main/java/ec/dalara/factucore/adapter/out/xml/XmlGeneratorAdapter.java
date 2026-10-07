@@ -86,26 +86,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
     private Element crearRaiz(Document document, ElementoXsdModel definicion, DocumentDefinitionModel definition,
             Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml) {
-
-        MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
-        Object valor = mapeo == null ? contextoJson
-                : resolverValor(mapeo, contextoJson, contextoJson, contextoFactuCore, null);
-
-        Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
-
-        Object contextoLocal = valor == null ? contextoJson : valor;
-        aplicarAtributos(elemento, definicion, definition, contextoLocal, contextoJson, contextoFactuCore,
-                obtenerRutaOrigen(mapeo, null));
-
-        if (mapeo != null && esValorSimple(valor) && valor != null) {
-            elemento.setTextContent(convertirValor(valor));
-        }
-
-        Map<String, Object> mapaHijos = convertirMapa(contextoLocal);
-        agregarHijos(document, elemento, definicion, mapaHijos, definition, contextoJson, contextoFactuCore,
-                namespaceXml, obtenerRutaOrigen(mapeo, null));
-
-        return elemento;
+        return crearElemento(document, definicion, contextoJson, definition, contextoJson, contextoFactuCore,
+                namespaceXml, null);
     }
 
     private Element crearElemento(Document document, ElementoXsdModel definicion, Object contextoActual,
@@ -113,33 +95,31 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
 
         MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
-        Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
+        Object valor = mapeo == null ? contextoActual
+                : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
 
         if (valor instanceof Iterable<?> iterable) {
             List<Object> valores = convertirIterable(iterable);
             if (valores.isEmpty()) {
                 return crearElementoConValor(document, definicion, contextoActual, definition, contextoJson,
-                        contextoFactuCore, namespaceXml, rutaOrigenPadre, null);
+                        contextoFactuCore, namespaceXml, rutaOrigenPadre, contextoActual);
             }
 
             Element primero = null;
             for (Object item : valores) {
                 Element elemento = crearElementoConValor(document, definicion, item, definition, contextoJson,
                         contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), item);
-                if (primero == null) {
+
+                if (elemento != null && primero == null) {
                     primero = elemento;
-                } else {
-                    Element parent = primero.getParentNode() instanceof Element parentElement ? parentElement : null;
-                    if (parent != null) {
-                        parent.appendChild(elemento);
-                    }
                 }
             }
+
             return primero;
         }
 
         return crearElementoConValor(document, definicion, valor, definition, contextoJson, contextoFactuCore,
-                namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), contextoActual);
+                namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
     }
 
     private Element crearElementoConValor(Document document, ElementoXsdModel definicion, Object valor,
@@ -176,26 +156,9 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             String rutaOrigenPadre) {
 
         for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
-            MapeoXsdModel mapeo = obtenerMapeoElemento(hijo, definition);
-            if (mapeo == null) {
-                continue;
-            }
+            Element elementoHijo = crearElemento(document, hijo, contextoLocal, definition, contextoJson,
+                    contextoFactuCore, namespaceXml, rutaOrigenPadre);
 
-            Object valor = resolverValor(mapeo, contextoLocal, contextoJson, contextoFactuCore, rutaOrigenPadre);
-
-            if (valor instanceof Iterable<?> iterable) {
-                for (Object item : convertirIterable(iterable)) {
-                    Element elementoHijo = crearElementoConValor(document, hijo, item, definition, contextoJson,
-                            contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), item);
-                    if (elementoHijo != null) {
-                        padre.appendChild(elementoHijo);
-                    }
-                }
-                continue;
-            }
-
-            Element elementoHijo = crearElementoConValor(document, hijo, valor, definition, contextoJson,
-                    contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
             if (elementoHijo != null) {
                 padre.appendChild(elementoHijo);
             }
