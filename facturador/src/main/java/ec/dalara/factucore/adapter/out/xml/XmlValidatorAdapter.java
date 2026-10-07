@@ -35,11 +35,11 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 	@Override
 	public void validar(String xml, DocumentDefinitionModel definition) {
 		if (xml == null || xml.isBlank()) {
-			registrarError("FACTUCORE.XML.VALIDACION.XML.REQUERIDO", null, null);
+			registrarErrorSinTag("FACTUCORE.XML.VALIDACION.XML.REQUERIDO");
 		}
 
 		if (definition == null) {
-			registrarError("FACTUCORE.XML.VALIDACION.DEFINITION.REQUERIDA", null, null);
+			registrarErrorSinTag("FACTUCORE.XML.VALIDACION.DEFINITION.REQUERIDA");
 		}
 
 		try {
@@ -57,7 +57,10 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			throw exception;
 
 		} catch (Exception exception) {
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ERROR");
+			String tag = documentTag(xml);
+			LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, detalle={}",
+					"FACTUCORE.XML.VALIDACION.ERROR", tag, exception.getMessage(), exception);
+			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ERROR", exception);
 		}
 	}
 
@@ -418,7 +421,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 					.anyMatch(atributo -> Objects.equals(atributo.getNombre(), atributoXml.getNodeName()));
 
 			if (!definido) {
-				registrarErrorAtributo("FACTUCORE.XML.VALIDACION.ATRIBUTO.NO_DEFINIDO", definicion, null, atributoXml.getNodeName());
+				registrarErrorAtributo("FACTUCORE.XML.VALIDACION.ATRIBUTO.NO_DEFINIDO", definicion, definition, atributoXml.getNodeName());
 			}
 		}
 	}
@@ -477,6 +480,11 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		}
 	}
 
+	private ApplicationException registrarErrorSinTag(String codigo) {
+		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}", codigo, "N/A");
+		throw new ApplicationException(codigo);
+	}
+
 	private ApplicationException registrarError(String codigo, String tag, String ruta) {
 		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}", codigo, tag, ruta);
 		throw new ApplicationException(codigo);
@@ -496,6 +504,16 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, atributo={}", codigo,
 				definicion.getNombre(), ruta, parametros.length > 0 ? parametros[0] : null);
 		throw new ApplicationException(codigo, parametros);
+	}
+
+	private String documentTag(String xml) {
+		try {
+			return parsearXml(xml).getDocumentElement().getLocalName() != null
+					? parsearXml(xml).getDocumentElement().getLocalName()
+					: parsearXml(xml).getDocumentElement().getNodeName();
+		} catch (Exception ignored) {
+			return "N/A";
+		}
 	}
 
 	private String obtenerRuta(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
