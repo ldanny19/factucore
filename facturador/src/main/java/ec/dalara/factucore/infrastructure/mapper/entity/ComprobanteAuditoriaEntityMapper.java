@@ -11,8 +11,9 @@ public interface ComprobanteAuditoriaEntityMapper {
 	default ComprobanteAuditoriaModel toModel(ComprobanteAuditoria e) {
 		if (e == null)
 			return null;
-		return new ComprobanteAuditoriaModel(e.getEstadoAnterior(), e.getEstadoNuevo(), e.getCodigoError(),
-				e.getMensajeError(), e.getFechaCreacion());
+		return new ComprobanteAuditoriaModel(e.getEtapa(), e.getResultado(), e.getEstadoAnterior(), e.getEstadoNuevo(),
+				e.getCodigoError(), e.getMensajeError(), e.getFechaInicio(), e.getFechaFin(), e.getIntento(),
+				e.getFechaCreacion());
 	}
 
 	@Mapping(target = "id", ignore = true)
