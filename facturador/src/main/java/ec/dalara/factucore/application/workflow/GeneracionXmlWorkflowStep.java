@@ -51,18 +51,13 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
         }
 
         var datos = solicitud.getDatos() == null || solicitud.getDatos().isNull() || !solicitud.getDatos().isObject()
-                ? new java.util.LinkedHashMap<String, Object>()
+                ? new LinkedHashMap<String, Object>()
                 : objectMapper.convertValue(solicitud.getDatos(),
-                        new TypeReference<java.util.LinkedHashMap<String, Object>>() {
+                        new TypeReference<LinkedHashMap<String, Object>>() {
                         });
 
         if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
             throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
-        }
-
-        datos.put("claveAcceso", contexto.getClaveAcceso());
-        if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
-            datos.put("secuencial", contexto.getSecuencial());
         }
 
         Map<String, Object> contextoFactuCore = new LinkedHashMap<>();
@@ -76,6 +71,11 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
         contextoFactuCore.put("canal", solicitud.getCanal());
 
         Map<String, Object> contextoGenerado = new LinkedHashMap<>(contexto.getValoresGenerados());
+        contextoGenerado.put("claveAcceso", contexto.getClaveAcceso());
+
+        if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
+            contextoGenerado.put("secuencial", contexto.getSecuencial());
+        }
 
         String xml = xmlGenerator.generar(
                 definition,
@@ -84,7 +84,8 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
                 contextoGenerado);
         contexto.setXml(xml);
 
-        LOGGER.info("XML generado antes de validacion XSD:\n{}", xml);
+        LOGGER.info("XML generado antes de validacion XSD:
+{}", xml);
 
         return ResultadoEtapa.exitosa(etapa(), "COMPLETADA", java.util.Map.of("xmlGenerado", true));
     }
