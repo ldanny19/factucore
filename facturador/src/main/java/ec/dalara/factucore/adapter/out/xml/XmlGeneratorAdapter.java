@@ -94,10 +94,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
 		aplicarAtributos(elemento, definicion, definition, contextoJson, contextoFactuCore);
 
-		if (esValorSimple(valor)) {
-			if (valor != null) {
-				elemento.setTextContent(convertirValor(valor));
-			}
+		if (esValorSimple(valor) && valor != null) {
+			elemento.setTextContent(convertirValor(valor));
 			return elemento;
 		}
 
