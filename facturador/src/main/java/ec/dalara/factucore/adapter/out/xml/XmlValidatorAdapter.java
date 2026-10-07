@@ -306,6 +306,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			numero = new BigDecimal(valor);
 		} catch (Exception exception) {
 			registrarError("FACTUCORE.XML.VALIDACION.NUMERICO.INVALIDO", definicion, definition, valor);
+			return;
 		}
 
 		if (definicion.getValorMinimo() != null && numero.compareTo(definicion.getValorMinimo()) < 0) {
