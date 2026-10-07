@@ -9,7 +9,8 @@ La librería únicamente resuelve infraestructura de mensajería:
 - API genérica de publicación y consumo.
 - Selección del broker mediante configuración.
 - Conexiones y clientes del broker.
-- Registro de consumidores.
+- Enrutamiento por tipo de evento.
+- Registro de múltiples consumidores.
 - Reintentos.
 - Dead Letter Queue/Topic.
 - Serialización del contrato `EventoMensaje`.
@@ -19,6 +20,8 @@ No contiene lógica de negocio ni conoce Facturador, Notification, ERP o dominio
 
 ## Configuración
 
+El productor no recibe el tópico desde cada microservicio. El destino se resuelve centralizadamente mediante el tipo de evento. Un tipo puede tener uno o varios destinos.
+
 Kafka:
 
 ```yaml
@@ -27,6 +30,11 @@ factucore:
     broker: KAFKA
     kafka:
       bootstrap-servers: localhost:9092
+    rutas:
+      REGISTRO_AUDITORIA_HTTP:
+        - factucore.auditoria.peticion
+      COMPROBANTE_AUTORIZADO:
+        - factucore.notificacion.comprobante
 ```
 
 RabbitMQ:
@@ -40,11 +48,24 @@ factucore:
       username: guest
       password: guest
       virtual-host: /
+    rutas:
+      REGISTRO_AUDITORIA_HTTP:
+        - factucore.auditoria.peticion
 ```
+
+La misma definición de rutas funciona para ambos brokers. El broker seleccionado se encarga de traducir el destino lógico a tópico/exchange/routing key según su implementación.
 
 ## Publicar
 
-Un microservicio inyecta `PublicadorMensajes` y publica un `EventoMensaje`. No necesita conocer Kafka ni RabbitMQ.
+Un microservicio inyecta `PublicadorMensajes`, crea un `EventoMensaje` y publica el evento sin conocer Kafka, RabbitMQ ni el destino físico:
+
+```java
+publicadorMensajes.publicar(evento);
+```
+
+La librería obtiene `evento.tipo()`, busca sus destinos configurados y publica en todos ellos.
+
+Si un tipo de evento no tiene una ruta válida, la publicación falla para evitar pérdida silenciosa de mensajes.
 
 ## Consumir
 
@@ -56,12 +77,17 @@ public class MiConsumidor implements ConsumidorMensajes {
 
     @Override
     public String topico() {
-        return "notificacion.comprobante";
+        return "factucore.notificacion.comprobante";
     }
 
     @Override
     public String grupo() {
         return "notification";
+    }
+
+    @Override
+    public Set<String> tiposEvento() {
+        return Set.of("COMPROBANTE_AUTORIZADO");
     }
 
     @Override
@@ -71,7 +97,9 @@ public class MiConsumidor implements ConsumidorMensajes {
 }
 ```
 
-El consumidor es registrado automáticamente en el broker seleccionado.
+El consumidor se registra automáticamente en el broker seleccionado. Se pueden registrar N consumidores, cada uno con su tópico/origen, grupo y tipos de evento.
+
+Si `tiposEvento()` devuelve un conjunto vacío, el consumidor acepta cualquier tipo de evento del origen configurado.
 
 ## Resiliencia
 
