@@ -339,7 +339,6 @@ CREATE TABLE comprobante (
     numero_autorizacion VARCHAR(100),
     fecha_autorizacion TIMESTAMP,
     fecha_proximo_reproceso TIMESTAMP,
-    datos_comprobante JSONB NOT NULL,
     estado_registro VARCHAR(20) NOT NULL,
     usuario_creacion VARCHAR(100) NOT NULL,
     usuario_modificacion VARCHAR(100),
