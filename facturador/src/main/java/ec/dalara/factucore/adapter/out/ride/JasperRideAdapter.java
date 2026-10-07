@@ -194,7 +194,7 @@ public class JasperRideAdapter implements RidePort {
 		}
 
 		parametros.put("INFO_ADICIONAL", infoAdicional);
-		return new JRMapCollectionDataSource(filas);
+		return new JRMapCollectionDataSource(new ArrayList<Map<String, ?>>(filas));
 	}
 
 	private List<Map<String, Object>> construirFilasDetalle(Long comprobanteId) {
