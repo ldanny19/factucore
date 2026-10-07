@@ -83,7 +83,9 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
             try {
                 var evento = objectMapper.readValue(
                         message.getBody(), EventoMensaje.class);
-                consumidor.consumir(evento);
+                if (aceptaEvento(consumidor, evento)) {
+                    consumidor.consumir(evento);
+                }
             } catch (Exception e) {
                 throw new IllegalStateException(
                         "No fue posible procesar el mensaje", e);
@@ -91,6 +93,11 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
         });
 
         container.start();
+    }
+
+    private boolean aceptaEvento(ConsumidorMensajes consumidor, EventoMensaje evento) {
+        var tipos = consumidor.tiposEvento();
+        return tipos == null || tipos.isEmpty() || tipos.contains(evento.tipo());
     }
 
     private Exchange exchange(String destino) {
