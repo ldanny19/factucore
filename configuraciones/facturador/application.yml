@@ -62,12 +62,18 @@ factucore:
 
   messaging:
     enabled: true
-    broker: KAFKA
-    rutas:
-      REGISTRO_AUDITORIA_HTTP:
-        - ${FACTUCORE_AUDITORIA_PETICION_TOPICO:factucore.auditoria.peticion}
-      COMPROBANTE_AUTORIZADO:
-        - ${FACTUCORE_NOTIFICACION_TOPICO:factucore.notificacion.comprobante}
+    conexiones:
+      kafka-principal:
+        tipo: KAFKA
+        kafka:
+          bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    destinos:
+      auditoria:
+        conexion: kafka-principal
+        nombre: ${FACTUCORE_AUDITORIA_PETICION_TOPICO:auditoria}
+      notificacion:
+        conexion: kafka-principal
+        nombre: ${FACTUCORE_NOTIFICACION_TOPICO:notificacion}
 
   path:
     base: ${FACTUCORE_PATH_BASE:/app}
@@ -107,7 +113,7 @@ factucore:
 
   auditoria:
     peticion:
-      habilitada: ${FACTUCORE_AUDITORIA_PETICION_HABILITADA:false}
+      habilitada: ${FACTUCORE_AUDITORIA_PETICION_HABILITADA:true}
       tipo-evento: ${FACTUCORE_AUDITORIA_PETICION_TIPO_EVENTO:REGISTRO_AUDITORIA_HTTP}
       version-evento: ${FACTUCORE_AUDITORIA_PETICION_VERSION_EVENTO:1.0}
 
