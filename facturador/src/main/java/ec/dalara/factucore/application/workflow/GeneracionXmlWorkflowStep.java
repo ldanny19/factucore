@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
@@ -22,7 +21,6 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 	private final DocumentoDefinitionProvider definitionProvider;
 	private final DocumentoXsdService documentoXsdService;
 	private final XmlGeneratorPort xmlGenerator;
-	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final ObjectMapper objectMapper;
 
 	@Override
@@ -62,7 +60,6 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
 		String xml = xmlGenerator.generar(definition, datos, contexto.getValoresGenerados());
 		contexto.setXml(xml);
-		evidenciaPort.guardarXmlGenerado(contexto.getComprobanteId(), xml, solicitud.getUsuario());
 
 		return ResultadoEtapa.exitosa(etapa(), "COMPLETADA", java.util.Map.of("xmlGenerado", true));
 	}
