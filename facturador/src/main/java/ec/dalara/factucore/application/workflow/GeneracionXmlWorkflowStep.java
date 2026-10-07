@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.workflow;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,49 +20,53 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
-	private final DocumentoDefinitionProvider definitionProvider;
-	private final DocumentoXsdService documentoXsdService;
-	private final XmlGeneratorPort xmlGenerator;
-	private final ObjectMapper objectMapper;
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
-	@Override
-	public EtapaWorkflow etapa() {
-		return EtapaWorkflow.GENERACION_XML;
-	}
+    private final DocumentoDefinitionProvider definitionProvider;
+    private final DocumentoXsdService documentoXsdService;
+    private final XmlGeneratorPort xmlGenerator;
+    private final ObjectMapper objectMapper;
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
-		var solicitud = contexto.getSolicitud();
-		var definition = contexto.getDefinicionDocumento();
+    @Override
+    public EtapaWorkflow etapa() {
+        return EtapaWorkflow.GENERACION_XML;
+    }
 
-		if (definition == null) {
-			var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-					.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+    @Override
+    public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+        var solicitud = contexto.getSolicitud();
+        var definition = contexto.getDefinicionDocumento();
 
-			definition = definitionProvider
-					.obtenerDefinicion(documento.getCodigo(), solicitud.getVersionXsd(), solicitud.getFechaInicio())
-					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
-			contexto.setDefinicionDocumento(definition);
-		}
+        if (definition == null) {
+            var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
+                    .orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
-		var datos = solicitud.getDatos() == null || solicitud.getDatos().isNull() || !solicitud.getDatos().isObject()
-				? new java.util.LinkedHashMap<String, Object>()
-				: objectMapper.convertValue(solicitud.getDatos(),
-						new TypeReference<java.util.LinkedHashMap<String, Object>>() {
-						});
+            definition = definitionProvider
+                    .obtenerDefinicion(documento.getCodigo(), solicitud.getVersionXsd(), solicitud.getFechaInicio())
+                    .orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
+            contexto.setDefinicionDocumento(definition);
+        }
 
-		if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
-			throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
-		}
+        var datos = solicitud.getDatos() == null || solicitud.getDatos().isNull() || !solicitud.getDatos().isObject()
+                ? new java.util.LinkedHashMap<String, Object>()
+                : objectMapper.convertValue(solicitud.getDatos(),
+                        new TypeReference<java.util.LinkedHashMap<String, Object>>() {
+                        });
 
-		datos.put("claveAcceso", contexto.getClaveAcceso());
-		if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
-			datos.put("secuencial", contexto.getSecuencial());
-		}
+        if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
+            throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
+        }
 
-		String xml = xmlGenerator.generar(definition, datos, contexto.getValoresGenerados());
-		contexto.setXml(xml);
+        datos.put("claveAcceso", contexto.getClaveAcceso());
+        if (contexto.getSecuencial() != null && !contexto.getSecuencial().isBlank()) {
+            datos.put("secuencial", contexto.getSecuencial());
+        }
 
-		return ResultadoEtapa.exitosa(etapa(), "COMPLETADA", java.util.Map.of("xmlGenerado", true));
-	}
+        String xml = xmlGenerator.generar(definition, datos, contexto.getValoresGenerados());
+        contexto.setXml(xml);
+
+        LOGGER.info("XML generado antes de validacion XSD:\n{}", xml);
+
+        return ResultadoEtapa.exitosa(etapa(), "COMPLETADA", java.util.Map.of("xmlGenerado", true));
+    }
 }
