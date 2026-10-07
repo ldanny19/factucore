@@ -14,8 +14,8 @@ import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
 import ec.dalara.factucore.application.service.ComprobanteReprocessService;
 import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
 @Component("camelWorkflowStepExecutor")
@@ -144,9 +144,6 @@ public class CamelWorkflowStepExecutor {
 			registrarResultado(contexto, resultado);
 			registrarAuditoria(contexto, step.etapa().name(), estadoAnterior, resultado, fechaInicio);
 			return resultado;
-		} catch (WorkflowException exception) {
-			registrarAuditoriaError(contexto, step.etapa().name(), estadoAnterior, exception, fechaInicio);
-			throw exception;
 		} catch (RuntimeException exception) {
 			registrarAuditoriaError(contexto, step.etapa().name(), estadoAnterior, exception, fechaInicio);
 			throw exception;
@@ -174,12 +171,7 @@ public class CamelWorkflowStepExecutor {
 		}
 	}
 
-;
-		return contexto;
-	}
-
-	private void registrarResultado(ContextoWorkflow contexto,
-			ec.dalara.factucore.domain.workflow.ResultadoEtapa resultado) {
+	private void registrarResultado(ContextoWorkflow contexto, ResultadoEtapa resultado) {
 		contexto.registrarResultado(resultado);
 
 		if (contexto.getComprobante() != null) {
@@ -188,7 +180,11 @@ public class CamelWorkflowStepExecutor {
 				contexto.getComprobante().setMensajeError(resultado.getMensaje());
 			} else if (!EstadoProceso.ERROR.name().equals(resultado.getEstado())) {
 				contexto.getComprobante().setCodigoError(null);
-				contexto.getComprobante().setMensaje
+				contexto.getComprobante().setMensajeError(null);
+			}
+		}
+	}
+
 	private void persistirCambios(ContextoWorkflow contexto) {
 		if (contexto.getComprobante() != null) {
 			comprobanteService.guardar(contexto.getComprobante());
