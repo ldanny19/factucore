@@ -1,3 +1,4 @@
+ec.dalara.factucore.messaging.infrastructure.MessagingCoreAutoConfiguration
 ec.dalara.factucore.messaging.infrastructure.kafka.KafkaMessagingConfiguration
 ec.dalara.factucore.messaging.infrastructure.rabbitmq.RabbitMessagingConfiguration
 ec.dalara.factucore.messaging.config.MessagingDiagnosticsAutoConfiguration
