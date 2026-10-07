@@ -1,34 +1,50 @@
 package ec.dalara.factucore.messaging.config;
 
+import ec.dalara.factucore.messaging.api.TipoBroker;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ConfigurationProperties(prefix = "factucore.messaging")
 public class MessagingProperties {
 
     private boolean enabled = true;
-    private String broker = "KAFKA";
-    private KafkaProperties kafka = new KafkaProperties();
-    private RabbitmqProperties rabbitmq = new RabbitmqProperties();
+    private Map<String, ConexionProperties> conexiones = new LinkedHashMap<>();
+    private Map<String, DestinoProperties> destinos = new LinkedHashMap<>();
     private RetryProperties retry = new RetryProperties();
-    private Map<String, List<String>> rutas = new HashMap<>();
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public String getBroker() { return broker; }
-    public void setBroker(String broker) { this.broker = broker; }
-    public KafkaProperties getKafka() { return kafka; }
-    public void setKafka(KafkaProperties kafka) { this.kafka = kafka; }
-    public RabbitmqProperties getRabbitmq() { return rabbitmq; }
-    public void setRabbitmq(RabbitmqProperties rabbitmq) { this.rabbitmq = rabbitmq; }
+    public Map<String, ConexionProperties> getConexiones() { return conexiones; }
+    public void setConexiones(Map<String, ConexionProperties> conexiones) { this.conexiones = conexiones; }
+    public Map<String, DestinoProperties> getDestinos() { return destinos; }
+    public void setDestinos(Map<String, DestinoProperties> destinos) { this.destinos = destinos; }
     public RetryProperties getRetry() { return retry; }
     public void setRetry(RetryProperties retry) { this.retry = retry; }
-    public Map<String, List<String>> getRutas() { return rutas; }
-    public void setRutas(Map<String, List<String>> rutas) { this.rutas = rutas; }
+
+    public static class ConexionProperties {
+        private TipoBroker tipo = TipoBroker.KAFKA;
+        private KafkaProperties kafka = new KafkaProperties();
+        private RabbitmqProperties rabbitmq = new RabbitmqProperties();
+
+        public TipoBroker getTipo() { return tipo; }
+        public void setTipo(TipoBroker tipo) { this.tipo = tipo; }
+        public KafkaProperties getKafka() { return kafka; }
+        public void setKafka(KafkaProperties kafka) { this.kafka = kafka; }
+        public RabbitmqProperties getRabbitmq() { return rabbitmq; }
+        public void setRabbitmq(RabbitmqProperties rabbitmq) { this.rabbitmq = rabbitmq; }
+    }
+
+    public static class DestinoProperties {
+        private String conexion;
+        private String nombre;
+
+        public String getConexion() { return conexion; }
+        public void setConexion(String conexion) { this.conexion = conexion; }
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+    }
 
     public static class KafkaProperties {
         private String bootstrapServers = "localhost:9092";
@@ -59,12 +75,14 @@ public class MessagingProperties {
         private String autoOffsetReset = "earliest";
         private boolean enableAutoCommit = false;
         private int concurrency = 1;
+
         public String getAutoOffsetReset() { return autoOffsetReset; }
         public void setAutoOffsetReset(String v) { autoOffsetReset = v; }
         public boolean isEnableAutoCommit() { return enableAutoCommit; }
         public void setEnableAutoCommit(boolean v) { enableAutoCommit = v; }
         public int getConcurrency() { return concurrency; }
-        public void setConcurrency(int v) { concurrency = v; }
+    public void setConcurrency(int v) { concurrency = v; }
+    }
     }
 
     public static class RabbitmqProperties {
@@ -76,6 +94,7 @@ public class MessagingProperties {
         private String exchangePrefix = "factucore";
         private boolean durable = true;
         private int concurrency = 1;
+
         public String getAddresses() { return addresses; }
         public void setAddresses(String v) { addresses = v; }
         public String getUsername() { return username; }
@@ -99,6 +118,7 @@ public class MessagingProperties {
         private long maxIntentos = 3;
         private boolean dlqHabilitada = true;
         private String sufijoDlq = ".DLQ";
+
         public long getIntervaloMs() { return intervaloMs; }
         public void setIntervaloMs(long v) { intervaloMs = v; }
         public long getMaxIntentos() { return maxIntentos; }
