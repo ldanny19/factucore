@@ -217,18 +217,18 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			valor = "";
 		}
 
-		validarLongitud(valor, definicion);
+		validarLongitud(valor, definicion, definition);
 
-		validarTipo(valor, definicion);
+		validarTipo(valor, definicion, definition);
 
-		validarNumerico(valor, definicion);
+		validarNumerico(valor, definicion, definition);
 
-		validarPatron(valor, definicion);
+		validarPatron(valor, definicion, definition);
 
 		validarEnumeracion(valor, definicion, definition);
 	}
 
-	private void validarLongitud(String valor, ElementoXsdModel definicion) {
+	private void validarLongitud(String valor, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		if (definicion.getLongitudMinima() != null && valor.length() < definicion.getLongitudMinima()) {
 
 			registrarError("FACTUCORE.XML.VALIDACION.LONGITUD.MINIMA", definicion, definition, definicion.getLongitudMinima());
@@ -240,7 +240,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		}
 	}
 
-	private void validarTipo(String valor, ElementoXsdModel definicion) {
+	private void validarTipo(String valor, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		String tipo = definicion.getTipoDato();
 
 		if (tipo == null || tipo.isBlank()) {
@@ -293,7 +293,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		}
 	}
 
-	private void validarNumerico(String valor, ElementoXsdModel definicion) {
+	private void validarNumerico(String valor, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		if (definicion.getValorMinimo() == null && definicion.getValorMaximo() == null
 				&& definicion.getDigitosTotales() == null && definicion.getDecimales() == null) {
 
@@ -343,7 +343,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		return numero.unscaledValue().abs().toString().length();
 	}
 
-	private void validarPatron(String valor, ElementoXsdModel definicion) {
+	private void validarPatron(String valor, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		String patron = definicion.getPatron();
 
 		if (patron == null || patron.isBlank()) {
