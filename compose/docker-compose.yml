@@ -193,6 +193,7 @@ services:
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/facturador/config:/app/config:ro
+      - ${FACTUCORE_HOME}/facturador/jasper:/app/jasper:ro
       - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
       - ${FACTUCORE_HOME}/facturador/certificados:/app/certificados:ro
       - ${FACTUCORE_HOME}/facturador/logs:/app/logs

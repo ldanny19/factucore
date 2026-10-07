@@ -212,11 +212,11 @@
 			<version>4.10.7</version>
 		</dependency>
 
-		<!-- RIDE/PDF -->
+		<!-- RIDE/JasperReports -->
 		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-			<version>3.0.5</version>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports</artifactId>
+			<version>6.21.5</version>
 		</dependency>
 
 		<!-- Mensajeria generica Kafka/RabbitMQ -->

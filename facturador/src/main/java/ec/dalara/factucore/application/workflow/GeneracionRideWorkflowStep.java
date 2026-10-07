@@ -33,7 +33,13 @@ public class GeneracionRideWorkflowStep implements WorkflowStep {
 
 		var comprobante = contexto.getComprobante();
 		try {
-			byte[] pdf = ridePort.generar(comprobante);
+			var definicion = contexto.getDefinicionDocumento();
+			if (definicion == null || definicion.getDocumento() == null
+					|| definicion.getDocumento().getNombre() == null) {
+				throw new WorkflowException(MessageCodes.RIDE_GENERACION_ERROR, "Definición de comprobante requerida");
+			}
+
+			byte[] pdf = ridePort.generar(comprobante, definicion.getDocumento().getNombre());
 			contexto.setRide(pdf);
 
 			String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, contexto.getSolicitud().getUsuario());

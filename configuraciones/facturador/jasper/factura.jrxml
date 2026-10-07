@@ -42,9 +42,9 @@
 	<parameter name="DIRECCION_CLIENTE" class="java.lang.String"/>
 	<parameter name="FECHA_EMISION" class="java.lang.String"/>
 	<parameter name="GUIA" class="java.lang.String"/>
-	<parameter name="SUBREPORT_INFO_ADICIONAL" class="java.io.InputStream" isForPrompting="false"/>
-	<parameter name="SUBREPORT_PAGOS" class="java.io.InputStream" isForPrompting="false"/>
-	<parameter name="SUBREPORT_TOTALES" class="java.io.InputStream" isForPrompting="false"/>
+	<parameter name="SUBREPORT_INFO_ADICIONAL" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="SUBREPORT_PAGOS" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="SUBREPORT_TOTALES" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="MARCA_AGUA" class="java.io.InputStream">
 		<defaultValueExpression><![CDATA[$P{MARCA_AGUA}]]></defaultValueExpression>
 	</parameter>
@@ -554,21 +554,21 @@
 					<printWhenExpression><![CDATA[$F{infoAdicional}!=null]]></printWhenExpression>
 				</reportElement>
 				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{infoAdicional})]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{SUBREPORT_INFO_ADICIONAL}]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_INFO_ADICIONAL} + "facturaInfoAdicional.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement isPrintRepeatedValues="false" x="2" y="174" width="263" height="48" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="64bbe2f2-9da7-4d59-af8d-76ba4cd10995">
 					<printWhenExpression><![CDATA[$F{formasPago}!=null]]></printWhenExpression>
 				</reportElement>
 				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{formasPago})]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{SUBREPORT_PAGOS}]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_PAGOS} + "facturaFormasPago.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement isPrintRepeatedValues="false" mode="Opaque" x="365" y="9" width="188" height="156" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="3bac27c1-4e36-440d-a840-20f184c6b719">
 					<printWhenExpression><![CDATA[$F{totalesComprobante}!=null]]></printWhenExpression>
 				</reportElement>
 				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{totalesComprobante})]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{SUBREPORT_TOTALES}]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_TOTALES} + "totalesComprobante.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</summary>
