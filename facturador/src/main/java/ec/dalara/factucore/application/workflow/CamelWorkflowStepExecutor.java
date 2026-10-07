@@ -1,5 +1,6 @@
 package ec.dalara.factucore.application.workflow;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -9,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.contract.response.ResultadoResponse;
+import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
 import ec.dalara.factucore.application.service.ComprobanteReprocessService;
 import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +34,7 @@ public class CamelWorkflowStepExecutor {
 	private final GeneracionRideWorkflowStep generacionRide;
 	private final NotificacionWorkflowStep notificacion;
 	private final ComprobanteReprocessService reprocessService;
+	private final ComprobanteAuditoriaService comprobanteAuditoriaService;
 	private final ComprobanteService comprobanteService;
 
 	public ContextoWorkflow crearContexto(ComprobanteGeneracionRequest request) {
@@ -51,12 +55,12 @@ public class CamelWorkflowStepExecutor {
 	}
 
 	public ContextoWorkflow validar(ContextoWorkflow contexto) {
-		registrarResultado(contexto, validacion.ejecutar(contexto));
+		ejecutarEtapa(contexto, validacion);
 		return contexto;
 	}
 
 	public ContextoWorkflow asignarSecuencial(ContextoWorkflow contexto) {
-		registrarResultado(contexto, asignacionSecuencial.ejecutar(contexto));
+		ejecutarEtapa(contexto, asignacionSecuencial);
 		return contexto;
 	}
 
@@ -78,54 +82,99 @@ public class CamelWorkflowStepExecutor {
 	}
 
 	public ContextoWorkflow generarClaveAcceso(ContextoWorkflow contexto) {
-		registrarResultado(contexto, generacionClaveAcceso.ejecutar(contexto));
+		ejecutarEtapa(contexto, generacionClaveAcceso);
 		return contexto;
 	}
 
 	public ContextoWorkflow persistirComprobante(ContextoWorkflow contexto) {
-		registrarResultado(contexto, persistenciaComprobante.ejecutar(contexto));
+		ejecutarEtapa(contexto, persistenciaComprobante);
 		return contexto;
 	}
 
 	public ContextoWorkflow generarXml(ContextoWorkflow contexto) {
-		registrarResultado(contexto, generacionXml.ejecutar(contexto));
+		ejecutarEtapa(contexto, generacionXml);
 		persistirCambios(contexto);
 		return contexto;
 	}
 
 	public ContextoWorkflow validarXsd(ContextoWorkflow contexto) {
-		registrarResultado(contexto, validacionXsd.ejecutar(contexto));
+		ejecutarEtapa(contexto, validacionXsd);
 		persistirCambios(contexto);
 		return contexto;
 	}
 
 	public ContextoWorkflow firmar(ContextoWorkflow contexto) {
-		registrarResultado(contexto, firmaElectronica.ejecutar(contexto));
+		ejecutarEtapa(contexto, firmaElectronica);
 		persistirCambios(contexto);
 		return contexto;
 	}
 
 	public ContextoWorkflow enviarSri(ContextoWorkflow contexto) {
-		registrarResultado(contexto, envioSri.ejecutar(contexto));
+		ejecutarEtapa(contexto, envioSri);
 		persistirCambios(contexto);
 		return contexto;
 	}
 
 	public ContextoWorkflow autorizarSri(ContextoWorkflow contexto) {
-		registrarResultado(contexto, autorizacionSri.ejecutar(contexto));
+		ejecutarEtapa(contexto, autorizacionSri);
 		persistirCambios(contexto);
 		return contexto;
 	}
 
 	public ContextoWorkflow generarRide(ContextoWorkflow contexto) {
-		registrarResultado(contexto, generacionRide.ejecutar(contexto));
+		ejecutarEtapa(contexto, generacionRide);
 		persistirCambios(contexto);
 		return contexto;
 	}
 
 	public ContextoWorkflow publicarNotificacion(ContextoWorkflow contexto) {
-		registrarResultado(contexto, notificacion.ejecutar(contexto));
+		ejecutarEtapa(contexto, notificacion);
 		persistirCambios(contexto);
+		return contexto;
+	}
+
+	private ResultadoEtapa ejecutarEtapa(ContextoWorkflow contexto, WorkflowStep step) {
+		LocalDateTime fechaInicio = LocalDateTime.now();
+		String estadoAnterior = contexto != null && contexto.getComprobante() != null
+				? contexto.getComprobante().getEstadoProceso()
+				: null;
+
+		try {
+			ResultadoEtapa resultado = step.ejecutar(contexto);
+			registrarResultado(contexto, resultado);
+			registrarAuditoria(contexto, step.etapa().name(), estadoAnterior, resultado, fechaInicio);
+			return resultado;
+		} catch (WorkflowException exception) {
+			registrarAuditoriaError(contexto, step.etapa().name(), estadoAnterior, exception, fechaInicio);
+			throw exception;
+		} catch (RuntimeException exception) {
+			registrarAuditoriaError(contexto, step.etapa().name(), estadoAnterior, exception, fechaInicio);
+			throw exception;
+		}
+	}
+
+	private void registrarAuditoria(ContextoWorkflow contexto, String etapa, String estadoAnterior,
+			ResultadoEtapa resultado, LocalDateTime fechaInicio) {
+		Long comprobanteId = contexto == null ? null : contexto.getComprobanteId();
+		if (comprobanteId != null) {
+			comprobanteAuditoriaService.registrarResultado(comprobanteId, etapa, estadoAnterior, resultado, fechaInicio,
+					LocalDateTime.now());
+		}
+	}
+
+	private void registrarAuditoriaError(ContextoWorkflow contexto, String etapa, String estadoAnterior,
+			RuntimeException exception, LocalDateTime fechaInicio) {
+		Long comprobanteId = contexto == null ? null : contexto.getComprobanteId();
+		if (comprobanteId != null) {
+			String codigoError = exception instanceof WorkflowException workflowException
+					? workflowException.getCodigo()
+					: null;
+			comprobanteAuditoriaService.registrarError(comprobanteId, etapa, estadoAnterior, codigoError,
+					exception.getMessage(), fechaInicio, LocalDateTime.now());
+		}
+	}
+
+;
 		return contexto;
 	}
 
@@ -139,11 +188,7 @@ public class CamelWorkflowStepExecutor {
 				contexto.getComprobante().setMensajeError(resultado.getMensaje());
 			} else if (!EstadoProceso.ERROR.name().equals(resultado.getEstado())) {
 				contexto.getComprobante().setCodigoError(null);
-				contexto.getComprobante().setMensajeError(null);
-			}
-		}
-	}
-
+				contexto.getComprobante().setMensaje
 	private void persistirCambios(ContextoWorkflow contexto) {
 		if (contexto.getComprobante() != null) {
 			comprobanteService.guardar(contexto.getComprobante());
