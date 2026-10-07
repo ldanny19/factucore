@@ -5,13 +5,18 @@ spring:
 factucore:
   messaging:
     enabled: true
-    broker: KAFKA
-    kafka:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    conexiones:
+      kafka-principal:
+        tipo: KAFKA
+        kafka:
+          bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    destinos:
+      auditoria:
+        conexion: kafka-principal
+        nombre: auditoria
 
   auditoria:
     peticion:
-      topico: ${FACTUCORE_AUDITORIA_PETICION_TOPICO:factucore.auditoria.peticion}
       grupo-consumidor: ${FACTUCORE_AUDITORIA_PETICION_GRUPO:factucore-auditoria}
 
 management:
