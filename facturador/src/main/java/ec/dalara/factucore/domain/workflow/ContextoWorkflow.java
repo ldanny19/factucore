@@ -45,7 +45,9 @@ public final class ContextoWorkflow {
 
 	private ResultadoEtapa ultimoResultado;
 
-	private final Map<EtapaWorkflow, ResultadoEtapa> resultados = new EnumMap<>(EtapaWorkflow.class);\n\n\tprivate final Map<String, Object> valoresGenerados = new java.util.LinkedHashMap<>();
+	private final Map<EtapaWorkflow, ResultadoEtapa> resultados = new EnumMap<>(EtapaWorkflow.class);
+
+	private final Map<String, Object> valoresGenerados = new java.util.LinkedHashMap<>();
 
 	private ContextoWorkflow(ComprobanteGeneracionRequest solicitud, LocalDateTime fechaInicio) {
 		this.solicitud = solicitud;
@@ -99,7 +101,17 @@ public final class ContextoWorkflow {
 		this.comprobanteId = comprobante.getId();
 	}
 
-	public void setValorGenerado(String clave, Object valor) {\n\t\tif (clave != null && !clave.isBlank() && valor != null) {\n\t\t\tvaloresGenerados.put(clave, valor);\n\t\t}\n\t}\n\n\tpublic Map<String, Object> getValoresGenerados() {\n\t\treturn Collections.unmodifiableMap(valoresGenerados);\n\t}\n\n\tpublic void registrarResultado(ResultadoEtapa resultado) {
+	public void setValorGenerado(String clave, Object valor) {
+		if (clave != null && !clave.isBlank() && valor != null) {
+			valoresGenerados.put(clave, valor);
+		}
+	}
+
+	public Map<String, Object> getValoresGenerados() {
+		return Collections.unmodifiableMap(valoresGenerados);
+	}
+
+	public void registrarResultado(ResultadoEtapa resultado) {
 		if (resultado == null) {
 			throw new ApplicationException(MessageCodes.WORKFLOW_RESULTADO_ETAPA_REQUERIDO);
 		}
