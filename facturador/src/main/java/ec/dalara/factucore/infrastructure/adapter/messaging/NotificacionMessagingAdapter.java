@@ -3,7 +3,6 @@ package ec.dalara.factucore.infrastructure.adapter.messaging;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.application.port.out.NotificacionPort;

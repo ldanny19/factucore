@@ -19,55 +19,51 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AsignacionSecuencialWorkflowStep implements WorkflowStep {
 
-    private static final Logger log = LoggerFactory.getLogger(AsignacionSecuencialWorkflowStep.class);
+	private static final Logger log = LoggerFactory.getLogger(AsignacionSecuencialWorkflowStep.class);
 
-    private final EmisionService emisionService;
-    private final DocumentoXsdService documentoXsdService;
-    private final SecuencialService secuencialService;
-    private final ComprobanteService comprobanteService;
+	private final EmisionService emisionService;
+	private final DocumentoXsdService documentoXsdService;
+	private final SecuencialService secuencialService;
+	private final ComprobanteService comprobanteService;
 
-    @Override
-    public EtapaWorkflow etapa() {
-        return EtapaWorkflow.ASIGNACION_SECUENCIAL;
-    }
+	@Override
+	public EtapaWorkflow etapa() {
+		return EtapaWorkflow.ASIGNACION_SECUENCIAL;
+	}
 
-    @Override
-    @Transactional
-    public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
-        var solicitud = contexto.getSolicitud();
+	@Override
+	@Transactional
+	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+		var solicitud = contexto.getSolicitud();
 
-        var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
-                solicitud.getIdPuntoEmision());
+		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
+				solicitud.getIdPuntoEmision());
 
-        var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-                .orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
+		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
+				.orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
 
-        log.info("Buscando secuencial: empresaId={}, establecimientoId={}, puntoEmisionRequestId={}, puntoEmisionId={}, tipoDocumentoRequestId={}, codigoDocumento={}, estadoRegistro={}",
-                solicitud.getIdEmpresa(),
-                solicitud.getIdEstablecimiento(),
-                solicitud.getIdPuntoEmision(),
-                emision.puntoEmision().getId(),
-                solicitud.getIdTipoDocumento(),
-                documento.getCodigo(),
-                "A");
+		log.info(
+				"Buscando secuencial: empresaId={}, establecimientoId={}, puntoEmisionRequestId={}, puntoEmisionId={}, tipoDocumentoRequestId={}, codigoDocumento={}, estadoRegistro={}",
+				solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(), solicitud.getIdPuntoEmision(),
+				emision.puntoEmision().getId(), solicitud.getIdTipoDocumento(), documento.getCodigo(), "A");
 
-        var secuencial = secuencialService.bloquearSecuencial(emision.puntoEmision().getId(), documento.getCodigo());
+		var secuencial = secuencialService.bloquearSecuencial(emision.puntoEmision().getId(), documento.getCodigo());
 
-        var existente = comprobanteService.obtenerPorEmpresaEIdTransaccion(solicitud.getIdEmpresa(),
-                solicitud.getIdTransaccion());
+		var existente = comprobanteService.obtenerPorEmpresaEIdTransaccion(solicitud.getIdEmpresa(),
+				solicitud.getIdTransaccion());
 
-        if (existente.isPresent()) {
-            contexto.asignarComprobante(existente.get());
-            contexto.setClaveAcceso(existente.get().getClaveAcceso());
-            contexto.setSecuencial(existente.get().getSecuencial());
-            contexto.marcarIdempotente();
+		if (existente.isPresent()) {
+			contexto.asignarComprobante(existente.get());
+			contexto.setClaveAcceso(existente.get().getClaveAcceso());
+			contexto.setSecuencial(existente.get().getSecuencial());
+			contexto.marcarIdempotente();
 
-            return ResultadoEtapa.exitosa(EtapaWorkflow.ASIGNACION_SECUENCIAL, "IDEMPOTENTE");
-        }
+			return ResultadoEtapa.exitosa(EtapaWorkflow.ASIGNACION_SECUENCIAL, "IDEMPOTENTE");
+		}
 
-        Long siguiente = secuencialService.consumirSiguienteSecuencial(secuencial);
-        contexto.setSecuencial(String.format("%09d", siguiente));
+		Long siguiente = secuencialService.consumirSiguienteSecuencial(secuencial);
+		contexto.setSecuencial(String.format("%09d", siguiente));
 
-        return ResultadoEtapa.exitosa(EtapaWorkflow.ASIGNACION_SECUENCIAL, "COMPLETADA");
-    }
+		return ResultadoEtapa.exitosa(EtapaWorkflow.ASIGNACION_SECUENCIAL, "COMPLETADA");
+	}
 }

@@ -14,25 +14,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuditoriaPeticionMessagingAdapter implements AuditoriaPeticionPort {
 
-    private static final String DESTINO_AUDITORIA = "auditoria";
+	private static final String DESTINO_AUDITORIA = "auditoria";
 
-    private final PublicadorMensajes publicadorMensajes;
-    private final ObjectMapper objectMapper;
-    private final AuditoriaPeticionMessagingProperties properties;
+	private final PublicadorMensajes publicadorMensajes;
+	private final ObjectMapper objectMapper;
+	private final AuditoriaPeticionMessagingProperties properties;
 
-    @Override
-    public void publicar(RegistroAuditoriaHttp peticion) {
-        if (!properties.isHabilitada() || peticion == null) {
-            return;
-        }
+	@Override
+	public void publicar(RegistroAuditoriaHttp peticion) {
+		if (!properties.isHabilitada() || peticion == null) {
+			return;
+		}
 
-        var evento = EventoMensaje.crear(
-                properties.getTipoEvento(),
-                properties.getVersionEvento(),
-                peticion.idTransaccion(),
-                objectMapper.valueToTree(peticion)
-        );
+		var evento = EventoMensaje.crear(properties.getTipoEvento(), properties.getVersionEvento(),
+				peticion.idTransaccion(), objectMapper.valueToTree(peticion));
 
-        publicadorMensajes.publicar(DESTINO_AUDITORIA, evento);
-    }
+		publicadorMensajes.publicar(DESTINO_AUDITORIA, evento);
+	}
 }

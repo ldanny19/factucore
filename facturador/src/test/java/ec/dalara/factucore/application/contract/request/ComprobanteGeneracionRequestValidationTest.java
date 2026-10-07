@@ -33,9 +33,9 @@ class ComprobanteGeneracionRequestValidationTest {
 
 	@Test
 	void requestValido_noDebeTenerViolaciones() {
-		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
-				.fechaInicio(LocalDateTime.now()).versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L)
-				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
+		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001").fechaInicio(LocalDateTime.now())
+				.versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L).idEstablecimiento(1L)
+				.idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		assertTrue(validator.validate(request).isEmpty());
 	}
@@ -60,9 +60,9 @@ class ComprobanteGeneracionRequestValidationTest {
 				}
 				""");
 
-		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
-				.fechaInicio(LocalDateTime.now()).versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L)
-				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).datos(datos).build();
+		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001").fechaInicio(LocalDateTime.now())
+				.versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L).idEstablecimiento(1L)
+				.idPuntoEmision(1L).idTipoDocumento(1L).datos(datos).build();
 
 		assertTrue(validator.validate(request).isEmpty());
 		assertNotNull(request.getDatos().get("factura"));

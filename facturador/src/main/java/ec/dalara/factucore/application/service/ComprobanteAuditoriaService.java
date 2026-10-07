@@ -46,20 +46,12 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 		int intento = siguienteIntento(comprobanteId, etapa);
 		var ahora = LocalDateTime.now(factuCoreClock);
 
-		var auditoria = ComprobanteAuditoria.builder()
-				.comprobante(comprobante)
-				.etapa(etapa)
-				.resultado(resultado.isExitosa() ? RESULTADO_EXITOSO : RESULTADO_ERROR)
-				.estadoAnterior(estadoAnterior)
-				.estadoNuevo(resultado.getEstado())
-				.codigoError(resultado.getCodigoError())
-				.mensajeError(resultado.getMensaje())
-				.fechaInicio(fechaInicio == null ? ahora : fechaInicio)
-				.fechaFin(fechaFin == null ? ahora : fechaFin)
-				.intento(intento)
-				.estadoRegistro(EstadoRegistro.ACTIVO)
-				.observacion(null)
-				.build();
+		var auditoria = ComprobanteAuditoria.builder().comprobante(comprobante).etapa(etapa)
+				.resultado(resultado.isExitosa() ? RESULTADO_EXITOSO : RESULTADO_ERROR).estadoAnterior(estadoAnterior)
+				.estadoNuevo(resultado.getEstado()).codigoError(resultado.getCodigoError())
+				.mensajeError(resultado.getMensaje()).fechaInicio(fechaInicio == null ? ahora : fechaInicio)
+				.fechaFin(fechaFin == null ? ahora : fechaFin).intento(intento).estadoRegistro(EstadoRegistro.ACTIVO)
+				.observacion(null).build();
 
 		comprobanteAuditoriaRepository.save(auditoria);
 	}
@@ -79,31 +71,18 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 		int intento = siguienteIntento(comprobanteId, etapa);
 		var ahora = LocalDateTime.now(factuCoreClock);
 
-		var auditoria = ComprobanteAuditoria.builder()
-				.comprobante(comprobante)
-				.etapa(etapa)
-				.resultado(RESULTADO_ERROR)
-				.estadoAnterior(estadoAnterior)
-				.estadoNuevo(comprobante.getEstadoProceso())
-				.codigoError(codigoError)
-				.mensajeError(mensajeError)
-				.fechaInicio(fechaInicio == null ? ahora : fechaInicio)
-				.fechaFin(fechaFin == null ? ahora : fechaFin)
-				.intento(intento)
-				.estadoRegistro(EstadoRegistro.ACTIVO)
-				.observacion(null)
-				.build();
+		var auditoria = ComprobanteAuditoria.builder().comprobante(comprobante).etapa(etapa).resultado(RESULTADO_ERROR)
+				.estadoAnterior(estadoAnterior).estadoNuevo(comprobante.getEstadoProceso()).codigoError(codigoError)
+				.mensajeError(mensajeError).fechaInicio(fechaInicio == null ? ahora : fechaInicio)
+				.fechaFin(fechaFin == null ? ahora : fechaFin).intento(intento).estadoRegistro(EstadoRegistro.ACTIVO)
+				.observacion(null).build();
 
 		comprobanteAuditoriaRepository.save(auditoria);
 	}
 
 	private int siguienteIntento(Long comprobanteId, String etapa) {
-		return comprobanteAuditoriaRepository
-				.findByComprobanteIdAndEtapaOrderByIntentoDesc(comprobanteId, etapa).stream()
-				.findFirst()
-				.map(ComprobanteAuditoria::getIntento)
-				.map(actual -> actual + 1)
-				.orElse(1);
+		return comprobanteAuditoriaRepository.findByComprobanteIdAndEtapaOrderByIntentoDesc(comprobanteId, etapa)
+				.stream().findFirst().map(ComprobanteAuditoria::getIntento).map(actual -> actual + 1).orElse(1);
 	}
 
 	public List<ComprobanteAuditoria> listarPorComprobante(Long comprobanteId) {

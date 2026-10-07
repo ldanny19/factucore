@@ -182,20 +182,10 @@ public class XsdParserAdapter implements XsdParserPort {
 		for (int i = 0; i < elementos.size(); i++) {
 			XsdElementSource elemento = elementos.get(i);
 			if (elemento.ruta().startsWith(prefijo)) {
-				elementos.set(i, new XsdElementSource(
-						elemento.ruta().substring(prefijo.length()),
-						elemento.nombre(),
-						elemento.tipoDato(),
-						elemento.orden(),
-						elemento.minOcurrencias(),
-						elemento.maxOcurrencias(),
-						elemento.longitudMinima(),
-						elemento.longitudMaxima(),
-						elemento.digitosTotales(),
-						elemento.decimales(),
-						elemento.valorMinimo(),
-						elemento.valorMaximo(),
-						elemento.patron()));
+				elementos.set(i, new XsdElementSource(elemento.ruta().substring(prefijo.length()), elemento.nombre(),
+						elemento.tipoDato(), elemento.orden(), elemento.minOcurrencias(), elemento.maxOcurrencias(),
+						elemento.longitudMinima(), elemento.longitudMaxima(), elemento.digitosTotales(),
+						elemento.decimales(), elemento.valorMinimo(), elemento.valorMaximo(), elemento.patron()));
 			}
 		}
 	}
@@ -304,19 +294,19 @@ public class XsdParserAdapter implements XsdParserPort {
 					String baseName = localTypeName(base);
 					Element baseType = findType(complexTypes, baseNamespace, baseName);
 					if (baseType != null) {
-						parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
-								enumeraciones, typeStack, baseNamespace, baseName);
+						parseComplexType(baseType, parentPath, complexTypes, simpleTypes, globalElements, elementos,
+								atributos, enumeraciones, typeStack, baseNamespace, baseName);
 					}
-					parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
-							enumeraciones, typeStack);
+					parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements, elementos,
+							atributos, enumeraciones, typeStack);
 					for (Element attribute : children(content, "attribute")) {
 						parseAttribute(attribute, parentPath, simpleTypes, atributos);
 					}
 				} else {
 					Element sequence = firstChild(complexType, "sequence");
 					if (sequence != null) {
-						parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements, elementos, atributos,
-								enumeraciones, typeStack);
+						parseParticle(sequence, parentPath, complexTypes, simpleTypes, globalElements, elementos,
+								atributos, enumeraciones, typeStack);
 					}
 					if (firstChild(complexType, "choice") != null) {
 						throw new InfrastructureException("FACTUCORE.XSD.CHOICE.NO_SOPORTADO", parentPath);

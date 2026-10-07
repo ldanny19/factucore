@@ -88,8 +88,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 	}
 
 	private Element crearElemento(Document document, ElementoXsdModel definicion, Object valor,
-			DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-			Map<String, Object> contextoFactuCore, String namespaceXml) {
+			DocumentDefinitionModel definition, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+			String namespaceXml) {
 		Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
 
 		aplicarAtributos(elemento, definicion, definition, contextoJson, contextoFactuCore);
@@ -110,15 +110,14 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 				continue;
 			}
 
-			Object valorHijo = obtenerValor(contextoLocal, contextoJson, contextoFactuCore,
-					mapeo.getTipoOrigen(), mapeo.getOrigen());
+			Object valorHijo = obtenerValor(contextoLocal, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(),
+					mapeo.getOrigen());
 
 			if (valorHijo == null) {
 				continue;
 			}
 
-			agregarHijo(document, elemento, hijo, valorHijo, definition,
-					contextoJson, contextoFactuCore, namespaceXml);
+			agregarHijo(document, elemento, hijo, valorHijo, definition, contextoJson, contextoFactuCore, namespaceXml);
 		}
 
 		return elemento;
@@ -133,19 +132,19 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 	}
 
 	private void agregarHijo(Document document, Element padre, ElementoXsdModel definicion, Object valor,
-			DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-			Map<String, Object> contextoFactuCore, String namespaceXml) {
+			DocumentDefinitionModel definition, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+			String namespaceXml) {
 		if (valor instanceof Iterable<?> iterable) {
 			for (Object item : iterable) {
-				Element hijo = crearElemento(document, definicion, item, definition,
-						contextoJson, contextoFactuCore, namespaceXml);
+				Element hijo = crearElemento(document, definicion, item, definition, contextoJson, contextoFactuCore,
+						namespaceXml);
 				padre.appendChild(hijo);
 			}
 			return;
 		}
 
-		Element hijo = crearElemento(document, definicion, valor, definition,
-				contextoJson, contextoFactuCore, namespaceXml);
+		Element hijo = crearElemento(document, definicion, valor, definition, contextoJson, contextoFactuCore,
+				namespaceXml);
 		padre.appendChild(hijo);
 	}
 
@@ -157,36 +156,27 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 	}
 
 	private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
-		return definition.getMapeos().stream()
-				.filter(MapeoXsdModel::esElemento)
-				.filter(mapeo -> Objects.equals(mapeo.getElementoXsdId(), elemento.getId()))
-				.findFirst()
-				.orElse(null);
+		return definition.getMapeos().stream().filter(MapeoXsdModel::esElemento)
+				.filter(mapeo -> Objects.equals(mapeo.getElementoXsdId(), elemento.getId())).findFirst().orElse(null);
 	}
 
-	private void aplicarAtributos(Element elemento, ElementoXsdModel definicion,
-			DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-			Map<String, Object> contextoFactuCore) {
+	private void aplicarAtributos(Element elemento, ElementoXsdModel definicion, DocumentDefinitionModel definition,
+			Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore) {
 		definition.getAtributos().stream()
 				.filter(atributo -> Objects.equals(atributo.getElementoXsdId(), definicion.getId()))
-				.forEach(atributo -> aplicarAtributo(elemento, atributo, definition,
-						contextoJson, contextoFactuCore));
+				.forEach(atributo -> aplicarAtributo(elemento, atributo, definition, contextoJson, contextoFactuCore));
 	}
 
-	private void aplicarAtributo(Element elemento, AtributoXsdModel atributo,
-			DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-			Map<String, Object> contextoFactuCore) {
-		MapeoXsdModel mapeo = definition.getMapeos().stream()
-				.filter(MapeoXsdModel::esAtributo)
-				.filter(item -> Objects.equals(item.getAtributoXsdId(), atributo.getId()))
-				.findFirst()
-				.orElse(null);
+	private void aplicarAtributo(Element elemento, AtributoXsdModel atributo, DocumentDefinitionModel definition,
+			Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore) {
+		MapeoXsdModel mapeo = definition.getMapeos().stream().filter(MapeoXsdModel::esAtributo)
+				.filter(item -> Objects.equals(item.getAtributoXsdId(), atributo.getId())).findFirst().orElse(null);
 
 		Object valor = null;
 
 		if (mapeo != null) {
-			valor = obtenerValor(contextoJson, contextoJson, contextoFactuCore,
-					mapeo.getTipoOrigen(), mapeo.getOrigen());
+			valor = obtenerValor(contextoJson, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(),
+					mapeo.getOrigen());
 		}
 
 		if (valor != null) {

@@ -14,11 +14,13 @@ public class EmisionService {
 	private final PuntoEmisionService puntoEmisionService;
 
 	public ResultadoEmision resolver(Long empresaId, Long establecimientoId, Long puntoEmisionId) {
-		Establecimiento establecimiento = establecimientoService
-				.obtenerPorId(establecimientoId).filter(item -> empresaId != null && empresaId.equals(item.getEmpresa().getId())).orElseThrow();
+		Establecimiento establecimiento = establecimientoService.obtenerPorId(establecimientoId)
+				.filter(item -> empresaId != null && empresaId.equals(item.getEmpresa().getId())).orElseThrow();
 
-		PuntoEmision puntoEmision = puntoEmisionService
-				.obtenerPorId(puntoEmisionId).filter(item -> item.getEstablecimiento() != null && establecimiento.getId().equals(item.getEstablecimiento().getId())).orElseThrow();
+		PuntoEmision puntoEmision = puntoEmisionService.obtenerPorId(puntoEmisionId)
+				.filter(item -> item.getEstablecimiento() != null
+						&& establecimiento.getId().equals(item.getEstablecimiento().getId()))
+				.orElseThrow();
 
 		return new ResultadoEmision(establecimiento, puntoEmision);
 	}

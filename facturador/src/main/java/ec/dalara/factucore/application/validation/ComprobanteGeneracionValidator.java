@@ -1,17 +1,13 @@
 package ec.dalara.factucore.application.validation;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;

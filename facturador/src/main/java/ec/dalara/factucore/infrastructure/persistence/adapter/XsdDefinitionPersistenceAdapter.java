@@ -52,8 +52,9 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition) {
 		LocalDateTime ahora = LocalDateTime.now();
 
-		DocumentoXsd documento = documentoRepository.findByCodigoForUpdate(request.codigo()).orElseGet(() -> documentoRepository
-				.save(DocumentoXsd.builder().codigo(request.codigo()).nombre(request.nombre()).descripcion(request.descripcion())
+		DocumentoXsd documento = documentoRepository.findByCodigoForUpdate(request.codigo())
+				.orElseGet(() -> documentoRepository.save(DocumentoXsd.builder().codigo(request.codigo())
+						.nombre(request.nombre()).descripcion(request.descripcion())
 						.tipoDocumento(request.tipoDocumento()).prefijoArchivo(request.prefijoArchivo())
 						.estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario()).fechaCreacion(ahora)
 						.observacion(request.observacion()).build()));
@@ -244,7 +245,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 	}
 
-	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneEstructuraObjeto, XsdDefinitionSource definition) {
+	private ObjectNode esquemaElemento(XsdElementSource source, boolean tieneEstructuraObjeto,
+			XsdDefinitionSource definition) {
 		ObjectNode base = objectMapper.createObjectNode();
 
 		if (source.esRepetible()) {
@@ -321,8 +323,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 
 		for (XsdAttributeSource attribute : definition.atributos()) {
-			if (esSeccionFactuCore(attribute.rutaElemento(), definition)
-					|| esAtributoTecnico(attribute, definition)
+			if (esSeccionFactuCore(attribute.rutaElemento(), definition) || esAtributoTecnico(attribute, definition)
 					|| !source.ruta().equals(attribute.rutaElemento())) {
 				continue;
 			}
@@ -361,10 +362,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 	private boolean tieneEstructuraObjeto(XsdElementSource source, XsdDefinitionSource definition) {
 		return tieneHijos(source.ruta(), definition)
-				|| definition.atributos().stream()
-						.anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)
-								&& !esAtributoTecnico(a, definition)
-								&& source.ruta().equals(a.rutaElemento()));
+				|| definition.atributos().stream().anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)
+						&& !esAtributoTecnico(a, definition) && source.ruta().equals(a.rutaElemento()));
 	}
 
 	private boolean tieneHijos(String ruta, XsdDefinitionSource definition) {
@@ -373,17 +372,14 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private List<XsdElementSource> elementosEntrada(XsdDefinitionSource definition) {
-		return definition.elementos().stream()
-				.filter(source -> !esSeccionFactuCore(source.ruta(), definition))
-				.filter(source -> !esElementoTecnico(source, definition))
-				.toList();
+		return definition.elementos().stream().filter(source -> !esSeccionFactuCore(source.ruta(), definition))
+				.filter(source -> !esElementoTecnico(source, definition)).toList();
 	}
 
 	private boolean esSeccionFactuCore(String ruta, XsdDefinitionSource definition) {
 		String raiz = definition.elementoRaiz();
 		return "factura".equals(raiz)
-				&& (ruta.equals(raiz + ".infoTributaria")
-						|| ruta.startsWith(raiz + ".infoTributaria."));
+				&& (ruta.equals(raiz + ".infoTributaria") || ruta.startsWith(raiz + ".infoTributaria."));
 	}
 
 	private boolean esElementoTecnico(XsdElementSource source, XsdDefinitionSource definition) {

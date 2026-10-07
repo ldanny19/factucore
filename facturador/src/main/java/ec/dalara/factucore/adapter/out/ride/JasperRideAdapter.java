@@ -32,12 +32,12 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 @Component
 @RequiredArgsConstructor
@@ -291,13 +291,13 @@ public class JasperRideAdapter implements RidePort {
 		return valor != null;
 	}
 
-	private void compilarSubreportes(String nombrePlantilla, Path origen, Path destino,
-			Map<String, Object> parametros) throws JRException {
+	private void compilarSubreportes(String nombrePlantilla, Path origen, Path destino, Map<String, Object> parametros)
+			throws JRException {
 		List<String> subreportes = switch (nombrePlantilla) {
 		case FACTURA -> List.of("facturaInfoAdicional.jrxml", "facturaFormasPago.jrxml", "totalesComprobante.jrxml");
 		case NOTA_CREDITO -> List.of("facturaInfoAdicional.jrxml", "totalesComprobante.jrxml");
-		case NOTA_DEBITO -> List.of("facturaInfoAdicional.jrxml", "facturaFormasPago.jrxml",
-				"totalesComprobante.jrxml");
+		case NOTA_DEBITO ->
+			List.of("facturaInfoAdicional.jrxml", "facturaFormasPago.jrxml", "totalesComprobante.jrxml");
 		case GUIA_REMISION -> List.of("guiaRemisionDetalles.jrxml", "facturaInfoAdicional.jrxml");
 		case COMPROBANTE_RETENCION -> List.of("facturaInfoAdicional.jrxml");
 		default -> Collections.emptyList();

@@ -23,10 +23,10 @@ import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentoXsdModel;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
+import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.Establecimiento;
 import ec.dalara.factucore.infrastructure.persistence.entity.PuntoEmision;
-import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 
 class GeneracionClaveAccesoWorkflowStepTest {
 
@@ -47,7 +47,7 @@ class GeneracionClaveAccesoWorkflowStepTest {
 
 		when(empresaService.obtenerPorId(10L)).thenReturn(Optional.of(empresa));
 		when(emisionService.resolver(10L, 20L, 30L))
-			.thenReturn(new EmisionService.ResultadoEmision(establecimiento, puntoEmision));
+				.thenReturn(new EmisionService.ResultadoEmision(establecimiento, puntoEmision));
 
 		var documento = DocumentoXsd.builder().id(40L).codigo("FACTURA").nombre("Factura").tipoDocumento("01")
 				.prefijoArchivo("factura").build();
@@ -64,8 +64,8 @@ class GeneracionClaveAccesoWorkflowStepTest {
 		when(claveAccesoService.generarConCodigoNumerico(any(ClaveAccesoDatos.class))).thenReturn(clave);
 
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("tx-1")
-				.fechaInicio(LocalDateTime.parse("2026-09-22T10:00:00")).versionXsd("1.1.0").usuario("usuario").canal("API")
-				.idEmpresa(10L).idEstablecimiento(20L).idPuntoEmision(30L).idTipoDocumento(40L).build();
+				.fechaInicio(LocalDateTime.parse("2026-09-22T10:00:00")).versionXsd("1.1.0").usuario("usuario")
+				.canal("API").idEmpresa(10L).idEstablecimiento(20L).idPuntoEmision(30L).idTipoDocumento(40L).build();
 
 		var contexto = ContextoWorkflow.nuevo(request);
 		contexto.setSecuencial("000000001");

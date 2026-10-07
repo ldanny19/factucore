@@ -125,8 +125,8 @@ public class XsdConsultaService {
 	}
 
 	private MapeoXsdModel crearMapeoModel(MapeoXsd mapeo) {
-		return new MapeoXsdModel(mapeo.getId(), mapeo.getVersionDocumentoXsd().getId(), mapeo.getTipoOrigen(), mapeo.getOrigen(),
-				mapeo.getElementoXsd() == null ? null : mapeo.getElementoXsd().getId(),
+		return new MapeoXsdModel(mapeo.getId(), mapeo.getVersionDocumentoXsd().getId(), mapeo.getTipoOrigen(),
+				mapeo.getOrigen(), mapeo.getElementoXsd() == null ? null : mapeo.getElementoXsd().getId(),
 				mapeo.getAtributoXsd() == null ? null : mapeo.getAtributoXsd().getId(), mapeo.getTipoMapeo());
 	}
 }

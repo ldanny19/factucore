@@ -9,11 +9,12 @@ import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 @Mapper(config = MapStructApplicationConfig.class)
 public interface MapeoXsdMapper {
 
-    default MapeoXsdModel toModel(MapeoXsdRequest r) {
-        if (r == null) return null;
-        return new MapeoXsdModel(null, r.getIdVersionDocumentoXsd(), r.getTipoOrigen(), r.getOrigen(),
-                r.getIdElementoXsd(), r.getIdAtributoXsd(), r.getTipoMapeo());
-    }
+	default MapeoXsdModel toModel(MapeoXsdRequest r) {
+		if (r == null)
+			return null;
+		return new MapeoXsdModel(null, r.getIdVersionDocumentoXsd(), r.getTipoOrigen(), r.getOrigen(),
+				r.getIdElementoXsd(), r.getIdAtributoXsd(), r.getTipoMapeo());
+	}
 
-    MapeoXsdResponse toResponse(MapeoXsdModel model);
+	MapeoXsdResponse toResponse(MapeoXsdModel model);
 }

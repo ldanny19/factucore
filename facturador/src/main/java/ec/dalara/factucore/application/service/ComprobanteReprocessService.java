@@ -64,8 +64,7 @@ public class ComprobanteReprocessService {
 					estadoAnterior, resultado, fechaInicio, LocalDateTime.now());
 			return resultado;
 		} catch (RuntimeException exception) {
-			comprobanteAuditoriaService.registrarError(contexto.getComprobanteId(), step.etapa().name(),
-					estadoAnterior,
+			comprobanteAuditoriaService.registrarError(contexto.getComprobanteId(), step.etapa().name(), estadoAnterior,
 					exception instanceof ec.dalara.factucore.application.workflow.WorkflowException workflowException
 							? workflowException.getCodigo()
 							: null,

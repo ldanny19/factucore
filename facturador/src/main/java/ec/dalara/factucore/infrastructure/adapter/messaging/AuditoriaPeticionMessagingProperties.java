@@ -10,7 +10,7 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "factucore.auditoria.peticion")
 public class AuditoriaPeticionMessagingProperties {
 
-    private boolean habilitada = false;
-    private String tipoEvento = "REGISTRO_AUDITORIA_HTTP";
-    private String versionEvento = "1.0";
+	private boolean habilitada = false;
+	private String tipoEvento = "REGISTRO_AUDITORIA_HTTP";
+	private String versionEvento = "1.0";
 }

@@ -6,9 +6,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import jakarta.persistence.LockModeType;
-
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
+import jakarta.persistence.LockModeType;
 
 public interface DocumentoXsdRepository extends BaseRepository<DocumentoXsd, Long> {
 
