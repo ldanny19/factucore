@@ -58,7 +58,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var definition = definitionProvider
-				.obtenerDefinicionVigente(documentoSolicitado.getCodigo(), solicitud.getFechaInicio().toLocalDateTime())
+				.obtenerDefinicionVigente(documentoSolicitado.getCodigo(), solicitud.getFechaInicio())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		contexto.setDefinicionDocumento(definition);

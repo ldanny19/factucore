@@ -38,7 +38,7 @@ public class FirmaElectronicaWorkflowStep implements WorkflowStep {
 		char[] password = passwordPort.obtenerPassword(contexto.getSolicitud().getIdEmpresa());
 		try {
 			String xmlFirmado = firmaElectronicaService.firmar(contexto.getSolicitud().getIdEmpresa(),
-					contexto.getXml(), password, contexto.getSolicitud().getFechaInicio().toLocalDateTime());
+					contexto.getXml(), password, contexto.getSolicitud().getFechaInicio());
 
 			contexto.setXmlFirmado(xmlFirmado);
 			String ruta = evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado,

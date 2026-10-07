@@ -41,7 +41,7 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 
 				definition = definitionProvider
 					.obtenerDefinicionVigente(documento.getCodigo(),
-							solicitud.getFechaInicio().toLocalDateTime())
+							solicitud.getFechaInicio())
 					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 			contexto.setDefinicionDocumento(definition);
 		}

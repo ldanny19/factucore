@@ -1,7 +1,6 @@
 package ec.dalara.factucore.application.validation;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,13 +77,13 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 
 	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
-		OffsetDateTime fechaInicio = request.getFechaInicio();
+		LocalDateTime fechaInicio = request.getFechaInicio();
 
 		if (fechaInicio == null) {
 			return;
 		}
 
-		LocalDateTime fechaEmision = convertirFecha(fechaInicio);
+		LocalDateTime fechaEmision = fechaInicio;
 
 		var documentoOptional = documentoXsdService.obtenerPorId(request.getIdTipoDocumento());
 		if (documentoOptional.isEmpty()) {
@@ -114,9 +113,5 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 		return objectMapper.convertValue(datos, new TypeReference<Map<String, Object>>() {
 		});
-	}
-
-	private LocalDateTime convertirFecha(OffsetDateTime fecha) {
-		return fecha.toLocalDateTime();
 	}
 }
