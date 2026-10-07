@@ -1,6 +1,7 @@
 package ec.dalara.factucore.adapter.out.ride;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
@@ -14,15 +15,20 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.RidePort;
+import ec.dalara.factucore.application.service.ComprobanteDetalleImpuestoService;
+import ec.dalara.factucore.application.service.ComprobanteDetalleService;
+import ec.dalara.factucore.application.service.ComprobanteInformacionAdicionalService;
+import ec.dalara.factucore.application.service.ComprobantePagoService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalleImpuesto;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteInformacionAdicional;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
@@ -43,14 +49,18 @@ public class JasperRideAdapter implements RidePort {
 	private static final String GUIA_REMISION = "guiaRemision";
 	private static final String COMPROBANTE_RETENCION = "comprobanteRetencion";
 
-	private final ObjectMapper objectMapper;
+	private final ComprobanteDetalleService comprobanteDetalleService;
+	private final ComprobanteDetalleImpuestoService comprobanteDetalleImpuestoService;
+	private final ComprobantePagoService comprobantePagoService;
+	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
 
 	@Value("${factucore.path.jasper}")
 	private String rutaJasper;
 
 	@Override
+	@Transactional(readOnly = true)
 	public byte[] generar(Comprobante comprobante, String nombreComprobante) {
-		if (comprobante == null || comprobante.getDatosComprobante() == null) {
+		if (comprobante == null || comprobante.getId() == null) {
 			throw new ApplicationException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
 		}
 
@@ -70,25 +80,25 @@ public class JasperRideAdapter implements RidePort {
 		Path directorioCompilado = null;
 
 		try {
-			JsonNode datos = objectMapper.readTree(comprobante.getDatosComprobante());
-			Map<String, Object> parametros = construirParametros(comprobante, datos);
-
+			Map<String, Object> parametros = construirParametros(comprobante);
 			directorioCompilado = Files.createTempDirectory("factucore-jasper-");
 			compilarSubreportes(nombrePlantilla, directorio, directorioCompilado, parametros);
 
 			JasperReport reporte = JasperCompileManager.compileReport(plantilla.toString());
-			JRDataSource dataSource = crearDataSource(nombrePlantilla, datos, parametros);
+			JRDataSource dataSource = crearDataSource(nombrePlantilla, comprobante, parametros);
 			JasperPrint jasperPrint = JasperFillManager.fillReport(reporte, parametros, dataSource);
 
 			return JasperExportManager.exportReportToPdf(jasperPrint);
-		} catch (IOException | JRException exception) {
+		} catch (JRException exception) {
+			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
+		} catch (IOException exception) {
 			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
 		} finally {
 			eliminarDirectorioTemporal(directorioCompilado);
 		}
 	}
 
-	private Map<String, Object> construirParametros(Comprobante comprobante, JsonNode datos) {
+	private Map<String, Object> construirParametros(Comprobante comprobante) {
 		Map<String, Object> parametros = new LinkedHashMap<>();
 
 		parametros.put("RUC", comprobante.getRucEmisor());
@@ -107,73 +117,178 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("AMBIENTE", comprobante.getAmbiente());
 		parametros.put("NOM_COMERCIAL", comprobante.getNombreComercialEmisor());
 
-		parametros.put("GUIA", buscarValor(datos, "guiaRemision"));
-		parametros.put("CONT_ESPECIAL", buscarValor(datos, "contribuyenteEspecial"));
-		parametros.put("LLEVA_CONTABILIDAD", buscarValor(datos, "obligadoContabilidad"));
-		parametros.put("NEGOCIABLE", buscarBoolean(datos, "tipoNegociable"));
-		parametros.put("REGIMEN_TRIBUTARIO", buscarValor(datos, "regimenRimpe"));
-		parametros.put("REGIMEN_RIMPE", buscarValor(datos, "regimenRimpe"));
-		parametros.put("AGENTE_RETENCION", buscarValor(datos, "agenteRetencion"));
-		parametros.put("DESCUENTO", buscarValor(datos, "totalDescuento"));
-		parametros.put("TOTAL_SIN_SUBSIDIO", buscarValor(datos, "totalSinImpuestos"));
-		parametros.put("AHORRO_POR_SUBSIDIO", buscarValor(datos, "ahorroPorSubsidio"));
-		parametros.put("RAZON_MODIF", buscarValor(datos, "razonModificacion"));
-		parametros.put("DOC_MODIFICADO", buscarValor(datos, "codDocModificado"));
-		parametros.put("NUM_DOC_MODIFICADO", buscarValor(datos, "numDocModificado"));
-		parametros.put("FECHA_EMISION_DOC_SUSTENTO", buscarValor(datos, "fechaEmisionDocSustento"));
-		parametros.put("EJERCICIO_FISCAL", buscarValor(datos, "periodoFiscal"));
+		parametros.put("GUIA", null);
+		parametros.put("CONT_ESPECIAL", null);
+		parametros.put("LLEVA_CONTABILIDAD", null);
+		parametros.put("NEGOCIABLE", null);
+		parametros.put("REGIMEN_TRIBUTARIO", null);
+		parametros.put("AGENTE_RETENCION", null);
 
-		parametros.put("IVA_12", buscarValor(datos, "iva12"));
-		parametros.put("IVA_0", buscarValor(datos, "iva0"));
-		parametros.put("TOTAL", buscarValor(datos, "importeTotal"));
-		parametros.put("ICE", buscarValor(datos, "ice"));
-		parametros.put("IVA", buscarValor(datos, "iva"));
-		parametros.put("TOTAL_SIN_IMP", buscarValor(datos, "totalSinImpuestos"));
-		parametros.put("NO_OBJETO_IVA", buscarValor(datos, "noObjetoIva"));
-		parametros.put("EXENTO_IVA", buscarValor(datos, "exentoIva"));
-		parametros.put("PORCENTAJE_IVA", buscarValor(datos, "porcentajeIva"));
+		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobante.getId());
+		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal totalSinImpuestos = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-		parametros.put("FECHA_INI_TRANSPORTE", buscarValor(datos, "fechaIniTransporte"));
-		parametros.put("FECHA_FIN_TRANSPORTE", buscarValor(datos, "fechaFinTransporte"));
-		parametros.put("RUC_TRANSPORTISTA", buscarValor(datos, "rucTransportista"));
-		parametros.put("RS_TRANSPORTISTA", buscarValor(datos, "razonSocialTransportista"));
-		parametros.put("PLACA", buscarValor(datos, "placa"));
-		parametros.put("PUNTO_PARTIDA", buscarValor(datos, "puntoPartida"));
+		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
+		BigDecimal iva = impuestos.stream().filter(impuesto -> "2".equals(impuesto.getCodigoImpuesto()))
+				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal ice = impuestos.stream().filter(impuesto -> "3".equals(impuesto.getCodigoImpuesto()))
+				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal total = totalSinImpuestos.add(impuestos.stream().map(ComprobanteDetalleImpuesto::getValor)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add));
 
-		parametros.put("INFO_ADICIONAL", obtenerLista(datos, "infoAdicional", "campoAdicional"));
+		parametros.put("DESCUENTO", descuento);
+		parametros.put("TOTAL_SIN_IMP", totalSinImpuestos);
+		parametros.put("TOTAL_SIN_SUBSIDIO", totalSinImpuestos);
+		parametros.put("IVA", iva);
+		parametros.put("ICE", ice);
+		parametros.put("TOTAL", total);
+		parametros.put("IVA_12", iva);
+		parametros.put("IVA_0", BigDecimal.ZERO);
+		parametros.put("NO_OBJETO_IVA", BigDecimal.ZERO);
+		parametros.put("EXENTO_IVA", BigDecimal.ZERO);
+		parametros.put("PORCENTAJE_IVA", null);
+		parametros.put("AHORRO_POR_SUBSIDIO", BigDecimal.ZERO);
+
+		parametros.put("RAZON_MODIF", null);
+		parametros.put("DOC_MODIFICADO", null);
+		parametros.put("NUM_DOC_MODIFICADO", null);
+		parametros.put("FECHA_EMISION_DOC_SUSTENTO", null);
+		parametros.put("EJERCICIO_FISCAL", null);
+		parametros.put("FECHA_INI_TRANSPORTE", null);
+		parametros.put("FECHA_FIN_TRANSPORTE", null);
+		parametros.put("RUC_TRANSPORTISTA", null);
+		parametros.put("RS_TRANSPORTISTA", null);
+		parametros.put("PLACA", null);
+		parametros.put("PUNTO_PARTIDA", null);
+
+		parametros.put("INFO_ADICIONAL", construirInformacionAdicional(comprobante.getId()));
 
 		return parametros;
 	}
 
-	private JRDataSource crearDataSource(String nombrePlantilla, JsonNode datos, Map<String, Object> parametros) {
-		JsonNode documento = obtenerDocumento(datos, nombrePlantilla);
-		List<Map<String, Object>> filas;
+	private JRDataSource crearDataSource(String nombrePlantilla, Comprobante comprobante,
+			Map<String, Object> parametros) {
+		List<Map<String, Object>> filas = new ArrayList<>();
 
-		switch (nombrePlantilla) {
-		case FACTURA, NOTA_CREDITO -> filas = obtenerFilas(documento, "detalles", "detalle");
-		case NOTA_DEBITO -> filas = obtenerFilas(documento, "motivos", "motivo");
-		case GUIA_REMISION -> filas = obtenerFilas(documento, "detalles", "detalle");
-		case COMPROBANTE_RETENCION -> filas = obtenerFilas(documento, "impuestos", "impuesto");
-		default -> filas = new ArrayList<>();
+		if (FACTURA.equals(nombrePlantilla) || NOTA_CREDITO.equals(nombrePlantilla)
+				|| GUIA_REMISION.equals(nombrePlantilla)) {
+			filas = construirFilasDetalle(comprobante.getId());
 		}
 
 		if (filas.isEmpty()) {
 			filas.add(new LinkedHashMap<>());
 		}
 
-		Collection<Map<String, Object>> infoAdicional = obtenerLista(datos, "infoAdicional", "campoAdicional");
-		Collection<Map<String, Object>> formasPago = construirFormasPago(documento);
-		Collection<Map<String, Object>> totales = construirTotales(documento);
+		Collection<Map<String, Object>> infoAdicional = construirInformacionAdicional(comprobante.getId());
+		Collection<Map<String, Object>> formasPago = construirFormasPago(comprobante.getId());
+		Collection<Map<String, Object>> totales = construirTotales(comprobante.getId());
 
 		for (Map<String, Object> fila : filas) {
-			fila.putIfAbsent("infoAdicional", infoAdicional);
-			fila.putIfAbsent("formasPago", formasPago);
-			fila.putIfAbsent("totalesComprobante", totales);
+			fila.put("infoAdicional", infoAdicional);
+			fila.put("formasPago", formasPago);
+			fila.put("totalesComprobante", totales);
 		}
 
 		parametros.put("INFO_ADICIONAL", infoAdicional);
-
 		return new JRMapCollectionDataSource(filas);
+	}
+
+	private List<Map<String, Object>> construirFilasDetalle(Long comprobanteId) {
+		List<Map<String, Object>> filas = new ArrayList<>();
+
+		for (ComprobanteDetalle detalle : comprobanteDetalleService.listarPorComprobante(comprobanteId)) {
+			Map<String, Object> fila = new LinkedHashMap<>();
+			fila.put("codigoPrincipal", detalle.getCodigoPrincipal());
+			fila.put("codigoAuxiliar", detalle.getCodigoAuxiliar());
+			fila.put("cantidad", detalle.getCantidad());
+			fila.put("descripcion", detalle.getDescripcion());
+			fila.put("precioUnitario", detalle.getPrecioUnitario());
+			fila.put("precioSinSubsidio", null);
+			fila.put("precioTotalSinImpuesto", detalle.getPrecioTotalSinImpuesto());
+			fila.put("detalle1", null);
+			fila.put("detalle2", null);
+			fila.put("detalle3", null);
+			fila.put("descuento", detalle.getDescuento());
+			filas.add(fila);
+		}
+
+		return filas;
+	}
+
+	private Collection<Map<String, Object>> construirFormasPago(Long comprobanteId) {
+		List<Map<String, Object>> resultado = new ArrayList<>();
+
+		for (ComprobantePago pago : comprobantePagoService.listarPorComprobante(comprobanteId)) {
+			Map<String, Object> fila = new LinkedHashMap<>();
+			fila.put("formaPago", pago.getCodigoFormaPago());
+			fila.put("valor", valor(pago.getTotal()));
+			resultado.add(fila);
+		}
+
+		return resultado;
+	}
+
+	private Collection<Map<String, Object>> construirInformacionAdicional(Long comprobanteId) {
+		List<Map<String, Object>> resultado = new ArrayList<>();
+
+		for (ComprobanteInformacionAdicional informacion : comprobanteInformacionAdicionalService
+				.listarPorComprobante(comprobanteId)) {
+			Map<String, Object> fila = new LinkedHashMap<>();
+			fila.put("nombre", informacion.getNombre());
+			fila.put("valor", informacion.getValor());
+			resultado.add(fila);
+		}
+
+		return resultado;
+	}
+
+	private Collection<Map<String, Object>> construirTotales(Long comprobanteId) {
+		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobanteId);
+		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
+
+		BigDecimal subtotal = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal totalImpuestos = impuestos.stream().map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		List<Map<String, Object>> resultado = new ArrayList<>();
+		resultado.add(total("Subtotal sin impuestos", subtotal, false));
+		if (descuento.signum() != 0) {
+			resultado.add(total("Descuento", descuento, true));
+		}
+		for (ComprobanteDetalleImpuesto impuesto : impuestos) {
+			String descripcion = "Impuesto " + impuesto.getCodigoImpuesto() + " - " + impuesto.getCodigoPorcentaje();
+			resultado.add(total(descripcion, impuesto.getValor(), false));
+		}
+		resultado.add(total("Total", subtotal.add(totalImpuestos), false));
+
+		return resultado;
+	}
+
+	private Map<String, Object> total(String descripcion, BigDecimal valor, boolean esNegativo) {
+		Map<String, Object> fila = new LinkedHashMap<>();
+		fila.put("descripcion", descripcion);
+		fila.put("valor", valor);
+		fila.put("esNegativo", esNegativo);
+		return fila;
+	}
+
+	private List<ComprobanteDetalleImpuesto> obtenerImpuestos(List<ComprobanteDetalle> detalles) {
+		List<ComprobanteDetalleImpuesto> impuestos = new ArrayList<>();
+		for (ComprobanteDetalle detalle : detalles) {
+			impuestos.addAll(comprobanteDetalleImpuestoService.listarPorComprobanteDetalle(detalle.getId()));
+		}
+		return impuestos;
+	}
+
+	private boolean noNulo(BigDecimal valor) {
+		return valor != null;
 	}
 
 	private void compilarSubreportes(String nombrePlantilla, Path origen, Path destino,
@@ -201,127 +316,8 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("SUBREPORT_TOTALES", directorio);
 	}
 
-	private JsonNode obtenerDocumento(JsonNode datos, String nombrePlantilla) {
-		JsonNode documento = datos.get(nombrePlantilla);
-
-		if (documento != null && documento.isObject()) {
-			return documento;
-		}
-
-		if (datos.isObject()) {
-			var iterator = datos.fields();
-			while (iterator.hasNext()) {
-				JsonNode candidato = iterator.next().getValue();
-				if (candidato.isObject()) {
-					return candidato;
-				}
-			}
-		}
-
-		return datos;
-	}
-
-	private List<Map<String, Object>> obtenerFilas(JsonNode documento, String contenedor, String lista) {
-		JsonNode nodo = documento.path(contenedor).path(lista);
-		if (!nodo.isArray()) {
-			return new ArrayList<>();
-		}
-
-		return objectMapper.convertValue(nodo, new TypeReference<List<Map<String, Object>>>() {
-		});
-	}
-
-	private Collection<Map<String, Object>> construirFormasPago(JsonNode documento) {
-		JsonNode pagos = documento.path("infoFactura").path("pagos").path("pago");
-		if (!pagos.isArray()) {
-			pagos = documento.path("pagos").path("pago");
-		}
-
-		List<Map<String, Object>> resultado = new ArrayList<>();
-		if (pagos.isArray()) {
-			for (JsonNode pago : pagos) {
-				Map<String, Object> fila = new LinkedHashMap<>();
-				fila.put("formaPago", pago.path("formaPago").asText(null));
-				fila.put("valor", pago.path("total").asText(null));
-				resultado.add(fila);
-			}
-		}
-		return resultado;
-	}
-
-	private Collection<Map<String, Object>> construirTotales(JsonNode documento) {
-		JsonNode impuestos = documento.path("infoFactura").path("totalConImpuestos").path("totalImpuesto");
-		if (!impuestos.isArray()) {
-			impuestos = documento.path("totalConImpuestos").path("totalImpuesto");
-		}
-
-		List<Map<String, Object>> resultado = new ArrayList<>();
-		if (impuestos.isArray()) {
-			for (JsonNode impuesto : impuestos) {
-				Map<String, Object> fila = new LinkedHashMap<>();
-				fila.put("descripcion", impuesto.path("codigoPorcentaje").asText(null));
-				fila.put("valor", impuesto.path("valor").asText(null));
-				fila.put("esNegativo", false);
-				resultado.add(fila);
-			}
-		}
-		return resultado;
-	}
-
-	private Collection<Map<String, Object>> obtenerLista(JsonNode datos, String contenedor, String lista) {
-		JsonNode nodo = datos.path(contenedor).path(lista);
-		if (!nodo.isArray()) {
-			return List.of();
-		}
-		return objectMapper.convertValue(nodo, new TypeReference<List<Map<String, Object>>>() {
-		});
-	}
-
-	private Object buscarValor(JsonNode datos, String nombre) {
-		if (datos == null || datos.isMissingNode()) {
-			return null;
-		}
-
-		if (datos.isObject()) {
-			var fields = datos.fields();
-			while (fields.hasNext()) {
-				var entry = fields.next();
-				if (normalizarClave(entry.getKey()).equals(normalizarClave(nombre))) {
-					return entry.getValue().isValueNode() ? entry.getValue().asText() : entry.getValue();
-				}
-				Object encontrado = buscarValor(entry.getValue(), nombre);
-				if (encontrado != null) {
-					return encontrado;
-				}
-			}
-		}
-
-		if (datos.isArray()) {
-			for (JsonNode elemento : datos) {
-				Object encontrado = buscarValor(elemento, nombre);
-				if (encontrado != null) {
-					return encontrado;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	private Boolean buscarBoolean(JsonNode datos, String nombre) {
-		Object valor = buscarValor(datos, nombre);
-		if (valor == null) {
-			return null;
-		}
-		if (valor instanceof Boolean booleano) {
-			return booleano;
-		}
-		return Boolean.valueOf(String.valueOf(valor));
-	}
-
 	private String normalizarNombre(String nombre) {
-		String sinAcentos = Normalizer.normalize(nombre, Normalizer.Form.NFD)
-				.replaceAll("\\p{M}", "");
+		String sinAcentos = Normalizer.normalize(nombre, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
 		String limpio = sinAcentos.replaceAll("[^A-Za-z0-9]+", " ").trim().toLowerCase(Locale.ROOT);
 		StringBuilder resultado = new StringBuilder();
 
@@ -337,10 +333,6 @@ public class JasperRideAdapter implements RidePort {
 		}
 
 		return resultado.toString();
-	}
-
-	private String normalizarClave(String valor) {
-		return valor == null ? "" : normalizarNombre(valor);
 	}
 
 	private String valor(Object valor) {

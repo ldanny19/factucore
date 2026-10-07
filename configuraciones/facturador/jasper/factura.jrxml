@@ -58,18 +58,18 @@
 	<parameter name="AGENTE_RETENCION" class="java.lang.String"/>
 	<field name="codigoPrincipal" class="java.lang.String"/>
 	<field name="codigoAuxiliar" class="java.lang.String"/>
-	<field name="cantidad" class="java.lang.String"/>
+	<field name="cantidad" class="java.math.BigDecimal"/>
 	<field name="descripcion" class="java.lang.String"/>
 	<field name="precioUnitario" class="java.math.BigDecimal"/>
 	<field name="precioSinSubsidio" class="java.math.BigDecimal"/>
-	<field name="precioTotalSinImpuesto" class="java.lang.String"/>
+	<field name="precioTotalSinImpuesto" class="java.math.BigDecimal"/>
 	<field name="detalle1" class="java.lang.String"/>
 	<field name="detalle2" class="java.lang.String"/>
 	<field name="detalle3" class="java.lang.String"/>
 	<field name="infoAdicional" class="java.util.Collection"/>
 	<field name="formasPago" class="java.util.Collection"/>
 	<field name="totalesComprobante" class="java.util.Collection"/>
-	<field name="descuento" class="java.lang.String"/>
+	<field name="descuento" class="java.math.BigDecimal"/>
 	<title>
 		<band height="277" splitType="Stretch">
 			<rectangle radius="8">
