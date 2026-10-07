@@ -11,52 +11,31 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 
 @AutoConfiguration
 @EnableConfigurationProperties(MessagingProperties.class)
 @ConditionalOnProperty(prefix = "factucore.messaging", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ConditionalOnProperty(prefix = "factucore.messaging", name = "broker", havingValue = "KAFKA", matchIfMissing = true)
 public class KafkaMessagingConfiguration {
-
-    @Bean
-    ProducerFactory<String, String> kafkaProducerFactory(MessagingProperties properties) {
-        return KafkaBrokerMensajeria.crearProducerFactory(properties);
-    }
-
-    @Bean
-    KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
-        return new KafkaTemplate<>(producerFactory);
-    }
-
-    @Bean
-    ConsumerFactory<String, String> kafkaConsumerFactory(MessagingProperties properties) {
-        return KafkaBrokerMensajeria.crearConsumerFactory(properties);
-    }
 
     @Bean
     BrokerMensajeria kafkaBrokerMensajeria(
             MessagingProperties properties,
-            ObjectMapper objectMapper,
-            KafkaTemplate<String, String> template,
-            ConsumerFactory<String, String> consumerFactory) {
-        return new KafkaBrokerMensajeria(properties, objectMapper, template, consumerFactory);
+            ObjectMapper objectMapper) {
+        return new KafkaBrokerMensajeria(properties, objectMapper);
     }
 
     @Bean
     @ConditionalOnMissingBean(PublicadorMensajes.class)
     PublicadorMensajes publicadorMensajes(
-            BrokerMensajeria broker,
+            java.util.List<BrokerMensajeria> brokers,
             MessagingProperties properties) {
-        return new GenericPublicadorMensajes(broker, properties);
+        return new GenericPublicadorMensajes(brokers, properties);
     }
 
     @Bean
     GenericConsumidorRegistrar consumidorRegistrar(
-            BrokerMensajeria broker,
+            java.util.List<BrokerMensajeria> brokers,
             java.util.List<ec.dalara.factucore.messaging.api.ConsumidorMensajes> consumidores) {
-        return new GenericConsumidorRegistrar(broker, consumidores);
+        return new GenericConsumidorRegistrar(brokers, consumidores);
     }
 }
