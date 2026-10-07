@@ -15,9 +15,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -108,11 +108,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
     private List<Element> crearElementos(Document document, ElementoXsdModel definicion, Object contextoActual,
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
+            String namespaceXml, String rutaOrigenPadre) {
 
         MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
         Object valor = mapeo == null ? contextoActual
-                : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
+                : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
+                        rutaOrigenPadre);
 
         if (valor instanceof Iterable<?> iterable) {
             List<Element> elementos = new ArrayList<>();
@@ -160,7 +162,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         Map<String, Object> contextoLocal = convertirMapa(valor);
         agregarHijos(document, elemento, definicion, contextoLocal, definition, contextoJson, contextoFactuCore,
-                namespaceXml, obtenerRutaOrigenActual(definicion, definition, rutaOrigenPadre));
+                contextoGenerado, namespaceXml, obtenerRutaOrigenActual(definicion, definition, rutaOrigenPadre));
 
         return elemento;
     }
@@ -275,7 +277,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
     private void aplicarAtributos(Element elemento, ElementoXsdModel definicion, DocumentDefinitionModel definition,
             Object contextoActual, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-            String rutaOrigenPadre) {
+            Map<String, Object> contextoGenerado, String rutaOrigenPadre) {
 
         definition.getAtributos().stream()
                 .filter(atributo -> Objects.equals(atributo.getElementoXsdId(), definicion.getId()))
