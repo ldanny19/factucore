@@ -113,7 +113,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 			Object valorHijo = obtenerValor(contextoLocal, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(),
 					mapeo.getOrigen());
 
-			if (valorHijo == null) {
+			if (valorHijo == null && !tieneHijos(hijo, definition)) {
 				continue;
 			}
 
@@ -153,6 +153,11 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 				.filter(elemento -> Objects.equals(elemento.getElementoPadreId(), padre.getId()))
 				.sorted(Comparator.comparing(ElementoXsdModel::getOrden, Comparator.nullsLast(Integer::compareTo)))
 				.toList();
+	}
+
+	private boolean tieneHijos(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+		return definition.getElementos().stream()
+				.anyMatch(hijo -> Objects.equals(hijo.getElementoPadreId(), elemento.getId()));
 	}
 
 	private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
