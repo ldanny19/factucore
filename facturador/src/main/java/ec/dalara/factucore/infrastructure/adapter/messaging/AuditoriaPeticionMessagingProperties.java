@@ -11,6 +11,6 @@ import lombok.Setter;
 public class AuditoriaPeticionMessagingProperties {
 
     private boolean habilitada = false;
-    private String tipoEvento = "PETICION_AUDITADA";
+    private String tipoEvento = "REGISTRO_AUDITORIA_HTTP";
     private String versionEvento = "1.0";
 }
