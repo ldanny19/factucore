@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
@@ -32,7 +31,7 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 		return comprobanteAuditoriaRepository;
 	}
 
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Transactional
 	public void registrarResultado(Long comprobanteId, String etapa, String estadoAnterior, ResultadoEtapa resultado,
 			LocalDateTime fechaInicio, LocalDateTime fechaFin) {
 		if (comprobanteId == null || resultado == null || etapa == null || etapa.isBlank()) {
@@ -44,14 +43,9 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 			return;
 		}
 
-		int intento = comprobanteAuditoriaRepository
-				.findByComprobanteIdAndEtapaOrderByIntentoDesc(comprobanteId, etapa).stream()
-				.findFirst()
-				.map(ComprobanteAuditoria::getIntento)
-				.map(actual -> actual + 1)
-				.orElse(1);
-
+		int intento = siguienteIntento(comprobanteId, etapa);
 		var ahora = LocalDateTime.now(factuCoreClock);
+
 		var auditoria = ComprobanteAuditoria.builder()
 				.comprobante(comprobante)
 				.etapa(etapa)
@@ -68,6 +62,48 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 				.build();
 
 		comprobanteAuditoriaRepository.save(auditoria);
+	}
+
+	@Transactional
+	public void registrarError(Long comprobanteId, String etapa, String estadoAnterior, String codigoError,
+			String mensajeError, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+		if (comprobanteId == null || etapa == null || etapa.isBlank()) {
+			return;
+		}
+
+		var comprobante = comprobanteRepository.findById(comprobanteId).orElse(null);
+		if (comprobante == null) {
+			return;
+		}
+
+		int intento = siguienteIntento(comprobanteId, etapa);
+		var ahora = LocalDateTime.now(factuCoreClock);
+
+		var auditoria = ComprobanteAuditoria.builder()
+				.comprobante(comprobante)
+				.etapa(etapa)
+				.resultado(RESULTADO_ERROR)
+				.estadoAnterior(estadoAnterior)
+				.estadoNuevo(comprobante.getEstadoProceso())
+				.codigoError(codigoError)
+				.mensajeError(mensajeError)
+				.fechaInicio(fechaInicio == null ? ahora : fechaInicio)
+				.fechaFin(fechaFin == null ? ahora : fechaFin)
+				.intento(intento)
+				.estadoRegistro(EstadoRegistro.ACTIVO)
+				.observacion(null)
+				.build();
+
+		comprobanteAuditoriaRepository.save(auditoria);
+	}
+
+	private int siguienteIntento(Long comprobanteId, String etapa) {
+		return comprobanteAuditoriaRepository
+				.findByComprobanteIdAndEtapaOrderByIntentoDesc(comprobanteId, etapa).stream()
+				.findFirst()
+				.map(ComprobanteAuditoria::getIntento)
+				.map(actual -> actual + 1)
+				.orElse(1);
 	}
 
 	public List<ComprobanteAuditoria> listarPorComprobante(Long comprobanteId) {
