@@ -1,6 +1,7 @@
 package ec.dalara.factucore.adapter.out.xml;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,7 +55,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 			ElementoXsdModel raiz = obtenerRaiz(definition);
 			String namespaceXml = definition.getVersion().getNamespaceXml();
 
-			Element elementoRaiz = crearElemento(document, raiz, datos, definition, datos, contexto, namespaceXml);
+			Element elementoRaiz = crearElemento(document, raiz, datos, definition, datos, contexto, namespaceXml, null);
 			document.appendChild(elementoRaiz);
 
 			return serializar(document);
@@ -87,19 +88,101 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		return raices.get(0);
 	}
 
-	private Element crearElemento(Document document, ElementoXsdModel definicion, Object valor,
-			DocumentDefinitionModel definition, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-			String namespaceXml) {
+	private Element crearElemento(Document document, ElementoXsdModel definicion, Object contextoActual,
+			DocumentDefinitionModel definition, Map<String, Object> contextoJson,
+			Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
+
+		MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
+		Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
+		String rutaOrigenActual = rutaOrigenPadre;
+
+		if (mapeo != null && "JSON".equalsIgnoreCase(mapeo.getTipoOrigen())) {
+			rutaOrigenActual = mapeo.getOrigen();
+		}
+
 		Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
 
-		aplicarAtributos(elemento, definicion, definition, contextoJson, contextoFactuCore);
+		aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore,
+				rutaOrigenActual);
 
-		if (esValorSimple(valor) && valor != null) {
-			elemento.setTextContent(convertirValor(valor));
-			return elemento;
+		if (esValorSimple(valor)) {
+			if (valor != null) {
+				elemento.setTextContent(convertirValor(valor));
+				return elemento;
+			}
+
+			if (!tieneHijos(definicion, definition)) {
+				return null;
+			}
+		}
+
+		if (valor instanceof Iterable<?> iterable) {
+			for (Object item : iterable) {
+				Element elementoItem = crearElementoConContexto(document, definicion, item, definition, contextoJson,
+						contextoFactuCore, namespaceXml, rutaOrigenActual);
+				if (elementoItem != null) {
+					return elementoItem;
+				}
+			}
 		}
 
 		Map<String, Object> contextoLocal = convertirMapa(valor);
+		agregarHijos(document, elemento, definicion, contextoLocal, definition, contextoJson, contextoFactuCore,
+				namespaceXml, rutaOrigenActual);
+
+		return elemento;
+	}
+
+	private Element crearElementoConContexto(Document document, ElementoXsdModel definicion, Object contextoActual,
+			DocumentDefinitionModel definition, Map<String, Object> contextoJson,
+			Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
+
+		MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
+		Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
+		String rutaOrigenActual = rutaOrigenPadre;
+
+		if (mapeo != null && "JSON".equalsIgnoreCase(mapeo.getTipoOrigen())) {
+			rutaOrigenActual = mapeo.getOrigen();
+		}
+
+		Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
+
+		aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore,
+				rutaOrigenActual);
+
+		if (esValorSimple(valor)) {
+			if (valor != null) {
+				elemento.setTextContent(convertirValor(valor));
+			} else if (!tieneHijos(definicion, definition)) {
+				return null;
+			}
+
+			if (valor != null || !tieneHijos(definicion, definition)) {
+				return elemento;
+			}
+		}
+
+		if (valor instanceof Iterable<?> iterable) {
+			for (Object item : iterable) {
+				Element itemElemento = crearElementoConContexto(document, definicion, item, definition, contextoJson,
+						contextoFactuCore, namespaceXml, rutaOrigenActual);
+				if (itemElemento != null) {
+					return itemElemento;
+				}
+			}
+		}
+
+		Map<String, Object> contextoLocal = convertirMapa(valor);
+		agregarHijos(document, elemento, definicion, contextoLocal, definition, contextoJson, contextoFactuCore,
+				namespaceXml, rutaOrigenActual);
+
+		return elemento;
+	}
+
+	private void agregarHijos(Document document, Element padre, ElementoXsdModel definicion,
+			Map<String, Object> contextoLocal, DocumentDefinitionModel definition,
+			Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, String namespaceXml,
+			String rutaOrigenPadre) {
 
 		for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
 			MapeoXsdModel mapeo = obtenerMapeoElemento(hijo, definition);
@@ -108,17 +191,92 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 				continue;
 			}
 
-			Object valorHijo = obtenerValor(contextoLocal, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(),
-					mapeo.getOrigen());
+			Object valorHijo = resolverValor(mapeo, contextoLocal, contextoJson, contextoFactuCore, rutaOrigenPadre);
 
 			if (valorHijo == null && !tieneHijos(hijo, definition)) {
 				continue;
 			}
 
-			agregarHijo(document, elemento, hijo, valorHijo, definition, contextoJson, contextoFactuCore, namespaceXml);
+			if (valorHijo instanceof Iterable<?> iterable) {
+				for (Object item : iterable) {
+					Element elementoHijo = crearElementoConContexto(document, hijo, item, definition, contextoJson,
+							contextoFactuCore, namespaceXml, obtenerRutaJson(mapeo, rutaOrigenPadre));
+					if (elementoHijo != null) {
+						padre.appendChild(elementoHijo);
+					}
+				}
+				continue;
+			}
+
+			Element elementoHijo = crearElementoConContexto(document, hijo, valorHijo, definition, contextoJson,
+					contextoFactuCore, namespaceXml, obtenerRutaJson(mapeo, rutaOrigenPadre));
+			if (elementoHijo != null) {
+				padre.appendChild(elementoHijo);
+			}
+		}
+	}
+
+	private Object resolverValor(MapeoXsdModel mapeo, Object contextoActual, Map<String, Object> contextoJson,
+			Map<String, Object> contextoFactuCore, String rutaOrigenPadre) {
+
+		if (mapeo == null) {
+			return null;
 		}
 
-		return elemento;
+		String tipoOrigen = mapeo.getTipoOrigen();
+		String ruta = mapeo.getOrigen();
+
+		if (ruta == null || ruta.isBlank()) {
+			return null;
+		}
+
+		if ("FACTUCORE".equalsIgnoreCase(tipoOrigen)) {
+			return factuCoreSourcePort.resolver(ruta, contextoFactuCore).resultado();
+		}
+
+		if ("GENERADO".equalsIgnoreCase(tipoOrigen)) {
+			return obtenerRuta(contextoFactuCore, ruta);
+		}
+
+		String rutaRelativa = obtenerRutaRelativa(ruta, rutaOrigenPadre);
+		Object valor = obtenerRuta(convertirMapa(contextoActual), rutaRelativa);
+
+		if (valor != null) {
+			return valor;
+		}
+
+		if (!Objects.equals(rutaRelativa, ruta)) {
+			valor = obtenerRuta(convertirMapa(contextoActual), ruta);
+			if (valor != null) {
+				return valor;
+			}
+		}
+
+		return obtenerRuta(contextoJson, ruta);
+	}
+
+	private String obtenerRutaJson(MapeoXsdModel mapeo, String rutaOrigenPadre) {
+		if (mapeo == null || !"JSON".equalsIgnoreCase(mapeo.getTipoOrigen())) {
+			return rutaOrigenPadre;
+		}
+		return mapeo.getOrigen();
+	}
+
+	private String obtenerRutaRelativa(String ruta, String rutaPadre) {
+		if (rutaPadre == null || rutaPadre.isBlank()) {
+			return ruta;
+		}
+
+		if (ruta.equals(rutaPadre)) {
+			return "";
+		}
+
+		String prefijo = rutaPadre + ".";
+		if (ruta.startsWith(prefijo)) {
+			return ruta.substring(prefijo.length());
+		}
+
+		return ruta;
 	}
 
 	private Element crearElementoXml(Document document, String nombre, String namespaceXml) {
@@ -127,23 +285,6 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		}
 
 		return document.createElementNS(namespaceXml, nombre);
-	}
-
-	private void agregarHijo(Document document, Element padre, ElementoXsdModel definicion, Object valor,
-			DocumentDefinitionModel definition, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-			String namespaceXml) {
-		if (valor instanceof Iterable<?> iterable) {
-			for (Object item : iterable) {
-				Element hijo = crearElemento(document, definicion, item, definition, contextoJson, contextoFactuCore,
-						namespaceXml);
-				padre.appendChild(hijo);
-			}
-			return;
-		}
-
-		Element hijo = crearElemento(document, definicion, valor, definition, contextoJson, contextoFactuCore,
-				namespaceXml);
-		padre.appendChild(hijo);
 	}
 
 	private List<ElementoXsdModel> obtenerHijos(ElementoXsdModel padre, DocumentDefinitionModel definition) {
@@ -164,23 +305,23 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 	}
 
 	private void aplicarAtributos(Element elemento, ElementoXsdModel definicion, DocumentDefinitionModel definition,
-			Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore) {
+			Object contextoActual, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+			String rutaOrigenPadre) {
+
 		definition.getAtributos().stream()
 				.filter(atributo -> Objects.equals(atributo.getElementoXsdId(), definicion.getId()))
-				.forEach(atributo -> aplicarAtributo(elemento, atributo, definition, contextoJson, contextoFactuCore));
+				.forEach(atributo -> aplicarAtributo(elemento, atributo, definition, contextoActual, contextoJson,
+						contextoFactuCore, rutaOrigenPadre));
 	}
 
 	private void aplicarAtributo(Element elemento, AtributoXsdModel atributo, DocumentDefinitionModel definition,
-			Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore) {
+			Object contextoActual, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+			String rutaOrigenPadre) {
+
 		MapeoXsdModel mapeo = definition.getMapeos().stream().filter(MapeoXsdModel::esAtributo)
 				.filter(item -> Objects.equals(item.getAtributoXsdId(), atributo.getId())).findFirst().orElse(null);
 
-		Object valor = null;
-
-		if (mapeo != null) {
-			valor = obtenerValor(contextoJson, contextoJson, contextoFactuCore, mapeo.getTipoOrigen(),
-					mapeo.getOrigen());
-		}
+		Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
 
 		if (valor != null) {
 			elemento.setAttribute(atributo.getNombre(), convertirValor(valor));
@@ -190,29 +331,6 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		if (atributo.getValorPredeterminado() != null) {
 			elemento.setAttribute(atributo.getNombre(), atributo.getValorPredeterminado());
 		}
-	}
-
-	private Object obtenerValor(Map<String, Object> contextoLocal, Map<String, Object> contextoJson,
-			Map<String, Object> contextoFactuCore, String tipoOrigen, String ruta) {
-		if (ruta == null || ruta.isBlank()) {
-			return null;
-		}
-
-		if ("FACTUCORE".equalsIgnoreCase(tipoOrigen)) {
-			return factuCoreSourcePort.resolver(ruta, contextoFactuCore).resultado();
-		}
-
-		if ("GENERADO".equalsIgnoreCase(tipoOrigen)) {
-			return obtenerRuta(contextoFactuCore, ruta);
-		}
-
-		Object valor = obtenerRuta(contextoLocal, ruta);
-
-		if (valor != null) {
-			return valor;
-		}
-
-		return obtenerRuta(contextoJson, ruta);
 	}
 
 	private Object obtenerRuta(Map<String, Object> datos, String ruta) {
@@ -241,15 +359,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		}
 
 		if (actual instanceof Iterable<?> iterable) {
-			List<Object> resultados = new java.util.ArrayList<>();
+			List<Object> resultados = new ArrayList<>();
 
 			for (Object item : iterable) {
 				Object resultado = resolverRuta(item, partes, indice);
 
 				if (resultado instanceof Iterable<?> resultadosAnidados) {
-					for (Object resultadoAnidado : resultadosAnidados) {
-						resultados.add(resultadoAnidado);
-					}
+					resultados.addAll((List<?>) convertirIterable(resultadosAnidados));
 				} else if (resultado != null) {
 					resultados.add(resultado);
 				}
@@ -259,6 +375,14 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 		}
 
 		return null;
+	}
+
+	private List<Object> convertirIterable(Iterable<?> iterable) {
+		List<Object> resultado = new ArrayList<>();
+		for (Object item : iterable) {
+			resultado.add(item);
+		}
+		return resultado;
 	}
 
 	@SuppressWarnings("unchecked")
