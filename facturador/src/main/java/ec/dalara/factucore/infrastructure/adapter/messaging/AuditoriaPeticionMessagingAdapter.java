@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.dalara.factucore.application.port.out.AuditoriaPeticionPort;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.api.PublicadorMensajes;
-import ec.dalara.factucore.messaging.api.auditoria.PeticionAuditada;
+import ec.dalara.factucore.messaging.api.auditoria.RegistroAuditoriaHttp;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -31,6 +31,6 @@ public class AuditoriaPeticionMessagingAdapter implements AuditoriaPeticionPort 
                 objectMapper.valueToTree(peticion)
         );
 
-        publicadorMensajes.publicar(properties.getTopico(), evento);
+        publicadorMensajes.publicar(evento);
     }
 }
