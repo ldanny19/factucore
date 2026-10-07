@@ -10,11 +10,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GenericConsumidorRegistrar implements InitializingBean {
 
-    private final BrokerMensajeria broker;
+    private final List<BrokerMensajeria> brokers;
     private final List<ConsumidorMensajes> consumidores;
 
     @Override
     public void afterPropertiesSet() {
-        consumidores.forEach(broker::registrar);
+        consumidores.forEach(consumidor -> brokers.stream()
+                .filter(broker -> broker.soporta(consumidor.destino()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "No existe un broker configurado para el destino: " + consumidor.destino()))
+                .registrar(consumidor));
     }
 }
