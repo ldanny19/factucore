@@ -76,7 +76,7 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
         var container = new SimpleMessageListenerContainer(connectionFactory(conexion));
         container.setQueueNames(queue.getName());
         container.setConcurrentConsumers(
-                conexion(conexion).getRabbitmq().getConcurrency());
+                Math.toIntExact(conexion(conexion).getRabbitmq().getConcurrency()));
         container.setAcknowledgeMode(AcknowledgeMode.AUTO);
 
         if (properties.getRetry().isDlqHabilitada()) {
