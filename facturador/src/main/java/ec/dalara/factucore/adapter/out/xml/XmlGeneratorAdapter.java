@@ -94,32 +94,41 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
             Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
 
+        List<Element> elementos = crearElementos(document, definicion, contextoActual, definition, contextoJson,
+                contextoFactuCore, namespaceXml, rutaOrigenPadre);
+
+        return elementos.isEmpty() ? null : elementos.get(0);
+    }
+
+    private List<Element> crearElementos(Document document, ElementoXsdModel definicion, Object contextoActual,
+            DocumentDefinitionModel definition, Map<String, Object> contextoJson,
+            Map<String, Object> contextoFactuCore, String namespaceXml, String rutaOrigenPadre) {
+
         MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
         Object valor = mapeo == null ? contextoActual
                 : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, rutaOrigenPadre);
 
         if (valor instanceof Iterable<?> iterable) {
-            List<Object> valores = convertirIterable(iterable);
-            if (valores.isEmpty()) {
-                return crearElementoConValor(document, definicion, contextoActual, definition, contextoJson,
-                        contextoFactuCore, namespaceXml, rutaOrigenPadre, contextoActual);
-            }
+            List<Element> elementos = new ArrayList<>();
 
-            Element primero = null;
-            for (Object item : valores) {
+            for (Object item : convertirIterable(iterable)) {
                 Element elemento = crearElementoConValor(document, definicion, item, definition, contextoJson,
                         contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), item);
 
-                if (elemento != null && primero == null) {
-                    primero = elemento;
+                if (elemento != null) {
+                    elementos.add(elemento);
                 }
             }
 
-            return primero;
+            if (!elementos.isEmpty()) {
+                return elementos;
+            }
         }
 
-        return crearElementoConValor(document, definicion, valor, definition, contextoJson, contextoFactuCore,
-                namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
+        Element elemento = crearElementoConValor(document, definicion, valor, definition, contextoJson,
+                contextoFactuCore, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
+
+        return elemento == null ? List.of() : List.of(elemento);
     }
 
     private Element crearElementoConValor(Document document, ElementoXsdModel definicion, Object valor,
@@ -156,10 +165,10 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             String rutaOrigenPadre) {
 
         for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
-            Element elementoHijo = crearElemento(document, hijo, contextoLocal, definition, contextoJson,
-                    contextoFactuCore, namespaceXml, rutaOrigenPadre);
+            List<Element> elementosHijo = crearElementos(document, hijo, contextoLocal, definition,
+                    contextoJson, contextoFactuCore, namespaceXml, rutaOrigenPadre);
 
-            if (elementoHijo != null) {
+            for (Element elementoHijo : elementosHijo) {
                 padre.appendChild(elementoHijo);
             }
         }
