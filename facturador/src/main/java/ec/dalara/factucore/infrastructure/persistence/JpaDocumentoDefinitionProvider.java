@@ -41,22 +41,22 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 	private final MapeoXsdRepository mapeoXsdRepository;
 
 	@Override
-	public Optional<VersionDocumentoXsdModel> obtenerVersionVigente(String codigoDocumento,
+	public Optional<VersionDocumentoXsdModel> obtenerVersion(String codigoDocumento, String versionXsd,
 			LocalDateTime fechaEmision) {
-		return obtenerEntidadVersionVigente(codigoDocumento, fechaEmision).map(this::crearVersionModel);
+		return obtenerEntidadVersion(codigoDocumento, versionXsd, fechaEmision).map(this::crearVersionModel);
 	}
 
 	@Override
-	public Optional<DocumentDefinitionModel> obtenerDefinicionVigente(String codigoDocumento,
+	public Optional<DocumentDefinitionModel> obtenerDefinicion(String codigoDocumento, String versionXsd,
 			LocalDateTime fechaEmision) {
-		Optional<VersionDocumentoXsd> versionOptional = obtenerEntidadVersionVigente(codigoDocumento, fechaEmision);
+		Optional<VersionDocumentoXsd> versionOptional = obtenerEntidadVersion(codigoDocumento, versionXsd,
+				fechaEmision);
 
 		if (versionOptional.isEmpty()) {
 			return Optional.empty();
 		}
 
 		VersionDocumentoXsd version = versionOptional.get();
-
 		DocumentoXsd documento = version.getDocumentoXsd();
 
 		List<ElementoXsd> elementos = elementoXsdRepository.findByVersionDocumentoXsdId(version.getId()).stream()
@@ -87,9 +87,10 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 				enumeracionModels, mapeoModels));
 	}
 
-	private Optional<VersionDocumentoXsd> obtenerEntidadVersionVigente(String codigoDocumento,
+	private Optional<VersionDocumentoXsd> obtenerEntidadVersion(String codigoDocumento, String versionXsd,
 			LocalDateTime fechaEmision) {
-		if (codigoDocumento == null || codigoDocumento.isBlank() || fechaEmision == null) {
+		if (codigoDocumento == null || codigoDocumento.isBlank() || versionXsd == null || versionXsd.isBlank()
+				|| fechaEmision == null) {
 			return Optional.empty();
 		}
 
@@ -100,19 +101,12 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 			return Optional.empty();
 		}
 
-		DocumentoXsd documento = documentoOptional.get();
+		Optional<VersionDocumentoXsd> versionOptional = versionDocumentoXsdRepository
+				.findByDocumentoXsdIdAndVersionAndEstadoRegistro(documentoOptional.get().getId(), versionXsd,
+						EstadoRegistro.ACTIVO);
 
-		Optional<VersionDocumentoXsd> version = versionDocumentoXsdRepository
-				.findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
-						documento.getId(), EstadoRegistro.ACTIVO, fechaEmision, fechaEmision);
-
-		if (version.isPresent()) {
-			return version;
-		}
-
-		return versionDocumentoXsdRepository
-				.findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(documento.getId(),
-						EstadoRegistro.ACTIVO, fechaEmision);
+		return versionOptional.filter(version -> !fechaEmision.isBefore(version.getFechaInicio())
+				&& (version.getFechaFin() == null || !fechaEmision.isAfter(version.getFechaFin())));
 	}
 
 	private VersionDocumentoXsdModel crearVersionModel(VersionDocumentoXsd version) {
@@ -143,8 +137,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 	}
 
 	private MapeoXsdModel crearMapeoModel(MapeoXsd mapeo) {
-		return new MapeoXsdModel(mapeo.getId(), mapeo.getVersionDocumentoXsd().getId(), mapeo.getTipoOrigen(), mapeo.getOrigen(),
-				mapeo.getElementoXsd() == null ? null : mapeo.getElementoXsd().getId(),
+		return new MapeoXsdModel(mapeo.getId(), mapeo.getVersionDocumentoXsd().getId(), mapeo.getTipoOrigen(),
+				mapeo.getOrigen(), mapeo.getElementoXsd() == null ? null : mapeo.getElementoXsd().getId(),
 				mapeo.getAtributoXsd() == null ? null : mapeo.getAtributoXsd().getId(), mapeo.getTipoMapeo());
 	}
 }

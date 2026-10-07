@@ -34,7 +34,7 @@ class ComprobanteGeneracionRequestValidationTest {
 	@Test
 	void requestValido_noDebeTenerViolaciones() {
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
-				.fechaInicio(LocalDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.fechaInicio(LocalDateTime.now()).versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L)
 				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		assertTrue(validator.validate(request).isEmpty());
@@ -61,7 +61,7 @@ class ComprobanteGeneracionRequestValidationTest {
 				""");
 
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("TX-001")
-				.fechaInicio(LocalDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.fechaInicio(LocalDateTime.now()).versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L)
 				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).datos(datos).build();
 
 		assertTrue(validator.validate(request).isEmpty());
@@ -79,7 +79,7 @@ class ComprobanteGeneracionRequestValidationTest {
 	@Test
 	void idTransaccionExcedeLongitud_debeDetectarViolacion() {
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("A".repeat(101))
-				.fechaInicio(LocalDateTime.now()).usuario("usuario").canal("API").idEmpresa(1L)
+				.fechaInicio(LocalDateTime.now()).versionXsd("1.1.0").usuario("usuario").canal("API").idEmpresa(1L)
 				.idEstablecimiento(1L).idPuntoEmision(1L).idTipoDocumento(1L).build();
 
 		assertTrue(validator.validate(request).stream()

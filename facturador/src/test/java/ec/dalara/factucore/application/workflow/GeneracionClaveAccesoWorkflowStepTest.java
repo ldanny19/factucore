@@ -64,7 +64,7 @@ class GeneracionClaveAccesoWorkflowStepTest {
 		when(claveAccesoService.generarConCodigoNumerico(any(ClaveAccesoDatos.class))).thenReturn(clave);
 
 		var request = ComprobanteGeneracionRequest.builder().idTransaccion("tx-1")
-				.fechaInicio(LocalDateTime.parse("2026-09-22T10:00:00")).usuario("usuario").canal("API")
+				.fechaInicio(LocalDateTime.parse("2026-09-22T10:00:00")).versionXsd("1.1.0").usuario("usuario").canal("API")
 				.idEmpresa(10L).idEstablecimiento(20L).idPuntoEmision(30L).idTipoDocumento(40L).build();
 
 		var contexto = ContextoWorkflow.nuevo(request);

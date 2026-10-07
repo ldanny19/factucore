@@ -8,7 +8,9 @@ import ec.dalara.factucore.domain.documentoxsd.VersionDocumentoXsdModel;
 
 public interface DocumentoDefinitionProvider {
 
-	Optional<VersionDocumentoXsdModel> obtenerVersionVigente(String codigoDocumento, LocalDateTime fechaEmision);
+	Optional<VersionDocumentoXsdModel> obtenerVersion(String codigoDocumento, String versionXsd,
+			LocalDateTime fechaEmision);
 
-	Optional<DocumentDefinitionModel> obtenerDefinicionVigente(String codigoDocumento, LocalDateTime fechaEmision);
+	Optional<DocumentDefinitionModel> obtenerDefinicion(String codigoDocumento, String versionXsd,
+			LocalDateTime fechaEmision);
 }

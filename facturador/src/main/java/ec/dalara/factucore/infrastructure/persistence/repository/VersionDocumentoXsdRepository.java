@@ -15,6 +15,9 @@ public interface VersionDocumentoXsdRepository extends BaseRepository<VersionDoc
 
 	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndVersion(Long documentoXsdId, String version);
 
+	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndVersionAndEstadoRegistro(Long documentoXsdId,
+			String version, String estadoRegistro);
+
 	boolean existsByDocumentoXsdIdAndVersion(Long documentoXsdId, String version);
 
 	boolean existsByDocumentoXsdIdAndVersionAndIdNot(Long documentoXsdId, String version, Long id);
@@ -28,12 +31,12 @@ public interface VersionDocumentoXsdRepository extends BaseRepository<VersionDoc
 			and (v.fechaFin is null or v.fechaFin >= :fechaInicio)
 			""")
 	boolean existsByDocumentoXsdIdAndEstadoRegistroAndRangoFechas(
-				@Param("documentoXsdId") Long documentoXsdId, @Param("estadoRegistro") String estadoRegistro,
-				@Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin);
+			@Param("documentoXsdId") Long documentoXsdId, @Param("estadoRegistro") String estadoRegistro,
+			@Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin);
 
 	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
 			Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
 	Optional<VersionDocumentoXsd> findByDocumentoXsdIdAndEstadoRegistroAndFechaInicioLessThanEqualAndFechaFinIsNull(
 			Long documentoXsdId, String estadoRegistro, LocalDateTime fechaInicio);
-}
+} 

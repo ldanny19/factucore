@@ -28,6 +28,10 @@ public class ComprobanteGeneracionRequest {
 	private LocalDateTime fechaInicio;
 
 	@NotBlank
+	@Size(max = 50)
+	private String versionXsd;
+
+	@NotBlank
 	private String usuario;
 
 	@NotBlank
