@@ -6,9 +6,13 @@ import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 
 public interface XmlGeneratorPort {
 
-	String generar(DocumentDefinitionModel definition, Map<String, Object> datos, Map<String, Object> contexto);
+    String generar(
+            DocumentDefinitionModel definition,
+            Map<String, Object> contextoJson,
+            Map<String, Object> contextoFactuCore,
+            Map<String, Object> contextoGenerado);
 
-	default String generar(DocumentDefinitionModel definition, Map<String, Object> datos) {
-		return generar(definition, datos, Map.of());
-	}
+    default String generar(DocumentDefinitionModel definition, Map<String, Object> contextoJson) {
+        return generar(definition, contextoJson, Map.of(), Map.of());
+    }
 }
