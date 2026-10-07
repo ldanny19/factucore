@@ -54,8 +54,8 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		}
 
 		String tabla = nombreTabla(entidad.getJavaType());
-		String sql = "select e."" + columna + "" from "" + tabla
-				+ "" e where e."id" = :id";
+		String sql = "select e.\"" + columna + "\" from \"" + tabla
+				+ "\" e where e.\"id\" = :id";
 
 		Object resultado = entityManager.createNativeQuery(sql)
 				.setParameter("id", id)
@@ -79,10 +79,10 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CONTEXTO.ID.NO_ENCONTRADO", partes.origen());
 		}
 
-		String sql = "select e."" + columnaValor + "", e."tipo_dato" from "" + tabla
-				+ "" e where e."" + columnaEmpresa + "" = :idEmpresa and e."" + columnaClave
-				+ "" = :clave and e."estado_registro" = 'ACTIVO' "
-				+ "order by e."fecha_vigencia_desde" desc limit 1";
+		String sql = "select e.\"" + columnaValor + "\", e.\"tipo_dato\" from \"" + tabla
+				+ "\" e where e.\"" + columnaEmpresa + "\" = :idEmpresa and e.\"" + columnaClave
+				+ "\" = :clave and e.\"estado_registro\" = 'ACTIVO' "
+				+ "order by e.\"fecha_vigencia_desde\" desc limit 1";
 
 		Object fila = entityManager.createNativeQuery(sql)
 				.setParameter("idEmpresa", idEmpresa)
