@@ -57,7 +57,7 @@ class GeneracionClaveAccesoWorkflowStepTest {
 
 		var definition = mock(DocumentDefinitionModel.class);
 		when(definition.getDocumento()).thenReturn(documentoModelo);
-		when(definitionProvider.obtenerDefinicionVigente(any(), any())).thenReturn(Optional.of(definition));
+		when(definitionProvider.obtenerDefinicion(any(), any(), any())).thenReturn(Optional.of(definition));
 
 		var clave = mock(ClaveAccesoModel.class);
 		when(clave.getClave()).thenReturn("1234567890123456789012345678901234567890123456789");
