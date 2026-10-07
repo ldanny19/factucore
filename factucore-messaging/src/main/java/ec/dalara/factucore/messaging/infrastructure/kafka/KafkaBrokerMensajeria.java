@@ -55,13 +55,21 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
             @Override
             public void onMessage(ConsumerRecord<String, String> record) {
                 try {
-                    consumidor.consumir(objectMapper.readValue(record.value(), EventoMensaje.class));
+                    var evento = objectMapper.readValue(record.value(), EventoMensaje.class);
+                    if (aceptaEvento(consumidor, evento)) {
+                        consumidor.consumir(evento);
+                    }
                 } catch (Exception e) {
                     throw new IllegalStateException("No fue posible procesar el mensaje", e);
                 }
             }
         });
         container.start();
+    }
+
+    private boolean aceptaEvento(ConsumidorMensajes consumidor, EventoMensaje evento) {
+        var tipos = consumidor.tiposEvento();
+        return tipos == null || tipos.isEmpty() || tipos.contains(evento.tipo());
     }
 
     @Override public TipoBroker tipo() { return TipoBroker.KAFKA; }
