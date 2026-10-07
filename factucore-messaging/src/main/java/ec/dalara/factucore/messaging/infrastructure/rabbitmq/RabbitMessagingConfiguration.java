@@ -55,8 +55,10 @@ public class RabbitMessagingConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PublicadorMensajes.class)
-    PublicadorMensajes publicadorMensajes(BrokerMensajeria broker) {
-        return new GenericPublicadorMensajes(broker);
+    PublicadorMensajes publicadorMensajes(
+            BrokerMensajeria broker,
+            MessagingProperties properties) {
+        return new GenericPublicadorMensajes(broker, properties);
     }
 
     @Bean
