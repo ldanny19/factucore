@@ -508,9 +508,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 	private String documentTag(String xml) {
 		try {
-			return parsearXml(xml).getDocumentElement().getLocalName() != null
-					? parsearXml(xml).getDocumentElement().getLocalName()
-					: parsearXml(xml).getDocumentElement().getNodeName();
+			org.w3c.dom.Element raiz = parsearXml(xml).getDocumentElement();
+			return raiz.getLocalName() != null ? raiz.getLocalName() : raiz.getNodeName();
 		} catch (Exception ignored) {
 			return "N/A";
 		}
