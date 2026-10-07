@@ -5,8 +5,8 @@ import java.util.LinkedHashMap;
 
 import org.springframework.stereotype.Component;
 
-
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
+import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.application.service.EmisionService;
 import ec.dalara.factucore.application.service.EmpresaService;
@@ -77,8 +77,8 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 		}
 
 		Comprobante comprobante = Comprobante.builder().empresa(empresa).establecimiento(emision.establecimiento())
-				.puntoEmision(emision.puntoEmision()).documentoXsd(documentoXsd).versionDocumentoXsd(versionXsd).idTransaccion(solicitud.getIdTransaccion())
-				.ambiente(resolverAmbiente(sriProperties.getAmbiente())).tipoEmision("1")
+				.puntoEmision(emision.puntoEmision()).documentoXsd(documentoXsd).versionDocumentoXsd(versionXsd)
+				.idTransaccion(solicitud.getIdTransaccion()).ambiente(resolverAmbiente(sriProperties.getAmbiente())).tipoEmision("1")
 				.codigoDocumento(definition.getDocumento().getCodigo()).secuencial(contexto.getSecuencial())
 				.claveAcceso(contexto.getClaveAcceso()).fechaEmision(solicitud.getFechaInicio().toLocalDate())
 				.razonSocialEmisor(empresa.getRazonSocial()).nombreComercialEmisor(empresa.getNombreComercial())
