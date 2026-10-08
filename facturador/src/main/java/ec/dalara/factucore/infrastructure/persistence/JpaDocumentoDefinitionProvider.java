@@ -1,6 +1,5 @@
 package ec.dalara.factucore.infrastructure.persistence;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,26 +42,24 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 
 	@Override
 	@Transactional(readOnly = true)
-	public Optional<VersionDocumentoXsdModel> obtenerVersion(String codigoDocumento, String versionXsd,
-			LocalDateTime fechaEmision) {
-		return obtenerEntidadVersion(codigoDocumento, versionXsd, fechaEmision).map(this::crearVersionModel);
+	public Optional<VersionDocumentoXsdModel> obtenerVersion(Long idDocumentoXsd, String versionXsd) {
+		return obtenerEntidadVersion(idDocumentoXsd, versionXsd).map(this::crearVersionModel);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Optional<DocumentDefinitionModel> obtenerDefinicion(String codigoDocumento, String versionXsd,
-			LocalDateTime fechaEmision) {
-		Optional<VersionDocumentoXsd> versionOptional = obtenerEntidadVersion(codigoDocumento, versionXsd,
-				fechaEmision);
+	public Optional<DocumentDefinitionModel> obtenerDefinicion(Long idDocumentoXsd, String versionXsd) {
+		Optional<VersionDocumentoXsd> versionOptional = obtenerEntidadVersion(idDocumentoXsd, versionXsd);
 
 		if (versionOptional.isEmpty()) {
 			return Optional.empty();
 		}
 
 		VersionDocumentoXsd version = versionOptional.get();
+		Long idVersionDocumentoXsd = version.getId();
 		DocumentoXsd documento = version.getDocumentoXsd();
 
-		List<ElementoXsd> elementos = elementoXsdRepository.findByVersionDocumentoXsdId(version.getId()).stream()
+		List<ElementoXsd> elementos = elementoXsdRepository.findByVersionDocumentoXsdId(idVersionDocumentoXsd).stream()
 				.filter(elemento -> EstadoRegistro.ACTIVO.equals(elemento.getEstadoRegistro())).toList();
 
 		List<ElementoXsdModel> elementoModels = elementos.stream().map(this::crearElementoModel).toList();
@@ -74,11 +71,11 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 
 		List<EnumeracionXsdModel> enumeracionModels = elementos.stream()
 				.flatMap(elemento -> enumeracionXsdRepository.findByElementoXsdId(elemento.getId()).stream())
-				.filter(enumeracion -> EstadoRegistro.ACTIVO.equals(enumeracion.getEstadoRegistro()))
+				.filter(enumeracion -> EstadoRegistro.ACTIVO.equals(atributo.getEstadoRegistro()))
 				.map(this::crearEnumeracionModel).toList();
 
 		List<MapeoXsdModel> mapeoModels = mapeoXsdRepository
-				.findByVersionDocumentoXsdIdAndEstadoRegistro(version.getId(), EstadoRegistro.ACTIVO).stream()
+				.findByVersionDocumentoXsdIdAndEstadoRegistro(idVersionDocumentoXsd, EstadoRegistro.ACTIVO).stream()
 				.map(this::crearMapeoModel).toList();
 
 		DocumentoXsdModel documentoModel = new DocumentoXsdModel(documento.getCodigo(), documento.getNombre(),
@@ -90,26 +87,20 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 				enumeracionModels, mapeoModels));
 	}
 
-	private Optional<VersionDocumentoXsd> obtenerEntidadVersion(String codigoDocumento, String versionXsd,
-			LocalDateTime fechaEmision) {
-		if (codigoDocumento == null || codigoDocumento.isBlank() || versionXsd == null || versionXsd.isBlank()
-				|| fechaEmision == null) {
+	private Optional<VersionDocumentoXsd> obtenerEntidadVersion(Long idDocumentoXsd, String versionXsd) {
+		if (idDocumentoXsd == null || versionXsd == null || versionXsd.isBlank()) {
 			return Optional.empty();
 		}
 
-		Optional<DocumentoXsd> documentoOptional = documentoXsdRepository.findByCodigo(codigoDocumento)
+		Optional<DocumentoXsd> documentoOptional = documentoXsdRepository.findById(idDocumentoXsd)
 				.filter(documento -> EstadoRegistro.ACTIVO.equals(documento.getEstadoRegistro()));
 
 		if (documentoOptional.isEmpty()) {
 			return Optional.empty();
 		}
 
-		Optional<VersionDocumentoXsd> versionOptional = versionDocumentoXsdRepository
-				.findByDocumentoXsdIdAndVersionAndEstadoRegistro(documentoOptional.get().getId(), versionXsd,
-						EstadoRegistro.ACTIVO);
-
-		return versionOptional.filter(version -> !fechaEmision.isBefore(version.getFechaInicio())
-				&& (version.getFechaFin() == null || !fechaEmision.isAfter(version.getFechaFin())));
+		return versionDocumentoXsdRepository.findByDocumentoXsdIdAndVersionAndEstadoRegistro(idDocumentoXsd, versionXsd,
+				EstadoRegistro.ACTIVO);
 	}
 
 	private VersionDocumentoXsdModel crearVersionModel(VersionDocumentoXsd version) {
