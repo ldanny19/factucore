@@ -115,7 +115,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
             Object contenido = obtenerContenidoSimple(valor, elemento, definition, mapeos);
             if (contenido == null) {
                 if (Boolean.TRUE.equals(elemento.getObligatorio())) {
-                    resultado.agregarError(REQUERIDO, campo);
+                    resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_REQUERIDO, campo, elemento.getNombre());
                 }
             } else {
                 validarValor(elemento, contenido, campo, definition, resultado);
@@ -328,14 +328,14 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
             return;
         }
         if ("LIST".equalsIgnoreCase(tipo) && !(valor instanceof Collection<?>)) {
-            resultado.agregarError(TIPO_INVALIDO, campo, tipo);
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_TIPO_INVALIDO, campo, nombreTag, tipo);
             return;
         }
         if (("MAP".equalsIgnoreCase(tipo) || "LIST".equalsIgnoreCase(tipo))) {
             return;
         }
         if (valor instanceof Map<?, ?> || valor instanceof Collection<?>) {
-            resultado.agregarError(TIPO_INVALIDO, campo, tipo);
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_TIPO_INVALIDO, campo, nombreTag, tipo);
             return;
         }
 
@@ -345,7 +345,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
                     resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_PATRON_INVALIDO, campo, nombreTag, patron);
                 }
             } catch (PatternSyntaxException exception) {
-                resultado.agregarError(PATRON_INVALIDO, campo, patron);
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_PATRON_INVALIDO, campo, nombreTag, patron);
             }
         }
     }
