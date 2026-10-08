@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 
 import ec.dalara.factucore.application.validation.ComprobanteGeneracionValidator;
 import ec.dalara.factucore.application.service.ComprobanteService;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ValidacionComprobanteWorkflowStep  {	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ComprobanteGeneracionValidator validator;
 	private final ComprobanteService comprobanteService;
 
@@ -42,7 +40,6 @@ public class ValidacionComprobanteWorkflowStep  {	private final WorkflowEtapaExe
 		var resultado = validator.validar(contexto.getSolicitud());
 		contexto.registrarErroresValidacion(resultado.getErrores());
 		if (!resultado.esValido()) {
-			resultado.getErrores().forEach(error -> log.error("Workflow etapa={} codigo={} campo={} mensaje={}", etapa(), error.getCodigo(), error.getCampo(), error.getMensaje()));
 			var error = resultado.getErrores().isEmpty() ? null : resultado.getErrores().get(0);
 			return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "RECHAZADA",
 				error == null ? MessageCodes.COMPROBANTE_REQUEST_REQUERIDO : error.getCodigo(),
