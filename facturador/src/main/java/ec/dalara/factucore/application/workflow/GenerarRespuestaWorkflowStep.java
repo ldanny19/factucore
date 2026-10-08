@@ -32,17 +32,15 @@ public class GenerarRespuestaWorkflowStep {
 			boolean exitoso = contexto != null
 					&& contexto.getUltimoResultado() != null
 					&& contexto.getUltimoResultado().isExitosa();
-	
+
 			if (contexto != null) {
 				contexto.setExitosoFinal(exitoso);
 				contexto.setRespuesta(responseFactory.crear(contexto));
 			}
-			return "OK";
 			log.debug("ID_TRANSACCION={} - Fin Etapa GENERAR_RESPUESTA - Resultado={}", idTransaccion, "OK");
 			return "OK";
 		} catch (RuntimeException exception) {
 			log.debug("ID_TRANSACCION={} - Fin Etapa GENERAR_RESPUESTA - Resultado=ERROR", idTransaccion);
 			throw exception;
 		}
-	}
-}
+	}}
