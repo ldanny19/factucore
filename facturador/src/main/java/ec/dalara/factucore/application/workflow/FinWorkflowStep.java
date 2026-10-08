@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.workflow;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
@@ -18,10 +20,23 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FinWorkflowStep {
 
+	private static final Logger log = LoggerFactory.getLogger(FinWorkflowStep.class);
+
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	public String ejecutar(ContextoWorkflow contexto) {
-		return "FIN";
+		String idTransaccion = contexto != null && contexto.getSolicitud() != null
+				? contexto.getSolicitud().getIdTransaccion()
+				: null;
+		log.debug("ID_TRANSACCION={} - Inicia Etapa FIN", idTransaccion);
+		try {
+			return "FIN";
+			log.debug("ID_TRANSACCION={} - Fin Etapa FIN - Resultado={}", idTransaccion, "FIN");
+			return "FIN";
+		} catch (RuntimeException exception) {
+			log.debug("ID_TRANSACCION={} - Fin Etapa FIN - Resultado=ERROR", idTransaccion);
+			throw exception;
+		}
 	}
 
 	public ComprobanteGeneracionResponse respuesta(ContextoWorkflow contexto) {
