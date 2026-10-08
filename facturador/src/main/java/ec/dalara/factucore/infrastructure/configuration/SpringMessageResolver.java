@@ -18,11 +18,19 @@ public class SpringMessageResolver implements MessageResolver {
 
 	@Override
 	public String resolver(String codigo, Object... parametros) {
-		return messageSource.getMessage(codigo, parametros, codigo, Locale.getDefault());
+		return resolverObligatorio(codigo, parametros, Locale.getDefault());
 	}
 
 	@Override
 	public String resolver(String codigo, Locale locale, Object... parametros) {
-		return messageSource.getMessage(codigo, parametros, codigo, locale);
+		return resolverObligatorio(codigo, parametros, locale);
+	}
+
+	private String resolverObligatorio(String codigo, Object[] parametros, Locale locale) {
+		String mensaje = messageSource.getMessage(codigo, parametros, null, locale);
+		if (mensaje == null) {
+			throw new IllegalStateException("No existe mensaje configurado para el código: " + codigo);
+		}
+		return mensaje;
 	}
 }

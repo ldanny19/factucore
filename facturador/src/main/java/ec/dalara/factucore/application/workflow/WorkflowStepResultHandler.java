@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import org.apache.camel.Exchange;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
@@ -28,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WorkflowStepResultHandler {
 
+	private static final Logger log = LoggerFactory.getLogger(WorkflowStepResultHandler.class);
+
 	private final ComprobanteAuditoriaService comprobanteAuditoriaService;
 	private final ComprobanteService comprobanteService;
 	private final MessageResolver messageResolver;
@@ -37,6 +41,7 @@ public class WorkflowStepResultHandler {
 			return contexto;
 		}
 		contexto.registrarResultado(resultado);
+		logResultado(resultado);
 		return persistir(contexto, resultado);
 	}
 
@@ -77,6 +82,14 @@ public class WorkflowStepResultHandler {
 		String mensaje = messageResolver.resolver(codigo, parametros);
 		ResultadoEtapa resultado = ResultadoEtapa.fallida(etapa, EstadoProceso.ERROR.name(), codigo, mensaje);
 		return registrar(contexto, resultado);
+	}
+
+	private void logResultado(ResultadoEtapa resultado) {
+		if (resultado.isExitosa()) {
+			log.info("Workflow etapa={} resultado=OK estado={} mensaje={}", resultado.getEtapa(), resultado.getEstado(), resultado.getMensaje());
+		} else {
+			log.error("Workflow etapa={} resultado=ERROR codigo={} estado={} mensaje={}", resultado.getEtapa(), resultado.getCodigoError(), resultado.getEstado(), resultado.getMensaje());
+		}
 	}
 
 	private ContextoWorkflow persistir(ContextoWorkflow contexto, ResultadoEtapa resultado) {

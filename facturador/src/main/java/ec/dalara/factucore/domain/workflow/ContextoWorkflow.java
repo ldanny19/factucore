@@ -3,6 +3,7 @@ package ec.dalara.factucore.domain.workflow;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import ec.dalara.factucore.application.ApplicationException;
@@ -55,6 +56,8 @@ public final class ContextoWorkflow {
 	private boolean errorNotificacion;
 
 	private Boolean exitosoFinal;
+
+	private List<ec.dalara.factucore.application.contract.response.MensajeResponse> erroresValidacion = List.of();
 
 	private ContextoWorkflow(ComprobanteGeneracionRequest solicitud, LocalDateTime fechaInicio) {
 		this.solicitud = solicitud;
@@ -142,6 +145,14 @@ public final class ContextoWorkflow {
 	public String registrarYObtenerSalida(ResultadoEtapa resultado) {
 		registrarResultado(resultado);
 		return resultado.salida();
+	}
+
+	public void registrarErroresValidacion(List<ec.dalara.factucore.application.contract.response.MensajeResponse> errores) {
+		this.erroresValidacion = errores == null ? List.of() : List.copyOf(errores);
+	}
+
+	public List<ec.dalara.factucore.application.contract.response.MensajeResponse> getErroresValidacion() {
+		return erroresValidacion;
 	}
 
 	public void marcarErrorNotificacion() {

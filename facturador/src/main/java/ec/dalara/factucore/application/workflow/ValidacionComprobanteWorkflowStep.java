@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ec.dalara.factucore.application.ApplicationException;
 
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ValidacionComprobanteWorkflowStep  {
+	private static final Logger log = LoggerFactory.getLogger(ValidacionComprobanteWorkflowStep.class);
 	private final ComprobanteGeneracionValidator validator;
 
 	public EtapaWorkflow etapa() {
@@ -31,7 +34,9 @@ public class ValidacionComprobanteWorkflowStep  {
 			throw new ApplicationException(MessageCodes.COMPROBANTE_REQUEST_REQUERIDO);
 		}
 		var resultado = validator.validar(contexto.getSolicitud());
+		contexto.registrarErroresValidacion(resultado.getErrores());
 		if (!resultado.esValido()) {
+			resultado.getErrores().forEach(error -> log.error("Workflow etapa={} codigo={} campo={} mensaje={}", etapa(), error.getCodigo(), error.getCampo(), error.getMensaje()));
 			var error = resultado.getErrores().isEmpty() ? null : resultado.getErrores().get(0);
 			return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "RECHAZADA",
 					error == null ? MessageCodes.COMPROBANTE_REQUEST_REQUERIDO : error.getCodigo(),
