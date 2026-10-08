@@ -5,6 +5,8 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -24,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class GeneracionXmlWorkflowStep  {
+
+	private static final Logger log = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
 	private final DocumentoDefinitionProvider definitionProvider;
@@ -87,7 +91,7 @@ public class GeneracionXmlWorkflowStep  {
 				contextoGenerado);
 		contexto.setXml(xml);
 
-		LOGGER.info("XML generado antes de validacion XSD:\n{}", xml);
+		log.debug("XML generado antes de validacion XSD:\n{}", xml);
 
 		return ResultadoEtapa.exitosa(etapa(), "COMPLETADA", java.util.Map.of("xmlGenerado", true));
 	}
