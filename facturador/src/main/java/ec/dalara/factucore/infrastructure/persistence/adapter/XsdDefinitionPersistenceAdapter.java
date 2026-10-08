@@ -136,40 +136,28 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private String tipoDatoEscalar(String tipoDatoXsd) {
-		String tipo = tipoDatoXsd == null ? "" : tipoDatoXsd.toLowerCase();
+		String tipo = tipoDatoXsd == null ? "" : tipoDatoXsd.trim().toLowerCase();
 
-		if (tipo.contains("boolean")) {
-			return "BOOLEAN";
-		}
-		if (tipo.contains("decimal")) {
-			return "DECIMAL";
-		}
-		if (tipo.contains("double")) {
-			return "DOUBLE";
-		}
-		if (tipo.contains("float")) {
-			return "FLOAT";
-		}
-		if (tipo.contains("integer")) {
-			return "INTEGER";
-		}
-		if (tipo.contains("long")) {
-			return "LONG";
-		}
-		if (tipo.contains("short")) {
-			return "SHORT";
-		}
-		if (tipo.contains("byte")) {
-			return "BYTE";
-		}
-		if (tipo.endsWith("date") || tipo.contains(":date")) {
-			return "DATE";
-		}
-		if (tipo.contains("datetime") || tipo.contains("dateTime".toLowerCase())) {
-			return "DATETIME";
+		int separador = tipo.lastIndexOf(':');
+		if (separador >= 0) {
+			tipo = tipo.substring(separador + 1);
 		}
 
-		return "STRING";
+		return switch (tipo) {
+		case "boolean" -> "BOOLEAN";
+		case "decimal" -> "DECIMAL";
+		case "double" -> "DOUBLE";
+		case "float" -> "FLOAT";
+		case "integer" -> "INTEGER";
+		case "int", "unsignedint", "nonnegativeinteger", "positiveinteger", "negativeinteger",
+				"nonpositiveinteger" -> "INTEGER";
+		case "long", "unsignedlong" -> "LONG";
+		case "short", "unsignedshort" -> "SHORT";
+		case "byte", "unsignedbyte" -> "BYTE";
+		case "datetime" -> "DATETIME";
+		case "date" -> "DATE";
+		default -> "STRING";
+		};
 	}
 
 	private String generarPlantillaJson(XsdDefinitionSource definition) {
