@@ -21,6 +21,7 @@ import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
+import ec.dalara.factucore.application.validation.ComprobanteValidationResult;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +78,14 @@ public class ValidacionXsdWorkflowStep {
 		}
 
 		// Si el XML no cumple el XSD, se lanza la excepción y no se persiste.
-		xmlValidator.validar(contexto.getXml(), definition);
+		ComprobanteValidationResult validacion = xmlValidator.validar(contexto.getXml(), definition);
+		contexto.setValidacionXsd(validacion);
+		if (!validacion.esValido()) {
+			String codigo = validacion.getErrores().isEmpty() ? MessageCodes.WORKFLOW_ETAPA_ERROR : validacion.getErrores().get(0).getCodigo();
+			String mensaje = validacion.getErrores().isEmpty() ? null : validacion.getErrores().get(0).getMensaje();
+			return ResultadoEtapa.fallida(etapa, EstadoProceso.ERROR.name(), codigo, mensaje,
+					java.util.Map.of("validacion", validacion));
+		}
 
 		// La persistencia ocurre solamente después de validar correctamente el XML.
 		persistirComprobante(contexto, definition);
