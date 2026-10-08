@@ -64,7 +64,7 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var definition = definitionProvider
-				.obtenerDefinicion(documento.getCodigo(), solicitud.getVersionXsd(), solicitud.getFechaInicio())
+				.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
 				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		String ambiente = resolverAmbiente(sriProperties.getAmbiente());
