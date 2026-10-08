@@ -60,10 +60,37 @@ public class WorkflowStepResultHandler {
 
 	public ContextoWorkflow registrarExcepcion(Exchange exchange) {
 		ContextoWorkflow contexto = exchange.getProperty("workflow.contexto", ContextoWorkflow.class);
-		String etapaNombre = exchange.getProperty("workflow.etapa", String.class);
-		EtapaWorkflow etapa = etapaNombre == null ? null : EtapaWorkflow.valueOf(etapaNombre);
+		EtapaWorkflow etapa = resolverEtapa(exchange, contexto);
 		Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
 		return registrarExcepcion(contexto, etapa, exception);
+	}
+
+	private EtapaWorkflow resolverEtapa(Exchange exchange, ContextoWorkflow contexto) {
+		String etapaNombre = exchange.getProperty("workflow.etapa", String.class);
+		if (etapaNombre != null && !etapaNombre.isBlank()) {
+			try {
+				return EtapaWorkflow.valueOf(etapaNombre);
+			} catch (IllegalArgumentException exception) {
+				log.warn("Etapa de workflow no reconocida: {}", etapaNombre);
+			}
+		}
+
+		if (contexto != null && contexto.getEtapaActual() != null) {
+			return contexto.getEtapaActual();
+		}
+
+		String routeId = exchange.getFromRouteId();
+		if (routeId != null && routeId.startsWith("facturador-workflow-")) {
+			String nombre = routeId.substring("facturador-workflow-".length()).toUpperCase();
+			nombre = nombre.replace('-', '_');
+			try {
+				return EtapaWorkflow.valueOf(nombre);
+			} catch (IllegalArgumentException exception) {
+				log.warn("No fue posible determinar la etapa desde la ruta: {}", routeId);
+			}
+		}
+
+		return null;
 	}
 
 	public ContextoWorkflow registrarExcepcion(ContextoWorkflow contexto, EtapaWorkflow etapa, Exception exception) {
@@ -78,6 +105,11 @@ public class WorkflowStepResultHandler {
 		Object[] parametros = exception instanceof ApplicationException applicationException
 				? applicationException.getParametros()
 				: new Object[] { etapa == null ? "DESCONOCIDA" : etapa.name() };
+
+		if (etapa == null) {
+			log.error("No fue posible determinar la etapa del workflow para registrar la excepción. codigo={}", codigo);
+			return contexto;
+		}
 
 		String mensaje = messageResolver.resolver(codigo, parametros);
 		ResultadoEtapa resultado = ResultadoEtapa.fallida(etapa, EstadoProceso.ERROR.name(), codigo, mensaje);
