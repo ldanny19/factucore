@@ -14,12 +14,13 @@ import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
+public class GeneracionClaveAccesoWorkflowStep  {
 
 	private static final String TIPO_EMISION_NORMAL = "1";
 
@@ -30,42 +31,49 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 	private final DocumentoXsdService documentoXsdService;
 	private final SriProperties sriProperties;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.GENERACION_CLAVE_ACCESO;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/**
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
+	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getSolicitud() == null) {
-			throw new WorkflowException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
+			throw new ApplicationException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
 		}
 
 		if (contexto.getClaveAcceso() != null && !contexto.getClaveAcceso().isBlank()) {
 			if (!claveAccesoService.validar(contexto.getClaveAcceso())) {
-				throw new WorkflowException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
+				throw new ApplicationException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
 			}
 			return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "YA_GENERADA");
 		}
 
 		if (contexto.getSecuencial() == null || contexto.getSecuencial().isBlank()) {
-			throw new WorkflowException(MessageCodes.COMPROBANTE_NUMERO_REQUERIDO);
+			throw new ApplicationException(MessageCodes.COMPROBANTE_NUMERO_REQUERIDO);
 		}
 
 		var solicitud = contexto.getSolicitud();
 
 		var empresa = empresaService.obtenerPorId(solicitud.getIdEmpresa())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
 
 		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
 				solicitud.getIdPuntoEmision());
 
 		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var definition = definitionProvider
 				.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		String ambiente = resolverAmbiente(sriProperties.getAmbiente());
 
@@ -100,6 +108,6 @@ public class GeneracionClaveAccesoWorkflowStep implements WorkflowStep {
 			return "2";
 		}
 
-		throw new WorkflowException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
+		throw new ApplicationException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
 	}
 }
