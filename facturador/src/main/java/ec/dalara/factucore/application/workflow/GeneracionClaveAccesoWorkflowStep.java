@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionClaveAccesoWorkflowStep   {
 
-\tprivate static final Logger log = LoggerFactory.getLogger(GeneracionClaveAccesoWorkflowStep.class);
+	private static final Logger log = LoggerFactory.getLogger(GeneracionClaveAccesoWorkflowStep.class);
 
 	private static final String TIPO_EMISION_NORMAL = "1";
 

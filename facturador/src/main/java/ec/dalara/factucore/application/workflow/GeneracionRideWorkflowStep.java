@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionRideWorkflowStep   {
 
-\tprivate static final Logger log = LoggerFactory.getLogger(GeneracionRideWorkflowStep.class);
+	private static final Logger log = LoggerFactory.getLogger(GeneracionRideWorkflowStep.class);
 
 	private final RidePort ridePort;
 	private final ComprobanteEvidenciaPort evidenciaPort;
