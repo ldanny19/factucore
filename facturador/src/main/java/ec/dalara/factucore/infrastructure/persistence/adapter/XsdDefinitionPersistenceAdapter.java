@@ -79,7 +79,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			ElementoXsd padre = padreDe(source.ruta(), elementosPorRuta);
 
 			ElementoXsd elemento = elementoRepository.save(ElementoXsd.builder().versionDocumentoXsd(version)
-					.elementoPadre(padre).nombre(source.nombre()).tipoDato(source.tipoDato()).orden(source.orden())
+					.elementoPadre(padre).nombre(source.nombre())
+					.tipoDato(tipoDatoRuntime(source, definition)).orden(source.orden())
 					.obligatorio(source.esObligatorio()).repetible(source.esRepetible())
 					.minOcurrencias(source.minOcurrencias()).maxOcurrencias(source.maxOcurrencias())
 					.longitudMinima(source.longitudMinima()).longitudMaxima(source.longitudMaxima())
@@ -119,6 +120,56 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 
 		return new XsdImportResult(documento.getId(), version.getId(), elementos, atributos, enumeraciones);
+	}
+
+
+	private String tipoDatoRuntime(XsdElementSource source, XsdDefinitionSource definition) {
+		if (source.esRepetible()) {
+			return "LIST";
+		}
+
+		if (tieneEstructuraObjeto(source, definition)) {
+			return "MAP";
+		}
+
+		return tipoDatoEscalar(source.tipoDato());
+	}
+
+	private String tipoDatoEscalar(String tipoDatoXsd) {
+		String tipo = tipoDatoXsd == null ? "" : tipoDatoXsd.toLowerCase();
+
+		if (tipo.contains("boolean")) {
+			return "BOOLEAN";
+		}
+		if (tipo.contains("decimal")) {
+			return "DECIMAL";
+		}
+		if (tipo.contains("double")) {
+			return "DOUBLE";
+		}
+		if (tipo.contains("float")) {
+			return "FLOAT";
+		}
+		if (tipo.contains("integer")) {
+			return "INTEGER";
+		}
+		if (tipo.contains("long")) {
+			return "LONG";
+		}
+		if (tipo.contains("short")) {
+			return "SHORT";
+		}
+		if (tipo.contains("byte")) {
+			return "BYTE";
+		}
+		if (tipo.endsWith("date") || tipo.contains(":date")) {
+			return "DATE";
+		}
+		if (tipo.contains("datetime") || tipo.contains("dateTime".toLowerCase())) {
+			return "DATETIME";
+		}
+
+		return "STRING";
 	}
 
 	private String generarPlantillaJson(XsdDefinitionSource definition) {
