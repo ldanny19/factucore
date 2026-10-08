@@ -4,8 +4,6 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
 import java.time.LocalDate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
@@ -21,7 +19,6 @@ import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +29,6 @@ public class GeneracionClaveAccesoWorkflowStep   {
 	private static final String TIPO_EMISION_NORMAL = "1";
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ClaveAccesoService claveAccesoService;
 	private final EmpresaService empresaService;
 	private final EmisionService emisionService;
