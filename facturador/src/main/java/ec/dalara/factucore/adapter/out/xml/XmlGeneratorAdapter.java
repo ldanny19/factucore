@@ -3,9 +3,11 @@ package ec.dalara.factucore.adapter.out.xml;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Objects;
 
 import javax.xml.XMLConstants;
@@ -58,7 +60,9 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             ElementoXsdModel raiz = obtenerRaiz(definition);
             String namespaceXml = definition.getVersion().getNamespaceXml();
 
-            Element elementoRaiz = crearRaiz(document, raiz, definition, contextoJson, contextoFactuCore, contextoGenerado, namespaceXml);
+            Set<Long> mappingsConsumidos = new HashSet<>();
+            Element elementoRaiz = crearRaiz(document, raiz, definition, contextoJson, contextoFactuCore,
+                    contextoGenerado, namespaceXml, mappingsConsumidos);
             document.appendChild(elementoRaiz);
 
             return serializar(document);
@@ -90,18 +94,19 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     private Element crearRaiz(Document document, ElementoXsdModel definicion, DocumentDefinitionModel definition,
-            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String namespaceXml) {
-        return crearElemento(document, definicion, contextoJson, definition, contextoJson, contextoFactuCore, contextoGenerado,
-                namespaceXml, null);
+            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+            Map<String, Object> contextoGenerado, String namespaceXml, Set<Long> mappingsConsumidos) {
+        return crearElemento(document, definicion, contextoJson, definition, contextoJson, contextoFactuCore,
+                contextoGenerado, namespaceXml, null, mappingsConsumidos);
     }
 
     private Element crearElemento(Document document, ElementoXsdModel definicion, Object contextoActual,
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
             Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String namespaceXml,
-            String rutaOrigenPadre) {
+            String rutaOrigenPadre, Set<Long> mappingsConsumidos) {
 
         List<Element> elementos = crearElementos(document, definicion, contextoActual, definition, contextoJson,
-                contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre);
+                contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre, mappingsConsumidos);
 
         return elementos.isEmpty() ? null : elementos.get(0);
     }
@@ -109,9 +114,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     private List<Element> crearElementos(Document document, ElementoXsdModel definicion, Object contextoActual,
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
             Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
-            String namespaceXml, String rutaOrigenPadre) {
+            String namespaceXml, String rutaOrigenPadre, Set<Long> mappingsConsumidos) {
 
-        MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
+        MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition, mappingsConsumidos);
+
+        if (mapeo != null) {
+            mappingsConsumidos.add(mapeo.getId());
+        }
 
         LOGGER.info(
                 "MAPEO ELEMENTO XML: elementoId={}, elemento={}, totalMapeos={}, mapeoEncontrado={}, tipoOrigen={}, origen={}",
@@ -131,7 +140,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
             for (Object item : convertirIterable(iterable)) {
                 Element elemento = crearElementoConValor(document, definicion, item, definition, contextoJson,
-                        contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), item);
+                        contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre),
+                        item, mappingsConsumidos);
 
                 if (elemento != null) {
                     elementos.add(elemento);
@@ -144,7 +154,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         }
 
         Element elemento = crearElementoConValor(document, definicion, valor, definition, contextoJson,
-                contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor);
+                contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor,
+                mappingsConsumidos);
 
         return elemento == null ? List.of() : List.of(elemento);
     }
@@ -152,7 +163,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     private Element crearElementoConValor(Document document, ElementoXsdModel definicion, Object valor,
             DocumentDefinitionModel definition, Map<String, Object> contextoJson,
             Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
-            String namespaceXml, String rutaOrigenPadre, Object contextoActual) {
+            String namespaceXml, String rutaOrigenPadre, Object contextoActual, Set<Long> mappingsConsumidos) {
 
         if (valor == null && !tieneHijos(definicion, definition)) {
             return null;
@@ -160,8 +171,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
 
-        aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
-                rutaOrigenPadre);
+        aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore,
+                contextoGenerado, rutaOrigenPadre, mappingsConsumidos);
 
         if (esValorSimple(valor)) {
             if (valor != null) {
@@ -172,7 +183,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         Map<String, Object> contextoLocal = convertirMapa(valor);
         agregarHijos(document, elemento, definicion, contextoLocal, definition, contextoJson, contextoFactuCore,
-                contextoGenerado, namespaceXml, obtenerRutaOrigenActual(definicion, definition, rutaOrigenPadre));
+                contextoGenerado, namespaceXml, obtenerRutaOrigenActual(definicion, definition, rutaOrigenPadre),
+                mappingsConsumidos);
 
         return elemento;
     }
@@ -230,7 +242,11 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
     private String obtenerRutaOrigenActual(ElementoXsdModel definicion, DocumentDefinitionModel definition,
             String rutaOrigenPadre) {
-        MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
+        MapeoXsdModel mapeo = definition.getMapeos().stream()
+                .filter(MapeoXsdModel::esElemento)
+                .filter(mapeoActual -> Objects.equals(mapeoActual.getElementoXsdId(), definicion.getId()))
+                .findFirst()
+                .orElse(null);
         return obtenerRutaOrigen(mapeo, rutaOrigenPadre);
     }
 
@@ -269,7 +285,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 .anyMatch(hijo -> Objects.equals(hijo.getElementoPadreId(), elemento.getId()));
     }
 
-    private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+    private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition,
+            Set<Long> mappingsConsumidos) {
         LOGGER.info(
                 "BUSCANDO MAPEO: elementoId={}, elemento={}, totalMapeos={}",
                 elemento.getId(),
@@ -279,28 +296,35 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         return definition.getMapeos().stream()
                 .filter(MapeoXsdModel::esElemento)
                 .filter(mapeo -> Objects.equals(mapeo.getElementoXsdId(), elemento.getId()))
+                .filter(mapeo -> !mappingsConsumidos.contains(mapeo.getId()))
                 .findFirst()
                 .orElse(null);
     }
 
-    private MapeoXsdModel obtenerMapeoAtributo(AtributoXsdModel atributo, DocumentDefinitionModel definition) {
+    private MapeoXsdModel obtenerMapeoAtributo(AtributoXsdModel atributo, DocumentDefinitionModel definition,
+            Set<Long> mappingsConsumidos) {
         return definition.getMapeos().stream()
                 .filter(MapeoXsdModel::esAtributo)
                 .filter(mapeo -> Objects.equals(mapeo.getAtributoXsdId(), atributo.getId()))
+                .filter(mapeo -> !mappingsConsumidos.contains(mapeo.getId()))
                 .findFirst()
                 .orElse(null);
     }
 
     private void aplicarAtributos(Element elemento, ElementoXsdModel definicion, DocumentDefinitionModel definition,
             Object contextoActual, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-            Map<String, Object> contextoGenerado, String rutaOrigenPadre) {
+            Map<String, Object> contextoGenerado, String rutaOrigenPadre, Set<Long> mappingsConsumidos) {
 
         definition.getAtributos().stream()
                 .filter(atributo -> Objects.equals(atributo.getElementoXsdId(), definicion.getId()))
                 .forEach(atributo -> {
-                    MapeoXsdModel mapeo = obtenerMapeoAtributo(atributo, definition);
+                    MapeoXsdModel mapeo = obtenerMapeoAtributo(atributo, definition, mappingsConsumidos);
                     Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore,
                             contextoGenerado, rutaOrigenPadre);
+
+                    if (mapeo != null) {
+                        mappingsConsumidos.add(mapeo.getId());
+                    }
 
                     if (valor != null) {
                         elemento.setAttribute(atributo.getNombre(), convertirValor(valor));
