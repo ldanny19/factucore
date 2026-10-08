@@ -1,6 +1,5 @@
 package ec.dalara.factucore.application.validation;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
-import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +22,6 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 	private final MessageResolver messageResolver;
 	private final ObjectMapper objectMapper;
 	private final DocumentoDefinitionProvider documentoDefinitionProvider;
-	private final DocumentoXsdService documentoXsdService;
 	private final DocumentDefinitionDataValidator documentDefinitionDataValidator;
 
 	@Override
@@ -72,24 +69,9 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 	}
 
 	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
-		LocalDateTime fechaInicio = request.getFechaInicio();
-
-		if (fechaInicio == null) {
-			return;
-		}
-
-		LocalDateTime fechaEmision = fechaInicio;
-
-		var documentoOptional = documentoXsdService.obtenerPorId(request.getIdTipoDocumento());
-		if (documentoOptional.isEmpty()) {
-			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento",
-					request.getIdTipoDocumento());
-			return;
-		}
-
-		var codigoDocumento = documentoOptional.get().getCodigo();
-		var definicionOptional = documentoDefinitionProvider.obtenerDefinicion(codigoDocumento, request.getVersionXsd(),
-				fechaEmision);
+		var definicionOptional = documentoDefinitionProvider.obtenerDefinicion(
+				request.getIdTipoDocumento(),
+				request.getVersionXsd());
 
 		if (definicionOptional.isEmpty()) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento",
