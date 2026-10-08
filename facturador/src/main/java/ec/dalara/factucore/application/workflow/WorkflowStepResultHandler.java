@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.workflow;
 
 import org.apache.camel.Exchange;
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.MessageResolver;
@@ -26,6 +28,8 @@ public class WorkflowStepResultHandler {
 			return contexto;
 		}
 
+		String estadoAnterior = contexto.getComprobante() == null ? null : contexto.getComprobante().getEstadoProceso();
+		LocalDateTime fechaInicio = LocalDateTime.now();
 		contexto.registrarResultado(resultado);
 
 		if (contexto.getComprobante() != null) {
@@ -41,6 +45,11 @@ public class WorkflowStepResultHandler {
 			}
 
 			comprobanteService.guardar(contexto.getComprobante());
+		}
+
+		if (contexto.getComprobanteId() != null && resultado.getEtapa() != null) {
+			comprobanteAuditoriaService.registrarResultado(contexto.getComprobanteId(), resultado.getEtapa().name(),
+					estadoAnterior, resultado, fechaInicio, LocalDateTime.now());
 		}
 
 		return contexto;
