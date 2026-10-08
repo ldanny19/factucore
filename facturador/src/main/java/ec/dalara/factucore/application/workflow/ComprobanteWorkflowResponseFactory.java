@@ -2,18 +2,30 @@ package ec.dalara.factucore.application.workflow;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Map;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.contract.response.MensajeResponse;
 import ec.dalara.factucore.application.contract.response.ResultadoResponse;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-import ec.dalara.factucore.domain.workflow.EstadoProceso;
+import lombok.RequiredArgsConstructor;
 
+/**
+ * Construye la respuesta pública del proceso a partir del contexto final.
+ *
+ * <p>La fábrica no decide transiciones ni estados del workflow. Solo transforma
+ * el resultado que ya fue preparado por los nodos {@code GENERAR_RESPUESTA} o
+ * {@code RESPUESTA_ERROR_NOTIFICACION} en el contrato REST.</p>
+ */
 @Component
+@RequiredArgsConstructor
 public class ComprobanteWorkflowResponseFactory {
+
+	private final MessageResolver messageResolver;
 
 	public ComprobanteGeneracionResponse crear(ContextoWorkflow contexto) {
 		var comprobante = contexto == null ? null : contexto.getComprobante();
@@ -23,19 +35,24 @@ public class ComprobanteWorkflowResponseFactory {
 				: comprobante.getCodigoDocumento() + "-" + comprobante.getEstablecimiento().getCodigo() + "-"
 						+ comprobante.getPuntoEmision().getCodigo() + "-" + comprobante.getSecuencial();
 
-		boolean exitoso = comprobante != null
-				&& (EstadoProceso.RIDE_GENERADO.name().equals(comprobante.getEstadoProceso())
-						|| EstadoProceso.AUTORIZADO.name().equals(comprobante.getEstadoProceso()));
-
 		var ultimo = contexto == null ? null : contexto.getUltimoResultado();
+		boolean exitoso = contexto != null && Boolean.TRUE.equals(contexto.getExitosoFinal());
+
+		List<MensajeResponse> errores = ultimo != null && !ultimo.isExitosa()
+				? List.of(MensajeResponse.builder().codigo(ultimo.getCodigoError()).mensaje(ultimo.getMensaje()).build())
+				: List.of();
+
+		List<MensajeResponse> mensajes = contexto != null && contexto.isErrorNotificacion()
+				? List.of(MensajeResponse.builder()
+						.codigo(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)
+						.mensaje(messageResolver.resolver(MessageCodes.NOTIFICACION_PUBLICACION_ERROR))
+						.build())
+				: List.of();
 
 		ResultadoResponse resultado = ResultadoResponse.builder()
-				.errores(ultimo != null && !ultimo.isExitosa()
-						? java.util.List.of(MensajeResponse.builder().codigo(ultimo.getCodigoError())
-								.mensaje(ultimo.getMensaje()).build())
-						: java.util.List.of())
-				.advertencias(java.util.List.of())
-				.mensajes(java.util.List.of())
+				.errores(errores)
+				.advertencias(List.of())
+				.mensajes(mensajes)
 				.build();
 
 		return ComprobanteGeneracionResponse.builder()
