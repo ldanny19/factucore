@@ -1,6 +1,7 @@
 package ec.dalara.factucore.application.validation;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -111,8 +112,18 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 			}
 
 			if (Boolean.TRUE.equals(atributo.getObligatorio())) {
-				log.error("VALIDACION XSD - ATRIBUTO: codigo={}, tag={}, campo={}, valor={}", VALOR_REQUERIDO, atributo.getNombre(), campo, valor);
+				log.error("VALIDACION XSD - ATRIBUTO: codigo={}, tag={}, campo={}, valor={}",
+						VALOR_REQUERIDO, atributo.getNombre(), campo, valor);
 				resultado.agregarError(VALOR_REQUERIDO, campo);
+			}
+
+			return;
+		}
+
+		if (valor instanceof Collection<?> coleccion) {
+
+			for (Object item : coleccion) {
+				validarAtributo(atributo, item, campo, resultado);
 			}
 
 			return;
@@ -139,7 +150,10 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (ocurrencias < minimo) {
 
-			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, minimo={}", Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS, elemento.getNombre(), campo, valor, ocurrencias, minimo);
+			log.error(
+					"VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, minimo={}",
+					Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS,
+					elemento.getNombre(), campo, valor, ocurrencias, minimo);
 			resultado.agregarError(
 					Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS, campo,
 					minimo);
@@ -151,7 +165,9 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (maximo != null && ocurrencias > maximo) {
 
-			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, maximo={}", OCURRENCIAS_MAXIMAS, elemento.getNombre(), campo, valor, ocurrencias, maximo);
+			log.error(
+					"VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, maximo={}",
+					OCURRENCIAS_MAXIMAS, elemento.getNombre(), campo, valor, ocurrencias, maximo);
 			resultado.agregarError(OCURRENCIAS_MAXIMAS, campo, maximo);
 
 			return;
@@ -174,8 +190,8 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 		validarValor(elemento, valor, definition, campo, resultado);
 	}
 
-	private void validarValor(ElementoXsdModel elemento, Object valor, DocumentDefinitionModel definition, String campo,
-			ComprobanteValidationResult resultado) {
+	private void validarValor(ElementoXsdModel elemento, Object valor, DocumentDefinitionModel definition,
+			String campo, ComprobanteValidationResult resultado) {
 		if (valor == null) {
 			return;
 		}
@@ -228,7 +244,8 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (!valido) {
 
-			log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, tipo={}", TIPO_INVALIDO, campo, valor, tipoDato);
+			log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, tipo={}", TIPO_INVALIDO, campo, valor,
+					tipoDato);
 			resultado.agregarError(TIPO_INVALIDO, campo, tipoDato);
 		}
 
@@ -277,7 +294,8 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 			if (digitos > elemento.getDigitosTotales()) {
 
-				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, digitosTotales={}", DIGITOS_TOTALES, elemento.getNombre(), campo, valor, elemento.getDigitosTotales());
+				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, digitosTotales={}",
+						DIGITOS_TOTALES, elemento.getNombre(), campo, valor, elemento.getDigitosTotales());
 				resultado.agregarError(DIGITOS_TOTALES, campo, elemento.getDigitosTotales());
 			}
 		}
@@ -288,7 +306,8 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 			if (decimales > elemento.getDecimales()) {
 
-				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, decimales={}", DECIMALES, elemento.getNombre(), campo, valor, elemento.getDecimales());
+				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, decimales={}",
+						DECIMALES, elemento.getNombre(), campo, valor, elemento.getDecimales());
 				resultado.agregarError(DECIMALES, campo, elemento.getDecimales());
 			}
 		}
@@ -307,7 +326,8 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 			if (!Pattern.matches(patron, texto)) {
 
-				log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, patron={}", PATRON_INVALIDO, campo, valor, patron);
+				log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, patron={}", PATRON_INVALIDO, campo,
+						valor, patron);
 				resultado.agregarError(PATRON_INVALIDO, campo);
 			}
 
@@ -337,7 +357,8 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (!existe) {
 
-			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}", ENUMERACION_INVALIDA, elemento.getNombre(), campo, valorTexto);
+			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}", ENUMERACION_INVALIDA,
+					elemento.getNombre(), campo, valorTexto);
 			resultado.agregarError(ENUMERACION_INVALIDA, campo, valorTexto);
 		}
 	}
@@ -379,24 +400,49 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 			return datos.get(ruta);
 		}
 
-		String[] partes = ruta.split("\\.");
+		String[] partes = ruta.split("\.");
 
-		Object actual = datos;
+		Object valor = resolverRuta(datos, partes, 0);
 
-		for (String parte : partes) {
-
-			if (!(actual instanceof Map<?, ?> mapa)) {
-				return null;
-			}
-
-			actual = mapa.get(parte);
-
-			if (actual == null) {
-				return null;
-			}
+		if (valor instanceof Collection<?> coleccion && coleccion.isEmpty()) {
+			return null;
 		}
 
-		return actual;
+		return valor;
+	}
+
+	private Object resolverRuta(Object actual, String[] partes, int indice) {
+		if (actual == null) {
+			return null;
+		}
+
+		if (indice == partes.length) {
+			return actual;
+		}
+
+		if (actual instanceof Map<?, ?> mapa) {
+			Object siguiente = mapa.get(partes[indice]);
+
+			return resolverRuta(siguiente, partes, indice + 1);
+		}
+
+		if (actual instanceof Collection<?> coleccion) {
+			List<Object> resultados = new ArrayList<>();
+
+			for (Object item : coleccion) {
+				Object resultado = resolverRuta(item, partes, indice);
+
+				if (resultado instanceof Collection<?> resultadosAnidados) {
+					resultados.addAll(resultadosAnidados);
+				} else if (resultado != null) {
+					resultados.add(resultado);
+				}
+			}
+
+			return resultados;
+		}
+
+		return null;
 	}
 
 	private int calcularOcurrencias(Object valor) {
