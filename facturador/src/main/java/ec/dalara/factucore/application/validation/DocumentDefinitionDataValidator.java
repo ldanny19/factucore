@@ -400,7 +400,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 			return datos.get(ruta);
 		}
 
-		String[] partes = ruta.split("\.");
+		String[] partes = ruta.split("\\.");
 
 		Object valor = resolverRuta(datos, partes, 0);
 
