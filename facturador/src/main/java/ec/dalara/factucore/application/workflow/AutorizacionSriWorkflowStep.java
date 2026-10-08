@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.ApplicationException;
+
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.application.service.SriService;
@@ -17,21 +19,25 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class AutorizacionSriWorkflowStep implements WorkflowStep {
+public class AutorizacionSriWorkflowStep  {
 
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final SriService sriService;
 	private final SriProperties sriProperties;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.AUTORIZACION_SRI;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/** Ejecuta la lógica de negocio y expone a Camel solo la salida de la etapa. */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
-			throw new WorkflowException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
+			throw new ApplicationException(MessageCodes.SRI_CLAVE_ACCESO_REQUERIDA);
 		}
 
 		if (EstadoProceso.ENVIADO_SRI.name().equals(contexto.getComprobante().getEstadoProceso())) {
@@ -78,7 +84,7 @@ public class AutorizacionSriWorkflowStep implements WorkflowStep {
 			Thread.sleep(esperaMs);
 		} catch (InterruptedException exception) {
 			Thread.currentThread().interrupt();
-			throw new WorkflowException(MessageCodes.SRI_ERROR_COMUNICACION);
+			throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
 		}
 	}
 }
