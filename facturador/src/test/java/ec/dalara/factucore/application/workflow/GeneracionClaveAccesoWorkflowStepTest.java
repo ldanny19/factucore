@@ -1,7 +1,7 @@
 package ec.dalara.factucore.application.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -75,8 +75,8 @@ class GeneracionClaveAccesoWorkflowStepTest {
 
 		var resultado = step.ejecutar(contexto);
 
-		assertTrue(resultado.isExitosa());
+		assertEquals("OK", resultado);
 		assertEquals("1234567890123456789012345678901234567890123456789", contexto.getClaveAcceso());
-		assertEquals("GENERADA", resultado.getEstado());
+		assertEquals("GENERADA", contexto.getUltimoResultado().getEstado());
 	}
 }

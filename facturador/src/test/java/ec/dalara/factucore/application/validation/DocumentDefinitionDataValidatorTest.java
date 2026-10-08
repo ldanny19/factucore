@@ -46,7 +46,7 @@ class DocumentDefinitionDataValidatorTest {
 		MessageResolver messageResolver = mock(MessageResolver.class);
 		when(messageResolver.resolver(anyString(), any(Object[].class))).thenReturn("error");
 
-		DocumentDefinitionDataValidator validator = new DocumentDefinitionDataValidator(messageResolver);
+		DocumentDefinitionDataValidator validator = new DocumentDefinitionDataValidator();
 		ComprobanteValidationResult resultado = new ComprobanteValidationResult(messageResolver);
 
 		@SuppressWarnings("unchecked")
