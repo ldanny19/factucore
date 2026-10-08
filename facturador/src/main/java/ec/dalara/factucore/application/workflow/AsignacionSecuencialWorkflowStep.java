@@ -36,6 +36,7 @@ public class AsignacionSecuencialWorkflowStep  {
 	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
 	 * El Bean no conoce ni decide el siguiente nodo del workflow.
 	 */
+	@Transactional
 	public String ejecutar(ContextoWorkflow contexto) {
 		ResultadoEtapa resultado = ejecutarResultado(contexto);
 		return contexto.registrarYObtenerSalida(resultado);
