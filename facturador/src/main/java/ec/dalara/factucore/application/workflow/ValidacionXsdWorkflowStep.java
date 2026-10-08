@@ -83,7 +83,7 @@ public class ValidacionXsdWorkflowStep {
 		if (!validacion.esValido()) {
 			String codigo = validacion.getErrores().isEmpty() ? MessageCodes.WORKFLOW_ETAPA_ERROR : validacion.getErrores().get(0).getCodigo();
 			String mensaje = validacion.getErrores().isEmpty() ? null : validacion.getErrores().get(0).getMensaje();
-			return ResultadoEtapa.fallida(etapa, EstadoProceso.ERROR.name(), codigo, mensaje,
+			return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(), codigo, mensaje,
 					java.util.Map.of("validacion", validacion));
 		}
 
