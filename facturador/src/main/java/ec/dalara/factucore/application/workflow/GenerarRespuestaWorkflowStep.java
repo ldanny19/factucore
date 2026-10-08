@@ -2,10 +2,7 @@ package ec.dalara.factucore.application.workflow;
 
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
-import ec.dalara.factucore.application.MessageResolver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -27,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 public class GenerarRespuestaWorkflowStep {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	private boolean resultadoFinalExitoso(ContextoWorkflow contexto) {
