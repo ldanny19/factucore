@@ -112,6 +112,16 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             String namespaceXml, String rutaOrigenPadre) {
 
         MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition);
+
+        LOGGER.info(
+                "MAPEO ELEMENTO XML: elementoId={}, elemento={}, totalMapeos={}, mapeoEncontrado={}, tipoOrigen={}, origen={}",
+                definicion.getId(),
+                definicion.getNombre(),
+                definition.getMapeos() == null ? 0 : definition.getMapeos().size(),
+                mapeo != null,
+                mapeo == null ? null : mapeo.getTipoOrigen(),
+                mapeo == null ? null : mapeo.getOrigen());
+
         Object valor = mapeo == null ? contextoActual
                 : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
                         rutaOrigenPadre);
@@ -260,6 +270,12 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        LOGGER.info(
+                "BUSCANDO MAPEO: elementoId={}, elemento={}, totalMapeos={}",
+                elemento.getId(),
+                elemento.getNombre(),
+                definition.getMapeos() == null ? 0 : definition.getMapeos().size());
+
         return definition.getMapeos().stream()
                 .filter(MapeoXsdModel::esElemento)
                 .filter(mapeo -> Objects.equals(mapeo.getElementoXsdId(), elemento.getId()))
