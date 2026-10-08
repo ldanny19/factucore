@@ -4,13 +4,10 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
 import java.util.Arrays;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 
 import ec.dalara.factucore.application.port.out.CertificadoFirmaPasswordPort;
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
@@ -27,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 public class FirmaElectronicaWorkflowStep   {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final FirmaElectronicaService firmaElectronicaService;
 	private final CertificadoFirmaPasswordPort passwordPort;
