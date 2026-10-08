@@ -4,6 +4,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Resultado interno producido por una etapa del workflow.
+ *
+ * <p>Se conserva como objeto de dominio para auditoría, persistencia y
+ * diagnóstico. La interfaz que Camel consume es {@link #salida()}, que evita
+ * acoplar el Bean con el nombre del siguiente nodo.</p>
+ */
 public final class ResultadoEtapa {
 
 	private final EtapaWorkflow etapa;
