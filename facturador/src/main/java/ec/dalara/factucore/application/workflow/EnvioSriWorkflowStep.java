@@ -2,6 +2,8 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.ApplicationException;
+
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.application.service.SriService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -13,19 +15,23 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class EnvioSriWorkflowStep implements WorkflowStep {
+public class EnvioSriWorkflowStep  {
 
 	private final SriService sriService;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.ENVIO_SRI;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/** Ejecuta la lógica de negocio y expone a Camel solo la salida de la etapa. */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getXmlFirmado() == null || contexto.getXmlFirmado().isBlank()) {
-			throw new WorkflowException(MessageCodes.FIRMA_XML_REQUERIDO);
+			throw new ApplicationException(MessageCodes.FIRMA_XML_REQUERIDO);
 		}
 
 		SriResponse respuesta = sriService.enviar(contexto.getXmlFirmado());
