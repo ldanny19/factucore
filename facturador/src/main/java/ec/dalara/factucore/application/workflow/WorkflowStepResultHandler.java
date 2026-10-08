@@ -1,5 +1,6 @@
 package ec.dalara.factucore.application.workflow;
 
+import org.apache.camel.Exchange;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.MessageResolver;
@@ -45,6 +46,20 @@ public class WorkflowStepResultHandler {
 		return contexto;
 	}
 
+	public ContextoWorkflow registrarResultado(Exchange exchange) {
+		ContextoWorkflow contexto = exchange.getProperty("workflow.contexto", ContextoWorkflow.class);
+		ResultadoEtapa resultado = exchange.getMessage().getBody(ResultadoEtapa.class);
+		return registrar(contexto, resultado);
+	}
+
+	public ContextoWorkflow registrarExcepcion(Exchange exchange) {
+		ContextoWorkflow contexto = exchange.getProperty("workflow.contexto", ContextoWorkflow.class);
+		String etapaNombre = exchange.getProperty("workflow.etapa", String.class);
+		EtapaWorkflow etapa = etapaNombre == null ? null : EtapaWorkflow.valueOf(etapaNombre);
+		Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+		return registrarExcepcion(contexto, etapa, exception);
+	}
+
 	public ContextoWorkflow registrarExcepcion(ContextoWorkflow contexto, EtapaWorkflow etapa, Exception exception) {
 		if (contexto == null) {
 			return null;
@@ -56,7 +71,7 @@ public class WorkflowStepResultHandler {
 
 		Object[] parametros = exception instanceof WorkflowException workflowException
 				? workflowException.getParametros()
-				: new Object[0];
+				: new Object[] { etapa == null ? "DESCONOCIDA" : etapa.name() };
 
 		String mensaje = messageResolver.resolver(codigo, parametros);
 
