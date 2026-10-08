@@ -36,14 +36,14 @@ public class AutorizacionSriWorkflowStep   {
 		String idTransaccion = contexto != null && contexto.getSolicitud() != null
 				? contexto.getSolicitud().getIdTransaccion()
 				: null;
-		log.debug("ID_TRANSACCION={} - Inicia Etapa etapa()", idTransaccion);
+		log.debug("ID_TRANSACCION={} - Inicia Etapa {}", idTransaccion, etapa());
 		try {
 			ResultadoEtapa resultado = ejecutarResultado(contexto);
 			String salida = contexto.registrarYObtenerSalida(resultado);
-			log.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado={}", idTransaccion, salida);
+			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);
 			return salida;
 		} catch (RuntimeException exception) {
-			log.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado=ERROR", idTransaccion);
+			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado=ERROR", idTransaccion, etapa());
 			throw exception;
 		}
 	}
