@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
-import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
@@ -26,7 +25,6 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 	private static final Logger LOGGER = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
 	private final DocumentoDefinitionProvider definitionProvider;
-	private final DocumentoXsdService documentoXsdService;
 	private final XmlGeneratorPort xmlGenerator;
 	private final ObjectMapper objectMapper;
 
@@ -41,9 +39,6 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 		var definition = contexto.getDefinicionDocumento();
 
 		if (definition == null) {
-			var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-					.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
-
 			definition = definitionProvider
 					.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
 					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
