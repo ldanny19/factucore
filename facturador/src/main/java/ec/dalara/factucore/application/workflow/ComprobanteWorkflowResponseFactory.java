@@ -39,6 +39,13 @@ public class ComprobanteWorkflowResponseFactory {
 		boolean exitoso = contexto != null && Boolean.TRUE.equals(contexto.getExitosoFinal());
 
 		List<MensajeResponse> errores = contexto == null ? List.of() : contexto.getErroresValidacion();
+		List<MensajeResponse> advertencias = List.of();
+		List<MensajeResponse> validacionMensajes = List.of();
+		if (contexto != null && contexto.getValidacionXsd() != null) {
+			errores = contexto.getValidacionXsd().getErrores();
+			advertencias = contexto.getValidacionXsd().getAdvertencias();
+			validacionMensajes = contexto.getValidacionXsd().getMensajes();
+		}
 		if (errores.isEmpty() && ultimo != null && !ultimo.isExitosa()) {
 			errores = List.of(MensajeResponse.builder().codigo(ultimo.getCodigoError()).mensaje(ultimo.getMensaje()).build());
 		}
@@ -52,8 +59,8 @@ public class ComprobanteWorkflowResponseFactory {
 
 		ResultadoResponse resultado = ResultadoResponse.builder()
 				.errores(errores)
-				.advertencias(List.of())
-				.mensajes(mensajes)
+				.advertencias(advertencias)
+				.mensajes(validacionMensajes.isEmpty() ? mensajes : validacionMensajes)
 				.build();
 
 		return ComprobanteGeneracionResponse.builder()
