@@ -393,7 +393,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             return datos;
         }
         Object actual = datos;
-        for (String parte : ruta.split("\.")) {
+        for (String parte : ruta.split("\\.")) {
             if (!(actual instanceof Map<?, ?> mapa)) {
                 return null;
             }
