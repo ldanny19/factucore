@@ -23,19 +23,7 @@
     <route id="facturador-workflow-procesar">
         <from uri="direct:facturador.workflow.procesar"/>
         <bean ref="workflowContextFactory" method="crear"/>
-        <bean ref="workflowIdempotencyStep" method="ejecutar"/>
-        <choice>
-            <when>
-                <simple>${body.idempotente} == true</simple>
-                <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
-                <setProperty name="workflow.etapa"><constant>INICIO</constant></setProperty>
-                <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-                <to uri="direct:facturador.workflow.nodo.GENERAR_RESPUESTA"/>
-            </when>
-            <otherwise>
-                <to uri="direct:facturador.workflow.nodo.INICIO"/>
-            </otherwise>
-        </choice>
+        <to uri="direct:facturador.workflow.nodo.INICIO"/>
     </route>
 
     <!-- Nodo INICIO: punto de entrada del workflow para una nueva solicitud. -->
@@ -62,6 +50,10 @@
             </doCatch>
         </doTry>
         <choice>
+                    <when>
+                        <simple>${body.idempotente} == true</simple>
+                        <to uri="direct:facturador.workflow.nodo.GENERAR_RESPUESTA"/>
+                    </when>
                     <when>
                         <simple>${exchangeProperty.workflow.resultado} == 'OK'</simple>
                         <to uri="direct:facturador.workflow.nodo.ASIGNACION_SECUENCIAL"/>
