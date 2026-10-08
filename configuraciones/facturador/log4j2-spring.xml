@@ -22,6 +22,11 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
+		<Logger name="ec.dalara.factucore.application.workflow"
+			level="DEBUG" additivity="false">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="File" />
+		</Logger>
 		<Logger name="ec.dalara.factucore"
 			level="INFO" additivity="false">
 			<AppenderRef ref="Console" />
