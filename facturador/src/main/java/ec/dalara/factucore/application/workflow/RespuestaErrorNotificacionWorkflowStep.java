@@ -34,12 +34,10 @@ public class RespuestaErrorNotificacionWorkflowStep {
 				contexto.setExitosoFinal(true);
 				contexto.setRespuesta(responseFactory.crear(contexto));
 			}
-			return "OK";
 			log.debug("ID_TRANSACCION={} - Fin Etapa RESPUESTA_ERROR_NOTIFICACION - Resultado={}", idTransaccion, "OK");
 			return "OK";
 		} catch (RuntimeException exception) {
 			log.debug("ID_TRANSACCION={} - Fin Etapa RESPUESTA_ERROR_NOTIFICACION - Resultado=ERROR", idTransaccion);
 			throw exception;
 		}
-	}
-}
+	}}
