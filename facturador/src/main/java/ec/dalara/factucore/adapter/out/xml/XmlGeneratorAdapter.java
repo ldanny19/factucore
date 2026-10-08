@@ -3,11 +3,9 @@ package ec.dalara.factucore.adapter.out.xml;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Objects;
 
 import javax.xml.XMLConstants;
@@ -32,7 +30,6 @@ import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 @Component
 public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
-
     private final FactuCoreSourcePort factuCoreSourcePort;
 
     public XmlGeneratorAdapter(FactuCoreSourcePort factuCoreSourcePort) {
@@ -52,16 +49,17 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
-
             Document document = factory.newDocumentBuilder().newDocument();
+
             ElementoXsdModel raiz = obtenerRaiz(definition);
-            String namespaceXml = definition.getVersion().getNamespaceXml();
+            Element elementoRaiz = crearInstancia(document, raiz, contextoJson, contextoJson, definition,
+                    contextoFactuCore, contextoGenerado, null);
 
-            Set<Long> mappingsConsumidos = new HashSet<>();
-            Element elementoRaiz = crearRaiz(document, raiz, definition, contextoJson, contextoFactuCore,
-                    contextoGenerado, namespaceXml, mappingsConsumidos);
+            if (elementoRaiz == null) {
+                throw new ApplicationException("FACTUCORE.XML.ELEMENTO_RAIZ.NO_GENERADO");
+            }
+
             document.appendChild(elementoRaiz);
-
             return serializar(document);
         } catch (ApplicationException exception) {
             throw exception;
@@ -71,13 +69,14 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     private ElementoXsdModel obtenerRaiz(DocumentDefinitionModel definition) {
-        String nombreRaizConfigurado = definition.getVersion().getElementoRaiz();
+        String nombreRaiz = definition.getVersion().getElementoRaiz();
 
         List<ElementoXsdModel> raices = definition.getElementos().stream()
-                .filter(elemento -> elemento.getElementoPadreId() == null)
-                .filter(elemento -> nombreRaizConfigurado == null || nombreRaizConfigurado.isBlank()
-                        || Objects.equals(elemento.getNombre(), nombreRaizConfigurado))
-                .sorted(Comparator.comparing(ElementoXsdModel::getOrden, Comparator.nullsLast(Integer::compareTo)))
+                .filter(e -> e.getElementoPadreId() == null)
+                .filter(e -> nombreRaiz == null || nombreRaiz.isBlank()
+                        || Objects.equals(e.getNombre(), nombreRaiz))
+                .sorted(Comparator.comparing(ElementoXsdModel::getOrden,
+                        Comparator.nullsLast(Integer::compareTo)))
                 .toList();
 
         if (raices.isEmpty()) {
@@ -86,325 +85,330 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         if (raices.size() > 1) {
             throw new ApplicationException("FACTUCORE.XML.ELEMENTO_RAIZ.MULTIPLE");
         }
-
         return raices.get(0);
     }
 
-    private Element crearRaiz(Document document, ElementoXsdModel definicion, DocumentDefinitionModel definition,
-            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-            Map<String, Object> contextoGenerado, String namespaceXml, Set<Long> mappingsConsumidos) {
-        return crearElemento(document, definicion, contextoJson, definition, contextoJson, contextoFactuCore,
-                contextoGenerado, namespaceXml, null, mappingsConsumidos);
-    }
+    private Element crearInstancia(Document document, ElementoXsdModel elemento, Object contexto,
+            Map<String, Object> contextoJson, DocumentDefinitionModel definition,
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String rutaPadre) {
 
-    private Element crearElemento(Document document, ElementoXsdModel definicion, Object contextoActual,
-            DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String namespaceXml,
-            String rutaOrigenPadre, Set<Long> mappingsConsumidos) {
+        MapeoXsdModel mapeo = obtenerMapeoElemento(elemento, definition);
+        Object valor = resolverValor(mapeo, contexto, contextoJson, contextoFactuCore, contextoGenerado, rutaPadre);
 
-        List<Element> elementos = crearElementos(document, definicion, contextoActual, definition, contextoJson,
-                contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre, mappingsConsumidos);
+        if (mapeo != null && valor == null && !tieneHijos(elemento, definition)) {
+            return null;
+        }
+        if (mapeo == null && !tieneHijos(elemento, definition) && !tieneAtributos(elemento, definition)) {
+            return null;
+        }
 
-        return elementos.isEmpty() ? null : elementos.get(0);
-    }
+        Element xml = crearElementoXml(document, elemento.getNombre(), definition.getVersion().getNamespaceXml());
 
-    private List<Element> crearElementos(Document document, ElementoXsdModel definicion, Object contextoActual,
-            DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
-            String namespaceXml, String rutaOrigenPadre, Set<Long> mappingsConsumidos) {
+        aplicarAtributos(xml, elemento, contexto, contextoJson, contextoFactuCore, contextoGenerado,
+                definition, rutaPadre);
 
-        MapeoXsdModel mapeo = obtenerMapeoElemento(definicion, definition, mappingsConsumidos);
+        Object contextoHijos = contexto;
 
         if (mapeo != null) {
-            mappingsConsumidos.add(mapeo.getId());
+            if (esValorSimple(valor)) {
+                if (valor != null) {
+                    xml.setTextContent(convertirValor(valor));
+                }
+                return xml;
+            }
+            contextoHijos = valor;
+        } else if (esContenidoSimple(elemento, definition)) {
+            Object contenido = obtenerContenidoSimple(contexto, elemento, definition, rutaPadre);
+            if (contenido != null) {
+                xml.setTextContent(convertirValor(contenido));
+            }
         }
-        Object valor = mapeo == null ? contextoActual
-                : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
-                        rutaOrigenPadre);
 
-        if (esContenidoSimple(definicion, definition)
-                && "JSON".equalsIgnoreCase(mapeo == null ? null : mapeo.getTipoOrigen())) {
-            String rutaContenido = obtenerRutaPadre(mapeo.getOrigen());
-            Object contenidos = obtenerRuta(contextoJson, rutaContenido);
+        agregarHijos(document, xml, elemento, contextoHijos, contextoJson, definition,
+                contextoFactuCore, contextoGenerado, rutaPadre);
 
-            if (contenidos instanceof Iterable<?> iterable) {
-                List<Element> elementos = new ArrayList<>();
+        return xml;
+    }
 
-                for (Object item : convertirIterable(iterable)) {
-                    Object contenido = obtenerRuta(convertirMapa(item), "valor");
-                    Element elemento = crearElementoConValor(document, definicion, contenido, definition, contextoJson,
-                            contextoFactuCore, contextoGenerado, namespaceXml, rutaContenido, item,
-                            mappingsConsumidos);
+    private void agregarHijos(Document document, Element padre, ElementoXsdModel elemento, Object contexto,
+            Map<String, Object> contextoJson, DocumentDefinitionModel definition,
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String rutaPadre) {
 
-                    if (elemento != null) {
-                        elementos.add(elemento);
+        String rutaActual = obtenerRutaOrigenElemento(elemento, definition);
+        if (rutaActual == null) {
+            rutaActual = rutaPadre;
+        }
+
+        Object contextoBase = contexto;
+        if (contexto instanceof Map<?, ?> && rutaActual != null && esRutaJson(elemento, definition, rutaActual)) {
+            String relativa = obtenerRutaRelativa(rutaActual, rutaPadre);
+            Object resuelto = obtenerRuta(contexto, relativa);
+            if (resuelto != null) {
+                contextoBase = resuelto;
+            }
+        }
+
+        for (ElementoXsdModel hijo : obtenerHijos(elemento, definition)) {
+            if (Boolean.TRUE.equals(hijo.getRepetible())) {
+                Object coleccion = obtenerColeccion(hijo, contextoBase, contextoJson, definition, rutaActual);
+                if (!(coleccion instanceof Iterable<?> iterable)) {
+                    continue;
+                }
+                for (Object item : iterable) {
+                    Element xml = crearInstancia(document, hijo, item, contextoJson, definition,
+                            contextoFactuCore, contextoGenerado, rutaActual == null ? null : rutaActual + "." + hijo.getNombre());
+                    if (xml != null) {
+                        padre.appendChild(xml);
                     }
                 }
-
-                if (!elementos.isEmpty()) {
-                    return elementos;
+            } else {
+                Object contextoHijo = resolverContextoHijo(hijo, contextoBase, contextoJson, definition, rutaActual);
+                Element xml = crearInstancia(document, hijo, contextoHijo, contextoJson, definition,
+                        contextoFactuCore, contextoGenerado, rutaActual);
+                if (xml != null) {
+                    padre.appendChild(xml);
                 }
             }
-
-            if (contenidos instanceof Map<?, ?> mapa) {
-                Object contenido = obtenerRuta(convertirMapa(mapa), "valor");
-                Element elemento = crearElementoConValor(document, definicion, contenido, definition, contextoJson,
-                        contextoFactuCore, contextoGenerado, namespaceXml, rutaContenido, mapa,
-                        mappingsConsumidos);
-
-                return elemento == null ? List.of() : List.of(elemento);
-            }
         }
-
-        if (valor instanceof Iterable<?> iterable) {
-            List<Element> elementos = new ArrayList<>();
-
-            for (Object item : convertirIterable(iterable)) {
-                Element elemento = crearElementoConValor(document, definicion, item, definition, contextoJson,
-                        contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre),
-                        item, mappingsConsumidos);
-
-                if (elemento != null) {
-                    elementos.add(elemento);
-                }
-            }
-
-            if (!elementos.isEmpty()) {
-                return elementos;
-            }
-        }
-
-        Element elemento = crearElementoConValor(document, definicion, valor, definition, contextoJson,
-                contextoFactuCore, contextoGenerado, namespaceXml, obtenerRutaOrigen(mapeo, rutaOrigenPadre), valor,
-                mappingsConsumidos);
-
-        return elemento == null ? List.of() : List.of(elemento);
     }
 
-    private Element crearElementoConValor(Document document, ElementoXsdModel definicion, Object valor,
-            DocumentDefinitionModel definition, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
-            String namespaceXml, String rutaOrigenPadre, Object contextoActual, Set<Long> mappingsConsumidos) {
+    private Object resolverContextoHijo(ElementoXsdModel hijo, Object contexto,
+            Map<String, Object> contextoJson, DocumentDefinitionModel definition, String rutaPadre) {
+        String ruta = obtenerRutaOrigenElemento(hijo, definition);
+        if (ruta == null || !esRutaJson(hijo, definition, ruta)) {
+            return contexto;
+        }
 
-        if (valor == null && !tieneHijos(definicion, definition)) {
+        Object valor = obtenerRuta(contexto, obtenerRutaRelativa(ruta, rutaPadre));
+        if (valor == null) {
+            valor = obtenerRuta(contextoJson, ruta);
+        }
+        return valor == null ? contexto : valor;
+    }
+
+    private Object obtenerColeccion(ElementoXsdModel elemento, Object contexto,
+            Map<String, Object> contextoJson, DocumentDefinitionModel definition, String rutaPadre) {
+        String ruta = obtenerRutaOrigenElemento(elemento, definition);
+        if (ruta != null && esRutaJson(elemento, definition, ruta)) {
+            Object valor = obtenerRuta(contexto, obtenerRutaRelativa(ruta, rutaPadre));
+            if (valor instanceof Iterable<?>) {
+                return valor;
+            }
+            valor = obtenerRuta(contextoJson, ruta);
+            if (valor instanceof Iterable<?>) {
+                return valor;
+            }
+        }
+        return contexto instanceof Iterable<?> ? contexto : null;
+    }
+
+    private String obtenerRutaOrigenElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        MapeoXsdModel directo = obtenerMapeoElemento(elemento, definition);
+        if (directo != null && "JSON".equalsIgnoreCase(directo.getTipoOrigen())) {
+            return directo.getOrigen();
+        }
+
+        for (MapeoXsdModel mapeo : definition.getMapeos()) {
+            if (mapeo == null || !"JSON".equalsIgnoreCase(mapeo.getTipoOrigen())) {
+                continue;
+            }
+
+            Long destino = mapeo.esElemento() ? mapeo.getElementoXsdId() : obtenerElementoDeAtributo(mapeo, definition);
+            if (!esDescendiente(destino, elemento.getId(), definition)) {
+                continue;
+            }
+
+            String ruta = recortarRuta(mapeo.getOrigen(), elemento.getNombre());
+            if (ruta != null) {
+                return ruta;
+            }
+        }
+        return null;
+    }
+
+    private boolean esRutaJson(ElementoXsdModel elemento, DocumentDefinitionModel definition, String ruta) {
+        return definition.getMapeos().stream()
+                .filter(Objects::nonNull)
+                .filter(m -> "JSON".equalsIgnoreCase(m.getTipoOrigen()))
+                .anyMatch(m -> m.getOrigen().equals(ruta) || m.getOrigen().startsWith(ruta + "."));
+    }
+
+    private boolean esDescendiente(Long destino, Long ancestro, DocumentDefinitionModel definition) {
+        ElementoXsdModel actual = buscarElemento(destino, definition);
+        while (actual != null) {
+            if (Objects.equals(actual.getId(), ancestro)) {
+                return true;
+            }
+            actual = buscarElemento(actual.getElementoPadreId(), definition);
+        }
+        return false;
+    }
+
+    private String recortarRuta(String ruta, String nombre) {
+        if (ruta == null || nombre == null) {
             return null;
         }
-
-        Element elemento = crearElementoXml(document, definicion.getNombre(), namespaceXml);
-
-        aplicarAtributos(elemento, definicion, definition, contextoActual, contextoJson, contextoFactuCore,
-                contextoGenerado, rutaOrigenPadre, mappingsConsumidos);
-
-        if (esValorSimple(valor)) {
-            if (valor != null) {
-                elemento.setTextContent(convertirValor(valor));
-            }
-            return elemento;
+        String token = "." + nombre;
+        int posicion = ruta.lastIndexOf(token);
+        if (posicion >= 0 && (posicion + token.length() == ruta.length()
+                || ruta.charAt(posicion + token.length()) == '.')) {
+            return ruta.substring(0, posicion + token.length());
         }
-
-        Map<String, Object> contextoLocal = convertirMapa(valor);
-        agregarHijos(document, elemento, definicion, contextoLocal, definition, contextoJson, contextoFactuCore,
-                contextoGenerado, namespaceXml, obtenerRutaOrigenActual(definicion, definition, rutaOrigenPadre),
-                mappingsConsumidos);
-
-        return elemento;
+        return ruta.equals(nombre) || ruta.startsWith(nombre + ".") ? nombre : null;
     }
 
-    private void agregarHijos(Document document, Element padre, ElementoXsdModel definicion,
-            Map<String, Object> contextoLocal, DocumentDefinitionModel definition,
-            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-            Map<String, Object> contextoGenerado, String namespaceXml, String rutaOrigenPadre,
-            Set<Long> mappingsConsumidos) {
-
-        for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
-            List<Element> elementosHijo = crearElementos(document, hijo, contextoLocal, definition,
-                    contextoJson, contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre,
-                    mappingsConsumidos);
-
-            for (Element elementoHijo : elementosHijo) {
-                padre.appendChild(elementoHijo);
-            }
-        }
-    }
-
-    private Object resolverValor(MapeoXsdModel mapeo, Object contextoActual, Map<String, Object> contextoJson,
-            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado, String rutaOrigenPadre) {
-
-        if (mapeo == null || mapeo.getOrigen() == null || mapeo.getOrigen().isBlank()) {
-            return null;
-        }
-
-        String tipoOrigen = mapeo.getTipoOrigen();
-        String origen = mapeo.getOrigen();
-        Object valor;
-
-        if ("FACTUCORE".equalsIgnoreCase(tipoOrigen)) {
-            valor = factuCoreSourcePort.resolver(origen, contextoFactuCore).resultado();
-        } else if ("GENERADO".equalsIgnoreCase(tipoOrigen)) {
-            valor = obtenerRuta(contextoGenerado, origen);
-        } else if ("JSON".equalsIgnoreCase(tipoOrigen)) {
-            String rutaRelativa = obtenerRutaRelativa(origen, rutaOrigenPadre);
-            valor = obtenerRuta(convertirMapa(contextoActual), rutaRelativa);
-
-            if (valor == null) {
-                valor = obtenerRuta(contextoJson, origen);
-            }
-        } else {
-            throw new ApplicationException("FACTUCORE.MAPEO_XSD.TIPO_ORIGEN_INVALIDO");
-        }
-        return valor;
-    }
-
-    private String obtenerRutaOrigenActual(ElementoXsdModel definicion, DocumentDefinitionModel definition,
-            String rutaOrigenPadre) {
-        MapeoXsdModel mapeo = definition.getMapeos().stream()
+    private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        return definition.getMapeos().stream()
+                .filter(Objects::nonNull)
                 .filter(MapeoXsdModel::esElemento)
-                .filter(mapeoActual -> Objects.equals(mapeoActual.getElementoXsdId(), definicion.getId()))
+                .filter(m -> Objects.equals(m.getElementoXsdId(), elemento.getId()))
                 .findFirst()
                 .orElse(null);
-        return obtenerRutaOrigen(mapeo, rutaOrigenPadre);
     }
 
-    private String obtenerRutaOrigen(MapeoXsdModel mapeo, String rutaOrigenPadre) {
-        if (mapeo != null && "JSON".equalsIgnoreCase(mapeo.getTipoOrigen())) {
-            return mapeo.getOrigen();
+    private Long obtenerElementoDeAtributo(MapeoXsdModel mapeo, DocumentDefinitionModel definition) {
+        if (mapeo.getAtributoXsdId() == null) {
+            return null;
         }
-        return rutaOrigenPadre;
+        return definition.getAtributos().stream()
+                .filter(a -> Objects.equals(a.getId(), mapeo.getAtributoXsdId()))
+                .map(AtributoXsdModel::getElementoXsdId)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void aplicarAtributos(Element xml, ElementoXsdModel elemento, Object contexto,
+            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+            Map<String, Object> contextoGenerado, DocumentDefinitionModel definition, String rutaPadre) {
+        for (AtributoXsdModel atributo : definition.getAtributos()) {
+            if (!Objects.equals(atributo.getElementoXsdId(), elemento.getId())) {
+                continue;
+            }
+
+            MapeoXsdModel mapeo = definition.getMapeos().stream()
+                    .filter(Objects::nonNull)
+                    .filter(MapeoXsdModel::esAtributo)
+                    .filter(m -> Objects.equals(m.getAtributoXsdId(), atributo.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            Object valor = resolverValor(mapeo, contexto, contextoJson, contextoFactuCore, contextoGenerado,
+                    rutaPadre);
+
+            if (valor != null) {
+                xml.setAttribute(atributo.getNombre(), convertirValor(valor));
+            } else if (atributo.getValorPredeterminado() != null) {
+                xml.setAttribute(atributo.getNombre(), atributo.getValorPredeterminado());
+            }
+        }
+    }
+
+    private Object resolverValor(MapeoXsdModel mapeo, Object contexto,
+            Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
+            Map<String, Object> contextoGenerado, String rutaPadre) {
+        if (mapeo == null) {
+            return null;
+        }
+
+        return switch (mapeo.getTipoOrigen().toUpperCase()) {
+        case "FACTUCORE" -> factuCoreSourcePort.resolver(mapeo.getOrigen(), contextoFactuCore).resultado();
+        case "GENERADO" -> obtenerRuta(contextoGenerado, mapeo.getOrigen());
+        case "JSON" -> {
+            Object valor = obtenerRuta(contexto, obtenerRutaRelativa(mapeo.getOrigen(), rutaPadre));
+            if (valor == null) {
+                valor = obtenerRuta(contextoJson, mapeo.getOrigen());
+            }
+            yield valor;
+        }
+        default -> throw new ApplicationException("FACTUCORE.MAPEO_XSD.TIPO_ORIGEN_INVALIDO");
+        };
+    }
+
+    private boolean esContenidoSimple(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        return !tieneHijos(elemento, definition)
+                && definition.getMapeos().stream()
+                        .anyMatch(m -> m.esElemento() && Objects.equals(m.getElementoXsdId(), elemento.getId()))
+                && definition.getAtributos().stream()
+                        .anyMatch(a -> Objects.equals(a.getElementoXsdId(), elemento.getId()));
+    }
+
+    private Object obtenerContenidoSimple(Object contexto, ElementoXsdModel elemento,
+            DocumentDefinitionModel definition, String rutaPadre) {
+        MapeoXsdModel mapeo = obtenerMapeoElemento(elemento, definition);
+        return resolverValor(mapeo, contexto, contexto, Map.of(), Map.of(), rutaPadre);
+    }
+
+    private ElementoXsdModel buscarElemento(Long id, DocumentDefinitionModel definition) {
+        if (id == null) {
+            return null;
+        }
+        return definition.getElementos().stream()
+                .filter(e -> Objects.equals(e.getId(), id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private List<ElementoXsdModel> obtenerHijos(ElementoXsdModel padre, DocumentDefinitionModel definition) {
+        return definition.getElementos().stream()
+                .filter(e -> Objects.equals(e.getElementoPadreId(), padre.getId()))
+                .sorted(Comparator.comparing(ElementoXsdModel::getOrden,
+                        Comparator.nullsLast(Integer::compareTo)))
+                .toList();
+    }
+
+    private boolean tieneHijos(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        return definition.getElementos().stream()
+                .anyMatch(e -> Objects.equals(e.getElementoPadreId(), elemento.getId()));
+    }
+
+    private boolean tieneAtributos(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        return definition.getAtributos().stream()
+                .anyMatch(a -> Objects.equals(a.getElementoXsdId(), elemento.getId()));
+    }
+
+    private Object obtenerContenidoSimple(Object contexto, ElementoXsdModel elemento,
+            DocumentDefinitionModel definition, String rutaPadre, boolean ignored) {
+        return obtenerContenidoSimple(contexto, elemento, definition, rutaPadre);
     }
 
     private String obtenerRutaRelativa(String origen, String rutaPadre) {
+        if (origen == null || origen.isBlank()) {
+            return origen;
+        }
         if (rutaPadre == null || rutaPadre.isBlank()) {
             return origen;
         }
         if (origen.equals(rutaPadre)) {
             return "";
         }
-
         String prefijo = rutaPadre + ".";
-        if (origen.startsWith(prefijo)) {
-            return origen.substring(prefijo.length());
+        return origen.startsWith(prefijo) ? origen.substring(prefijo.length()) : origen;
+    }
+
+    private Object obtenerRuta(Object datos, String ruta) {
+        if (datos == null) {
+            return null;
         }
-
-        return origen;
-    }
-
-    private boolean esContenidoSimple(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
-        return !tieneHijos(elemento, definition)
-                && definition.getAtributos().stream()
-                        .anyMatch(atributo -> Objects.equals(atributo.getElementoXsdId(), elemento.getId()));
-    }
-
-    private String obtenerRutaPadre(String ruta) {
         if (ruta == null || ruta.isBlank()) {
-            return ruta;
+            return datos;
         }
-
-        int separador = ruta.lastIndexOf('.');
-        return separador < 0 ? ruta : ruta.substring(0, separador);
-    }
-
-    private List<ElementoXsdModel> obtenerHijos(ElementoXsdModel padre, DocumentDefinitionModel definition) {
-        return definition.getElementos().stream()
-                .filter(elemento -> Objects.equals(elemento.getElementoPadreId(), padre.getId()))
-                .sorted(Comparator.comparing(ElementoXsdModel::getOrden, Comparator.nullsLast(Integer::compareTo)))
-                .toList();
-    }
-
-    private boolean tieneHijos(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
-        return definition.getElementos().stream()
-                .anyMatch(hijo -> Objects.equals(hijo.getElementoPadreId(), elemento.getId()));
-    }
-
-    private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition,
-            Set<Long> mappingsConsumidos) {
-        return definition.getMapeos().stream()
-                .filter(MapeoXsdModel::esElemento)
-                .filter(mapeo -> Objects.equals(mapeo.getElementoXsdId(), elemento.getId()))
-                .filter(mapeo -> !mappingsConsumidos.contains(mapeo.getId()))
-                .findFirst()
-                .orElse(null);
-    }
-
-    private MapeoXsdModel obtenerMapeoAtributo(AtributoXsdModel atributo, DocumentDefinitionModel definition,
-            Set<Long> mappingsConsumidos) {
-        return definition.getMapeos().stream()
-                .filter(MapeoXsdModel::esAtributo)
-                .filter(mapeo -> Objects.equals(mapeo.getAtributoXsdId(), atributo.getId()))
-                .filter(mapeo -> !mappingsConsumidos.contains(mapeo.getId()))
-                .findFirst()
-                .orElse(null);
-    }
-
-    private void aplicarAtributos(Element elemento, ElementoXsdModel definicion, DocumentDefinitionModel definition,
-            Object contextoActual, Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-            Map<String, Object> contextoGenerado, String rutaOrigenPadre, Set<Long> mappingsConsumidos) {
-
-        definition.getAtributos().stream()
-                .filter(atributo -> Objects.equals(atributo.getElementoXsdId(), definicion.getId()))
-                .forEach(atributo -> {
-                    MapeoXsdModel mapeo = obtenerMapeoAtributo(atributo, definition, mappingsConsumidos);
-                    Object valor = resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore,
-                            contextoGenerado, rutaOrigenPadre);
-
-                    if (mapeo != null) {
-                        mappingsConsumidos.add(mapeo.getId());
-                    }
-
-                    if (valor != null) {
-                        elemento.setAttribute(atributo.getNombre(), convertirValor(valor));
-                    } else if (atributo.getValorPredeterminado() != null) {
-                        elemento.setAttribute(atributo.getNombre(), atributo.getValorPredeterminado());
-                    }
-                });
-    }
-
-    private Object obtenerRuta(Map<String, Object> datos, String ruta) {
-        if (datos == null || ruta == null || ruta.isBlank()) {
-            return null;
-        }
-        return resolverRuta(datos, ruta.split("\\."), 0);
-    }
-
-    private Object resolverRuta(Object actual, String[] partes, int indice) {
-        if (actual == null) {
-            return null;
-        }
-        if (indice >= partes.length) {
-            return actual;
-        }
-
-        if (actual instanceof Map<?, ?> mapa) {
-            return resolverRuta(mapa.get(partes[indice]), partes, indice + 1);
-        }
-
-        if (actual instanceof Iterable<?> iterable) {
-            List<Object> resultados = new ArrayList<>();
-            for (Object item : iterable) {
-                Object resultado = resolverRuta(item, partes, indice);
-                if (resultado instanceof Iterable<?> anidado) {
-                    resultados.addAll(convertirIterable(anidado));
-                } else if (resultado != null) {
-                    resultados.add(resultado);
-                }
+        Object actual = datos;
+        for (String parte : ruta.split("\.")) {
+            if (!(actual instanceof Map<?, ?> mapa)) {
+                return null;
             }
-            return resultados.isEmpty() ? null : resultados;
+            actual = mapa.get(parte);
         }
-
-        return null;
+        return actual;
     }
 
-    private List<Object> convertirIterable(Iterable<?> iterable) {
-        List<Object> resultado = new ArrayList<>();
-        for (Object item : iterable) {
-            resultado.add(item);
-        }
-        return resultado;
-    }
-
-    @SuppressWarnings("unchecked")
     private Map<String, Object> convertirMapa(Object valor) {
         if (valor instanceof Map<?, ?> mapa) {
-            return (Map<String, Object>) mapa;
+            Map<String, Object> resultado = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : mapa.entrySet()) {
+                resultado.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+            return resultado;
         }
         return new LinkedHashMap<>();
     }
@@ -418,24 +422,21 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     }
 
     private Element crearElementoXml(Document document, String nombre, String namespaceXml) {
-        if (namespaceXml == null || namespaceXml.isBlank()) {
-            return document.createElement(nombre);
-        }
-        return document.createElementNS(namespaceXml, nombre);
+        return namespaceXml == null || namespaceXml.isBlank()
+                ? document.createElement(nombre)
+                : document.createElementNS(namespaceXml, nombre);
     }
 
     private String serializar(Document document) throws Exception {
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-
-        var transformer = transformerFactory.newTransformer();
+        TransformerFactory factory = TransformerFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        var transformer = factory.newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(document), new StreamResult(writer));
-
         return writer.toString();
     }
 }
