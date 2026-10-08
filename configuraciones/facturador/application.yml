@@ -125,7 +125,7 @@ factucore:
     motor: apache-camel
     version: 4.10.7
     rutas:
-      facturacion: ${FACTUCORE_WORKFLOW_RUTA_FACTURACION:file:${factucore.path.config}/camel/facturacion.xml}
+      facturacion: ${FACTUCORE_WORKFLOW_RUTA_FACTURACION:file:${factucore.path.config}/workflow/facturacion.xml}
     reproceso:
       habilitado: ${FACTUCORE_WORKFLOW_REPROCESO_HABILITADO:true}
       bloqueo-ms: ${FACTUCORE_WORKFLOW_REPROCESO_BLOQUEO_MS:60000}
