@@ -326,6 +326,7 @@
         <setProperty name="workflow.etapa"><constant>GENERAR_RESPUESTA</constant></setProperty>
         <bean ref="generarRespuestaWorkflowStep" method="ejecutar"/>
         <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
+        <setBody><simple>${exchangeProperty.workflow.contexto}</simple></setBody>
         <to uri="direct:facturador.workflow.nodo.FIN"/>
     </route>
 
@@ -336,6 +337,7 @@
         <setProperty name="workflow.etapa"><constant>RESPUESTA_ERROR_NOTIFICACION</constant></setProperty>
         <bean ref="respuestaErrorNotificacionWorkflowStep" method="ejecutar"/>
         <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
+        <setBody><simple>${exchangeProperty.workflow.contexto}</simple></setBody>
         <to uri="direct:facturador.workflow.nodo.FIN"/>
     </route>
 
@@ -345,6 +347,7 @@
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>FIN</constant></setProperty>
         <bean ref="finWorkflowStep" method="ejecutar"/>
+        <setBody><simple>${exchangeProperty.workflow.contexto}</simple></setBody>
         <bean ref="finWorkflowStep" method="respuesta"/>
     </route>
 
