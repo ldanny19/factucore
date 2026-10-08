@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
+import ec.dalara.factucore.application.service.ComprobanteService;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -31,8 +34,11 @@ class GeneracionClaveAccesoWorkflowStepTest {
 
 	@Test
 	void generaClaveDespuesDeAsignarSecuencial() {
-		var workflowResultadoService = mock(WorkflowResultadoService.class);
+		var comprobanteAuditoriaService = mock(ComprobanteAuditoriaService.class);
+		var comprobanteService = mock(ComprobanteService.class);
+		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService);
 		var messageResolver = mock(ec.dalara.factucore.application.MessageResolver.class);
+		var workflowEtapaExecutor = new WorkflowEtapaExecutor(workflowResultadoService, messageResolver);
 		var claveAccesoService = mock(ClaveAccesoService.class);
 		var empresaService = mock(EmpresaService.class);
 		var emisionService = mock(EmisionService.class);
@@ -71,7 +77,7 @@ class GeneracionClaveAccesoWorkflowStepTest {
 		var contexto = ContextoWorkflow.nuevo(request);
 		contexto.setSecuencial("000000001");
 
-		var step = new GeneracionClaveAccesoWorkflowStep(workflowResultadoService, messageResolver,
+		var step = new GeneracionClaveAccesoWorkflowStep(workflowEtapaExecutor,
 				claveAccesoService, empresaService, emisionService, definitionProvider, documentoXsdService, sriProperties);
 
 		var resultado = step.ejecutar(contexto);
