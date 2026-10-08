@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.workflow;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -17,17 +19,30 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GenerarRespuestaWorkflowStep {
 
+	private static final Logger log = LoggerFactory.getLogger(GenerarRespuestaWorkflowStep.class);
+
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	public String ejecutar(ContextoWorkflow contexto) {
-		boolean exitoso = contexto != null
-				&& contexto.getUltimoResultado() != null
-				&& contexto.getUltimoResultado().isExitosa();
-
-		if (contexto != null) {
-			contexto.setExitosoFinal(exitoso);
-			contexto.setRespuesta(responseFactory.crear(contexto));
+		String idTransaccion = contexto != null && contexto.getSolicitud() != null
+				? contexto.getSolicitud().getIdTransaccion()
+				: null;
+		log.debug("ID_TRANSACCION={} - Inicia Etapa GENERAR_RESPUESTA", idTransaccion);
+		try {
+			boolean exitoso = contexto != null
+					&& contexto.getUltimoResultado() != null
+					&& contexto.getUltimoResultado().isExitosa();
+	
+			if (contexto != null) {
+				contexto.setExitosoFinal(exitoso);
+				contexto.setRespuesta(responseFactory.crear(contexto));
+			}
+			return "OK";
+			log.debug("ID_TRANSACCION={} - Fin Etapa GENERAR_RESPUESTA - Resultado={}", idTransaccion, "OK");
+			return "OK";
+		} catch (RuntimeException exception) {
+			log.debug("ID_TRANSACCION={} - Fin Etapa GENERAR_RESPUESTA - Resultado=ERROR", idTransaccion);
+			throw exception;
 		}
-		return "OK";
 	}
 }
