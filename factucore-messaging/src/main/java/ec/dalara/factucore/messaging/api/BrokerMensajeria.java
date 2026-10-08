@@ -2,11 +2,11 @@ package ec.dalara.factucore.messaging.api;
 
 public interface BrokerMensajeria {
 
-    TipoBroker tipo();
+	TipoBroker tipo();
 
-    boolean soporta(String destino);
+	boolean soporta(String destino);
 
-    void publicar(String destino, EventoMensaje evento);
+	void publicar(String destino, EventoMensaje evento);
 
-    void registrar(ConsumidorMensajes consumidor);
+	void registrar(ConsumidorMensajes consumidor);
 }

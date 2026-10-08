@@ -4,13 +4,13 @@ import java.util.Set;
 
 public interface ConsumidorMensajes {
 
-    String destino();
+	String destino();
 
-    String grupo();
+	String grupo();
 
-    default Set<String> tiposEvento() {
-        return Set.of();
-    }
+	default Set<String> tiposEvento() {
+		return Set.of();
+	}
 
-    void consumir(EventoMensaje evento);
+	void consumir(EventoMensaje evento);
 }

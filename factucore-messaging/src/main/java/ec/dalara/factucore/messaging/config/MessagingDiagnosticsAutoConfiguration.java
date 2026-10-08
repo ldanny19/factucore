@@ -11,15 +11,11 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(MessagingProperties.class)
 public class MessagingDiagnosticsAutoConfiguration {
 
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(MessagingDiagnosticsAutoConfiguration.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MessagingDiagnosticsAutoConfiguration.class);
 
-    @Bean
-    ApplicationRunner messagingConfigurationLogger(MessagingProperties properties) {
-        return args -> LOGGER.info(
-                "FACTUCORE-MESSAGING: enabled={}, conexiones={}, destinos={}",
-                properties.isEnabled(),
-                properties.getConexiones().keySet(),
-                properties.getDestinos().keySet());
-    }
+	@Bean
+	ApplicationRunner messagingConfigurationLogger(MessagingProperties properties) {
+		return args -> LOGGER.info("FACTUCORE-MESSAGING: enabled={}, conexiones={}, destinos={}",
+				properties.isEnabled(), properties.getConexiones().keySet(), properties.getDestinos().keySet());
+	}
 }
