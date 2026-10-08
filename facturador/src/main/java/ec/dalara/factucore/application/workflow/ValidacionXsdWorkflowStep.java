@@ -2,6 +2,8 @@ package ec.dalara.factucore.application.workflow;
 
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
@@ -27,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ValidacionXsdWorkflowStep {
 
+	private static final Logger log = LoggerFactory.getLogger(ValidacionXsdWorkflowStep.class);
+
 	private final XmlValidatorPort xmlValidator;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final ComprobanteService comprobanteService;
@@ -47,8 +51,19 @@ public class ValidacionXsdWorkflowStep {
 	 * nodo independiente del workflow.
 	 */
 	public String ejecutar(ContextoWorkflow contexto) {
-		ResultadoEtapa resultado = ejecutarResultado(contexto);
-		return contexto.registrarYObtenerSalida(resultado);
+		String idTransaccion = contexto != null && contexto.getSolicitud() != null
+				? contexto.getSolicitud().getIdTransaccion()
+				: null;
+		log.debug("ID_TRANSACCION={} - Inicia Etapa etapa()", idTransaccion);
+		try {
+			ResultadoEtapa resultado = ejecutarResultado(contexto);
+			String salida = contexto.registrarYObtenerSalida(resultado);
+			log.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado={}", idTransaccion, salida);
+			return salida;
+		} catch (RuntimeException exception) {
+			log.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado=ERROR", idTransaccion);
+			throw exception;
+		}
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
