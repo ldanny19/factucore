@@ -25,7 +25,7 @@ public class WorkflowIdempotencyStep {
 					contexto.setClaveAcceso(comprobante.getClaveAcceso());
 					contexto.setSecuencial(comprobante.getSecuencial());
 					contexto.marcarIdempotente();
-					contexto.registrarResultado(ResultadoEtapa.exitosa(EtapaWorkflow.RECEPCION, "IDEMPOTENTE"));
+					contexto.registrarResultado(ResultadoEtapa.exitosa(EtapaWorkflow.INICIO, "IDEMPOTENTE"));
 				});
 
 		return contexto;
