@@ -2,15 +2,12 @@ package ec.dalara.factucore.application.workflow;
 
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
-import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -29,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class FinWorkflowStep {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	public EtapaWorkflow etapa() {
