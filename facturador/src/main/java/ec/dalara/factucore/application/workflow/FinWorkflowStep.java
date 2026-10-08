@@ -30,15 +30,14 @@ public class FinWorkflowStep {
 				: null;
 		log.debug("ID_TRANSACCION={} - Inicia Etapa FIN", idTransaccion);
 		try {
-			return "FIN";
-			log.debug("ID_TRANSACCION={} - Fin Etapa FIN - Resultado={}", idTransaccion, "FIN");
-			return "FIN";
+			String resultado = "FIN";
+			log.debug("ID_TRANSACCION={} - Fin Etapa FIN - Resultado={}", idTransaccion, resultado);
+			return resultado;
 		} catch (RuntimeException exception) {
 			log.debug("ID_TRANSACCION={} - Fin Etapa FIN - Resultado=ERROR", idTransaccion);
 			throw exception;
 		}
 	}
-
 	public ComprobanteGeneracionResponse respuesta(ContextoWorkflow contexto) {
 		if (contexto == null) {
 			return null;
