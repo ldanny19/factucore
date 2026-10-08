@@ -31,7 +31,6 @@ public class AsignacionSecuencialWorkflowStep  {
 		return EtapaWorkflow.ASIGNACION_SECUENCIAL;
 	}
 
-	@Transactional
 	/**
 	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
 	 * El Bean no conoce ni decide el siguiente nodo del workflow.

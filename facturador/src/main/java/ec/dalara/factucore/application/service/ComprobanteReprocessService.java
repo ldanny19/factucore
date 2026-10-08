@@ -35,11 +35,9 @@ public class ComprobanteReprocessService {
 
 		var contexto = ContextoWorkflow.existente(comprobante, null);
 		var resultadoAutorizacion = ejecutarYAuditar(contexto, autorizacionSri);
-		contexto.registrarResultado(resultadoAutorizacion);
 
 		if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
-			var resultadoRide = ejecutarYAuditar(contexto, generacionRide);
-			contexto.registrarResultado(resultadoRide);
+			ejecutarYAuditar(contexto, generacionRide);
 		}
 
 		if (!resultadoAutorizacion.isExitosa()) {
@@ -53,23 +51,42 @@ public class ComprobanteReprocessService {
 		comprobanteRepository.save(comprobante);
 	}
 
-	private ResultadoEtapa ejecutarYAuditar(ContextoWorkflow contexto,
-			ec.dalara.factucore.application.workflow.WorkflowStep step) {
+	private ResultadoEtapa ejecutarYAuditar(ContextoWorkflow contexto, AutorizacionSriWorkflowStep step) {
 		LocalDateTime fechaInicio = LocalDateTime.now();
 		String estadoAnterior = contexto.getComprobante() == null ? null : contexto.getComprobante().getEstadoProceso();
 
 		try {
-			var resultado = step.ejecutar(contexto);
+			step.ejecutar(contexto);
+			ResultadoEtapa resultado = contexto.getUltimoResultado();
 			comprobanteAuditoriaService.registrarResultado(contexto.getComprobanteId(), step.etapa().name(),
 					estadoAnterior, resultado, fechaInicio, LocalDateTime.now());
 			return resultado;
 		} catch (RuntimeException exception) {
 			comprobanteAuditoriaService.registrarError(contexto.getComprobanteId(), step.etapa().name(), estadoAnterior,
-					exception instanceof ec.dalara.factucore.application.workflow.WorkflowException workflowException
-							? workflowException.getCodigo()
-							: null,
+					exception instanceof ec.dalara.factucore.application.ApplicationException applicationException
+							? applicationException.getCodigo() : null,
 					exception.getMessage(), fechaInicio, LocalDateTime.now());
 			throw exception;
 		}
 	}
+
+	private ResultadoEtapa ejecutarYAuditar(ContextoWorkflow contexto, GeneracionRideWorkflowStep step) {
+		LocalDateTime fechaInicio = LocalDateTime.now();
+		String estadoAnterior = contexto.getComprobante() == null ? null : contexto.getComprobante().getEstadoProceso();
+
+		try {
+			step.ejecutar(contexto);
+			ResultadoEtapa resultado = contexto.getUltimoResultado();
+			comprobanteAuditoriaService.registrarResultado(contexto.getComprobanteId(), step.etapa().name(),
+					estadoAnterior, resultado, fechaInicio, LocalDateTime.now());
+			return resultado;
+		} catch (RuntimeException exception) {
+			comprobanteAuditoriaService.registrarError(contexto.getComprobanteId(), step.etapa().name(), estadoAnterior,
+					exception instanceof ec.dalara.factucore.application.ApplicationException applicationException
+							? applicationException.getCodigo() : null,
+					exception.getMessage(), fechaInicio, LocalDateTime.now());
+			throw exception;
+		}
+	}
+
 }
