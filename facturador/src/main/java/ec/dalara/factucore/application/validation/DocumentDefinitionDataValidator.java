@@ -18,9 +18,11 @@ import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentDefinitionDataValidator implements DocumentDefinitionValidator {
 
 	private static final String VALOR_REQUERIDO = "FACTUCORE.COMPROBANTE.CAMPO.REQUERIDO";
@@ -109,6 +111,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 			}
 
 			if (Boolean.TRUE.equals(atributo.getObligatorio())) {
+				log.error("VALIDACION XSD - ATRIBUTO: codigo={}, tag={}, campo={}, valor={}", VALOR_REQUERIDO, atributo.getNombre(), campo, valor);
 				resultado.agregarError(VALOR_REQUERIDO, campo);
 			}
 
@@ -136,6 +139,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (ocurrencias < minimo) {
 
+			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, minimo={}", Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS, elemento.getNombre(), campo, valor, ocurrencias, minimo);
 			resultado.agregarError(
 					Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS, campo,
 					minimo);
@@ -147,6 +151,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (maximo != null && ocurrencias > maximo) {
 
+			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, maximo={}", OCURRENCIAS_MAXIMAS, elemento.getNombre(), campo, valor, ocurrencias, maximo);
 			resultado.agregarError(OCURRENCIAS_MAXIMAS, campo, maximo);
 
 			return;
@@ -223,6 +228,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (!valido) {
 
+			log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, tipo={}", TIPO_INVALIDO, campo, valor, tipoDato);
 			resultado.agregarError(TIPO_INVALIDO, campo, tipoDato);
 		}
 
@@ -271,6 +277,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 			if (digitos > elemento.getDigitosTotales()) {
 
+				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, digitosTotales={}", DIGITOS_TOTALES, elemento.getNombre(), campo, valor, elemento.getDigitosTotales());
 				resultado.agregarError(DIGITOS_TOTALES, campo, elemento.getDigitosTotales());
 			}
 		}
@@ -281,6 +288,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 			if (decimales > elemento.getDecimales()) {
 
+				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, decimales={}", DECIMALES, elemento.getNombre(), campo, valor, elemento.getDecimales());
 				resultado.agregarError(DECIMALES, campo, elemento.getDecimales());
 			}
 		}
@@ -299,6 +307,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 			if (!Pattern.matches(patron, texto)) {
 
+				log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, patron={}", PATRON_INVALIDO, campo, valor, patron);
 				resultado.agregarError(PATRON_INVALIDO, campo);
 			}
 
@@ -328,6 +337,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		if (!existe) {
 
+			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}", ENUMERACION_INVALIDA, elemento.getNombre(), campo, valorTexto);
 			resultado.agregarError(ENUMERACION_INVALIDA, campo, valorTexto);
 		}
 	}
