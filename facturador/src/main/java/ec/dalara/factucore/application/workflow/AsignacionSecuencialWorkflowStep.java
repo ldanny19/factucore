@@ -13,11 +13,12 @@ import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
+import ec.dalara.factucore.application.ApplicationException;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class AsignacionSecuencialWorkflowStep implements WorkflowStep {
+public class AsignacionSecuencialWorkflowStep  {
 
 	private static final Logger log = LoggerFactory.getLogger(AsignacionSecuencialWorkflowStep.class);
 
@@ -26,21 +27,28 @@ public class AsignacionSecuencialWorkflowStep implements WorkflowStep {
 	private final SecuencialService secuencialService;
 	private final ComprobanteService comprobanteService;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.ASIGNACION_SECUENCIAL;
 	}
 
-	@Override
 	@Transactional
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/**
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
+	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		var solicitud = contexto.getSolicitud();
 
 		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
 				solicitud.getIdPuntoEmision());
 
 		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
 
 		log.info(
 				"Buscando secuencial: empresaId={}, establecimientoId={}, puntoEmisionRequestId={}, puntoEmisionId={}, tipoDocumentoRequestId={}, codigoDocumento={}, estadoRegistro={}",
