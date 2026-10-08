@@ -5,7 +5,6 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 import ec.dalara.factucore.application.workflow.WorkflowResultadoService;
 
 
-import ec.dalara.factucore.application.MessageResolver;
 
 import org.springframework.stereotype.Component;
 
@@ -30,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 public class RespuestaErrorNotificacionWorkflowStep {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	public EtapaWorkflow etapa() {
