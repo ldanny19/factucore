@@ -4,13 +4,10 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
@@ -28,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 public class AutorizacionSriWorkflowStep   {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final SriService sriService;
 	private final SriProperties sriProperties;
