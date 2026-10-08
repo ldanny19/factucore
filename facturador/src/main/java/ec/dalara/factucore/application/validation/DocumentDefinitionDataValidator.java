@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,42 +61,19 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 		}
 
 		Map<Long, ElementoXsdModel> elementosPorId = indexarElementos(definition.getElementos());
-
+		Map<Long, MapeoXsdModel> mapeosPorElemento = indexarMapeosElemento(definition.getMapeos());
 		Map<Long, AtributoXsdModel> atributosPorId = indexarAtributos(definition.getAtributos());
+		Map<Long, List<AtributoXsdModel>> atributosPorElemento = agruparAtributosPorElemento(definition.getAtributos());
+		Map<Long, List<ElementoXsdModel>> hijosPorElemento = agruparHijos(definition.getElementos());
 
-		for (MapeoXsdModel mapeo : definition.getMapeos()) {
-
-			if (mapeo == null) {
+		for (ElementoXsdModel elemento : definition.getElementos()) {
+			if (elemento == null || elemento.getId() == null || elemento.getElementoPadreId() != null
+					|| !mapeosPorElemento.containsKey(elemento.getId())) {
 				continue;
 			}
 
-			if (mapeo.esElemento()) {
-
-				ElementoXsdModel elemento = elementosPorId.get(mapeo.getElementoXsdId());
-
-				if (elemento == null) {
-					continue;
-				}
-
-				Object valor = obtenerValor(datos, mapeo.getOrigen());
-
-				validarElemento(elemento, valor, mapeo.getOrigen(), definition, resultado);
-
-				continue;
-			}
-
-			if (mapeo.esAtributo()) {
-
-				AtributoXsdModel atributo = atributosPorId.get(mapeo.getAtributoXsdId());
-
-				if (atributo == null) {
-					continue;
-				}
-
-				Object valor = obtenerValor(datos, mapeo.getOrigen());
-
-				validarAtributo(atributo, valor, mapeo.getOrigen(), resultado);
-			}
+			validarElemento(elemento, null, datos, mapeosPorElemento, elementosPorId, hijosPorElemento,
+					atributosPorElemento, atributosPorId, definition, resultado);
 		}
 	}
 
@@ -142,376 +120,236 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 		validarPatron(atributo.getPatron(), valor, campo, resultado);
 	}
 
-	private void validarElemento(ElementoXsdModel elemento, Object valor, String campo,
-			DocumentDefinitionModel definition, ComprobanteValidationResult resultado) {
-		int ocurrencias = calcularOcurrencias(valor);
+	private void validarElemento(ElementoXsdModel elemento, ElementoXsdModel padre, Object contexto,
+			Map<Long, MapeoXsdModel> mapeosPorElemento, Map<Long, ElementoXsdModel> elementosPorId,
+			Map<Long, List<ElementoXsdModel>> hijosPorElemento, Map<Long, List<AtributoXsdModel>> atributosPorElemento,
+			Map<Long, AtributoXsdModel> atributosPorId, DocumentDefinitionModel definition,
+			ComprobanteValidationResult resultado) {
+		MapeoXsdModel mapeo = mapeosPorElemento.get(elemento.getId());
 
-		int minimo = determinarMinimo(elemento);
+		if (mapeo == null || !"JSON".equals(mapeo.getTipoOrigen())) {
+			return;
+		}
+
+		String rutaBase = padre == null ? null : obtenerOrigenElemento(padre, mapeosPorElemento);
+		String rutaRelativa = rutaRelativa(mapeo.getOrigen(), rutaBase);
+
+		Object valorOcurrencias = obtenerValorDirecto(contexto, rutaRelativa);
+		Object valorValidacion = valorOcurrencias;
+		boolean contenidoSimple = esContenidoSimple(elemento, mapeo);
+
+		if (contenidoSimple) {
+			valorValidacion = obtenerContenidoSimple(valorOcurrencias, elemento.getNombre(), mapeo.getOrigen());
+		}
+
+		if (Boolean.TRUE.equals(elemento.getRepetible())) {
+			if (!(valorOcurrencias instanceof Collection<?>)) {
+				validarOcurrencias(elemento, valorOcurrencias == null ? 0 : 1, mapeo.getOrigen(), resultado);
+				return;
+			}
+
+			Collection<?> lista = (Collection<?>) valorOcurrencias;
+			validarOcurrencias(elemento, lista.size(), mapeo.getOrigen(), resultado);
+
+			for (Object item : lista) {
+				if (contenidoSimple) {
+					validarValor(elemento, obtenerValorContenidoSimple(item, mapeo.getOrigen()),
+						definition, mapeo.getOrigen(), resultado);
+				} else {
+					validarValor(elemento, item, definition, mapeo.getOrigen(), resultado);
+				}
+
+				validarAtributos(elemento, item, atributosPorElemento, atributosPorId, mapeosPorElemento,
+						definition, resultado);
+
+				validarHijos(elemento, item, hijosPorElemento, mapeosPorElemento, elementosPorId,
+						atributosPorElemento, atributosPorId, definition, resultado);
+			}
+			return;
+		}
+
+		if (valorOcurrencias == null) {
+			if (Boolean.TRUE.equals(elemento.getObligatorio())) {
+				agregarRequerido(elemento, mapeo.getOrigen(), resultado);
+			}
+			return;
+		}
+
+		if (valorOcurrencias instanceof Collection<?>) {
+			validarTipoInvalido(mapeo.getOrigen(), valorOcurrencias, elemento.getTipoDato(), resultado);
+			return;
+		}
+
+		validarValor(elemento, valorValidacion, definition, mapeo.getOrigen(), resultado);
+		validarAtributos(elemento, valorOcurrencias, atributosPorElemento, atributosPorId, mapeosPorElemento,
+				definition, resultado);
+		validarHijos(elemento, valorOcurrencias, hijosPorElemento, mapeosPorElemento, elementosPorId,
+				atributosPorElemento, atributosPorId, definition, resultado);
+	}
+
+	private void validarHijos(ElementoXsdModel padre, Object contexto,
+			Map<Long, List<ElementoXsdModel>> hijosPorElemento, Map<Long, MapeoXsdModel> mapeosPorElemento,
+			Map<Long, ElementoXsdModel> elementosPorId, Map<Long, List<AtributoXsdModel>> atributosPorElemento,
+			Map<Long, AtributoXsdModel> atributosPorId, DocumentDefinitionModel definition,
+			ComprobanteValidationResult resultado) {
+		if (!(contexto instanceof Map<?, ?>)) {
+			return;
+		}
+
+		for (ElementoXsdModel hijo : hijosPorElemento.getOrDefault(padre.getId(), List.of())) {
+			validarElemento(hijo, padre, contexto, mapeosPorElemento, elementosPorId, hijosPorElemento,
+					atributosPorElemento, atributosPorId, definition, resultado);
+		}
+	}
+
+	private void validarAtributos(ElementoXsdModel elemento, Object contexto,
+			Map<Long, List<AtributoXsdModel>> atributosPorElemento, Map<Long, AtributoXsdModel> atributosPorId,
+			Map<Long, MapeoXsdModel> mapeosPorElemento, DocumentDefinitionModel definition,
+			ComprobanteValidationResult resultado) {
+		if (!(contexto instanceof Map<?, ?> mapa)) {
+			return;
+		}
+
+		for (AtributoXsdModel atributo : atributosPorElemento.getOrDefault(elemento.getId(), List.of())) {
+			MapeoXsdModel mapeo = definition.getMapeos().stream()
+					.filter(Objects::nonNull)
+					.filter(m -> m.esAtributo() && Objects.equals(m.getAtributoXsdId(), atributo.getId()))
+					.findFirst().orElse(null);
+
+			if (mapeo == null || !"JSON".equals(mapeo.getTipoOrigen())) {
+				continue;
+			}
+
+			String rutaRelativa = rutaRelativa(mapeo.getOrigen(), obtenerOrigenElemento(elemento, mapeosPorElemento));
+			Object valor = obtenerValorDirecto(mapa, rutaRelativa);
+
+			validarAtributo(atributo, valor, mapeo.getOrigen(), resultado);
+		}
+	}
+
+	private Object obtenerValorDirecto(Object contexto, String ruta) {
+		if (contexto == null) {
+			return null;
+		}
+		if (ruta == null || ruta.isBlank()) {
+			return contexto;
+		}
+
+		Object actual = contexto;
+		for (String parte : ruta.split("\\.")) {
+			if (!(actual instanceof Map<?, ?> mapa)) {
+				return null;
+			}
+			actual = mapa.get(parte);
+		}
+		return actual;
+	}
+
+	private String rutaRelativa(String origen, String origenPadre) {
+		if (origenPadre == null || origenPadre.isBlank()) {
+			return origen;
+		}
+		String prefijo = origenPadre + ".";
+		return origen.startsWith(prefijo) ? origen.substring(prefijo.length()) : origen;
+	}
+
+	private String obtenerOrigenElemento(ElementoXsdModel elemento, Map<Long, MapeoXsdModel> mapeosPorElemento) {
+		MapeoXsdModel mapeo = mapeosPorElemento.get(elemento.getId());
+		return mapeo == null ? null : mapeo.getOrigen();
+	}
+
+	private boolean esContenidoSimple(ElementoXsdModel elemento, MapeoXsdModel mapeo) {
+		String[] partes = mapeo.getOrigen().split("\\.");
+		return partes.length > 0 && elemento.getNombre().equals(partes[partes.length - 2]);
+	}
+
+	private Object obtenerContenidoSimple(Object valor, String nombreElemento, String origen) {
+		if (!(valor instanceof Collection<?> lista)) {
+			return valor;
+		}
+		return lista.stream().map(item -> obtenerValorContenidoSimple(item, origen)).toList();
+	}
+
+	private Object obtenerValorContenidoSimple(Object item, String origen) {
+		if (!(item instanceof Map<?, ?> mapa)) {
+			return item;
+		}
+		String[] partes = origen.split("\\.");
+		return mapa.get(partes[partes.length - 1]);
+	}
+
+	private void validarOcurrencias(ElementoXsdModel elemento, int ocurrencias, String campo,
+			ComprobanteValidationResult resultado) {
+		int minimo = elemento.getMinOcurrencias() == null ? 0 : elemento.getMinOcurrencias();
 
 		if (ocurrencias < minimo) {
-
 			log.error(
-					"VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, minimo={}",
-					Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS,
-					elemento.getNombre(), campo, valor, ocurrencias, minimo);
-			resultado.agregarError(
-					Boolean.TRUE.equals(elemento.getObligatorio()) ? VALOR_REQUERIDO : OCURRENCIAS_MINIMAS, campo,
-					minimo);
-
-			return;
+					"VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, ocurrencias={}, minimo={}",
+					OCURRENCIAS_MINIMAS, elemento.getNombre(), campo, ocurrencias, minimo);
+			resultado.agregarError(OCURRENCIAS_MINIMAS, campo, minimo);
 		}
 
 		Integer maximo = elemento.getMaxOcurrencias();
-
 		if (maximo != null && ocurrencias > maximo) {
-
 			log.error(
-					"VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, ocurrencias={}, maximo={}",
-					OCURRENCIAS_MAXIMAS, elemento.getNombre(), campo, valor, ocurrencias, maximo);
+					"VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, ocurrencias={}, maximo={}",
+					OCURRENCIAS_MAXIMAS, elemento.getNombre(), campo, ocurrencias, maximo);
 			resultado.agregarError(OCURRENCIAS_MAXIMAS, campo, maximo);
-
-			return;
 		}
-
-		if (valor == null) {
-			return;
-		}
-
-		if (valor instanceof Collection<?> coleccion) {
-
-			for (Object item : coleccion) {
-
-				validarValor(elemento, item, definition, campo, resultado);
-			}
-
-			return;
-		}
-
-		validarValor(elemento, valor, definition, campo, resultado);
 	}
 
-	private void validarValor(ElementoXsdModel elemento, Object valor, DocumentDefinitionModel definition,
-			String campo, ComprobanteValidationResult resultado) {
-		if (valor == null) {
-			return;
-		}
-
-		if (esEstructura(valor)) {
-			return;
-		}
-
-		boolean tipoValido = validarTipo(elemento.getTipoDato(), valor, campo, resultado);
-
-		if (!tipoValido) {
-			return;
-		}
-
-		if (valor instanceof String texto) {
-
-			validarTexto(elemento, texto, campo, resultado);
-		}
-
-		if (esNumerico(elemento.getTipoDato())) {
-
-			validarNumerico(elemento, valor, campo, resultado);
-		}
-
-		validarPatron(elemento.getPatron(), valor, campo, resultado);
-
-		validarEnumeracion(elemento, valor, definition, campo, resultado);
-	}
-
-	private boolean validarTipo(String tipoDato, Object valor, String campo, ComprobanteValidationResult resultado) {
-		String tipo = normalizarTipo(tipoDato);
-
-		boolean valido = switch (tipo) {
-
-		case "STRING", "TOKEN", "NORMALIZEDSTRING" -> valor instanceof String;
-
-		case "INTEGER", "INT", "LONG", "SHORT", "BYTE" ->
-			valor instanceof Integer || valor instanceof Long || valor instanceof Short || valor instanceof Byte;
-
-		case "DECIMAL" -> valor instanceof BigDecimal || valor instanceof Number || valor instanceof String;
-
-		case "DOUBLE", "FLOAT" -> valor instanceof Number;
-
-		case "BOOLEAN" -> valor instanceof Boolean || esBooleanoTexto(valor);
-
-		case "DATE", "DATETIME", "DATE_TIME" -> valor instanceof String;
-
-		default -> true;
-		};
-
-		if (!valido) {
-
-			log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, tipo={}", TIPO_INVALIDO, campo, valor,
-					tipoDato);
-			resultado.agregarError(TIPO_INVALIDO, campo, tipoDato);
-		}
-
-		return valido;
-	}
-
-	private void validarTexto(ElementoXsdModel elemento, String valor, String campo,
+	private void agregarRequerido(ElementoXsdModel elemento, String campo,
 			ComprobanteValidationResult resultado) {
-		if (elemento.getLongitudMinima() != null && valor.length() < elemento.getLongitudMinima()) {
-
-			resultado.agregarError(LONGITUD_MINIMA, campo, elemento.getLongitudMinima());
-		}
-
-		if (elemento.getLongitudMaxima() != null && valor.length() > elemento.getLongitudMaxima()) {
-
-			resultado.agregarError(LONGITUD_MAXIMA, campo, elemento.getLongitudMaxima());
-		}
+		log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}",
+				VALOR_REQUERIDO, elemento.getNombre(), campo, null);
+		resultado.agregarError(VALOR_REQUERIDO, campo);
 	}
 
-	private void validarNumerico(ElementoXsdModel elemento, Object valor, String campo,
+	private void validarTipoInvalido(String campo, Object valor, String tipoDato,
 			ComprobanteValidationResult resultado) {
-		BigDecimal numero;
-
-		try {
-			numero = new BigDecimal(valor.toString());
-		} catch (NumberFormatException exception) {
-
-			resultado.agregarError(TIPO_INVALIDO, campo, elemento.getTipoDato());
-
-			return;
-		}
-
-		if (elemento.getValorMinimo() != null && numero.compareTo(elemento.getValorMinimo()) < 0) {
-
-			resultado.agregarError(VALOR_MINIMO, campo, elemento.getValorMinimo());
-		}
-
-		if (elemento.getValorMaximo() != null && numero.compareTo(elemento.getValorMaximo()) > 0) {
-
-			resultado.agregarError(VALOR_MAXIMO, campo, elemento.getValorMaximo());
-		}
-
-		if (elemento.getDigitosTotales() != null) {
-
-			int digitos = contarDigitos(numero);
-
-			if (digitos > elemento.getDigitosTotales()) {
-
-				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, digitosTotales={}",
-						DIGITOS_TOTALES, elemento.getNombre(), campo, valor, elemento.getDigitosTotales());
-				resultado.agregarError(DIGITOS_TOTALES, campo, elemento.getDigitosTotales());
-			}
-		}
-
-		if (elemento.getDecimales() != null) {
-
-			int decimales = Math.max(numero.stripTrailingZeros().scale(), 0);
-
-			if (decimales > elemento.getDecimales()) {
-
-				log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}, decimales={}",
-						DECIMALES, elemento.getNombre(), campo, valor, elemento.getDecimales());
-				resultado.agregarError(DECIMALES, campo, elemento.getDecimales());
-			}
-		}
-	}
-
-	private void validarPatron(String patron, Object valor, String campo, ComprobanteValidationResult resultado) {
-		if (patron == null || patron.isBlank()) {
-			return;
-		}
-
-		if (!(valor instanceof String texto)) {
-			return;
-		}
-
-		try {
-
-			if (!Pattern.matches(patron, texto)) {
-
-				log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, patron={}", PATRON_INVALIDO, campo,
-						valor, patron);
-				resultado.agregarError(PATRON_INVALIDO, campo);
-			}
-
-		} catch (PatternSyntaxException exception) {
-
-			resultado.agregarError(PATRON_INVALIDO, campo);
-		}
-	}
-
-	private void validarEnumeracion(ElementoXsdModel elemento, Object valor, DocumentDefinitionModel definition,
-			String campo, ComprobanteValidationResult resultado) {
-		if (elemento.getId() == null) {
-			return;
-		}
-
-		List<EnumeracionXsdModel> enumeraciones = definition.getEnumeraciones().stream().filter(Objects::nonNull)
-				.filter(enumeracion -> Objects.equals(enumeracion.getElementoXsdId(), elemento.getId())).toList();
-
-		if (enumeraciones.isEmpty()) {
-			return;
-		}
-
-		String valorTexto = valor.toString();
-
-		boolean existe = enumeraciones.stream()
-				.anyMatch(enumeracion -> Objects.equals(enumeracion.getValor(), valorTexto));
-
-		if (!existe) {
-
-			log.error("VALIDACION XSD - ELEMENTO: codigo={}, tag={}, campo={}, valor={}", ENUMERACION_INVALIDA,
-					elemento.getNombre(), campo, valorTexto);
-			resultado.agregarError(ENUMERACION_INVALIDA, campo, valorTexto);
-		}
+		log.error("VALIDACION XSD - CAMPO: codigo={}, campo={}, valor={}, tipo={}",
+				TIPO_INVALIDO, campo, valor, tipoDato);
+		resultado.agregarError(TIPO_INVALIDO, campo, tipoDato);
 	}
 
 	private Map<Long, ElementoXsdModel> indexarElementos(List<ElementoXsdModel> elementos) {
 		Map<Long, ElementoXsdModel> resultado = new LinkedHashMap<>();
-
 		for (ElementoXsdModel elemento : elementos) {
-
 			if (elemento != null && elemento.getId() != null) {
-
 				resultado.put(elemento.getId(), elemento);
 			}
 		}
-
 		return resultado;
 	}
 
-	private Map<Long, AtributoXsdModel> indexarAtributos(List<AtributoXsdModel> atributos) {
-		Map<Long, AtributoXsdModel> resultado = new LinkedHashMap<>();
+	private Map<Long, MapeoXsdModel> indexarMapeosElemento(List<MapeoXsdModel> mapeos) {
+		Map<Long, MapeoXsdModel> resultado = new HashMap<>();
+		for (MapeoXsdModel mapeo : mapeos) {
+			if (mapeo != null && mapeo.esElemento() && mapeo.getElementoXsdId() != null) {
+				resultado.put(mapeo.getElementoXsdId(), mapeo);
+			}
+		}
+		return resultado;
+	}
 
+	private Map<Long, List<ElementoXsdModel>> agruparHijos(List<ElementoXsdModel> elementos) {
+		Map<Long, List<ElementoXsdModel>> resultado = new HashMap<>();
+		for (ElementoXsdModel elemento : elementos) {
+			if (elemento != null && elemento.getElementoPadreId() != null) {
+				resultado.computeIfAbsent(elemento.getElementoPadreId(), key -> new ArrayList<>()).add(elemento);
+			}
+		}
+		return resultado;
+	}
+
+	private Map<Long, List<AtributoXsdModel>> agruparAtributosPorElemento(List<AtributoXsdModel> atributos) {
+		Map<Long, List<AtributoXsdModel>> resultado = new HashMap<>();
 		for (AtributoXsdModel atributo : atributos) {
-
-			if (atributo != null && atributo.getId() != null) {
-
-				resultado.put(atributo.getId(), atributo);
+			if (atributo != null && atributo.getElementoXsdId() != null) {
+				resultado.computeIfAbsent(atributo.getElementoXsdId(), key -> new ArrayList<>()).add(atributo);
 			}
 		}
-
 		return resultado;
 	}
 
-	private Object obtenerValor(Map<String, Object> datos, String ruta) {
-		if (ruta == null || ruta.isBlank()) {
-			return null;
-		}
 
-		if (datos.containsKey(ruta)) {
-			return datos.get(ruta);
-		}
-
-		String[] partes = ruta.split("\\.");
-
-		Object valor = resolverRuta(datos, partes, 0);
-
-		if (valor instanceof Collection<?> coleccion && coleccion.isEmpty()) {
-			return null;
-		}
-
-		return valor;
-	}
-
-	private Object resolverRuta(Object actual, String[] partes, int indice) {
-		if (actual == null) {
-			return null;
-		}
-
-		if (indice == partes.length) {
-			return actual;
-		}
-
-		if (actual instanceof Map<?, ?> mapa) {
-			Object siguiente = mapa.get(partes[indice]);
-
-			return resolverRuta(siguiente, partes, indice + 1);
-		}
-
-		if (actual instanceof Collection<?> coleccion) {
-			List<Object> resultados = new ArrayList<>();
-
-			for (Object item : coleccion) {
-				Object resultado = resolverRuta(item, partes, indice);
-
-				if (resultado instanceof Collection<?> resultadosAnidados) {
-					resultados.addAll(resultadosAnidados);
-				} else if (resultado != null) {
-					resultados.add(resultado);
-				}
-			}
-
-			return resultados;
-		}
-
-		return null;
-	}
-
-	private int calcularOcurrencias(Object valor) {
-		if (valor == null) {
-			return 0;
-		}
-
-		if (valor instanceof Collection<?> coleccion) {
-			return coleccion.size();
-		}
-
-		return 1;
-	}
-
-	private int determinarMinimo(ElementoXsdModel elemento) {
-		if (elemento.getMinOcurrencias() != null) {
-			return elemento.getMinOcurrencias();
-		}
-
-		if (Boolean.TRUE.equals(elemento.getObligatorio())) {
-			return 1;
-		}
-
-		return 0;
-	}
-
-	private boolean esNumerico(String tipoDato) {
-		String tipo = normalizarTipo(tipoDato);
-
-		return switch (tipo) {
-
-		case "INTEGER", "INT", "LONG", "SHORT", "BYTE", "DECIMAL", "DOUBLE", "FLOAT" -> true;
-
-		default -> false;
-		};
-	}
-
-	private boolean esBooleanoTexto(Object valor) {
-		if (!(valor instanceof String texto)) {
-			return false;
-		}
-
-		return "true".equalsIgnoreCase(texto) || "false".equalsIgnoreCase(texto);
-	}
-
-	private boolean esEstructura(Object valor) {
-		return valor instanceof Map<?, ?> || valor instanceof Collection<?>;
-	}
-
-	private String normalizarTipo(String tipoDato) {
-		if (tipoDato == null) {
-			return "";
-		}
-
-		String tipo = tipoDato.trim().toUpperCase();
-
-		int separador = tipo.lastIndexOf(':');
-
-		if (separador >= 0) {
-
-			tipo = tipo.substring(separador + 1);
-		}
-
-		return tipo;
-	}
-
-	private int contarDigitos(BigDecimal numero) {
-		BigDecimal absoluto = numero.abs().stripTrailingZeros();
-
-		return absoluto.unscaledValue().abs().toString().length();
-	}
-}
