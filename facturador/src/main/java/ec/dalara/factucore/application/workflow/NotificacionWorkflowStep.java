@@ -38,8 +38,7 @@ public class NotificacionWorkflowStep  {
 		var comprobante = contexto.getComprobante();
 
 		if (!EstadoProceso.RIDE_GENERADO.name().equals(comprobante.getEstadoProceso())) {
-			return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
-					MessageCodes.NOTIFICACION_PUBLICACION_ERROR, null);
+			return ResultadoEtapa.exitosa(etapa(), "NOTIFICACION_ERROR");
 		}
 
 		try {
@@ -47,8 +46,7 @@ public class NotificacionWorkflowStep  {
 			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.RIDE_GENERADO.name(),
 					Map.of("notificacionPublicada", true));
 		} catch (RuntimeException exception) {
-			return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
-					MessageCodes.NOTIFICACION_PUBLICACION_ERROR, null);
+			return ResultadoEtapa.exitosa(etapa(), "NOTIFICACION_ERROR");
 		}
 	}
 }
