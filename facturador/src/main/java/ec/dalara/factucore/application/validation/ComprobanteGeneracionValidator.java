@@ -22,7 +22,7 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 	private final MessageResolver messageResolver;
 	private final ObjectMapper objectMapper;
 	private final DocumentoDefinitionProvider documentoDefinitionProvider;
-	private final DocumentDefinitionDataValidator documentDefinitionDataValidator;
+	private final JsonSchemaComprobanteValidator jsonSchemaComprobanteValidator;
 
 	@Override
 	public ComprobanteValidationResult validar(ComprobanteGeneracionRequest request) {
@@ -30,18 +30,12 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 		if (request == null) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_REQUEST_REQUERIDO, null);
-
 			return resultado;
 		}
 
 		validarTipoDocumento(request, resultado);
 		validarFechaInicio(request, resultado);
 		validarDatos(request, resultado);
-
-		if (!resultado.esValido()) {
-			return resultado;
-		}
-
 		validarDefinicionYDatos(request, resultado);
 
 		return resultado;
@@ -55,23 +49,26 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 	private void validarFechaInicio(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		if (request.getFechaInicio() == null) {
-
 			resultado.agregarError(MessageCodes.COMPROBANTE_FECHA_INICIO_REQUERIDA, "fechaInicio");
 		}
 	}
 
 	private void validarDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		JsonNode datos = request.getDatos();
-
-		if (datos == null || datos.isNull() || !datos.isObject() || datos.isEmpty()) {
+		if (datos == null || !datos.isObject() || datos.isEmpty()) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS, "datos");
 		}
 	}
 
-	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
+	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request,
+			ComprobanteValidationResult resultado) {
+		if (request.getIdTipoDocumento() == null || request.getVersionXsd() == null
+				|| request.getVersionXsd().isBlank()) {
+			return;
+		}
+
 		var definicionOptional = documentoDefinitionProvider.obtenerDefinicion(
-				request.getIdTipoDocumento(),
-				request.getVersionXsd());
+				request.getIdTipoDocumento(), request.getVersionXsd());
 
 		if (definicionOptional.isEmpty()) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento",
@@ -80,17 +77,20 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 		}
 
 		DocumentDefinitionModel definicion = definicionOptional.get();
+		String esquemaJson = definicion.getVersion().getEsquemaJson();
+		if (esquemaJson == null || esquemaJson.isBlank()) {
+			resultado.agregarError(MessageCodes.COMPROBANTE_ESQUEMA_JSON_NO_CONFIGURADO, "esquemaJson",
+					request.getVersionXsd());
+			return;
+		}
 
-		Map<String, Object> datos = convertirDatos(request.getDatos());
-
-		documentDefinitionDataValidator.validar(definicion, datos, resultado);
+		jsonSchemaComprobanteValidator.validar(esquemaJson, request.getDatos(), resultado);
 	}
 
 	private Map<String, Object> convertirDatos(JsonNode datos) {
 		if (datos == null || !datos.isObject()) {
 			return Map.of();
 		}
-
 		return objectMapper.convertValue(datos, new TypeReference<Map<String, Object>>() {
 		});
 	}
