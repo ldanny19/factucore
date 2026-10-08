@@ -16,11 +16,12 @@ import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
+import ec.dalara.factucore.application.ApplicationException;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class GeneracionXmlWorkflowStep implements WorkflowStep {
+public class GeneracionXmlWorkflowStep  {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
@@ -28,20 +29,27 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 	private final XmlGeneratorPort xmlGenerator;
 	private final ObjectMapper objectMapper;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.GENERACION_XML;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/**
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
+	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		var solicitud = contexto.getSolicitud();
 		var definition = contexto.getDefinicionDocumento();
 
 		if (definition == null) {
 			definition = definitionProvider
 					.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
-					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
+					.orElseThrow(() -> new ApplicationException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 			contexto.setDefinicionDocumento(definition);
 		}
 
@@ -52,7 +60,7 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 						});
 
 		if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
-			throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
+			throw new ApplicationException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
 		}
 
 		Map<String, Object> contextoFactuCore = new LinkedHashMap<>();
