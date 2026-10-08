@@ -2,7 +2,6 @@ package ec.dalara.factucore.application.workflow;
 
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
-import ec.dalara.factucore.application.workflow.WorkflowResultadoService;
 
 import java.time.LocalDateTime;
 
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlValidatorPort;
@@ -34,9 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ValidacionXsdWorkflowStep {
 
-	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
-	private final XmlValidatorPort xmlValidator;
+	private final WorkflowEtapaExecutor workflowEtapaExecutor;	private final XmlValidatorPort xmlValidator;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final ComprobanteService comprobanteService;
 	private final EmpresaService empresaService;
