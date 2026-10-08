@@ -118,7 +118,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             }
             contextoHijos = valor;
         } else if (esContenidoSimple(elemento, definition)) {
-            Object contenido = obtenerContenidoSimple(contexto, elemento, definition, rutaPadre);
+            Object contenido = obtenerContenidoSimple(contexto, contextoJson, contextoFactuCore, contextoGenerado,
+                    elemento, definition, rutaPadre);
             if (contenido != null) {
                 xml.setTextContent(convertirValor(contenido));
             }
@@ -332,10 +333,11 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                         .anyMatch(a -> Objects.equals(a.getElementoXsdId(), elemento.getId()));
     }
 
-    private Object obtenerContenidoSimple(Object contexto, ElementoXsdModel elemento,
-            DocumentDefinitionModel definition, String rutaPadre) {
+    private Object obtenerContenidoSimple(Object contexto, Map<String, Object> contextoJson,
+            Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado,
+            ElementoXsdModel elemento, DocumentDefinitionModel definition, String rutaPadre) {
         MapeoXsdModel mapeo = obtenerMapeoElemento(elemento, definition);
-        return resolverValor(mapeo, contexto, contexto, Map.of(), Map.of(), rutaPadre);
+        return resolverValor(mapeo, contexto, contextoJson, contextoFactuCore, contextoGenerado, rutaPadre);
     }
 
     private ElementoXsdModel buscarElemento(Long id, DocumentDefinitionModel definition) {
@@ -366,12 +368,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 .anyMatch(a -> Objects.equals(a.getElementoXsdId(), elemento.getId()));
     }
 
-    private Object obtenerContenidoSimple(Object contexto, ElementoXsdModel elemento,
-            DocumentDefinitionModel definition, String rutaPadre, boolean ignored) {
-        return obtenerContenidoSimple(contexto, elemento, definition, rutaPadre);
-    }
-
-    private String obtenerRutaRelativa(String origen, String rutaPadre) {
+        private String obtenerRutaRelativa(String origen, String rutaPadre) {
         if (origen == null || origen.isBlank()) {
             return origen;
         }
