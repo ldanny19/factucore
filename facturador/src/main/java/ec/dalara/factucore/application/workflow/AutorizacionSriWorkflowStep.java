@@ -2,6 +2,8 @@ package ec.dalara.factucore.application.workflow;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
@@ -19,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class AutorizacionSriWorkflowStep  {
+public class AutorizacionSriWorkflowStep   {
 
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final SriService sriService;
@@ -31,8 +33,19 @@ public class AutorizacionSriWorkflowStep  {
 
 	/** Ejecuta la lógica de negocio y expone a Camel solo la salida de la etapa. */
 	public String ejecutar(ContextoWorkflow contexto) {
-		ResultadoEtapa resultado = ejecutarResultado(contexto);
-		return contexto.registrarYObtenerSalida(resultado);
+		String idTransaccion = contexto != null && contexto.getSolicitud() != null
+				? contexto.getSolicitud().getIdTransaccion()
+				: null;
+		log.debug("ID_TRANSACCION={} - Inicia Etapa etapa()", idTransaccion);
+		try {
+			ResultadoEtapa resultado = ejecutarResultado(contexto);
+			String salida = contexto.registrarYObtenerSalida(resultado);
+			log.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado={}", idTransaccion, salida);
+			return salida;
+		} catch (RuntimeException exception) {
+			log.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado=ERROR", idTransaccion);
+			throw exception;
+		}
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
