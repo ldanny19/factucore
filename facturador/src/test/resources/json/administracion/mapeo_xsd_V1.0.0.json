@@ -995,6 +995,14 @@
       "idElementoXsd": null,
       "idAtributoXsd": 3,
       "tipoMapeo": "ATRIBUTO"
+    },
+    {
+      "idVersionDocumentoXsd": 1,
+      "tipoOrigen": "JSON",
+      "origen": "factura.infoAdicional.campoAdicional.valor",
+      "idElementoXsd": 253,
+      "idAtributoXsd": null,
+      "tipoMapeo": "ELEMENTO"
     }
   ]
 }
