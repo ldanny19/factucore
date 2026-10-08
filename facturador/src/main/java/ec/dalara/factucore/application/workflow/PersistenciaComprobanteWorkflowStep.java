@@ -17,13 +17,14 @@ import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
+public class PersistenciaComprobanteWorkflowStep  {
 
 	private final ComprobanteService comprobanteService;
 	private final EmpresaService empresaService;
@@ -33,39 +34,46 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 	private final VersionDocumentoXsdService versionDocumentoXsdService;
 	private final SriProperties sriProperties;
 
-	@Override
 	public EtapaWorkflow etapa() {
-		return EtapaWorkflow.RECEPCION;
+		return EtapaWorkflow.PERSISTENCIA_COMPROBANTE;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/**
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
+	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getSolicitud() == null) {
-			throw new WorkflowException(MessageCodes.COMPROBANTE_REQUEST_REQUERIDO);
+			throw new ApplicationException(MessageCodes.COMPROBANTE_REQUEST_REQUERIDO);
 		}
 
 		var solicitud = contexto.getSolicitud();
 		var empresa = empresaService.obtenerPorId(solicitud.getIdEmpresa())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_EMPRESA_REQUERIDA));
 		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
 				solicitud.getIdPuntoEmision());
 
 		var documentoSolicitado = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var definition = definitionProvider
 				.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		contexto.setDefinicionDocumento(definition);
 
 		var documentoXsd = documentoXsdService.obtenerPorCodigo(definition.getDocumento().getCodigo())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 		var versionXsd = versionDocumentoXsdService.obtenerPorId(definition.getVersion().getId())
-				.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
+				.orElseThrow(() -> new ApplicationException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 
 		if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
-			throw new WorkflowException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
+			throw new ApplicationException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
 		}
 
 		var existente = comprobanteService.obtenerPorClaveAcceso(contexto.getClaveAcceso())
@@ -101,7 +109,7 @@ public class PersistenciaComprobanteWorkflowStep implements WorkflowStep {
 		if ("PRODUCCION".equalsIgnoreCase(ambiente)) {
 			return "2";
 		}
-		throw new WorkflowException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
+		throw new ApplicationException(MessageCodes.SRI_AMBIENTE_REQUERIDO);
 	}
 
 }
