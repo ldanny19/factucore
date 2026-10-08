@@ -1000,7 +1000,7 @@
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "JSON",
       "origen": "factura.infoAdicional.campoAdicional.valor",
-      "idElementoXsd": 253,
+      "idElementoXsd": 123,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"
     }
