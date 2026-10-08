@@ -7,6 +7,7 @@ import java.util.Map;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
+import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
@@ -48,6 +49,10 @@ public final class ContextoWorkflow {
 	private final Map<EtapaWorkflow, ResultadoEtapa> resultados = new EnumMap<>(EtapaWorkflow.class);
 
 	private final Map<String, Object> valoresGenerados = new java.util.LinkedHashMap<>();
+
+	private ComprobanteGeneracionResponse respuesta;
+
+	private boolean errorNotificacion;
 
 	private ContextoWorkflow(ComprobanteGeneracionRequest solicitud, LocalDateTime fechaInicio) {
 		this.solicitud = solicitud;
@@ -111,6 +116,15 @@ public final class ContextoWorkflow {
 		return Collections.unmodifiableMap(valoresGenerados);
 	}
 
+	/**
+	 * Contexto mutable de una ejecución de facturación.
+	 *
+	 * <p>Conserva los datos generados y el resultado de cada nodo del workflow.
+	 * Los Beans de las etapas no conocen la siguiente etapa: registran únicamente
+	 * su resultado y devuelven una salida como OK, ERROR, RECIBIDO o AUTORIZADO.
+	 * La transición entre nodos es responsabilidad exclusiva del workflow XML
+	 * ejecutado por Camel.</p>
+	 */
 	public void registrarResultado(ResultadoEtapa resultado) {
 		if (resultado == null) {
 			throw new ApplicationException(MessageCodes.WORKFLOW_RESULTADO_ETAPA_REQUERIDO);
@@ -121,6 +135,27 @@ public final class ContextoWorkflow {
 		this.ultimoResultado = resultado;
 
 		this.resultados.put(resultado.getEtapa(), resultado);
+	}
+
+	public String registrarYObtenerSalida(ResultadoEtapa resultado) {
+		registrarResultado(resultado);
+		return resultado.salida();
+	}
+
+	public void marcarErrorNotificacion() {
+		this.errorNotificacion = true;
+	}
+
+	public boolean isErrorNotificacion() {
+		return errorNotificacion;
+	}
+
+	public ComprobanteGeneracionResponse getRespuesta() {
+		return respuesta;
+	}
+
+	public void setRespuesta(ComprobanteGeneracionResponse respuesta) {
+		this.respuesta = respuesta;
 	}
 
 	public boolean etapaCompletada(EtapaWorkflow etapa) {
