@@ -2,13 +2,10 @@ package ec.dalara.factucore.application.workflow;
 
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.application.service.SriService;
@@ -24,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class EnvioSriWorkflowStep   {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final SriService sriService;
 
 	public EtapaWorkflow etapa() {
