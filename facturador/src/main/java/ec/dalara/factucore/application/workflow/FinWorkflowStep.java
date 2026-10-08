@@ -2,20 +2,35 @@ package ec.dalara.factucore.application.workflow;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Nodo terminal único del workflow de facturación.
  *
- * <p>FIN no contiene reglas de negocio ni decide el resultado. Su única
- * responsabilidad es marcar el cierre lógico del grafo. La ruta Camel entrega
- * inmediatamente después la respuesta que fue preparada por la etapa de
- * respuesta correspondiente.</p>
+ * <p>FIN no contiene reglas de negocio ni decide transiciones. Su operación
+ * principal devuelve {@code FIN}, que representa exclusivamente el cierre del
+ * grafo. La respuesta pública ya fue preparada por el nodo de respuesta y este
+ * nodo únicamente la entrega al final de la ruta Camel.</p>
  */
 @Component
+@RequiredArgsConstructor
 public class FinWorkflowStep {
+
+	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	public String ejecutar(ContextoWorkflow contexto) {
 		return "FIN";
+	}
+
+	public ComprobanteGeneracionResponse respuesta(ContextoWorkflow contexto) {
+		if (contexto == null) {
+			return null;
+		}
+		if (contexto.getRespuesta() == null) {
+			contexto.setRespuesta(responseFactory.crear(contexto));
+		}
+		return contexto.getRespuesta();
 	}
 }
