@@ -37,6 +37,8 @@ public class ComprobanteWorkflowResponseFactory {
 
 		var ultimo = contexto == null ? null : contexto.getUltimoResultado();
 		boolean exitoso = contexto != null && Boolean.TRUE.equals(contexto.getExitosoFinal());
+		String codigo = ultimo == null || ultimo.isExitosa() ? null : ultimo.getCodigoError();
+		String mensaje = ultimo == null || ultimo.isExitosa() ? null : ultimo.getMensaje();
 
 		List<MensajeResponse> errores = contexto == null ? List.of() : contexto.getErroresValidacion();
 		List<MensajeResponse> advertencias = List.of();
@@ -48,6 +50,10 @@ public class ComprobanteWorkflowResponseFactory {
 		}
 		if (errores.isEmpty() && ultimo != null && !ultimo.isExitosa()) {
 			errores = List.of(MensajeResponse.builder().codigo(ultimo.getCodigoError()).mensaje(ultimo.getMensaje()).build());
+		}
+		if (!exitoso && (codigo == null || mensaje == null) && !errores.isEmpty()) {
+			codigo = errores.get(0).getCodigo();
+			mensaje = errores.get(0).getMensaje();
 		}
 
 		List<MensajeResponse> mensajes = contexto != null && contexto.isErrorNotificacion()
@@ -69,6 +75,8 @@ public class ComprobanteWorkflowResponseFactory {
 						: contexto.getFechaInicio().atOffset(ZoneOffset.UTC))
 				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC))
 				.exitoso(exitoso)
+				.codigo(codigo)
+				.mensaje(mensaje)
 				.resultado(resultado)
 				.claveAcceso(contexto == null ? null : contexto.getClaveAcceso())
 				.numeroComprobante(numeroComprobante)
