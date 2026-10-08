@@ -41,14 +41,14 @@ public class GeneracionXmlWorkflowStep  {
 		String idTransaccion = contexto != null && contexto.getSolicitud() != null
 				? contexto.getSolicitud().getIdTransaccion()
 				: null;
-		LOGGER.debug("ID_TRANSACCION={} - Inicia Etapa etapa()", idTransaccion);
+		LOGGER.debug("ID_TRANSACCION={} - Inicia Etapa {}", idTransaccion, etapa());
 		try {
 			ResultadoEtapa resultado = ejecutarResultado(contexto);
 			String salida = contexto.registrarYObtenerSalida(resultado);
-			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado={}", idTransaccion, salida);
+			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);
 			return salida;
 		} catch (RuntimeException exception) {
-			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa etapa() - Resultado=ERROR", idTransaccion);
+			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado=ERROR", idTransaccion, etapa());
 			throw exception;
 		}
 	}
