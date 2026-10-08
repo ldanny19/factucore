@@ -3,8 +3,8 @@ package ec.dalara.factucore.application.validation;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -135,10 +135,11 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
 		String rutaBase = padre == null ? null : obtenerOrigenElemento(padre, mapeosPorElemento);
 		String rutaRelativa = rutaRelativa(mapeo.getOrigen(), rutaBase);
-
-		Object valorOcurrencias = obtenerValorDirecto(contexto, rutaRelativa);
-		Object valorValidacion = valorOcurrencias;
 		boolean contenidoSimple = esContenidoSimple(elemento, mapeo);
+		String rutaOcurrencia = contenidoSimple ? rutaOcurrencia(rutaRelativa, elemento.getNombre()) : rutaRelativa;
+
+		Object valorOcurrencias = obtenerValorDirecto(contexto, rutaOcurrencia);
+		Object valorValidacion = valorOcurrencias;
 
 		if (contenidoSimple) {
 			valorValidacion = obtenerContenidoSimple(valorOcurrencias, elemento.getNombre(), mapeo.getOrigen());
@@ -263,6 +264,19 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 	private boolean esContenidoSimple(ElementoXsdModel elemento, MapeoXsdModel mapeo) {
 		String[] partes = mapeo.getOrigen().split("\\.");
 		return partes.length > 0 && elemento.getNombre().equals(partes[partes.length - 2]);
+	}
+
+	private String rutaOcurrencia(String ruta, String nombreElemento) {
+		String sufijo = "." + nombreElemento + ".";
+		int posicion = ruta.indexOf(sufijo);
+		if (posicion >= 0) {
+			return ruta.substring(0, posicion + sufijo.length() - 1);
+		}
+		if (ruta.equals(nombreElemento) || ruta.startsWith(nombreElemento + ".")) {
+			int separador = ruta.indexOf('.');
+			return separador < 0 ? nombreElemento : ruta.substring(0, separador);
+		}
+		return ruta;
 	}
 
 	private Object obtenerContenidoSimple(Object valor, String nombreElemento, String origen) {
