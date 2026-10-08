@@ -1,7 +1,6 @@
 package ec.dalara.factucore.application.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -32,6 +31,8 @@ class GeneracionClaveAccesoWorkflowStepTest {
 
 	@Test
 	void generaClaveDespuesDeAsignarSecuencial() {
+		var workflowResultadoService = mock(WorkflowResultadoService.class);
+		var messageResolver = mock(ec.dalara.factucore.application.MessageResolver.class);
 		var claveAccesoService = mock(ClaveAccesoService.class);
 		var empresaService = mock(EmpresaService.class);
 		var emisionService = mock(EmisionService.class);
@@ -70,8 +71,8 @@ class GeneracionClaveAccesoWorkflowStepTest {
 		var contexto = ContextoWorkflow.nuevo(request);
 		contexto.setSecuencial("000000001");
 
-		var step = new GeneracionClaveAccesoWorkflowStep(claveAccesoService, empresaService, emisionService,
-				definitionProvider, documentoXsdService, sriProperties);
+		var step = new GeneracionClaveAccesoWorkflowStep(workflowResultadoService, messageResolver,
+				claveAccesoService, empresaService, emisionService, definitionProvider, documentoXsdService, sriProperties);
 
 		var resultado = step.ejecutar(contexto);
 

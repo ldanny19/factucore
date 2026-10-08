@@ -58,7 +58,7 @@ public class RespuestaErrorNotificacionWorkflowStep {
 			}
 			ResultadoEtapa resultado = ResultadoEtapa.exitosa(etapa(), "COMPLETADA");
 			if (contexto != null) {
-				workflowResultadoService.registrar(contexto, resultado);
+				contexto.registrarResultado(resultado);
 			}
 			String salida = resultado.salida();
 			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);

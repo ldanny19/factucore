@@ -14,6 +14,8 @@ import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.domain.shared.MessageCodes;
+
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -49,7 +51,7 @@ public class FinWorkflowStep {
 		try {
 			ResultadoEtapa resultado = ResultadoEtapa.exitosa(etapa(), "FIN");
 			if (contexto != null) {
-				workflowResultadoService.registrar(contexto, resultado);
+				contexto.registrarResultado(resultado);
 			}
 			String salida = resultado.salida();
 			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);
