@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.ApplicationException;
+
 import ec.dalara.factucore.application.port.out.NotificacionPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -14,19 +16,23 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class NotificacionWorkflowStep implements WorkflowStep {
+public class NotificacionWorkflowStep  {
 
 	private final NotificacionPort notificacionPort;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.NOTIFICACION;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/** Ejecuta la notificación y devuelve a Camel solo OK o ERROR. */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getComprobante() == null) {
-			throw new WorkflowException(MessageCodes.NOTIFICACION_COMPROBANTE_REQUERIDO);
+			throw new ApplicationException(MessageCodes.NOTIFICACION_COMPROBANTE_REQUERIDO);
 		}
 
 		var comprobante = contexto.getComprobante();
