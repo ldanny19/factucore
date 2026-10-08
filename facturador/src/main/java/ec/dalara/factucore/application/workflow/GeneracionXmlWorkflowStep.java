@@ -25,8 +25,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeneracionXmlWorkflowStep  {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
-
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
 	private final DocumentoDefinitionProvider definitionProvider;
 	private final XmlGeneratorPort xmlGenerator;
