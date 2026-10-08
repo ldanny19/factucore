@@ -98,8 +98,6 @@ public class ValidacionXsdWorkflowStep {
 		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),
 				solicitud.getIdPuntoEmision());
 
-		var documentoSolicitado = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
-				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		var documentoXsd = documentoXsdService.obtenerPorCodigo(definition.getDocumento().getCodigo())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
