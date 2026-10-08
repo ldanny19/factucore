@@ -54,6 +54,8 @@ public final class ContextoWorkflow {
 
 	private boolean errorNotificacion;
 
+	private Boolean exitosoFinal;
+
 	private ContextoWorkflow(ComprobanteGeneracionRequest solicitud, LocalDateTime fechaInicio) {
 		this.solicitud = solicitud;
 		this.fechaInicio = fechaInicio;
@@ -144,6 +146,14 @@ public final class ContextoWorkflow {
 
 	public void marcarErrorNotificacion() {
 		this.errorNotificacion = true;
+	}
+
+	public void setExitosoFinal(boolean exitosoFinal) {
+		this.exitosoFinal = exitosoFinal;
+	}
+
+	public Boolean getExitosoFinal() {
+		return exitosoFinal;
 	}
 
 	public boolean isErrorNotificacion() {
