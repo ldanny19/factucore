@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.MessageResolver;
+import ec.dalara.factucore.application.validation.ComprobanteValidationResult;
 import ec.dalara.factucore.application.port.out.XmlValidatorPort;
 import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
@@ -31,15 +33,21 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 	private static final Logger LOGGER = LoggerFactory.getLogger(XmlValidatorAdapter.class);
 
 	private final XsdSchemaBuilder schemaBuilder;
+	private final MessageResolver messageResolver;
+	private final ThreadLocal<ComprobanteValidationResult> resultadoActual = new ThreadLocal<>();
 
 	@Override
-	public void validar(String xml, DocumentDefinitionModel definition) {
+	public ComprobanteValidationResult validar(String xml, DocumentDefinitionModel definition) {
+		ComprobanteValidationResult resultado = new ComprobanteValidationResult(messageResolver);
+		resultadoActual.set(resultado);
 		if (xml == null || xml.isBlank()) {
 			registrarErrorSinTag("FACTUCORE.XML.VALIDACION.XML.REQUERIDO");
+			resultadoActual.remove(); return resultado;
 		}
 
 		if (definition == null) {
 			registrarErrorSinTag("FACTUCORE.XML.VALIDACION.DEFINITION.REQUERIDA");
+			resultadoActual.remove(); return resultado;
 		}
 
 		try {
@@ -54,14 +62,16 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			validarContraEsquema(xml, definition);
 
 		} catch (ApplicationException exception) {
-			throw exception;
+			resultado.agregarError(exception.getCodigo(), null, exception.getParametros());
 
 		} catch (Exception exception) {
 			String tag = documentTag(xml);
 			LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, detalle={}",
 					"FACTUCORE.XML.VALIDACION.ERROR", tag, exception.getMessage(), exception);
-			throw new ApplicationException("FACTUCORE.XML.VALIDACION.ERROR", exception);
+			resultado.agregarError("FACTUCORE.XML.VALIDACION.ERROR", documentTag(xml), exception.getMessage());
 		}
+		resultadoActual.remove();
+		return resultado;
 	}
 
 	private void validarContraEsquema(String xml, DocumentDefinitionModel definition) throws Exception {
@@ -94,6 +104,10 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 	private void validarEstructuraBasica(Document document, DocumentDefinitionModel definition) {
 		ElementoXsdModel raiz = obtenerRaiz(definition);
+		if (raiz == null) {
+			registrarErrorSinTag("FACTUCORE.XML.VALIDACION.ELEMENTO_RAIZ.NO_DEFINIDO");
+			return;
+		}
 
 		org.w3c.dom.Element elementoRaiz = document.getDocumentElement();
 
@@ -118,6 +132,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 		if (definicion == null) {
 			registrarError("FACTUCORE.XML.VALIDACION.ELEMENTO.NO_DEFINIDO", elementoXml.getLocalName() != null ? elementoXml.getLocalName() : elementoXml.getNodeName(), null);
+			return;
 		}
 
 		validarValorElemento(elementoXml, definicion, definition);
@@ -481,31 +496,33 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		}
 	}
 
-	private ApplicationException registrarErrorSinTag(String codigo) {
+	private void registrarErrorSinTag(String codigo) {
 		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}", codigo, "N/A");
-		throw new ApplicationException(codigo);
+		obtenerResultado().agregarError(codigo, null);
 	}
 
-	private ApplicationException registrarError(String codigo, String tag, String ruta) {
+	private void registrarError(String codigo, String tag, String ruta) {
 		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}", codigo, tag, ruta);
-		throw new ApplicationException(codigo);
+		obtenerResultado().agregarError(codigo, tag);
 	}
 
-	private ApplicationException registrarError(String codigo, ElementoXsdModel definicion,
+	private void registrarError(String codigo, ElementoXsdModel definicion,
 			DocumentDefinitionModel definition, Object... parametros) {
 		String ruta = obtenerRuta(definicion, definition);
 		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, parametros={}", codigo,
 				definicion.getNombre(), ruta, java.util.Arrays.toString(parametros));
-		throw new ApplicationException(codigo, parametros);
+		obtenerResultado().agregarError(codigo, definicion.getNombre(), parametros);
 	}
 
-	private ApplicationException registrarErrorAtributo(String codigo, ElementoXsdModel definicion,
+	private void registrarErrorAtributo(String codigo, ElementoXsdModel definicion,
 			DocumentDefinitionModel definition, Object... parametros) {
 		String ruta = obtenerRuta(definicion, definition);
 		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, atributo={}", codigo,
 				definicion.getNombre(), ruta, parametros.length > 0 ? parametros[0] : null);
-		throw new ApplicationException(codigo, parametros);
+		obtenerResultado().agregarError(codigo, definicion.getNombre(), parametros);
 	}
+
+	private ComprobanteValidationResult obtenerResultado() { return resultadoActual.get(); }
 
 	private String documentTag(String xml) {
 		try {
@@ -536,7 +553,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		return definition.getElementos().stream().filter(elemento -> elemento.getElementoPadreId() == null)
 				.filter(elemento -> nombre == null || nombre.isBlank() || Objects.equals(elemento.getNombre(), nombre))
 				.findFirst()
-				.orElseThrow(() -> new ApplicationException("FACTUCORE.XML.VALIDACION.ELEMENTO_RAIZ.NO_DEFINIDO"));
+				.orElse(null);
 	}
 
 	private List<ElementoXsdModel> obtenerHijos(ElementoXsdModel padre, DocumentDefinitionModel definition) {
