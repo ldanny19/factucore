@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
@@ -49,6 +50,8 @@ public final class ContextoWorkflow {
 
 	private final Map<EtapaWorkflow, ResultadoEtapa> resultados = new EnumMap<>(EtapaWorkflow.class);
 
+	private final Map<EtapaWorkflow, EjecucionEtapaWorkflow> ejecuciones = new EnumMap<>(EtapaWorkflow.class);
+
 	private final Map<String, Object> valoresGenerados = new java.util.LinkedHashMap<>();
 
 	private ComprobanteGeneracionResponse respuesta;
@@ -58,6 +61,8 @@ public final class ContextoWorkflow {
 	private Boolean exitosoFinal;
 
 	private List<ec.dalara.factucore.application.contract.response.MensajeResponse> erroresValidacion = List.of();
+
+	private ec.dalara.factucore.application.validation.ComprobanteValidationResult validacionXsd;
 
 	private ContextoWorkflow(ComprobanteGeneracionRequest solicitud, LocalDateTime fechaInicio) {
 		this.solicitud = solicitud;
@@ -130,6 +135,37 @@ public final class ContextoWorkflow {
 	 * La transición entre nodos es responsabilidad exclusiva del workflow XML
 	 * ejecutado por Camel.</p>
 	 */
+	public void iniciarEtapa(EtapaWorkflow etapa) {
+		if (etapa == null) return;
+		etapaActual = etapa;
+		ejecuciones.put(etapa, new EjecucionEtapaWorkflow(etapa, capturarEntrada(), LocalDateTime.now()));
+	}
+
+	private Map<String, Object> capturarEntrada() {
+		Map<String, Object> entrada = new LinkedHashMap<>();
+		entrada.put("idTransaccion", solicitud == null ? null : solicitud.getIdTransaccion());
+		entrada.put("idEmpresa", solicitud == null ? null : solicitud.getIdEmpresa());
+		entrada.put("idEstablecimiento", solicitud == null ? null : solicitud.getIdEstablecimiento());
+		entrada.put("idPuntoEmision", solicitud == null ? null : solicitud.getIdPuntoEmision());
+		entrada.put("idComprobante", comprobanteId);
+		entrada.put("secuencial", secuencial);
+		entrada.put("claveAcceso", claveAcceso);
+		entrada.put("xmlDisponible", xml != null && !xml.isBlank());
+		entrada.put("xmlFirmadoDisponible", xmlFirmado != null && !xmlFirmado.isBlank());
+		entrada.put("estadoSri", estadoSri);
+		entrada.put("idempotente", idempotente);
+		return Collections.unmodifiableMap(entrada);
+	}
+
+	public void registrarSalidaEtapa(EtapaWorkflow etapa, Object salida) {
+		EjecucionEtapaWorkflow ejecucion = ejecuciones.get(etapa);
+		if (ejecucion == null) {
+			iniciarEtapa(etapa);
+			ejecucion = ejecuciones.get(etapa);
+		}
+		ejecucion.completar(salida, null, LocalDateTime.now());
+	}
+
 	public void registrarResultado(ResultadoEtapa resultado) {
 		if (resultado == null) {
 			throw new ApplicationException(MessageCodes.WORKFLOW_RESULTADO_ETAPA_REQUERIDO);
@@ -140,11 +176,22 @@ public final class ContextoWorkflow {
 		this.ultimoResultado = resultado;
 
 		this.resultados.put(resultado.getEtapa(), resultado);
+		EjecucionEtapaWorkflow ejecucion = ejecuciones.get(resultado.getEtapa());
+		if (ejecucion == null) { iniciarEtapa(resultado.getEtapa()); ejecucion = ejecuciones.get(resultado.getEtapa()); }
+		ejecucion.completar(resultado.salida(), resultado, LocalDateTime.now());
 	}
 
 	public String registrarYObtenerSalida(ResultadoEtapa resultado) {
 		registrarResultado(resultado);
 		return resultado.salida();
+	}
+
+	public void setValidacionXsd(ec.dalara.factucore.application.validation.ComprobanteValidationResult validacionXsd) {
+		this.validacionXsd = validacionXsd;
+	}
+
+	public ec.dalara.factucore.application.validation.ComprobanteValidationResult getValidacionXsd() {
+		return validacionXsd;
 	}
 
 	public void registrarErroresValidacion(List<ec.dalara.factucore.application.contract.response.MensajeResponse> errores) {
@@ -277,9 +324,15 @@ public final class ContextoWorkflow {
 		return etapaActual;
 	}
 
+	public ResultadoEtapa getResultado(EtapaWorkflow etapa) { return etapa == null ? null : resultados.get(etapa); }
+
 	public ResultadoEtapa getUltimoResultado() {
 		return ultimoResultado;
 	}
+
+	public Map<EtapaWorkflow, EjecucionEtapaWorkflow> getEjecuciones() { return Collections.unmodifiableMap(ejecuciones); }
+
+	public EjecucionEtapaWorkflow getEjecucion(EtapaWorkflow etapa) { return ejecuciones.get(etapa); }
 
 	public Map<EtapaWorkflow, ResultadoEtapa> getResultados() {
 		return Collections.unmodifiableMap(resultados);
