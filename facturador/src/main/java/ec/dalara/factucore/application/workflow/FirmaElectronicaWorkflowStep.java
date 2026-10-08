@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FirmaElectronicaWorkflowStep   {
 
+\tprivate static final Logger log = LoggerFactory.getLogger(FirmaElectronicaWorkflowStep.class);
+
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final FirmaElectronicaService firmaElectronicaService;
 	private final CertificadoFirmaPasswordPort passwordPort;

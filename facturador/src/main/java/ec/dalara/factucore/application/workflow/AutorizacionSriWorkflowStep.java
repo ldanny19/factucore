@@ -23,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AutorizacionSriWorkflowStep   {
 
+\tprivate static final Logger log = LoggerFactory.getLogger(AutorizacionSriWorkflowStep.class);
+
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final SriService sriService;
 	private final SriProperties sriProperties;

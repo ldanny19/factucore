@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificacionWorkflowStep   {
 
+\tprivate static final Logger log = LoggerFactory.getLogger(NotificacionWorkflowStep.class);
+
 	private final NotificacionPort notificacionPort;
 
 	public EtapaWorkflow etapa() {

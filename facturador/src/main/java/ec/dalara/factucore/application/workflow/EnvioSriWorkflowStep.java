@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EnvioSriWorkflowStep   {
 
+\tprivate static final Logger log = LoggerFactory.getLogger(EnvioSriWorkflowStep.class);
+
 	private final SriService sriService;
 
 	public EtapaWorkflow etapa() {
