@@ -2,7 +2,6 @@ package ec.dalara.factucore.application.workflow;
 
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
-import ec.dalara.factucore.application.workflow.WorkflowResultadoService;
 
 import org.springframework.stereotype.Component;
 
