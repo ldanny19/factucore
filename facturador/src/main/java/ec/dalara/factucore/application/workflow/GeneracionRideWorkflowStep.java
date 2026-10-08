@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.ApplicationException;
+
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -15,20 +17,24 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class GeneracionRideWorkflowStep implements WorkflowStep {
+public class GeneracionRideWorkflowStep  {
 
 	private final RidePort ridePort;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 
-	@Override
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.GENERACION_RIDE;
 	}
 
-	@Override
-	public ResultadoEtapa ejecutar(ContextoWorkflow contexto) {
+	/** Ejecuta la lógica de negocio y expone a Camel solo la salida de la etapa. */
+	public String ejecutar(ContextoWorkflow contexto) {
+		ResultadoEtapa resultado = ejecutarResultado(contexto);
+		return contexto.registrarYObtenerSalida(resultado);
+	}
+
+	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getComprobante() == null) {
-			throw new WorkflowException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
+			throw new ApplicationException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
 		}
 
 		var comprobante = contexto.getComprobante();
@@ -36,7 +42,7 @@ public class GeneracionRideWorkflowStep implements WorkflowStep {
 			var definicion = contexto.getDefinicionDocumento();
 			if (definicion == null || definicion.getDocumento() == null
 					|| definicion.getDocumento().getNombre() == null) {
-				throw new WorkflowException(MessageCodes.RIDE_GENERACION_ERROR, "Definición de comprobante requerida");
+				throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, "Definición de comprobante requerida");
 			}
 
 			byte[] pdf = ridePort.generar(comprobante, definicion.getDocumento().getNombre());
