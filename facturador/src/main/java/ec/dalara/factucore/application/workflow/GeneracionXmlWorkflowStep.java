@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.workflow;
 
+import ec.dalara.factucore.application.workflow.WorkflowResultadoService;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,8 +17,12 @@ import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
+
+import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.application.ApplicationException;
+
+import ec.dalara.factucore.application.MessageResolver;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -25,6 +31,8 @@ public class GeneracionXmlWorkflowStep  {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
+	private final WorkflowResultadoService workflowResultadoService;
+	private final MessageResolver messageResolver;
 	private final DocumentoDefinitionProvider definitionProvider;
 	private final XmlGeneratorPort xmlGenerator;
 	private final ObjectMapper objectMapper;
@@ -44,12 +52,26 @@ public class GeneracionXmlWorkflowStep  {
 		LOGGER.debug("ID_TRANSACCION={} - Inicia Etapa {}", idTransaccion, etapa());
 		try {
 			ResultadoEtapa resultado = ejecutarResultado(contexto);
-			String salida = contexto.registrarYObtenerSalida(resultado);
+			String salida = workflowResultadoService.registrar(contexto, resultado);
 			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);
 			return salida;
 		} catch (RuntimeException exception) {
-			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado=ERROR", idTransaccion, etapa());
-			throw exception;
+			String codigo = exception instanceof ApplicationException applicationException
+					? applicationException.getCodigo()
+					: MessageCodes.WORKFLOW_ETAPA_ERROR;
+			Object[] parametros = exception instanceof ApplicationException applicationException
+					? applicationException.getParametros()
+					: new Object[] { etapa().name() };
+			String mensaje = messageResolver.resolver(codigo, parametros);
+			ResultadoEtapa resultadoError = ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(), codigo, mensaje);
+			if (contexto != null) {
+				workflowResultadoService.registrar(contexto, resultadoError);;
+			}
+			LOGGER.error("ID_TRANSACCION={} - Error Etapa {} - codigo={} - mensaje={}", idTransaccion, etapa(), codigo, mensaje,
+					exception);
+			String salida = resultadoError.salida();
+			LOGGER.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);
+			return salida;
 		}
 	}
 

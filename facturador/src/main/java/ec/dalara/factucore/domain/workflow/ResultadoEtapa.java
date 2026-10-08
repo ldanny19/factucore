@@ -59,6 +59,12 @@ public final class ResultadoEtapa {
 		if (etapa == EtapaWorkflow.NOTIFICACION && "NOTIFICACION_ERROR".equals(estado)) {
 			return "ERROR";
 		}
+		if (etapa == EtapaWorkflow.FIN) {
+			return "FIN";
+		}
+		if (etapa == EtapaWorkflow.ENVIO_SRI && "RECHAZADO".equals(estado)) {
+			return "RECHAZADO";
+		}
 		if (!exitosa) {
 			return "ERROR";
 		}
