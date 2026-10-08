@@ -71,7 +71,7 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 
 		List<EnumeracionXsdModel> enumeracionModels = elementos.stream()
 				.flatMap(elemento -> enumeracionXsdRepository.findByElementoXsdId(elemento.getId()).stream())
-				.filter(enumeracion -> EstadoRegistro.ACTIVO.equals(atributo.getEstadoRegistro()))
+				.filter(enumeracion -> EstadoRegistro.ACTIVO.equals(enumeracion.getEstadoRegistro()))
 				.map(this::crearEnumeracionModel).toList();
 
 		List<MapeoXsdModel> mapeoModels = mapeoXsdRepository
