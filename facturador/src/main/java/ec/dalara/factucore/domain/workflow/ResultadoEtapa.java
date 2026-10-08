@@ -35,6 +35,33 @@ public final class ResultadoEtapa {
 		return new ResultadoEtapa(etapa, false, estado, codigoError, mensaje, Map.of());
 	}
 
+	/**
+	 * Convierte el resultado interno de una etapa en el valor que consume el
+	 * workflow definido en Camel.
+	 *
+	 * <p>El Bean nunca conoce el siguiente nodo. Solo informa el resultado de su
+	 * propia ejecución. Camel utiliza este valor para resolver la transición
+	 * declarada en el XML.</p>
+	 */
+	public String salida() {
+		if (!exitosa) {
+			return "ERROR";
+		}
+		if (etapa == EtapaWorkflow.ENVIO_SRI && "ENVIADO_SRI".equals(estado)) {
+			return "RECIBIDO";
+		}
+		if (etapa == EtapaWorkflow.AUTORIZACION_SRI) {
+			if ("AUTORIZADO".equals(estado)) {
+				return "AUTORIZADO";
+			}
+			if ("AUTORIZACION_PENDIENTE".equals(estado)) {
+				return "EN_PROCESO";
+			}
+			return "NO_AUTORIZADO";
+		}
+		return "OK";
+	}
+
 	public EtapaWorkflow getEtapa() {
 		return etapa;
 	}
