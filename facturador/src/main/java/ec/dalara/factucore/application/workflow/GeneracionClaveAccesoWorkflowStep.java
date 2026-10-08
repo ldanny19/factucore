@@ -2,6 +2,8 @@ package ec.dalara.factucore.application.workflow;
 
 import java.time.LocalDate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
@@ -20,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class GeneracionClaveAccesoWorkflowStep  {
+public class GeneracionClaveAccesoWorkflowStep   {
 
 	private static final String TIPO_EMISION_NORMAL = "1";
 
@@ -40,8 +42,19 @@ public class GeneracionClaveAccesoWorkflowStep  {
 	 * El Bean no conoce ni decide el siguiente nodo del workflow.
 	 */
 	public String ejecutar(ContextoWorkflow contexto) {
-		ResultadoEtapa resultado = ejecutarResultado(contexto);
-		return contexto.registrarYObtenerSalida(resultado);
+		String idTransaccion = contexto != null && contexto.getSolicitud() != null
+				? contexto.getSolicitud().getIdTransaccion()
+				: null;
+		log.debug("ID_TRANSACCION={} - Inicia Etapa {}", idTransaccion, etapa());
+		try {
+			ResultadoEtapa resultado = ejecutarResultado(contexto);
+			String salida = contexto.registrarYObtenerSalida(resultado);
+			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa(), salida);
+			return salida;
+		} catch (RuntimeException exception) {
+			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado=ERROR", idTransaccion, etapa());
+			throw exception;
+		}
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {

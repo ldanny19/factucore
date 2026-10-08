@@ -1,5 +1,7 @@
 package ec.dalara.factucore.application.workflow;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -17,14 +19,25 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RespuestaErrorNotificacionWorkflowStep {
 
+	private static final Logger log = LoggerFactory.getLogger(RespuestaErrorNotificacionWorkflowStep.class);
+
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
 	public String ejecutar(ContextoWorkflow contexto) {
-		if (contexto != null) {
-			contexto.marcarErrorNotificacion();
-			contexto.setExitosoFinal(true);
-			contexto.setRespuesta(responseFactory.crear(contexto));
+		String idTransaccion = contexto != null && contexto.getSolicitud() != null
+				? contexto.getSolicitud().getIdTransaccion()
+				: null;
+		log.debug("ID_TRANSACCION={} - Inicia Etapa RESPUESTA_ERROR_NOTIFICACION", idTransaccion);
+		try {
+			if (contexto != null) {
+				contexto.marcarErrorNotificacion();
+				contexto.setExitosoFinal(true);
+				contexto.setRespuesta(responseFactory.crear(contexto));
+			}
+			log.debug("ID_TRANSACCION={} - Fin Etapa RESPUESTA_ERROR_NOTIFICACION - Resultado={}", idTransaccion, "OK");
+			return "OK";
+		} catch (RuntimeException exception) {
+			log.debug("ID_TRANSACCION={} - Fin Etapa RESPUESTA_ERROR_NOTIFICACION - Resultado=ERROR", idTransaccion);
+			throw exception;
 		}
-		return "OK";
-	}
-}
+	}}

@@ -31,11 +31,6 @@
         <from uri="direct:facturador.workflow.nodo.INICIO"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>INICIO</constant></setProperty>
-        <setProperty name="workflow.resultado"><constant>OK</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa INICIO"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa INICIO"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa INICIO=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa INICIO - Resultado=${exchangeProperty.workflow.resultado}"/>
         <to uri="direct:facturador.workflow.nodo.VALIDACION"/>
     </route>
 
@@ -44,8 +39,6 @@
         <from uri="direct:facturador.workflow.nodo.VALIDACION"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>VALIDACION</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa VALIDACION"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa VALIDACION"/>
         <doTry>
             <bean ref="validacionComprobanteWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -56,8 +49,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa VALIDACION=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa VALIDACION - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -79,8 +70,6 @@
         <from uri="direct:facturador.workflow.nodo.ASIGNACION_SECUENCIAL"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>ASIGNACION_SECUENCIAL</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa ASIGNACION_SECUENCIAL"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa ASIGNACION_SECUENCIAL"/>
         <doTry>
             <bean ref="asignacionSecuencialWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -91,8 +80,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa ASIGNACION_SECUENCIAL=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa ASIGNACION_SECUENCIAL - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -110,8 +97,6 @@
         <from uri="direct:facturador.workflow.nodo.GENERACION_CLAVE_ACCESO"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>GENERACION_CLAVE_ACCESO</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa GENERACION_CLAVE_ACCESO"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa GENERACION_CLAVE_ACCESO"/>
         <doTry>
             <bean ref="generacionClaveAccesoWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -122,8 +107,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa GENERACION_CLAVE_ACCESO=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa GENERACION_CLAVE_ACCESO - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -141,8 +124,6 @@
         <from uri="direct:facturador.workflow.nodo.GENERACION_XML"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>GENERACION_XML</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa GENERACION_XML"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa GENERACION_XML"/>
         <doTry>
             <bean ref="generacionXmlWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -153,8 +134,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa GENERACION_XML=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa GENERACION_XML - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -172,8 +151,6 @@
         <from uri="direct:facturador.workflow.nodo.VALIDACION_XSD"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>VALIDACION_XSD</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa VALIDACION_XSD"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa VALIDACION_XSD"/>
         <doTry>
             <bean ref="validacionXsdWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -184,8 +161,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa VALIDACION_XSD=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa VALIDACION_XSD - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -203,8 +178,6 @@
         <from uri="direct:facturador.workflow.nodo.FIRMA_ELECTRONICA"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>FIRMA_ELECTRONICA</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa FIRMA_ELECTRONICA"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa FIRMA_ELECTRONICA"/>
         <doTry>
             <bean ref="firmaElectronicaWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -215,8 +188,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa FIRMA_ELECTRONICA=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa FIRMA_ELECTRONICA - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -234,8 +205,6 @@
         <from uri="direct:facturador.workflow.nodo.ENVIO_SRI"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>ENVIO_SRI</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa ENVIO_SRI"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa ENVIO_SRI"/>
         <doTry>
             <bean ref="envioSriWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -246,8 +215,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa ENVIO_SRI=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa ENVIO_SRI - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -269,8 +236,6 @@
         <from uri="direct:facturador.workflow.nodo.AUTORIZACION_SRI"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>AUTORIZACION_SRI</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa AUTORIZACION_SRI"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa AUTORIZACION_SRI"/>
         <doTry>
             <bean ref="autorizacionSriWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -281,8 +246,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa AUTORIZACION_SRI=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa AUTORIZACION_SRI - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -308,8 +271,6 @@
         <from uri="direct:facturador.workflow.nodo.GENERACION_RIDE"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>GENERACION_RIDE</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa GENERACION_RIDE"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa GENERACION_RIDE"/>
         <doTry>
             <bean ref="generacionRideWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -320,8 +281,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa GENERACION_RIDE=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa GENERACION_RIDE - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -339,8 +298,6 @@
         <from uri="direct:facturador.workflow.nodo.NOTIFICACION"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>NOTIFICACION</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa NOTIFICACION"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa NOTIFICACION"/>
         <doTry>
             <bean ref="notificacionWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
@@ -351,8 +308,6 @@
                 <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
             </doCatch>
         </doTry>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa NOTIFICACION=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa NOTIFICACION - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <choice>
                     <when>
@@ -371,13 +326,9 @@
         <from uri="direct:facturador.workflow.nodo.GENERAR_RESPUESTA"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>GENERAR_RESPUESTA</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa GENERAR_RESPUESTA"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa GENERAR_RESPUESTA"/>
 
         <bean ref="generarRespuestaWorkflowStep" method="ejecutar"/>
         <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa GENERAR_RESPUESTA=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa GENERAR_RESPUESTA - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <setBody><simple>${exchangeProperty.workflow.contexto}</simple></setBody>
         <to uri="direct:facturador.workflow.nodo.FIN"/>
@@ -388,13 +339,9 @@
         <from uri="direct:facturador.workflow.nodo.RESPUESTA_ERROR_NOTIFICACION"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>RESPUESTA_ERROR_NOTIFICACION</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa RESPUESTA_ERROR_NOTIFICACION"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa RESPUESTA_ERROR_NOTIFICACION"/>
 
         <bean ref="respuestaErrorNotificacionWorkflowStep" method="ejecutar"/>
         <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa RESPUESTA_ERROR_NOTIFICACION=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa RESPUESTA_ERROR_NOTIFICACION - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <setBody><simple>${exchangeProperty.workflow.contexto}</simple></setBody>
         <to uri="direct:facturador.workflow.nodo.FIN"/>
@@ -405,12 +352,8 @@
         <from uri="direct:facturador.workflow.nodo.FIN"/>
         <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
         <setProperty name="workflow.etapa"><constant>FIN</constant></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Ejecutando etapa FIN"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Inicia Etapa FIN"/>
         <bean ref="finWorkflowStep" method="ejecutar"/>
         <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Resultado Ejecutando etapa FIN=${exchangeProperty.workflow.resultado}"/>
-        <log logName="ec.dalara.factucore.application.workflow" loggingLevel="DEBUG" message="ID_TRANSACCION=${exchangeProperty.workflow.contexto.solicitud.idTransaccion} - Fin Etapa FIN - Resultado=${exchangeProperty.workflow.resultado}"/>
 
         <setBody><simple>${exchangeProperty.workflow.contexto}</simple></setBody>
         <bean ref="finWorkflowStep" method="respuesta"/>
