@@ -28,14 +28,22 @@
             <when>
                 <simple>${body.idempotente} == true</simple>
                 <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
-                <setProperty name="workflow.etapa"><constant>RECEPCION</constant></setProperty>
+                <setProperty name="workflow.etapa"><constant>INICIO</constant></setProperty>
                 <bean ref="workflowStepResultHandler" method="registrarResultado"/>
                 <to uri="direct:facturador.workflow.nodo.GENERAR_RESPUESTA"/>
             </when>
             <otherwise>
-                <to uri="direct:facturador.workflow.nodo.VALIDACION"/>
+                <to uri="direct:facturador.workflow.nodo.INICIO"/>
             </otherwise>
         </choice>
+    </route>
+
+    <!-- Nodo INICIO: punto de entrada del workflow para una nueva solicitud. -->
+    <route id="facturador-workflow-inicio">
+        <from uri="direct:facturador.workflow.nodo.INICIO"/>
+        <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+        <setProperty name="workflow.etapa"><constant>INICIO</constant></setProperty>
+        <to uri="direct:facturador.workflow.nodo.VALIDACION"/>
     </route>
 
     <!-- Nodo VALIDACION: ejecuta el Bean y solo interpreta su resultado. -->
@@ -97,32 +105,6 @@
         <setProperty name="workflow.etapa"><constant>GENERACION_CLAVE_ACCESO</constant></setProperty>
         <doTry>
             <bean ref="generacionClaveAccesoWorkflowStep" method="ejecutar"/>
-            <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setProperty name="workflow.resultado"><constant>ERROR</constant></setProperty>
-            </doCatch>
-        </doTry>
-        <choice>
-                    <when>
-                        <simple>${exchangeProperty.workflow.resultado} == 'OK'</simple>
-                        <to uri="direct:facturador.workflow.nodo.PERSISTENCIA_COMPROBANTE"/>
-                    </when>
-                    <when>
-                        <simple>${exchangeProperty.workflow.resultado} == 'ERROR'</simple>
-                        <to uri="direct:facturador.workflow.nodo.GENERAR_RESPUESTA"/>
-                    </when>
-        </choice>
-    </route>
-    <!-- Nodo PERSISTENCIA_COMPROBANTE: ejecuta el Bean y solo interpreta su resultado. -->
-    <route id="facturador-workflow-persistencia_comprobante">
-        <from uri="direct:facturador.workflow.nodo.PERSISTENCIA_COMPROBANTE"/>
-        <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
-        <setProperty name="workflow.etapa"><constant>PERSISTENCIA_COMPROBANTE</constant></setProperty>
-        <doTry>
-            <bean ref="persistenciaComprobanteWorkflowStep" method="ejecutar"/>
             <setProperty name="workflow.resultado"><simple>${body}</simple></setProperty>
             <bean ref="workflowStepResultHandler" method="registrarResultado"/>
             <doCatch>
