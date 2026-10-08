@@ -1,16 +1,13 @@
 package ec.dalara.factucore.application.workflow;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.MessageResolver;
-import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
 import ec.dalara.factucore.application.service.ComprobanteService;
-import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +45,7 @@ public class WorkflowStepResultHandler {
 		return contexto;
 	}
 
-	public ContextoWorkflow registrarExcepcion(ContextoWorkflow contexto, Exception exception) {
+	public ContextoWorkflow registrarExcepcion(ContextoWorkflow contexto, EtapaWorkflow etapa, Exception exception) {
 		if (contexto == null) {
 			return null;
 		}
@@ -63,10 +60,7 @@ public class WorkflowStepResultHandler {
 
 		String mensaje = messageResolver.resolver(codigo, parametros);
 
-		ResultadoEtapa resultado = ResultadoEtapa.fallida(
-				contexto.getEtapaActual() == null ? null : contexto.getEtapaActual(),
-				EstadoProceso.ERROR.name(), codigo, mensaje);
-
+		ResultadoEtapa resultado = ResultadoEtapa.fallida(etapa, EstadoProceso.ERROR.name(), codigo, mensaje);
 		return registrar(contexto, resultado);
 	}
 }
