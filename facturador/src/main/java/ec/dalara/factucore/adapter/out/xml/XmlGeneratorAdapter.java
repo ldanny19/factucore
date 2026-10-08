@@ -135,6 +135,40 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
                         rutaOrigenPadre);
 
+        if (esContenidoSimple(definicion, definition)
+                && "JSON".equalsIgnoreCase(mapeo == null ? null : mapeo.getTipoOrigen())) {
+            String rutaContenido = obtenerRutaPadre(mapeo.getOrigen());
+            Object contenidos = obtenerRuta(contextoJson, rutaContenido);
+
+            if (contenidos instanceof Iterable<?> iterable) {
+                List<Element> elementos = new ArrayList<>();
+
+                for (Object item : convertirIterable(iterable)) {
+                    Object contenido = obtenerRuta(convertirMapa(item), "valor");
+                    Element elemento = crearElementoConValor(document, definicion, contenido, definition, contextoJson,
+                            contextoFactuCore, contextoGenerado, namespaceXml, rutaContenido, item,
+                            mappingsConsumidos);
+
+                    if (elemento != null) {
+                        elementos.add(elemento);
+                    }
+                }
+
+                if (!elementos.isEmpty()) {
+                    return elementos;
+                }
+            }
+
+            if (contenidos instanceof Map<?, ?> mapa) {
+                Object contenido = obtenerRuta(convertirMapa(mapa), "valor");
+                Element elemento = crearElementoConValor(document, definicion, contenido, definition, contextoJson,
+                        contextoFactuCore, contextoGenerado, namespaceXml, rutaContenido, mapa,
+                        mappingsConsumidos);
+
+                return elemento == null ? List.of() : List.of(elemento);
+            }
+        }
+
         if (valor instanceof Iterable<?> iterable) {
             List<Element> elementos = new ArrayList<>();
 
@@ -192,11 +226,13 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     private void agregarHijos(Document document, Element padre, ElementoXsdModel definicion,
             Map<String, Object> contextoLocal, DocumentDefinitionModel definition,
             Map<String, Object> contextoJson, Map<String, Object> contextoFactuCore,
-            Map<String, Object> contextoGenerado, String namespaceXml, String rutaOrigenPadre) {
+            Map<String, Object> contextoGenerado, String namespaceXml, String rutaOrigenPadre,
+            Set<Long> mappingsConsumidos) {
 
         for (ElementoXsdModel hijo : obtenerHijos(definicion, definition)) {
             List<Element> elementosHijo = crearElementos(document, hijo, contextoLocal, definition,
-                    contextoJson, contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre);
+                    contextoJson, contextoFactuCore, contextoGenerado, namespaceXml, rutaOrigenPadre,
+                    mappingsConsumidos);
 
             for (Element elementoHijo : elementosHijo) {
                 padre.appendChild(elementoHijo);
@@ -271,6 +307,21 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         }
 
         return origen;
+    }
+
+    private boolean esContenidoSimple(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
+        return !tieneHijos(elemento, definition)
+                && definition.getAtributos().stream()
+                        .anyMatch(atributo -> Objects.equals(atributo.getElementoXsdId(), elemento.getId()));
+    }
+
+    private String obtenerRutaPadre(String ruta) {
+        if (ruta == null || ruta.isBlank()) {
+            return ruta;
+        }
+
+        int separador = ruta.lastIndexOf('.');
+        return separador < 0 ? ruta : ruta.substring(0, separador);
     }
 
     private List<ElementoXsdModel> obtenerHijos(ElementoXsdModel padre, DocumentDefinitionModel definition) {
