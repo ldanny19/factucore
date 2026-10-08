@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -23,6 +24,15 @@ public class GenerarRespuestaWorkflowStep {
 
 	private final ComprobanteWorkflowResponseFactory responseFactory;
 
+	private boolean resultadoFinalExitoso(ContextoWorkflow contexto) {
+		for (EtapaWorkflow etapa : EtapaWorkflow.values()) {
+			if (etapa == EtapaWorkflow.INICIO || etapa == EtapaWorkflow.GENERAR_RESPUESTA || etapa == EtapaWorkflow.RESPUESTA_ERROR_NOTIFICACION || etapa == EtapaWorkflow.FIN) continue;
+			ResultadoEtapa resultado = contexto.getResultado(etapa);
+			if (resultado != null && !resultado.isExitosa()) return false;
+		}
+		return true;
+	}
+
 	public String ejecutar(ContextoWorkflow contexto) {
 		String idTransaccion = contexto != null && contexto.getSolicitud() != null
 				? contexto.getSolicitud().getIdTransaccion()
@@ -30,8 +40,7 @@ public class GenerarRespuestaWorkflowStep {
 		log.debug("ID_TRANSACCION={} - Inicia Etapa GENERAR_RESPUESTA", idTransaccion);
 		try {
 			boolean exitoso = contexto != null
-					&& contexto.getUltimoResultado() != null
-					&& contexto.getUltimoResultado().isExitosa();
+					&& resultadoFinalExitoso(contexto);
 
 			if (contexto != null) {
 				contexto.setExitosoFinal(exitoso);
