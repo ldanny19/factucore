@@ -10,192 +10,156 @@
                 <bean ref="comprobanteWorkflowResponseFactory" method="crear"/>
             </when>
             <otherwise>
+                <doTry>
+                    <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                    <setProperty name="workflow.etapa"><constant>VALIDACION</constant></setProperty>
+                    <bean ref="validacionComprobanteWorkflowStep" method="ejecutar"/>
+                    <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                    <doCatch>
+                        <exception>java.lang.Exception</exception>
+                        <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                        <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                    </doCatch>
+                </doTry>
+                <choice>
+                    <when>
+                        <simple>${body.ultimoResultado.exitosa} == true</simple>
+    <doTry>
+        <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+        <setProperty name="workflow.etapa"><constant>ASIGNACION_SECUENCIAL</constant></setProperty>
+        <bean ref="reservaComprobanteWorkflowStep" method="ejecutar"/>
+        <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+        <doCatch>
+            <exception>java.lang.Exception</exception>
+            <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+            <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+        </doCatch>
+    </doTry>
+    <choice>
+        <when>
+            <simple>${body.ultimoResultado.exitosa} == true</simple>
         <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>VALIDACION</constant>
-            </setProperty>
-            <bean ref="validacionComprobanteWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>ASIGNACION_SECUENCIAL</constant>
-            </setProperty>
-            <bean ref="reservaComprobanteWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>GENERACION_XML</constant>
-            </setProperty>
+            <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+            <setProperty name="workflow.etapa"><constant>GENERACION_XML</constant></setProperty>
             <bean ref="generacionXmlWorkflowStep" method="ejecutar"/>
             <bean ref="workflowStepResultHandler" method="registrarResultado"/>
             <doCatch>
                 <exception>java.lang.Exception</exception>
                 <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
+                <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
             </doCatch>
         </doTry>
         <choice>
             <when>
                 <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>VALIDACION_XSD</constant>
-            </setProperty>
-            <bean ref="validacionXsdWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>FIRMA_ELECTRONICA</constant>
-            </setProperty>
-            <bean ref="firmaElectronicaWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>ENVIO_SRI</constant>
-            </setProperty>
-            <bean ref="envioSriWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>AUTORIZACION_SRI</constant>
-            </setProperty>
-            <bean ref="autorizacionSriWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
+            <doTry>
+                <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                <setProperty name="workflow.etapa"><constant>VALIDACION_XSD</constant></setProperty>
+                <bean ref="validacionXsdWorkflowStep" method="ejecutar"/>
+                <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                <doCatch>
+                    <exception>java.lang.Exception</exception>
+                    <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                    <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                </doCatch>
+            </doTry>
+            <choice>
+                <when>
+                    <simple>${body.ultimoResultado.exitosa} == true</simple>
+                <doTry>
+                    <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                    <setProperty name="workflow.etapa"><constant>FIRMA_ELECTRONICA</constant></setProperty>
+                    <bean ref="firmaElectronicaWorkflowStep" method="ejecutar"/>
+                    <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                    <doCatch>
+                        <exception>java.lang.Exception</exception>
+                        <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                        <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                    </doCatch>
+                </doTry>
+                <choice>
+                    <when>
+                        <simple>${body.ultimoResultado.exitosa} == true</simple>
+                    <doTry>
+                        <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                        <setProperty name="workflow.etapa"><constant>ENVIO_SRI</constant></setProperty>
+                        <bean ref="envioSriWorkflowStep" method="ejecutar"/>
+                        <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                        <doCatch>
+                            <exception>java.lang.Exception</exception>
+                            <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                            <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                        </doCatch>
+                    </doTry>
+                    <choice>
+                        <when>
+                            <simple>${body.ultimoResultado.exitosa} == true</simple>
+                    <doTry>
+                        <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                        <setProperty name="workflow.etapa"><constant>AUTORIZACION_SRI</constant></setProperty>
+                        <bean ref="autorizacionSriWorkflowStep" method="ejecutar"/>
+                        <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                        <doCatch>
+                            <exception>java.lang.Exception</exception>
+                            <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                            <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                        </doCatch>
+                    </doTry>
+                    <choice>
+                        <when>
+                            <simple>${body.ultimoResultado.exitosa} == true</simple>
                     <choice>
                         <when>
                             <simple>${body.comprobante.estadoProceso} == 'AUTORIZADO'</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>GENERACION_RIDE</constant>
-            </setProperty>
-            <bean ref="generacionRideWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
-        <doTry>
-            <setProperty name="workflow.contexto">
-                <simple>${body}</simple>
-            </setProperty>
-            <setProperty name="workflow.etapa">
-                <constant>NOTIFICACION</constant>
-            </setProperty>
-            <bean ref="notificacionWorkflowStep" method="ejecutar"/>
-            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
-            <doCatch>
-                <exception>java.lang.Exception</exception>
-                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
-                <setBody>
-                    <exchangeProperty>workflow.contexto</exchangeProperty>
-                </setBody>
-            </doCatch>
-        </doTry>
-        <choice>
-            <when>
-                <simple>${body.ultimoResultado.exitosa} == true</simple>
+                        <doTry>
+                            <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                            <setProperty name="workflow.etapa"><constant>GENERACION_RIDE</constant></setProperty>
+                            <bean ref="generacionRideWorkflowStep" method="ejecutar"/>
+                            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                            <doCatch>
+                                <exception>java.lang.Exception</exception>
+                                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                                <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                            </doCatch>
+                        </doTry>
+                        <choice>
+                            <when>
+                                <simple>${body.ultimoResultado.exitosa} == true</simple>
+                        <doTry>
+                            <setProperty name="workflow.contexto"><simple>${body}</simple></setProperty>
+                            <setProperty name="workflow.etapa"><constant>NOTIFICACION</constant></setProperty>
+                            <bean ref="notificacionWorkflowStep" method="ejecutar"/>
+                            <bean ref="workflowStepResultHandler" method="registrarResultado"/>
+                            <doCatch>
+                                <exception>java.lang.Exception</exception>
+                                <bean ref="workflowStepResultHandler" method="registrarExcepcion"/>
+                                <setBody><exchangeProperty>workflow.contexto</exchangeProperty></setBody>
+                            </doCatch>
+                        </doTry>
+                        <choice>
+                            <when>
+                                <simple>${body.ultimoResultado.exitosa} == true</simple>
+                                                </when>
+                        </choice>
+                            </when>
+                        </choice>
                         </when>
                     </choice>
-                    <bean ref="comprobanteWorkflowResponseFactory" method="crear"/>
+                        </when>
+                    </choice>
+                        </when>
+                    </choice>
+                    </when>
+                </choice>
+                </when>
+            </choice>
+            </when>
+        </choice>
+        </when>
+    </choice>
+                    </when>
+                </choice>
+                <bean ref="comprobanteWorkflowResponseFactory" method="crear"/>
             </otherwise>
         </choice>
     </route>
