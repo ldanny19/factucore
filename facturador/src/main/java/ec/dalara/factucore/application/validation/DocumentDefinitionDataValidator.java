@@ -67,7 +67,9 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 		Map<Long, List<ElementoXsdModel>> hijosPorElemento = agruparHijos(definition.getElementos());
 
 		for (ElementoXsdModel elemento : definition.getElementos()) {
-			if (elemento == null || elemento.getId() == null || elemento.getElementoPadreId() != null
+			if (elemento == null || elemento.getId() == null
+					|| (elemento.getElementoPadreId() != null
+							&& mapeosPorElemento.containsKey(elemento.getElementoPadreId()))
 					|| !mapeosPorElemento.containsKey(elemento.getId())) {
 				continue;
 			}
