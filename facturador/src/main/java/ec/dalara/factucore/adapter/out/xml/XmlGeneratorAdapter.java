@@ -17,8 +17,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,7 +32,6 @@ import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
 @Component
 public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XmlGeneratorAdapter.class);
 
     private final FactuCoreSourcePort factuCoreSourcePort;
 
@@ -121,16 +118,6 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         if (mapeo != null) {
             mappingsConsumidos.add(mapeo.getId());
         }
-
-        LOGGER.info(
-                "MAPEO ELEMENTO XML: elementoId={}, elemento={}, totalMapeos={}, mapeoEncontrado={}, tipoOrigen={}, origen={}",
-                definicion.getId(),
-                definicion.getNombre(),
-                definition.getMapeos() == null ? 0 : definition.getMapeos().size(),
-                mapeo != null,
-                mapeo == null ? null : mapeo.getTipoOrigen(),
-                mapeo == null ? null : mapeo.getOrigen());
-
         Object valor = mapeo == null ? contextoActual
                 : resolverValor(mapeo, contextoActual, contextoJson, contextoFactuCore, contextoGenerado,
                         rutaOrigenPadre);
@@ -249,10 +236,6 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         String tipoOrigen = mapeo.getTipoOrigen();
         String origen = mapeo.getOrigen();
-
-        LOGGER.info("Resolviendo valor XML: tipoOrigen={}, origen={}, contextoJson={}, contextoFactuCore={}, contextoGenerado={}, contextoActual={}",
-                tipoOrigen, origen, contextoJson, contextoFactuCore, contextoGenerado, contextoActual);
-
         Object valor;
 
         if ("FACTUCORE".equalsIgnoreCase(tipoOrigen)) {
@@ -269,10 +252,6 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         } else {
             throw new ApplicationException("FACTUCORE.MAPEO_XSD.TIPO_ORIGEN_INVALIDO");
         }
-
-        LOGGER.info("Valor XML resuelto: tipoOrigen={}, origen={}, valor={}",
-                tipoOrigen, origen, valor);
-
         return valor;
     }
 
@@ -338,12 +317,6 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
     private MapeoXsdModel obtenerMapeoElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition,
             Set<Long> mappingsConsumidos) {
-        LOGGER.info(
-                "BUSCANDO MAPEO: elementoId={}, elemento={}, totalMapeos={}",
-                elemento.getId(),
-                elemento.getNombre(),
-                definition.getMapeos() == null ? 0 : definition.getMapeos().size());
-
         return definition.getMapeos().stream()
                 .filter(MapeoXsdModel::esElemento)
                 .filter(mapeo -> Objects.equals(mapeo.getElementoXsdId(), elemento.getId()))
