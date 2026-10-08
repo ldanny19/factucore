@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -23,6 +25,7 @@ public class WorkflowIdempotencyStep {
 					contexto.setClaveAcceso(comprobante.getClaveAcceso());
 					contexto.setSecuencial(comprobante.getSecuencial());
 					contexto.marcarIdempotente();
+					contexto.registrarResultado(ResultadoEtapa.exitosa(EtapaWorkflow.RECEPCION, "IDEMPOTENTE"));
 				});
 
 		return contexto;
