@@ -44,6 +44,9 @@ public final class ResultadoEtapa {
 	 * declarada en el XML.</p>
 	 */
 	public String salida() {
+		if (etapa == EtapaWorkflow.NOTIFICACION && "NOTIFICACION_ERROR".equals(estado)) {
+			return "ERROR";
+		}
 		if (!exitosa) {
 			return "ERROR";
 		}
