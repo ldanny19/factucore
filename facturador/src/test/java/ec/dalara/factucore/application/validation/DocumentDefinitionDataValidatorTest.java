@@ -118,19 +118,19 @@ class DocumentDefinitionDataValidatorTest {
 			}
 
 			boolean repetible = switch (id.intValue()) {
-			case 43, 52, 65, 73, 86, 93, 105, 112, 123 -> true;
+			case 43, 52, 65, 73, 84, 86, 93, 105, 112, 123 -> true;
 		default -> false;
 			};
 
 			Integer min = repetible ? 1 : 0;
 			Integer max = switch (id.intValue()) {
-			case 86 -> 3;
+			case 84 -> 3;
 			case 123 -> 15;
 			default -> repetible ? null : 1;
 			};
 
 			resultado.add(new ElementoXsdModel(id, 1L, padreId, nombre,
-					repetible ? "LIST" : "STRING", 1, !repetible, repetible, min, max,
+					repetible ? "LIST" : "STRING", 1, false, repetible, min, max,
 				null, null, null, null, null, null, null, null, null));
 		}
 
