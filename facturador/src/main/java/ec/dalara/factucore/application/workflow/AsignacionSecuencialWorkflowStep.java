@@ -2,8 +2,6 @@ package ec.dalara.factucore.application.workflow;
 
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +16,6 @@ import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -26,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class AsignacionSecuencialWorkflowStep  {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final EmisionService emisionService;
 	private final DocumentoXsdService documentoXsdService;
 	private final SecuencialService secuencialService;
@@ -54,10 +50,6 @@ public class AsignacionSecuencialWorkflowStep  {
 		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
 
-		log.info(
-				"Buscando secuencial: empresaId={}, establecimientoId={}, puntoEmisionRequestId={}, puntoEmisionId={}, tipoDocumentoRequestId={}, codigoDocumento={}, estadoRegistro={}",
-				solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(), solicitud.getIdPuntoEmision(),
-				emision.puntoEmision().getId(), solicitud.getIdTipoDocumento(), documento.getCodigo(), "A");
 
 		var secuencial = secuencialService.bloquearSecuencial(emision.puntoEmision().getId(), documento.getCodigo());
 
