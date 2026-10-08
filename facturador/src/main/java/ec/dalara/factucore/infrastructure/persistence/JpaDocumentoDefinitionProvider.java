@@ -28,11 +28,9 @@ import ec.dalara.factucore.infrastructure.persistence.repository.EnumeracionXsdR
 import ec.dalara.factucore.infrastructure.persistence.repository.MapeoXsdRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.VersionDocumentoXsdRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvider {
 
 	private final DocumentoXsdRepository documentoXsdRepository;
@@ -61,9 +59,6 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 		Long idVersionDocumentoXsd = version.getId();
 		DocumentoXsd documento = version.getDocumentoXsd();
 
-		log.info("DEFINICION XSD RESUELTA: idDocumentoXsd={}, versionXsd={}, idVersionDocumentoXsd={}, codigoDocumento={}, estadoVersion={}",
-				idDocumentoXsd, versionXsd, idVersionDocumentoXsd, documento.getCodigo(), version.getEstadoRegistro());
-
 		List<ElementoXsd> elementos = elementoXsdRepository.findByVersionDocumentoXsdId(idVersionDocumentoXsd).stream()
 				.filter(elemento -> EstadoRegistro.ACTIVO.equals(elemento.getEstadoRegistro())).toList();
 
@@ -79,25 +74,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 				.filter(enumeracion -> EstadoRegistro.ACTIVO.equals(enumeracion.getEstadoRegistro()))
 				.map(this::crearEnumeracionModel).toList();
 
-		log.info("CONSULTANDO MAPEOS XSD: versionDocumentoXsdId={}, estadoRegistro={}",
-				idVersionDocumentoXsd, EstadoRegistro.ACTIVO);
-
 		List<MapeoXsd> mapeos = mapeoXsdRepository
 				.findByVersionDocumentoXsdIdAndEstadoRegistro(idVersionDocumentoXsd, EstadoRegistro.ACTIVO);
-
-		log.info("RESULTADO CONSULTA MAPEOS XSD: versionDocumentoXsdId={}, cantidad={}",
-				idVersionDocumentoXsd, mapeos.size());
-
-		mapeos.forEach(mapeo -> log.info(
-					"MAPEO XSD CARGADO: id={}, versionDocumentoXsdId={}, tipoOrigen={}, origen={}, elementoXsdId={}, atributoXsdId={}, tipoMapeo={}, estadoRegistro={}",
-					mapeo.getId(),
-					mapeo.getVersionDocumentoXsd().getId(),
-					mapeo.getTipoOrigen(),
-					mapeo.getOrigen(),
-					mapeo.getElementoXsd() == null ? null : mapeo.getElementoXsd().getId(),
-					mapeo.getAtributoXsd() == null ? null : mapeo.getAtributoXsd().getId(),
-					mapeo.getTipoMapeo(),
-					mapeo.getEstadoRegistro()));
 
 		List<MapeoXsdModel> mapeoModels = mapeos.stream()
 				.map(this::crearMapeoModel).toList();
@@ -116,16 +94,8 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 			return Optional.empty();
 		}
 
-		log.info("BUSCANDO DOCUMENTO XSD: idDocumentoXsd={}, versionXsd={}, estadoDocumentoRequerido={}",
-				idDocumentoXsd, versionXsd, EstadoRegistro.ACTIVO);
-
 		Optional<DocumentoXsd> documentoOptional = documentoXsdRepository.findById(idDocumentoXsd)
 				.filter(documento -> EstadoRegistro.ACTIVO.equals(documento.getEstadoRegistro()));
-
-		log.info("RESULTADO DOCUMENTO XSD: encontrado={}, idDocumentoXsd={}, estado={}",
-				documentoOptional.isPresent(),
-				documentoOptional.map(DocumentoXsd::getId).orElse(null),
-				documentoOptional.map(DocumentoXsd::getEstadoRegistro).orElse(null));
 
 		if (documentoOptional.isEmpty()) {
 			return Optional.empty();
@@ -133,15 +103,6 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 
 		Optional<VersionDocumentoXsd> versionOptional = versionDocumentoXsdRepository
 				.findByDocumentoXsdIdAndVersionAndEstadoRegistro(idDocumentoXsd, versionXsd, EstadoRegistro.ACTIVO);
-
-		log.info("RESULTADO VERSION XSD: idDocumentoXsd={}, versionXsd={}, estadoVersionRequerido={}, encontrado={}, idVersionDocumentoXsd={}, versionEncontrada={}, estadoEncontrado={}",
-				idDocumentoXsd,
-				versionXsd,
-				EstadoRegistro.ACTIVO,
-				versionOptional.isPresent(),
-				versionOptional.map(VersionDocumentoXsd::getId).orElse(null),
-				versionOptional.map(VersionDocumentoXsd::getVersion).orElse(null),
-				versionOptional.map(VersionDocumentoXsd::getEstadoRegistro).orElse(null));
 
 		return versionOptional;
 	}
