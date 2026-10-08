@@ -11,34 +11,16 @@ import java.util.regex.PatternSyntaxException;
 
 import org.springframework.stereotype.Component;
 
-import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.EnumeracionXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
 public class DocumentDefinitionDataValidator implements DocumentDefinitionValidator {
 
-    private static final String REQUERIDO = "FACTUCORE.COMPROBANTE.CAMPO.REQUERIDO";
-    private static final String TIPO_INVALIDO = "FACTUCORE.COMPROBANTE.CAMPO.TIPO_INVALIDO";
-    private static final String LONGITUD_MINIMA = "FACTUCORE.COMPROBANTE.CAMPO.LONGITUD_MINIMA";
-    private static final String LONGITUD_MAXIMA = "FACTUCORE.COMPROBANTE.CAMPO.LONGITUD_MAXIMA";
-    private static final String VALOR_MINIMO = "FACTUCORE.COMPROBANTE.CAMPO.VALOR_MINIMO";
-    private static final String VALOR_MAXIMO = "FACTUCORE.COMPROBANTE.CAMPO.VALOR_MAXIMO";
-    private static final String DIGITOS_TOTALES = "FACTUCORE.COMPROBANTE.CAMPO.DIGITOS_TOTALES";
-    private static final String DECIMALES = "FACTUCORE.COMPROBANTE.CAMPO.DECIMALES";
-    private static final String PATRON_INVALIDO = "FACTUCORE.COMPROBANTE.CAMPO.PATRON_INVALIDO";
-    private static final String ENUMERACION_INVALIDA = "FACTUCORE.COMPROBANTE.CAMPO.ENUMERACION_INVALIDA";
-    private static final String OCURRENCIAS_MINIMAS = "FACTUCORE.COMPROBANTE.CAMPO.OCURRENCIAS_MINIMAS";
-    private static final String OCURRENCIAS_MAXIMAS = "FACTUCORE.COMPROBANTE.CAMPO.OCURRENCIAS_MAXIMAS";
-
-    private final MessageResolver messageResolver;
 
     @Override
     public void validar(DocumentDefinitionModel definition, Map<String, Object> datos,
@@ -100,7 +82,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
         if (valor == null) {
             if (Boolean.TRUE.equals(elemento.getObligatorio())) {
-                resultado.agregarError(REQUERIDO, campo);
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_REQUERIDO, campo, elemento.getNombre());
             }
             return;
         }
@@ -117,7 +99,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
         if (tieneHijos) {
             if (!(valor instanceof Map<?, ?>)) {
-                resultado.agregarError(TIPO_INVALIDO, campo, elemento.getTipoDato());
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_TIPO_INVALIDO, campo, elemento.getNombre(), elemento.getTipoDato());
                 return;
             }
 
@@ -290,18 +272,18 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
             Object valorAtributo = mapa.get(nombre);
             if (valorAtributo == null) {
                 if (Boolean.TRUE.equals(atributo.getObligatorio()) && atributo.getValorPredeterminado() == null) {
-                    resultado.agregarError(REQUERIDO, campo + "." + atributo.getNombre());
+                    resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_REQUERIDO, campo + "." + atributo.getNombre(), atributo.getNombre());
                 }
             } else {
                 validarTipoYPatron(atributo.getTipoDato(), atributo.getPatron(), valorAtributo,
-                        campo + "." + atributo.getNombre(), resultado);
+                        campo + "." + atributo.getNombre(), resultado, atributo.getNombre());
             }
         }
     }
 
     private void validarValor(ElementoXsdModel elemento, Object valor, String campo,
             DocumentDefinitionModel definition, ComprobanteValidationResult resultado) {
-        validarTipoYPatron(elemento.getTipoDato(), elemento.getPatron(), valor, campo, resultado);
+        validarTipoYPatron(elemento.getTipoDato(), elemento.getPatron(), valor, campo, resultado, elemento.getNombre());
 
         if (valor == null) {
             return;
@@ -309,25 +291,25 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
 
         String texto = String.valueOf(valor);
         if (elemento.getLongitudMinima() != null && texto.length() < elemento.getLongitudMinima()) {
-            resultado.agregarError(LONGITUD_MINIMA, campo, elemento.getLongitudMinima());
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_LONGITUD_MINIMA, campo, elemento.getNombre(), elemento.getLongitudMinima());
         }
         if (elemento.getLongitudMaxima() != null && texto.length() > elemento.getLongitudMaxima()) {
-            resultado.agregarError(LONGITUD_MAXIMA, campo, elemento.getLongitudMaxima());
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_LONGITUD_MAXIMA, campo, elemento.getNombre(), elemento.getLongitudMaxima());
         }
 
         try {
             BigDecimal numero = new BigDecimal(texto);
             if (elemento.getValorMinimo() != null && numero.compareTo(elemento.getValorMinimo()) < 0) {
-                resultado.agregarError(VALOR_MINIMO, campo, elemento.getValorMinimo());
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_VALOR_MINIMO, campo, elemento.getNombre(), elemento.getValorMinimo());
             }
             if (elemento.getValorMaximo() != null && numero.compareTo(elemento.getValorMaximo()) > 0) {
-                resultado.agregarError(VALOR_MAXIMO, campo, elemento.getValorMaximo());
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_VALOR_MAXIMO, campo, elemento.getNombre(), elemento.getValorMaximo());
             }
             if (elemento.getDigitosTotales() != null && contarDigitos(texto) > elemento.getDigitosTotales()) {
-                resultado.agregarError(DIGITOS_TOTALES, campo, elemento.getDigitosTotales());
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_DIGITOS_TOTALES, campo, elemento.getNombre(), elemento.getDigitosTotales());
             }
             if (elemento.getDecimales() != null && escala(texto) > elemento.getDecimales()) {
-                resultado.agregarError(DECIMALES, campo, elemento.getDecimales());
+                resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_DECIMALES, campo, elemento.getNombre(), elemento.getDecimales());
             }
         } catch (NumberFormatException exception) {
             // Las restricciones numéricas solo aplican cuando el valor es numérico.
@@ -337,12 +319,12 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
     }
 
     private void validarTipoYPatron(String tipo, String patron, Object valor, String campo,
-            ComprobanteValidationResult resultado) {
+            ComprobanteValidationResult resultado, String nombreTag) {
         if (valor == null) {
             return;
         }
         if ("MAP".equalsIgnoreCase(tipo) && !(valor instanceof Map<?, ?>)) {
-            resultado.agregarError(TIPO_INVALIDO, campo, tipo);
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_TIPO_INVALIDO, campo, nombreTag, tipo);
             return;
         }
         if ("LIST".equalsIgnoreCase(tipo) && !(valor instanceof Collection<?>)) {
@@ -360,7 +342,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
         if (patron != null && !patron.isBlank()) {
             try {
                 if (!Pattern.compile(patron).matcher(String.valueOf(valor)).matches()) {
-                    resultado.agregarError(PATRON_INVALIDO, campo, patron);
+                    resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_PATRON_INVALIDO, campo, nombreTag, patron);
                 }
             } catch (PatternSyntaxException exception) {
                 resultado.agregarError(PATRON_INVALIDO, campo, patron);
@@ -374,7 +356,7 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
                 .filter(e -> Objects.equals(e.getElementoXsdId(), elemento.getId()))
                 .toList();
         if (!propias.isEmpty() && propias.stream().noneMatch(e -> Objects.equals(e.getValor(), valor))) {
-            resultado.agregarError(ENUMERACION_INVALIDA, campo, valor);
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_ENUMERACION_INVALIDA, campo, elemento.getNombre(), valor);
         }
     }
 
@@ -391,11 +373,11 @@ public class DocumentDefinitionDataValidator implements DocumentDefinitionValida
             ComprobanteValidationResult resultado) {
         int minimo = elemento.getMinOcurrencias() == null ? 0 : elemento.getMinOcurrencias();
         if (ocurrencias < minimo) {
-            resultado.agregarError(OCURRENCIAS_MINIMAS, campo, minimo);
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_OCURRENCIAS_MINIMAS, campo, elemento.getNombre(), minimo);
         }
         Integer maximo = elemento.getMaxOcurrencias();
         if (maximo != null && ocurrencias > maximo) {
-            resultado.agregarError(OCURRENCIAS_MAXIMAS, campo, maximo);
+            resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_OCURRENCIAS_MAXIMAS, campo, elemento.getNombre(), maximo);
         }
     }
 }
