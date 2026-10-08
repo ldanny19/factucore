@@ -45,7 +45,7 @@ public class GeneracionXmlWorkflowStep implements WorkflowStep {
 					.orElseThrow(() -> new WorkflowException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 			definition = definitionProvider
-					.obtenerDefinicion(documento.getCodigo(), solicitud.getVersionXsd(), solicitud.getFechaInicio())
+					.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
 					.orElseThrow(() -> new WorkflowException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 			contexto.setDefinicionDocumento(definition);
 		}
