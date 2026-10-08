@@ -39,7 +39,12 @@ public final class ResultadoEtapa {
 	}
 
 	public static ResultadoEtapa fallida(EtapaWorkflow etapa, String estado, String codigoError, String mensaje) {
-		return new ResultadoEtapa(etapa, false, estado, codigoError, mensaje, Map.of());
+		return fallida(etapa, estado, codigoError, mensaje, Map.of());
+	}
+
+	public static ResultadoEtapa fallida(EtapaWorkflow etapa, String estado, String codigoError, String mensaje,
+			Map<String, Object> datos) {
+		return new ResultadoEtapa(etapa, false, estado, codigoError, mensaje, datos);
 	}
 
 	/**
