@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 
-import ec.dalara.factucore.application.MessageResolver;
 
 import ec.dalara.factucore.application.port.out.NotificacionPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -25,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 public class NotificacionWorkflowStep   {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
-	private final MessageResolver messageResolver;
 	private final NotificacionPort notificacionPort;
 
 	public EtapaWorkflow etapa() {
