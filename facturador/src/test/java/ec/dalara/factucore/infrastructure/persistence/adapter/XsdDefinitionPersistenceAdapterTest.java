@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -180,13 +179,17 @@ class XsdDefinitionPersistenceAdapterTest {
 
 	@Test
 	void debeValidarJsonRealContraEsquemaGeneradoDesdeXsdReal() throws Exception {
-		Path xsdPath = Path.of("documentos", "xsd", "factura", "factura_V1.0.0.xsd");
-		if (!Files.isRegularFile(xsdPath)) {
-			xsdPath = Path.of("facturador", "documentos", "xsd", "factura", "factura_V1.0.0.xsd");
-		}
+		Path xsdAbsoluto = Path.of("C:\\factucore\\facturador\\documentos\\xsd\\factura\\factura_V1.0.0.xsd");
+		Path xsdRelativoModulo = Path.of("documentos", "xsd", "factura", "factura_V1.0.0.xsd");
+		Path xsdRelativoRepositorio = Path.of("facturador", "documentos", "xsd", "factura", "factura_V1.0.0.xsd");
 
-		Assumptions.assumeTrue(Files.isRegularFile(xsdPath),
-				"No se encontro el XSD local para la prueba: " + xsdPath.toAbsolutePath());
+		Path xsdPath = Files.isRegularFile(xsdAbsoluto) ? xsdAbsoluto
+				: Files.isRegularFile(xsdRelativoModulo) ? xsdRelativoModulo : xsdRelativoRepositorio;
+
+		assertTrue(Files.isRegularFile(xsdPath),
+				"No se encontro el XSD. Rutas revisadas: " + xsdAbsoluto + ", "
+						+ xsdRelativoModulo.toAbsolutePath() + ", " + xsdRelativoRepositorio.toAbsolutePath());
+		System.out.println("XSD utilizado para la prueba: " + xsdPath.toAbsolutePath().normalize());
 
 		String contenidoJson;
 		try (InputStream input = getClass().getResourceAsStream("/json/factura/factura_V1.0.0.json")) {
