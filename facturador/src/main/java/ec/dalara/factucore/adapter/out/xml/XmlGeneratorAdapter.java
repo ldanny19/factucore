@@ -97,10 +97,10 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         Object valor = resolverValor(mapeo, contexto, contextoJson, contextoFactuCore, contextoGenerado, rutaPadre);
 
         if (mapeo != null && valor == null && !tieneHijos(elemento, definition)) {
-            if (!"FACTUCORE".equalsIgnoreCase(mapeo.getTipoOrigen()) || esElementoOpcional(elemento)) {
-                return null;
+            if ("FACTUCORE".equalsIgnoreCase(mapeo.getTipoOrigen()) && !esElementoOpcional(elemento)) {
+                throw new ApplicationException(MessageCodes.XML_CAMPO_REQUERIDO, elemento.getNombre());
             }
-            throw new ApplicationException(MessageCodes.XML_CAMPO_REQUERIDO, elemento.getNombre());
+            return null;
         }
         if (mapeo == null && !tieneHijos(elemento, definition) && !tieneAtributos(elemento, definition)) {
             return null;
