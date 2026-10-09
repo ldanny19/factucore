@@ -71,8 +71,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 		} catch (Exception exception) {
 			String tag = documentTag(xml);
-			LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, detalle={}",
-					MessageCodes.XML_VALIDACION_ERROR, tag, exception.getMessage(), exception);
+			LOGGER.error(messageResolver.resolver(MessageCodes.XML_VALIDACION_ERROR, exception.getMessage()), exception);
 			resultado.agregarError(MessageCodes.XML_VALIDACION_ERROR, documentTag(xml), exception.getMessage());
 		}
 		resultadoActual.remove();
@@ -523,28 +522,28 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 	}
 
 	private void registrarErrorSinTag(String codigo) {
-		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}", codigo, "N/A");
+		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_TAG, codigo, "N/A"));
 		obtenerResultado().agregarError(codigo, null);
 	}
 
 	private void registrarError(String codigo, String tag, String ruta) {
-		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}", codigo, tag, ruta);
+		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_RUTA, codigo, tag, ruta));
 		obtenerResultado().agregarError(codigo, tag);
 	}
 
 	private void registrarError(String codigo, ElementoXsdModel definicion,
 			DocumentDefinitionModel definition, Object... parametros) {
 		String ruta = obtenerRuta(definicion, definition);
-		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, parametros={}", codigo,
-				definicion.getNombre(), ruta, java.util.Arrays.toString(parametros));
+		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_PARAMETROS, codigo,
+				definicion.getNombre(), ruta, java.util.Arrays.toString(parametros)));
 		obtenerResultado().agregarError(codigo, definicion.getNombre(), parametros);
 	}
 
 	private void registrarErrorAtributo(String codigo, ElementoXsdModel definicion,
 			DocumentDefinitionModel definition, Object... parametros) {
 		String ruta = obtenerRuta(definicion, definition);
-		LOGGER.error("Validacion XML/XSD fallida: codigo={}, tag={}, ruta={}, atributo={}", codigo,
-				definicion.getNombre(), ruta, parametros.length > 0 ? parametros[0] : null);
+		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_ATRIBUTO, codigo,
+				definicion.getNombre(), ruta, parametros.length > 0 ? parametros[0] : null));
 		obtenerResultado().agregarError(codigo, definicion.getNombre(), parametros);
 	}
 

@@ -20,6 +20,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.SriPort;
 import ec.dalara.factucore.application.port.out.sri.SriCommunicationException;
 import ec.dalara.factucore.application.port.out.sri.SriMensaje;
@@ -35,11 +36,13 @@ public class SriSoapAdapter implements SriPort {
 	private static final String AUTORIZACION_NAMESPACE = "http://ec.gob.sri.ws.autorizacion";
 
 	private final SriProperties properties;
+	private final MessageResolver messageResolver;
 	private final HttpClient httpClient;
 	private final DocumentBuilderFactory documentBuilderFactory;
 
-	public SriSoapAdapter(SriProperties properties) {
+	public SriSoapAdapter(SriProperties properties, MessageResolver messageResolver) {
 		this.properties = properties;
+		this.messageResolver = messageResolver;
 		this.httpClient = HttpClient.newBuilder().build();
 		this.documentBuilderFactory = DocumentBuilderFactory.newInstance();
 		this.documentBuilderFactory.setNamespaceAware(true);
@@ -141,7 +144,7 @@ public class SriSoapAdapter implements SriPort {
 			int statusCode = response.statusCode();
 
 			if (statusCode >= 500) {
-				throw new SriCommunicationException("SRI respondió con estado HTTP " + statusCode);
+				throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_HTTP_ERROR, statusCode));
 			}
 
 			if (statusCode < 200 || statusCode >= 300) {
@@ -159,10 +162,10 @@ public class SriSoapAdapter implements SriPort {
 		} catch (ApplicationException exception) {
 			throw exception;
 		} catch (IOException exception) {
-			throw new SriCommunicationException("Error de comunicación con el SRI", exception);
+			throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_ERROR_COMUNICACION), exception);
 		} catch (InterruptedException exception) {
 			Thread.currentThread().interrupt();
-			throw new SriCommunicationException("Comunicación con el SRI interrumpida", exception);
+			throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_ERROR_COMUNICACION), exception);
 		}
 	}
 
@@ -244,7 +247,7 @@ public class SriSoapAdapter implements SriPort {
 			var builder = documentBuilderFactory.newDocumentBuilder();
 			return builder.parse(new InputSource(new StringReader(xml)));
 		} catch (Exception exception) {
-			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA, exception);
 		}
 	}
 

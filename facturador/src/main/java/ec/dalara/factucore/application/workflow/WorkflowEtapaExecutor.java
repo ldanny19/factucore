@@ -29,7 +29,7 @@ public class WorkflowEtapaExecutor {
 				? contexto.getSolicitud().getIdTransaccion()
 				: null;
 
-		log.debug("ID_TRANSACCION={} - Inicia Etapa {}", idTransaccion, etapa);
+		log.debug(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_INICIO, idTransaccion, etapa));
 		if (contexto != null) {
 			contexto.iniciarEtapa(etapa);
 		}
@@ -37,7 +37,7 @@ public class WorkflowEtapaExecutor {
 		try {
 			ResultadoEtapa resultado = ejecucion.get();
 			String salida = workflowResultadoService.registrar(contexto, resultado);
-			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa, salida);
+			log.debug(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_FIN, idTransaccion, etapa, salida));
 			return salida;
 		} catch (RuntimeException exception) {
 			String codigo = exception instanceof ApplicationException applicationException
@@ -51,10 +51,10 @@ public class WorkflowEtapaExecutor {
 			if (contexto != null) {
 				workflowResultadoService.registrar(contexto, resultadoError);
 			}
-			log.error("ID_TRANSACCION={} - Error Etapa {} - codigo={} - mensaje={}", idTransaccion, etapa, codigo, mensaje,
+			log.error(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_ERROR, idTransaccion, etapa, codigo, mensaje),
 					exception);
 			String salida = resultadoError.salida();
-			log.debug("ID_TRANSACCION={} - Fin Etapa {} - Resultado={}", idTransaccion, etapa, salida);
+			log.debug(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_FIN, idTransaccion, etapa, salida));
 			return salida;
 		}
 	}

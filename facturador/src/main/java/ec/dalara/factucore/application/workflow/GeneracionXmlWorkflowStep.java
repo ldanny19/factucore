@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -29,6 +30,7 @@ public class GeneracionXmlWorkflowStep  {
 
 	private static final Logger log = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
+	private final MessageResolver messageResolver;
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
 	private final DocumentoDefinitionProvider definitionProvider;
 	private final XmlGeneratorPort xmlGenerator;
@@ -91,7 +93,7 @@ public class GeneracionXmlWorkflowStep  {
 				contextoGenerado);
 		contexto.setXml(xml);
 
-		log.debug("XML generado antes de validacion XSD:\n{}", xml);
+		log.debug(messageResolver.resolver(MessageCodes.LOG_XML_GENERADO, xml));
 
 		return ResultadoEtapa.exitosa(etapa(), "COMPLETADA", java.util.Map.of("xmlGenerado", true));
 	}

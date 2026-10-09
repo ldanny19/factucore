@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.FactuCoreSourcePort;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.CatalogoItem;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import jakarta.persistence.Column;
@@ -34,7 +35,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		EntityType<?> entidad = buscarEntidad(partes.tabla());
 
 		if (entidad == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.FUENTE.NO_ENCONTRADA", origen);
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_FUENTE_NO_ENCONTRADA, origen);
 		}
 
 		if (partes.esCatalogo()) {
@@ -48,13 +49,13 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		SingularAttribute<?, ?> atributo = atributoBasico(entidad, partes.campo());
 
 		if (atributo == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CAMPO.NO_ENCONTRADO", origen);
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_CAMPO_NO_ENCONTRADO, origen);
 		}
 
 		Object id = contexto == null ? null : contexto.get(nombreId(entidad.getJavaType()));
 
 		if (id == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CONTEXTO.ID.NO_ENCONTRADO", origen);
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_CONTEXTO_ID_NO_ENCONTRADO, origen);
 		}
 
 		String tabla = nombreTabla(entidad.getJavaType());
@@ -70,13 +71,13 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 	private ValorOrigen resolverCatalogoItem(EntityType<?> entidad, OrigenPartes partes) {
 		if (!CatalogoItem.class.isAssignableFrom(entidad.getJavaType())) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.FUENTE.NO_ENCONTRADA", partes.origen());
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_FUENTE_NO_ENCONTRADA, partes.origen());
 		}
 
 		SingularAttribute<?, ?> atributo = atributoBasico(entidad, partes.campo());
 
 		if (atributo == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CAMPO.NO_ENCONTRADO", partes.origen());
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_CAMPO_NO_ENCONTRADO, partes.origen());
 		}
 
 		String tablaItem = nombreTabla(entidad.getJavaType());
@@ -105,7 +106,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		Object idEmpresa = contexto == null ? null : contexto.get("idEmpresa");
 
 		if (idEmpresa == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CONTEXTO.ID.NO_ENCONTRADO", partes.origen());
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_CONTEXTO_ID_NO_ENCONTRADO, partes.origen());
 		}
 
 		String sql = "select e.\"" + columnaValor + "\", e.\"tipo_dato\" from \"" + tabla
@@ -166,7 +167,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		Table table = tipo.getAnnotation(Table.class);
 
 		if (table == null || table.name().isBlank()) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.TABLA.NO_CONFIGURADA", tipo.getSimpleName());
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_TABLA_NO_CONFIGURADA, tipo.getSimpleName());
 		}
 
 		return table.name();
@@ -176,7 +177,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		Field field = buscarCampo(tipo, campo);
 
 		if (field == null) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.CAMPO.NO_ENCONTRADO",
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_CAMPO_NO_ENCONTRADO,
 					tipo.getSimpleName() + "." + campo);
 		}
 
@@ -217,7 +218,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 	private OrigenPartes parsear(String origen) {
 		if (origen == null || origen.isBlank()) {
-			throw new ApplicationException("FACTUCORE.MAPEO_XSD.ORIGEN.REQUERIDO");
+			throw new ApplicationException(MessageCodes.MAPEO_XSD_ORIGEN_REQUERIDO);
 		}
 
 		String[] partes = origen.split("\\.", -1);
@@ -231,7 +232,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 			return new OrigenPartes(partes[0], partes[1], partes[2], origen);
 		}
 
-		throw new ApplicationException("FACTUCORE.MAPEO_XSD.ORIGEN.FORMATO_INVALIDO", origen);
+		throw new ApplicationException(MessageCodes.MAPEO_XSD_ORIGEN_FORMATO_INVALIDO, origen);
 	}
 
 	private record OrigenPartes(String tabla, String claveCatalogo, String campo, String origen) {

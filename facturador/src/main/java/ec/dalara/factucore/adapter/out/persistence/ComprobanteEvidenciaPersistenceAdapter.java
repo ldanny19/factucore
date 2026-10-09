@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
@@ -31,6 +32,7 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
 
 	private static final DateTimeFormatter RESPALDO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS");
 
+	private final MessageResolver messageResolver;
 	private final ComprobanteRepository comprobanteRepository;
 	private final ComprobanteEvidenciaRepository evidenciaRepository;
 
@@ -176,7 +178,7 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
 			}
 			return resultado.toString();
 		} catch (NoSuchAlgorithmException exception) {
-			throw new IllegalStateException("SHA-256 no disponible", exception);
+			throw new IllegalStateException(messageResolver.resolver(MessageCodes.EVIDENCIA_HASH_ALGORITMO_NO_DISPONIBLE), exception);
 		}
 	}
 }
