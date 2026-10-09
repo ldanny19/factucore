@@ -77,12 +77,17 @@ public class EmpresaService extends BaseService<Empresa> {
 			throw new ApplicationException(MessageCodes.EMPRESA_DIRECCION_MATRIZ_REQUERIDA);
 		}
 
-		if (empresa.getObligadoContabilidad() == null) {
+		if (empresa.getObligadoContabilidad() == null || empresa.getObligadoContabilidad().isBlank()) {
 			throw new ApplicationException(MessageCodes.EMPRESA_OBLIGADO_CONTABILIDAD_REQUERIDO);
 		}
+		if (!"SI".equals(empresa.getObligadoContabilidad())
+				&& !"NO".equals(empresa.getObligadoContabilidad())) {
+			throw new ApplicationException(MessageCodes.EMPRESA_OBLIGADO_CONTABILIDAD_INVALIDO);
+		}
 
-		if (empresa.getContribuyenteRimpe() == null) {
-			throw new ApplicationException(MessageCodes.EMPRESA_CONTRIBUYENTE_RIMPE_REQUERIDO);
+		if (empresa.getContribuyenteRimpe() != null
+				&& !"CONTRIBUYENTE RÉGIMEN RIMPE".equals(empresa.getContribuyenteRimpe())) {
+			throw new ApplicationException(MessageCodes.EMPRESA_CONTRIBUYENTE_RIMPE_INVALIDO);
 		}
 	}
 }

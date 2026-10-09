@@ -10,8 +10,12 @@ CREATE TABLE empresa (
     razon_social VARCHAR(300) NOT NULL,
     nombre_comercial VARCHAR(300),
     direccion_matriz VARCHAR(500) NOT NULL,
-    obligado_contabilidad BOOLEAN NOT NULL DEFAULT FALSE,
-    contribuyente_rimpe BOOLEAN NOT NULL DEFAULT FALSE,
+    obligado_contabilidad VARCHAR(2) NOT NULL DEFAULT 'NO',
+    contribuyente_rimpe VARCHAR(35),
+    CONSTRAINT ck_empresa_obligado_contabilidad CHECK (obligado_contabilidad IN ('SI', 'NO')),
+    CONSTRAINT ck_empresa_contribuyente_rimpe CHECK (
+        contribuyente_rimpe IS NULL OR contribuyente_rimpe = 'CONTRIBUYENTE RÉGIMEN RIMPE'
+    ),
     estado_registro VARCHAR(20) NOT NULL,
     usuario_creacion VARCHAR(100) NOT NULL,
     usuario_modificacion VARCHAR(100),

@@ -96,7 +96,9 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         Object valor = resolverValor(mapeo, contexto, contextoJson, contextoFactuCore, contextoGenerado, rutaPadre);
 
         if (mapeo != null && valor == null && !tieneHijos(elemento, definition)) {
-            return null;
+            if (!"FACTUCORE".equalsIgnoreCase(mapeo.getTipoOrigen()) || esElementoOpcional(elemento)) {
+                return null;
+            }
         }
         if (mapeo == null && !tieneHijos(elemento, definition) && !tieneAtributos(elemento, definition)) {
             return null;
@@ -129,6 +131,11 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 contextoFactuCore, contextoGenerado, rutaPadre);
 
         return xml;
+    }
+
+    private boolean esElementoOpcional(ElementoXsdModel elemento) {
+        Integer minOcurrencias = elemento.getMinOcurrencias();
+        return minOcurrencias != null ? minOcurrencias == 0 : !Boolean.TRUE.equals(elemento.getObligatorio());
     }
 
     private void agregarHijos(Document document, Element padre, ElementoXsdModel elemento, Object contexto,

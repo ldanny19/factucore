@@ -2,6 +2,7 @@ package ec.dalara.factucore.application.contract.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,8 +31,9 @@ public class EmpresaRequest {
 	private String direccionMatriz;
 
 	@NotNull
-	private Boolean obligadoContabilidad;
+	@Pattern(regexp = "SI|NO")
+	private String obligadoContabilidad;
 
-	@NotNull
-	private Boolean contribuyenteRimpe;
+	@Pattern(regexp = "CONTRIBUYENTE RÉGIMEN RIMPE")
+	private String contribuyenteRimpe;
 }

@@ -11,11 +11,11 @@ public final class EmpresaModel {
 	private final String razonSocial;
 	private final String nombreComercial;
 	private final String direccionMatriz;
-	private final Boolean obligadoContabilidad;
-	private final Boolean contribuyenteRimpe;
+	private final String obligadoContabilidad;
+	private final String contribuyenteRimpe;
 
 	public EmpresaModel(Long id, String ruc, String razonSocial, String nombreComercial, String direccionMatriz,
-			Boolean obligadoContabilidad, Boolean contribuyenteRimpe) {
+			String obligadoContabilidad, String contribuyenteRimpe) {
 
 		if (ruc == null || ruc.isBlank()) {
 			throw new DomainException("FACTUCORE.EMPRESA.RUC.REQUERIDO");
@@ -58,11 +58,11 @@ public final class EmpresaModel {
 		return direccionMatriz;
 	}
 
-	public Boolean getObligadoContabilidad() {
+	public String getObligadoContabilidad() {
 		return obligadoContabilidad;
 	}
 
-	public Boolean getContribuyenteRimpe() {
+	public String getContribuyenteRimpe() {
 		return contribuyenteRimpe;
 	}
 

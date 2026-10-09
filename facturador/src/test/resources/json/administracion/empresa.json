@@ -8,7 +8,7 @@
     "razonSocial": "CRISTHIAN WILLIAN JUCA TOALA",
     "nombreComercial": "JUCARSA",
     "direccionMatriz": "NICOLAS SEGOVIA #607 entre Ayacucho y P.P. Gomez",
-    "obligadoContabilidad": true,
-    "contribuyenteRimpe": false
+    "obligadoContabilidad": "SI",
+    "contribuyenteRimpe": null
   }
 }

@@ -42,11 +42,11 @@ public class Empresa implements EstadoRegistroEntity {
 	@Column(name = "direccion_matriz", nullable = false, length = 500)
 	private String direccionMatriz;
 
-	@Column(name = "obligado_contabilidad", nullable = false)
-	private Boolean obligadoContabilidad;
+	@Column(name = "obligado_contabilidad", nullable = false, length = 2)
+	private String obligadoContabilidad;
 
-	@Column(name = "contribuyente_rimpe", nullable = false)
-	private Boolean contribuyenteRimpe;
+	@Column(name = "contribuyente_rimpe", length = 35)
+	private String contribuyenteRimpe;
 
 	@Column(name = "estado_registro", nullable = false, length = 20)
 	private String estadoRegistro;

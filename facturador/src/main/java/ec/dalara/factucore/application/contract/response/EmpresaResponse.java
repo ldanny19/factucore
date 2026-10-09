@@ -23,9 +23,9 @@ public class EmpresaResponse {
 
 	private String direccionMatriz;
 
-	private Boolean obligadoContabilidad;
+	private String obligadoContabilidad;
 
-	private Boolean contribuyenteRimpe;
+	private String contribuyenteRimpe;
 
 	private String estadoRegistro;
 
