@@ -248,7 +248,7 @@ public class AdministracionApplicationService implements AdministracionPort {
 
 		XsdImportResult resultado;
 		try (InputStream inputStream = Files.newInputStream(rutaXsd)) {
-			resultado = xsdImportService.importar(inputStream, rutaXsd.toUri().toString(),
+			resultado = xsdImportService.importar(inputStream, rutaXsd.toString(),
 					new XsdImportRequest(r.getCodigo(), r.getNombre(), r.getDescripcion(), r.getTipoDocumento(),
 							r.getPrefijoArchivo(), r.getVersion().getVersion(), nombreArchivo,
 							r.getVersion().getFechaInicio(), r.getVersion().getFechaFin(), usuario, null));
