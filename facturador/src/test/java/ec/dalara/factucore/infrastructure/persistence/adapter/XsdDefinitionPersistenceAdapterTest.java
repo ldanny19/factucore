@@ -3,13 +3,21 @@ package ec.dalara.factucore.infrastructure.persistence.adapter;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 
@@ -169,4 +177,57 @@ class XsdDefinitionPersistenceAdapterTest {
 		assertFalse(factura.path("properties").has("id"));
 		assertFalse(factura.path("properties").has("version"));
 	}
+
+	@Test
+	void debeValidarJsonRealContraEsquemaGeneradoDesdeXsdReal() throws Exception {
+		Path xsdPath = Path.of("documentos", "xsd", "factura", "factura_V1.0.0.xsd");
+		if (!Files.isRegularFile(xsdPath)) {
+			xsdPath = Path.of("facturador", "documentos", "xsd", "factura", "factura_V1.0.0.xsd");
+		}
+
+		Assumptions.assumeTrue(Files.isRegularFile(xsdPath),
+				"No se encontro el XSD local para la prueba: " + xsdPath.toAbsolutePath());
+
+		String contenidoJson;
+		try (InputStream input = getClass().getResourceAsStream("/json/factura/factura_V1.0.0.json")) {
+			assertTrue(input != null, "No se encontro el JSON real de prueba en src/test/resources");
+			contenidoJson = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+		}
+
+		contenidoJson = contenidoJson.replace("{{idTransaccion}}", UUID.randomUUID().toString())
+				.replace("{{fechaInicioActual}}", OffsetDateTime.now().toString())
+				.replace("{{idEmpresaActual}}", "1");
+
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode requestJson = mapper.readTree(contenidoJson);
+		JsonNode datos = requestJson.path("datos");
+
+		assertTrue(datos.isObject(), "El JSON real debe contener el objeto datos");
+
+		ec.dalara.factucore.application.port.out.XsdParserPort parser =
+				new ec.dalara.factucore.infrastructure.documentoxsd.XsdParserAdapter();
+		ec.dalara.factucore.domain.documentoxsd.importacion.XsdDefinitionSource definition;
+		try (InputStream xsdInput = Files.newInputStream(xsdPath)) {
+			definition = parser.parse(xsdInput, xsdPath.toAbsolutePath().normalize().toUri().toString());
+		}
+
+		var adapter = new XsdDefinitionPersistenceAdapter(null, null, null, null, null, mapper);
+		Method method = XsdDefinitionPersistenceAdapter.class.getDeclaredMethod("generarEsquemaJson",
+				ec.dalara.factucore.domain.documentoxsd.importacion.XsdDefinitionSource.class);
+		method.setAccessible(true);
+		String schemaJson = (String) method.invoke(adapter, definition);
+
+		JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+		var schema = factory.getSchema(mapper.readTree(schemaJson));
+		var erroresJsonReal = schema.validate(datos);
+
+		assertTrue(erroresJsonReal.isEmpty(),
+				"El JSON real no cumple el esquema generado desde el XSD real: " + erroresJsonReal);
+
+		ObjectNode datosInvalidos = ((ObjectNode) datos).deepCopy();
+		((ObjectNode) datosInvalidos.path("factura")).put("campoNoPermitidoParaLaPrueba", "valor");
+		assertFalse(schema.validate(datosInvalidos).isEmpty(),
+				"El esquema generado debe rechazar propiedades no definidas en el XSD");
+	}
+
 }
