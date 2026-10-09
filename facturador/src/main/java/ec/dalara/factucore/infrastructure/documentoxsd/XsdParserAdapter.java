@@ -339,7 +339,9 @@ public class XsdParserAdapter implements XsdParserPort {
 		if (simpleType == null)
 			simpleType = findType(simpleTypes, namespaceForQName(attribute, attr(attribute, "type")), typeName);
 		Restriction restriction = resolveRestriction(simpleType, simpleTypes);
-		parseEnumerations(simpleType, parentPath, enumeraciones);
+		if (simpleType != null) {
+			parseEnumerations(simpleType, parentPath, enumeraciones);
+		}
 
 		atributos.add(new XsdAttributeSource(parentPath, name, typeName, "required".equals(attr(attribute, "use")),
 				firstNonBlank(attr(attribute, "default"), attr(attribute, "fixed")), restriction.pattern));
