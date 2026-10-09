@@ -831,7 +831,7 @@
     {
       "idVersionDocumentoXsd": 1,
       "tipoOrigen": "GENERADO",
-      "origen": "comprobante",
+      "origen": "idDocumentoXml",
       "idElementoXsd": null,
       "idAtributoXsd": 4,
       "tipoMapeo": "ATRIBUTO"
