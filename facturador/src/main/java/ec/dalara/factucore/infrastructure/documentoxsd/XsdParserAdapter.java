@@ -68,11 +68,6 @@ public class XsdParserAdapter implements XsdParserPort {
 			parseElement(root, "", 1, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones,
 					new HashSet<>());
 
-			// Los atributos de la raíz <factura> son metadatos del XML, no datos del comprobante.
-			if ("factura".equals(attr(root, "name"))) {
-				atributos.removeIf(atributo -> "factura".equals(atributo.rutaElemento()));
-			}
-
 			Element rootSchema = validarSchema(rootDocument);
 			return new XsdDefinitionSource(attr(rootSchema, "targetNamespace"), attr(root, "name"), elementos,
 					atributos, enumeraciones);
