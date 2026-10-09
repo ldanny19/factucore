@@ -159,7 +159,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         }
 
         for (ElementoXsdModel hijo : obtenerHijos(elemento, definition)) {
-            if (Boolean.TRUE.equals(hijo.getRepetible())) {
+            if (esRepetible(hijo)) {
                 Object coleccion = obtenerColeccion(hijo, contextoBase, contextoJson, definition, rutaActual);
                 if (!(coleccion instanceof Iterable<?> iterable)) {
                     continue;
@@ -193,7 +193,23 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         if (valor == null) {
             valor = obtenerRuta(contextoJson, ruta);
         }
-        return valor == null ? contexto : valor;
+        /*
+         * Los valores escalares deben resolverse dentro del contexto del objeto actual.
+         * Si se devuelve aquí, por ejemplo, el valor de "codigo", crearInstancia()
+         * intentará resolver nuevamente "codigo" dentro de ese escalar y generará
+         * el elemento vacío. Solo se cambia de contexto al entrar en un objeto
+         * anidado o en una colección.
+         */
+        return valor instanceof Map<?, ?> || valor instanceof Iterable<?> ? valor : contexto;
+    }
+
+    private boolean esRepetible(ElementoXsdModel elemento) {
+        if (Boolean.TRUE.equals(elemento.getRepetible())) {
+            return true;
+        }
+
+        Integer maxOcurrencias = elemento.getMaxOcurrencias();
+        return maxOcurrencias == null || maxOcurrencias > 1;
     }
 
     private Object obtenerColeccion(ElementoXsdModel elemento, Object contexto,
@@ -377,7 +393,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 .anyMatch(a -> Objects.equals(a.getElementoXsdId(), elemento.getId()));
     }
 
-        private String obtenerRutaRelativa(String origen, String rutaPadre) {
+    private String obtenerRutaRelativa(String origen, String rutaPadre) {
         if (origen == null || origen.isBlank()) {
             return origen;
         }
