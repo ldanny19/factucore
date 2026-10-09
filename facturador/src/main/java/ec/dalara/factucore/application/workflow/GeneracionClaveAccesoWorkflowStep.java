@@ -84,6 +84,8 @@ public class GeneracionClaveAccesoWorkflowStep   {
 		contexto.setValorGenerado("ambiente", ambiente);
 		contexto.setValorGenerado("tipoEmision", TIPO_EMISION_NORMAL);
 		contexto.setValorGenerado("tipoDocumento", documento.getTipoDocumento());
+		contexto.setValorGenerado("idDocumentoXml", "comprobante");
+		contexto.setValorGenerado("versionDocumento", definition.getVersion().getVersion());
 
 		var datos = new ClaveAccesoDatos(LocalDate.from(solicitud.getFechaInicio()),
 				definition.getDocumento().getCodigo(), empresa.getRuc(), ambiente,

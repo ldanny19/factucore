@@ -1051,6 +1051,22 @@
       "idElementoXsd": 253,
       "idAtributoXsd": null,
       "tipoMapeo": "ELEMENTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "GENERADO",
+      "origen": "idDocumentoXml",
+      "idElementoXsd": null,
+      "idAtributoXsd": 9999,
+      "tipoMapeo": "ATRIBUTO"
+    },
+    {
+      "idVersionDocumentoXsd": 2,
+      "tipoOrigen": "GENERADO",
+      "origen": "versionDocumento",
+      "idElementoXsd": null,
+      "idAtributoXsd": 9998,
+      "tipoMapeo": "ATRIBUTO"
     }
   ]
 }

@@ -262,7 +262,7 @@ public class XsdParserAdapter implements XsdParserPort {
 				}
 				if (content != null) {
 					for (Element attribute : children(content, "attribute")) {
-						parseAttribute(attribute, parentPath, simpleTypes, atributos);
+						parseAttribute(attribute, parentPath, simpleTypes, atributos, enumeraciones);
 					}
 				}
 			} else {
@@ -284,7 +284,7 @@ public class XsdParserAdapter implements XsdParserPort {
 					parseParticleContainer(content, parentPath, complexTypes, simpleTypes, globalElements, elementos,
 							atributos, enumeraciones, typeStack);
 					for (Element attribute : children(content, "attribute")) {
-						parseAttribute(attribute, parentPath, simpleTypes, atributos);
+						parseAttribute(attribute, parentPath, simpleTypes, atributos, enumeraciones);
 					}
 				} else {
 					Element sequence = firstChild(complexType, "sequence");
@@ -299,7 +299,7 @@ public class XsdParserAdapter implements XsdParserPort {
 						throw new InfrastructureException("FACTUCORE.XSD.ALL.NO_SOPORTADO", parentPath);
 					}
 					for (Element attribute : children(complexType, "attribute")) {
-						parseAttribute(attribute, parentPath, simpleTypes, atributos);
+						parseAttribute(attribute, parentPath, simpleTypes, atributos, enumeraciones);
 					}
 				}
 			}
@@ -329,7 +329,7 @@ public class XsdParserAdapter implements XsdParserPort {
 	}
 
 	private void parseAttribute(Element attribute, String parentPath, Map<String, Element> simpleTypes,
-			List<XsdAttributeSource> atributos) {
+			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones) {
 		String name = attr(attribute, "name");
 		if (name == null || name.isBlank())
 			return;
@@ -339,6 +339,7 @@ public class XsdParserAdapter implements XsdParserPort {
 		if (simpleType == null)
 			simpleType = findType(simpleTypes, namespaceForQName(attribute, attr(attribute, "type")), typeName);
 		Restriction restriction = resolveRestriction(simpleType, simpleTypes);
+		parseEnumerations(simpleType, parentPath, enumeraciones);
 
 		atributos.add(new XsdAttributeSource(parentPath, name, typeName, "required".equals(attr(attribute, "use")),
 				firstNonBlank(attr(attribute, "default"), attr(attribute, "fixed")), restriction.pattern));
