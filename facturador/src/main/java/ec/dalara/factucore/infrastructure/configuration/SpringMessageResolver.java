@@ -6,6 +6,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.MessageResolver;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 
 @Component
 public class SpringMessageResolver implements MessageResolver {
@@ -29,7 +30,8 @@ public class SpringMessageResolver implements MessageResolver {
 	private String resolverObligatorio(String codigo, Object[] parametros, Locale locale) {
 		String mensaje = messageSource.getMessage(codigo, parametros, null, locale);
 		if (mensaje == null) {
-			throw new IllegalStateException("No existe mensaje configurado para el código: " + codigo);
+			throw new IllegalStateException(messageSource.getMessage(
+					MessageCodes.MENSAJE_CODIGO_NO_CONFIGURADO, new Object[] { codigo }, locale));
 		}
 		return mensaje;
 	}
