@@ -26,6 +26,7 @@ import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.MapeoXsdModel;
+import ec.dalara.factucore.domain.shared.MessageCodes;
 
 @Component
 public class XmlGeneratorAdapter implements XmlGeneratorPort {
@@ -40,10 +41,10 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     public String generar(DocumentDefinitionModel definition, Map<String, Object> contextoJson,
             Map<String, Object> contextoFactuCore, Map<String, Object> contextoGenerado) {
         if (definition == null) {
-            throw new ApplicationException("FACTUCORE.XML.DEFINITION.REQUERIDA");
+            throw new ApplicationException(MessageCodes.XML_DEFINITION_REQUERIDA);
         }
         if (contextoJson == null) {
-            throw new ApplicationException("FACTUCORE.XML.DATOS.REQUERIDOS");
+            throw new ApplicationException(MessageCodes.XML_DATOS_REQUERIDOS);
         }
 
         try {
@@ -56,7 +57,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                     contextoFactuCore, contextoGenerado, null);
 
             if (elementoRaiz == null) {
-                throw new ApplicationException("FACTUCORE.XML.ELEMENTO_RAIZ.NO_GENERADO");
+                throw new ApplicationException(MessageCodes.XML_ELEMENTO_RAIZ_NO_GENERADO);
             }
 
             document.appendChild(elementoRaiz);
@@ -64,7 +65,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         } catch (ApplicationException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new ApplicationException("FACTUCORE.XML.GENERACION.ERROR");
+            throw new ApplicationException(MessageCodes.XML_GENERACION_ERROR, exception);
         }
     }
 
@@ -80,10 +81,10 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
                 .toList();
 
         if (raices.isEmpty()) {
-            throw new ApplicationException("FACTUCORE.XML.ELEMENTO_RAIZ.NO_DEFINIDO");
+            throw new ApplicationException(MessageCodes.XML_ELEMENTO_RAIZ_NO_DEFINIDO);
         }
         if (raices.size() > 1) {
-            throw new ApplicationException("FACTUCORE.XML.ELEMENTO_RAIZ.MULTIPLE");
+            throw new ApplicationException(MessageCodes.XML_ELEMENTO_RAIZ_MULTIPLE);
         }
         return raices.get(0);
     }
@@ -99,6 +100,7 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
             if (!"FACTUCORE".equalsIgnoreCase(mapeo.getTipoOrigen()) || esElementoOpcional(elemento)) {
                 return null;
             }
+            throw new ApplicationException(MessageCodes.XML_CAMPO_REQUERIDO, elemento.getNombre());
         }
         if (mapeo == null && !tieneHijos(elemento, definition) && !tieneAtributos(elemento, definition)) {
             return null;
