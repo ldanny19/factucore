@@ -8,10 +8,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -31,9 +34,9 @@ import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 @Component
 public class SriSoapAdapter implements SriPort {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SriSoapAdapter.class);
+	private static final int MAX_RESPUESTA_LOG_CARACTERES = 4000;
 	private static final String SOAP_ENV_NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/";
-	private static final String RECEPCION_NAMESPACE = "http://ec.gob.sri.ws.recepcion";
-	private static final String AUTORIZACION_NAMESPACE = "http://ec.gob.sri.ws.autorizacion";
 
 	private final SriProperties properties;
 	private final MessageResolver messageResolver;
@@ -56,7 +59,7 @@ public class SriSoapAdapter implements SriPort {
 		}
 		String url = obtenerUrlRecepcion();
 		String soapRequest = construirSolicitudRecepcion(xml);
-		String respuesta = ejecutarSolicitud(url, soapRequest);
+		String respuesta = ejecutarSolicitud(url, soapRequest, "recepcion");
 		return procesarRespuestaRecepcion(respuesta);
 	}
 
@@ -67,7 +70,7 @@ public class SriSoapAdapter implements SriPort {
 		}
 		String url = obtenerUrlAutorizacion();
 		String soapRequest = construirSolicitudAutorizacion(claveAcceso);
-		String respuesta = ejecutarSolicitud(url, soapRequest);
+		String respuesta = ejecutarSolicitud(url, soapRequest, "autorizacion");
 		return procesarRespuestaAutorizacion(respuesta);
 	}
 
@@ -99,7 +102,7 @@ public class SriSoapAdapter implements SriPort {
 	}
 
 	private String construirSolicitudRecepcion(String xml) {
-		String xmlCodificado = escaparXml(xml);
+		String xmlCodificado = Base64.getEncoder().encodeToString(xml.getBytes(StandardCharsets.UTF_8));
 		return """
 				<?xml version="1.0" encoding="UTF-8"?>
 				<soap:Envelope
@@ -132,7 +135,7 @@ public class SriSoapAdapter implements SriPort {
 				""".formatted(claveEscapada);
 	}
 
-	private String ejecutarSolicitud(String url, String soapRequest) {
+	private String ejecutarSolicitud(String url, String soapRequest, String etapa) {
 		try {
 			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url))
 					.header("Content-Type", "text/xml; charset=UTF-8").header("Accept", "text/xml")
@@ -142,20 +145,30 @@ public class SriSoapAdapter implements SriPort {
 					HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
 			int statusCode = response.statusCode();
+			String cuerpo = response.body();
+			String contentType = response.headers().firstValue("Content-Type").orElse("no informado");
 
 			if (statusCode >= 500) {
+				registrarRespuestaInvalida(etapa, statusCode, contentType, "error HTTP del servicio remoto", cuerpo, null);
 				throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_HTTP_ERROR, statusCode));
 			}
 
 			if (statusCode < 200 || statusCode >= 300) {
+				registrarRespuestaInvalida(etapa, statusCode, contentType, "estado HTTP no exitoso", cuerpo, null);
 				throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
 			}
 
-			if (response.body() == null || response.body().isBlank()) {
+			if (cuerpo == null || cuerpo.isBlank()) {
+				registrarRespuestaInvalida(etapa, statusCode, contentType, "cuerpo vacío", cuerpo, null);
 				throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 			}
 
-			return response.body();
+			if (esRespuestaHtml(cuerpo, contentType) || !pareceXml(cuerpo)) {
+				registrarRespuestaInvalida(etapa, statusCode, contentType, "contenido no XML/SOAP", cuerpo, null);
+				throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+			}
+
+			return cuerpo;
 
 		} catch (SriCommunicationException exception) {
 			throw exception;
@@ -170,35 +183,43 @@ public class SriSoapAdapter implements SriPort {
 	}
 
 	private SriResponse procesarRespuestaRecepcion(String xml) {
-		Document document = parsearXml(xml);
+		Document document = parsearXml(xml, "recepcion");
+		validarEnvelopeSoap(document, "recepcion", xml);
 		Element respuesta = obtenerPrimerElemento(document, "RespuestaRecepcionComprobante");
 		if (respuesta == null) {
+			registrarRespuestaInvalida("recepcion", null, null, "no contiene RespuestaRecepcionComprobante", xml, null);
+			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+		}
+		if (obtenerTexto(respuesta, "estado") == null) {
+			registrarRespuestaInvalida("recepcion", null, null, "no contiene el estado de recepción", xml, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 		String estado = obtenerTexto(respuesta, "estado");
-		List<SriMensaje> mensajes = obtenerMensajes(respuesta, "comprobante");
+		List<SriMensaje> mensajes = obtenerMensajes(respuesta);
 		String identificador = obtenerTexto(respuesta, "claveAcceso");
 		return new SriResponse("RECIBIDA".equalsIgnoreCase(estado), estado, identificador, mensajes, xml);
 	}
 
 	private SriResponse procesarRespuestaAutorizacion(String xml) {
-		Document document = parsearXml(xml);
+		Document document = parsearXml(xml, "autorizacion");
+		validarEnvelopeSoap(document, "autorizacion", xml);
 		Element respuesta = obtenerPrimerElemento(document, "RespuestaAutorizacionComprobante");
 		if (respuesta == null) {
+			registrarRespuestaInvalida("autorizacion", null, null, "no contiene RespuestaAutorizacionComprobante", xml, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 		Element autorizacion = obtenerPrimerElemento(respuesta, "autorizacion");
 		if (autorizacion == null) {
 			return new SriResponse(false, null, obtenerTexto(respuesta, "claveAccesoConsultada"),
-					obtenerMensajes(respuesta, "autorizacion"));
+					obtenerMensajes(respuesta));
 		}
 		String estado = obtenerTexto(autorizacion, "estado");
 		String numeroAutorizacion = obtenerTexto(autorizacion, "numeroAutorizacion");
-		List<SriMensaje> mensajes = obtenerMensajes(autorizacion, "autorizacion");
+		List<SriMensaje> mensajes = obtenerMensajes(autorizacion);
 		return new SriResponse("AUTORIZADO".equalsIgnoreCase(estado), estado, numeroAutorizacion, mensajes, xml);
 	}
 
-	private List<SriMensaje> obtenerMensajes(Element contenedor, String elementoContenedor) {
+	private List<SriMensaje> obtenerMensajes(Element contenedor) {
 		List<SriMensaje> mensajes = new ArrayList<>();
 		NodeList nodos = contenedor.getElementsByTagNameNS("*", "mensaje");
 		for (int i = 0; i < nodos.getLength(); i++) {
@@ -242,13 +263,72 @@ public class SriSoapAdapter implements SriPort {
 		return texto == null ? null : texto.trim();
 	}
 
-	private Document parsearXml(String xml) {
+	private Document parsearXml(String xml, String etapa) {
 		try {
 			var builder = documentBuilderFactory.newDocumentBuilder();
 			return builder.parse(new InputSource(new StringReader(xml)));
 		} catch (Exception exception) {
+			registrarRespuestaInvalida(etapa, null, null, "XML malformado", xml, exception);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA, exception);
 		}
+	}
+
+	private void validarEnvelopeSoap(Document document, String etapa, String respuesta) {
+		Element envelope = document.getDocumentElement();
+		if (envelope == null || !"Envelope".equals(envelope.getLocalName())
+				|| !SOAP_ENV_NAMESPACE.equals(envelope.getNamespaceURI())) {
+			registrarRespuestaInvalida(etapa, null, null, "Envelope SOAP ausente o inválido", respuesta, null);
+			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+		}
+
+		Element body = obtenerPrimerElemento(envelope, "Body");
+		if (body == null) {
+			registrarRespuestaInvalida(etapa, null, null, "Body SOAP ausente", respuesta, null);
+			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+		}
+
+		Element fault = obtenerPrimerElemento(body, "Fault");
+		if (fault != null) {
+			String codigo = obtenerTexto(fault, "faultcode");
+			String mensaje = obtenerTexto(fault, "faultstring");
+			registrarRespuestaInvalida(etapa, null, null,
+					"SOAP Fault: " + (codigo == null ? "" : codigo) + " " + (mensaje == null ? "" : mensaje),
+					respuesta, null);
+			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
+		}
+	}
+
+	private boolean esRespuestaHtml(String cuerpo, String contentType) {
+		String tipo = contentType == null ? "" : contentType.toLowerCase();
+		String inicio = cuerpo.stripLeading().toLowerCase();
+		return tipo.contains("text/html") || inicio.startsWith("<html") || inicio.startsWith("<!doctype html");
+	}
+
+	private boolean pareceXml(String cuerpo) {
+		String inicio = cuerpo.stripLeading();
+		return inicio.startsWith("<?xml") || inicio.matches("(?s)^<(?:[A-Za-z_][\\w.-]*:)?Envelope(?:\\s|>).*");
+	}
+
+	private void registrarRespuestaInvalida(String etapa, Integer estadoHttp, String contentType, String motivo,
+			String respuesta, Exception exception) {
+		String resumen = respuesta == null ? "<vacía>" : respuesta.substring(0,
+				Math.min(respuesta.length(), MAX_RESPUESTA_LOG_CARACTERES));
+		if (respuesta != null && respuesta.length() > MAX_RESPUESTA_LOG_CARACTERES) {
+			resumen += " [respuesta truncada]";
+		}
+		String mensajeLog = "Respuesta SRI no interpretable. etapa={}, ambiente={}, estadoHttp={}, contentType={}, motivo={}, respuesta={}";
+		String respuestaSaneada = sanearParaLog(resumen);
+		if (exception == null) {
+			LOGGER.error(mensajeLog, etapa, properties.getAmbiente(), estadoHttp, contentType, motivo, respuestaSaneada);
+		} else {
+			LOGGER.error(mensajeLog, etapa, properties.getAmbiente(), estadoHttp, contentType, motivo, respuestaSaneada, exception);
+		}
+	}
+
+	private String sanearParaLog(String valor) {
+		return valor.replaceAll("(?i)(password|clave|token|authorization)\\s*[:=]\\s*[^<\\s,;]+", "$1=[REDACTADO]")
+				.replaceAll("(?is)<(claveAcceso|identificacion|razonSocial|correo|email|informacionAdicional)(\\s[^>]*)?>.*?</\\1>", "<$1>[REDACTADO]</$1>")
+				.replaceAll("[\\r\\n\\t]+", " ");
 	}
 
 	private String escaparXml(String valor) {
