@@ -68,6 +68,10 @@ public class XsdParserAdapter implements XsdParserPort {
 			parseElement(root, "", 1, complexTypes, simpleTypes, globalElements, elementos, atributos, enumeraciones,
 					new HashSet<>());
 
+			// Los atributos de la raíz <factura> son metadatos del XML, no datos del comprobante.
+			if ("factura".equals(attr(root, "name"))) {
+				atributos.removeIf(atributo -> "factura".equals(atributo.rutaElemento()));
+			}
 
 			Element rootSchema = validarSchema(rootDocument);
 			return new XsdDefinitionSource(attr(rootSchema, "targetNamespace"), attr(root, "name"), elementos,
@@ -339,10 +343,9 @@ public class XsdParserAdapter implements XsdParserPort {
 		if (simpleType == null)
 			simpleType = findType(simpleTypes, namespaceForQName(attribute, attr(attribute, "type")), typeName);
 		Restriction restriction = resolveRestriction(simpleType, simpleTypes);
-		if (simpleType != null) {
-			parseEnumerations(simpleType, parentPath, enumeraciones);
-		}
 
+		// Las enumeraciones de atributos no son enumeraciones del elemento padre.
+		// El modelo actual persiste enumeraciones asociadas a elementos, por lo que no deben mezclarse.
 		atributos.add(new XsdAttributeSource(parentPath, name, typeName, "required".equals(attr(attribute, "use")),
 				firstNonBlank(attr(attribute, "default"), attr(attribute, "fixed")), restriction.pattern));
 	}

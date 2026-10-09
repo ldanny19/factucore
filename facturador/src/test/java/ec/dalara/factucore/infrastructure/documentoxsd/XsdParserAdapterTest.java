@@ -68,6 +68,34 @@ class XsdParserAdapterTest {
 	}
 
 	@Test
+	void noDebePersistirAtributosNiEnumeracionesDeLaRaizFactura() {
+		String xsd = """
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+				  <xs:element name="factura">
+				    <xs:complexType>
+				      <xs:sequence>
+				        <xs:element name="ambiente" type="xs:string"/>
+				      </xs:sequence>
+				      <xs:attribute name="id">
+				        <xs:simpleType>
+				          <xs:restriction base="xs:string">
+				            <xs:enumeration value="comprobante"/>
+				          </xs:restriction>
+				        </xs:simpleType>
+				      </xs:attribute>
+				      <xs:attribute name="version" type="xs:string"/>
+				    </xs:complexType>
+				  </xs:element>
+				</xs:schema>
+				""";
+
+		var definition = parser.parse(new ByteArrayInputStream(xsd.getBytes(StandardCharsets.UTF_8)), "test.xsd");
+
+		assertTrue(definition.atributos().isEmpty());
+		assertTrue(definition.enumeraciones().isEmpty());
+	}
+
+	@Test
 	void debeConservarMinOccursDeUnaReferenciaLocal() {
 		String xsd = """
 				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
