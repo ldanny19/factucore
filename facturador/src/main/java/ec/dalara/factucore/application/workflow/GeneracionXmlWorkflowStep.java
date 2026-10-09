@@ -76,6 +76,7 @@ public class GeneracionXmlWorkflowStep  {
 		contextoFactuCore.put("idTipoDocumento", solicitud.getIdTipoDocumento());
 		contextoFactuCore.put("idTransaccion", solicitud.getIdTransaccion());
 		contextoFactuCore.put("versionXsd", solicitud.getVersionXsd());
+		contextoFactuCore.put("idVersionDocumentoXsd", definition.getVersion().getId());
 		contextoFactuCore.put("usuario", solicitud.getUsuario());
 		contextoFactuCore.put("canal", solicitud.getCanal());
 
