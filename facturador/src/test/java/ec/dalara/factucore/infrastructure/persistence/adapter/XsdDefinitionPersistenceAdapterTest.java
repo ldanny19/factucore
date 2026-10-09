@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
 
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdAttributeSource;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdDefinitionSource;
@@ -96,6 +98,46 @@ class XsdDefinitionPersistenceAdapterTest {
 		assertTrue(infoFactura.path("required").toString().contains("codigo"));
 		assertFalse(factura.path("properties").has("infoTributaria"));
 		assertFalse(factura.path("properties").has("signature"));
+	}
+
+
+	@Test
+	void esquemaGeneradoDebeAplicarRestriccionesConUnValidadorJsonSchemaReal() throws Exception {
+		var definition = new XsdDefinitionSource("urn:test", "documento",
+				List.of(new XsdElementSource("documento", "documento", "DocumentoType", 1, 1, 1, null, null,
+						null, null, null, null, null),
+						new XsdElementSource("documento.codigo", "codigo", "xs:string", 1, 1, 1, 2, 5, null,
+								null, null, null, "^[A-Z]+$"),
+						new XsdElementSource("documento.importe", "importe", "xs:decimal", 2, 0, 1, null, null,
+								6, 2, null, null, null),
+						new XsdElementSource("documento.estado", "estado", "xs:string", 3, 1, 1, null, null,
+								null, null, null, null, null)),
+				List.of(), List.of(new XsdEnumerationSource("documento.estado", "ACTIVO", "Activo", 1),
+						new XsdEnumerationSource("documento.estado", "INACTIVO", "Inactivo", 2)));
+		var adapter = new XsdDefinitionPersistenceAdapter(null, null, null, null, null, new ObjectMapper());
+		Method method = XsdDefinitionPersistenceAdapter.class.getDeclaredMethod("generarEsquemaJson",
+				XsdDefinitionSource.class);
+		method.setAccessible(true);
+		String schemaJson = (String) method.invoke(adapter, definition);
+		JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+		var schema = factory.getSchema(new ObjectMapper().readTree(schemaJson));
+
+		ObjectMapper mapper = new ObjectMapper();
+		com.fasterxml.jackson.databind.node.ObjectNode documentoValido = mapper.createObjectNode();
+		documentoValido.put("codigo", "ABCD");
+		documentoValido.put("importe", new java.math.BigDecimal("12.34"));
+		documentoValido.put("estado", "ACTIVO");
+		com.fasterxml.jackson.databind.node.ObjectNode valido = mapper.createObjectNode();
+		valido.set("documento", documentoValido);
+		assertTrue(schema.validate(valido).isEmpty());
+
+		com.fasterxml.jackson.databind.node.ObjectNode documentoInvalido = mapper.createObjectNode();
+		documentoInvalido.put("codigo", "a");
+		documentoInvalido.put("importe", new java.math.BigDecimal("12.345"));
+		documentoInvalido.put("estado", "OTRO");
+		com.fasterxml.jackson.databind.node.ObjectNode invalido = mapper.createObjectNode();
+		invalido.set("documento", documentoInvalido);
+		assertFalse(schema.validate(invalido).isEmpty());
 	}
 
 	@Test

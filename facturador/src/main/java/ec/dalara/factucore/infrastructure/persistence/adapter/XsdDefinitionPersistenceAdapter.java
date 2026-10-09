@@ -252,6 +252,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			schema.put("type", "object");
 
 			ObjectNode rootProperties = schema.putObject("properties");
+			schema.put("additionalProperties", false);
 			Set<String> rootRequired = new HashSet<>();
 
 			for (XsdElementSource source : elementosEsquema(definition)) {
@@ -308,44 +309,81 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private void aplicarRestricciones(ObjectNode target, XsdElementSource source, XsdDefinitionSource definition) {
-		if (source.longitudMinima() != null) {
-			target.put("minLength", source.longitudMinima());
-		}
-		if (source.longitudMaxima() != null) {
-			target.put("maxLength", source.longitudMaxima());
-		}
-		if (source.digitosTotales() != null) {
-			target.put("totalDigits", source.digitosTotales());
-		}
-		if (source.decimales() != null) {
-			target.put("fractionDigits", source.decimales());
-		}
-		if (source.valorMinimo() != null) {
-			target.put("minimum", source.valorMinimo());
-		}
-		if (source.valorMaximo() != null) {
-			target.put("maximum", source.valorMaximo());
-		}
-		if (source.patron() != null) {
-			target.put("pattern", source.patron());
+		String tipo = tipoJson(source.tipoDato());
+		if ("string".equals(tipo)) {
+			if (source.longitudMinima() != null) {
+				target.put("minLength", source.longitudMinima());
+			}
+			if (source.longitudMaxima() != null) {
+				target.put("maxLength", source.longitudMaxima());
+			}
+			if (source.patron() != null && !source.patron().isBlank()) {
+				target.put("pattern", source.patron());
+			}
+		} else if ("number".equals(tipo) || "integer".equals(tipo)) {
+			if (source.valorMinimo() != null) {
+				target.put("minimum", source.valorMinimo());
+			}
+			if (source.valorMaximo() != null) {
+				target.put("maximum", source.valorMaximo());
+			}
+			if (source.digitosTotales() != null && source.digitosTotales() > 0) {
+				int decimales = source.decimales() == null ? 0 : source.decimales();
+				int digitosEnteros = Math.max(0, source.digitosTotales() - decimales);
+				java.math.BigDecimal limite = java.math.BigDecimal.TEN.pow(digitosEnteros);
+				target.put("exclusiveMinimum", limite.negate());
+				target.put("exclusiveMaximum", limite);
+			}
+			if (source.decimales() != null && source.decimales() >= 0 && "number".equals(tipo)) {
+				target.put("multipleOf", java.math.BigDecimal.ONE.movePointLeft(source.decimales()));
+			}
 		}
 
 		List<XsdEnumerationSource> enumeraciones = definition.enumeraciones().stream()
 				.filter(e -> source.ruta().equals(e.rutaElemento())).toList();
 		if (!enumeraciones.isEmpty()) {
 			ArrayNode enumeration = target.putArray("enum");
-			enumeraciones.forEach(e -> enumeration.add(e.valor()));
+			for (XsdEnumerationSource valor : enumeraciones) {
+				if ("integer".equals(tipo)) {
+					try {
+						enumeration.add(new java.math.BigInteger(valor.valor()));
+					} catch (NumberFormatException exception) {
+						enumeration.add(valor.valor());
+					}
+				} else if ("number".equals(tipo)) {
+					try {
+						enumeration.add(new java.math.BigDecimal(valor.valor()));
+					} catch (NumberFormatException exception) {
+						enumeration.add(valor.valor());
+					}
+				} else {
+					enumeration.add(valor.valor());
+				}
+			}
 		}
 	}
-
 	private void construirTipo(ObjectNode target, XsdElementSource source, boolean tieneEstructuraObjeto,
 			XsdDefinitionSource definition) {
 		if (!tieneEstructuraObjeto) {
-			target.put("type", tipoJson(source.tipoDato()));
+			String tipo = tipoJson(source.tipoDato());
+			target.put("type", tipo);
+			String tipoXsd = source.tipoDato() == null ? "" : source.tipoDato().trim().toLowerCase();
+			int separador = tipoXsd.lastIndexOf(':');
+			if (separador >= 0) {
+				tipoXsd = tipoXsd.substring(separador + 1);
+			}
+			if ("date".equals(tipoXsd)) {
+				target.put("format", "date");
+			} else if ("datetime".equals(tipoXsd)) {
+				target.put("format", "date-time");
+			} else if ("time".equals(tipoXsd)) {
+				target.put("format", "time");
+			}
 			return;
 		}
 
 		target.put("type", "object");
+		target.put("additionalProperties", false);
 		ObjectNode properties = target.putObject("properties");
 		if (!tieneHijosEsquema(source.ruta(), definition)) {
 			ObjectNode valorSchema = objectMapper.createObjectNode();
@@ -368,7 +406,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			}
 			ObjectNode attributeSchema = objectMapper.createObjectNode();
 			attributeSchema.put("type", tipoJson(attribute.tipoDato()));
-			if (attribute.patron() != null) {
+			if ("string".equals(tipoJson(attribute.tipoDato())) && attribute.patron() != null
+					&& !attribute.patron().isBlank()) {
 				attributeSchema.put("pattern", attribute.patron());
 			}
 			properties.set(attribute.nombre(), attributeSchema);
@@ -412,21 +451,21 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private String tipoJson(String tipoDato) {
-		String tipo = tipoDato == null ? "" : tipoDato.toLowerCase();
+		String tipo = tipoDato == null ? "" : tipoDato.trim().toLowerCase();
+		int separador = tipo.lastIndexOf(':');
+		if (separador >= 0) {
+			tipo = tipo.substring(separador + 1);
+		}
 
-		if (tipo.contains("boolean")) {
-			return "boolean";
-		}
-		if (tipo.contains("decimal") || tipo.contains("double") || tipo.contains("float")) {
-			return "number";
-		}
-		if (tipo.contains("integer") || tipo.contains("int") || tipo.contains("long") || tipo.contains("short")
-				|| tipo.contains("byte")) {
-			return "integer";
-		}
-		return "string";
+		return switch (tipo) {
+		case "boolean" -> "boolean";
+		case "decimal", "double", "float" -> "number";
+		case "integer", "int", "long", "short", "byte", "unsignedint", "unsignedlong", "unsignedshort",
+				"unsignedbyte", "nonnegativeinteger", "positiveinteger", "negativeinteger", "nonpositiveinteger" ->
+				"integer";
+		default -> "string";
+		};
 	}
-
 	private boolean tieneEstructuraObjeto(XsdElementSource source, XsdDefinitionSource definition) {
 		return tieneHijos(source.ruta(), definition)
 				|| definition.atributos().stream().anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)
