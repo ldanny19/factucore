@@ -187,6 +187,13 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- Versión compatible con org.apache.commons.lang3.Strings requerida por DSS -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.18.0</version>
+		</dependency>
+
 		<!-- Implementación requerida por DSS para utilidades comunes -->
 		<dependency>
 			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
