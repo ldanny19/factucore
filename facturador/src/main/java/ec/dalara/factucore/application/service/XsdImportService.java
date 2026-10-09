@@ -2,8 +2,6 @@ package ec.dalara.factucore.application.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 
@@ -34,8 +32,7 @@ public class XsdImportService {
 
 		try {
 			byte[] contenido = inputStream.readAllBytes();
-			String systemId = resolverSystemId(rutaXsd);
-			XsdDefinitionSource definition = parser.parse(new ByteArrayInputStream(contenido), systemId);
+			XsdDefinitionSource definition = parser.parse(new ByteArrayInputStream(contenido), rutaXsd);
 			String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(contenido));
 			return persistence.persist(request, definition, rutaXsd, hash);
 		} catch (InfrastructureException exception) {
@@ -43,13 +40,5 @@ public class XsdImportService {
 		} catch (Exception exception) {
 			throw new InfrastructureException("FACTUCORE.XSD.IMPORTACION.ERROR", exception);
 		}
-	}
-
-	private String resolverSystemId(String rutaXsd) {
-		URI uri = URI.create(rutaXsd);
-		if (uri.getScheme() != null) {
-			return uri.normalize().toString();
-		}
-		return Path.of(rutaXsd).toAbsolutePath().normalize().toUri().toString();
 	}
 }
