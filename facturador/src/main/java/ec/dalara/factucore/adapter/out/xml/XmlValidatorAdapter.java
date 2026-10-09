@@ -83,17 +83,17 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		String rutaXsd = definition.getVersion().getRutaXsd();
 		String hashEsperado = definition.getVersion().getHashXsd();
 		if (rutaXsd == null || rutaXsd.isBlank() || hashEsperado == null || hashEsperado.isBlank()) {
-			throw new IllegalStateException("La definición no contiene la ruta y el hash del XSD original.");
+			throw new IllegalStateException(messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_RUTA_HASH_REQUERIDOS));
 		}
 
 		Path archivoXsd = Path.of(rutaXsd).toAbsolutePath().normalize();
 		if (!Files.isRegularFile(archivoXsd)) {
-			throw new java.io.FileNotFoundException("No se encuentra el XSD registrado para la definición.");
+			throw new java.io.FileNotFoundException(messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_ARCHIVO_NO_ENCONTRADO));
 		}
 		String hashReal = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(archivoXsd)));
 		if (!MessageDigest.isEqual(hashEsperado.getBytes(java.nio.charset.StandardCharsets.US_ASCII),
 				hashReal.getBytes(java.nio.charset.StandardCharsets.US_ASCII))) {
-			throw new SecurityException("El hash del XSD almacenado no coincide con la definición registrada.");
+			throw new SecurityException(messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_HASH_INVALIDO));
 		}
 
 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
