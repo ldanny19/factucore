@@ -68,7 +68,7 @@ class XsdParserAdapterTest {
 	}
 
 	@Test
-	void noDebePersistirAtributosNiEnumeracionesDeLaRaizFactura() {
+	void debeConservarAtributosDeLaRaizFacturaEnElParseo() {
 		String xsd = """
 				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 				  <xs:element name="factura">
@@ -91,8 +91,11 @@ class XsdParserAdapterTest {
 
 		var definition = parser.parse(new ByteArrayInputStream(xsd.getBytes(StandardCharsets.UTF_8)), "test.xsd");
 
-		assertTrue(definition.atributos().isEmpty());
-		assertTrue(definition.enumeraciones().isEmpty());
+		assertEquals(2, definition.atributos().size());
+		assertTrue(definition.atributos().stream().anyMatch(a -> "id".equals(a.nombre())
+				&& "factura".equals(a.rutaElemento())));
+		assertTrue(definition.atributos().stream().anyMatch(a -> "version".equals(a.nombre())
+				&& "factura".equals(a.rutaElemento())));
 	}
 
 	@Test
