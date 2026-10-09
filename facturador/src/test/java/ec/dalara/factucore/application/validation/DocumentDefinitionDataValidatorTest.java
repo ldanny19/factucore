@@ -39,8 +39,8 @@ class DocumentDefinitionDataValidatorTest {
 
 		DocumentDefinitionModel definition = new DocumentDefinitionModel(
 				new DocumentoXsdModel("FACTURA", "Factura", null, "01", "factura"),
-				new VersionDocumentoXsdModel(1L, 1L, "1.0.0", "factura_V1.0.0.xsd", null, "factura",
-						null, null, LocalDateTime.now(), null),
+				new VersionDocumentoXsdModel(1L, 1L, "1.0.0", "factura_V1.0.0.xsd", null, null, null,
+						"factura", null, null, LocalDateTime.now(), null),
 				elementos, List.of(), List.of(), mapeos);
 
 		MessageResolver messageResolver = mock(MessageResolver.class);
