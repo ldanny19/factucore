@@ -36,7 +36,7 @@ public class JsonSchemaComprobanteValidator {
 			JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
 			JsonSchema jsonSchema = factory.getSchema(esquema);
 			for (ValidationMessage error : jsonSchema.validate(datos)) {
-				String ruta = normalizarRuta(error.getPath());
+				String ruta = normalizarRuta(error.getInstanceLocation().toString());
 				String propiedadRequerida = obtenerPropiedadRequerida(error.getMessage());
 				if (propiedadRequerida != null) {
 					resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_REQUERIDO,
