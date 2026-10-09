@@ -187,6 +187,13 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- Implementación requerida por DSS para utilidades comunes -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-utils-apache-commons</artifactId>
+			<version>6.5</version>
+		</dependency>
+
 		<dependency>
 			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 			<artifactId>dss-xades</artifactId>
