@@ -254,7 +254,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			ObjectNode rootProperties = schema.putObject("properties");
 			Set<String> rootRequired = new HashSet<>();
 
-			for (XsdElementSource source : elementosEntrada(definition)) {
+			for (XsdElementSource source : elementosEsquema(definition)) {
 				if (rutaPadre(source.ruta()) != null) {
 					continue;
 				}
@@ -274,7 +274,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 	private void agregarEsquemaElemento(ObjectNode properties, Set<String> required, XsdElementSource source,
 			XsdDefinitionSource definition) {
-		boolean tieneEstructuraObjeto = tieneEstructuraObjeto(source, definition);
+		boolean tieneEstructuraObjeto = tieneEstructuraObjetoEsquema(source, definition);
 		ObjectNode elementoSchema = esquemaElemento(source, tieneEstructuraObjeto, definition);
 
 		properties.set(source.nombre(), elementoSchema);
@@ -347,14 +347,14 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 		target.put("type", "object");
 		ObjectNode properties = target.putObject("properties");
-		if (!tieneHijos(source.ruta(), definition)) {
+		if (!tieneHijosEsquema(source.ruta(), definition)) {
 			ObjectNode valorSchema = objectMapper.createObjectNode();
 			valorSchema.put("type", tipoJson(source.tipoDato()));
 			properties.set("valor", valorSchema);
 		}
 		Set<String> required = new HashSet<>();
 
-		for (XsdElementSource child : elementosEntrada(definition)) {
+		for (XsdElementSource child : elementosEsquema(definition)) {
 			if (!source.ruta().equals(rutaPadre(child.ruta()))) {
 				continue;
 			}
@@ -362,7 +362,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 
 		for (XsdAttributeSource attribute : definition.atributos()) {
-			if (esSeccionFactuCore(attribute.rutaElemento(), definition) || esAtributoTecnico(attribute, definition)
+			if (esAtributoExcluidoEsquema(attribute, definition)
 					|| !source.ruta().equals(attribute.rutaElemento())) {
 				continue;
 			}
@@ -381,6 +381,34 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			ArrayNode requiredNode = target.putArray("required");
 			required.forEach(requiredNode::add);
 		}
+	}
+
+	private List<XsdElementSource> elementosEsquema(XsdDefinitionSource definition) {
+		return definition.elementos().stream().filter(source -> !contieneTagExcluido(source.ruta())).toList();
+	}
+
+	private boolean tieneEstructuraObjetoEsquema(XsdElementSource source, XsdDefinitionSource definition) {
+		return tieneHijosEsquema(source.ruta(), definition)
+				|| definition.atributos().stream().anyMatch(attribute -> !esAtributoExcluidoEsquema(attribute, definition)
+						&& source.ruta().equals(attribute.rutaElemento()));
+	}
+
+	private boolean tieneHijosEsquema(String ruta, XsdDefinitionSource definition) {
+		String prefijo = ruta + ".";
+		return elementosEsquema(definition).stream().anyMatch(elemento -> elemento.ruta().startsWith(prefijo));
+	}
+
+	private boolean esAtributoExcluidoEsquema(XsdAttributeSource attribute, XsdDefinitionSource definition) {
+		return contieneTagExcluido(attribute.rutaElemento()) || esAtributoTecnico(attribute, definition);
+	}
+
+	private boolean contieneTagExcluido(String ruta) {
+		for (String segmento : ruta.split("\\.")) {
+			if ("infoTributaria".equalsIgnoreCase(segmento) || "signature".equalsIgnoreCase(segmento)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String tipoJson(String tipoDato) {

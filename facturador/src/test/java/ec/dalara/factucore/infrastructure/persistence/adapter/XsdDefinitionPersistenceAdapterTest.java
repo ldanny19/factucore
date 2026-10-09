@@ -53,6 +53,51 @@ class XsdDefinitionPersistenceAdapterTest {
 		assertFalse(json.path("factura").has("version"));
 	}
 
+
+	@Test
+	void debeGenerarObligatoriedadCardinalidadYExcluirTagsDelEsquema() throws Exception {
+		var definition = new XsdDefinitionSource("urn:test", "factura",
+				List.of(new XsdElementSource("factura", "factura", "FacturaType", 1, 1, 1, null, null, null, null,
+						null, null, null),
+						new XsdElementSource("factura.infoTributaria", "infoTributaria", "InfoType", 1, 1, 1, null,
+							null, null, null, null, null, null),
+						new XsdElementSource("factura.infoTributaria.ruc", "ruc", "string", 1, 1, 1, null, null,
+							null, null, null, null, null),
+						new XsdElementSource("factura.infoFactura", "infoFactura", "InfoType", 1, 1, 1, null, null,
+							null, null, null, null, null),
+						new XsdElementSource("factura.infoFactura.fechaEmision", "fechaEmision", "string", 1, 1, 1,
+							null, null, null, null, null, null, null),
+						new XsdElementSource("factura.infoFactura.observacion", "observacion", "string", 2, 0, 1,
+							null, null, null, null, null, null, null),
+						new XsdElementSource("factura.detalle", "detalle", "string", 2, 1, null, null, null, null, null,
+							null, null, null),
+						new XsdElementSource("factura.signature", "signature", "SignatureType", 3, 0, 1, null, null,
+							null, null, null, null, null)),
+				List.of(new XsdAttributeSource("factura.infoFactura", "codigo", "string", true, null, null),
+						new XsdAttributeSource("factura.signature", "id", "string", true, null, null)),
+				List.<XsdEnumerationSource>of());
+
+		var adapter = new XsdDefinitionPersistenceAdapter(null, null, null, null, null, new ObjectMapper());
+		Method method = XsdDefinitionPersistenceAdapter.class.getDeclaredMethod("generarEsquemaJson",
+				XsdDefinitionSource.class);
+		method.setAccessible(true);
+
+		JsonNode schema = new ObjectMapper().readTree((String) method.invoke(adapter, definition));
+		JsonNode factura = schema.path("properties").path("factura");
+		JsonNode infoFactura = factura.path("properties").path("infoFactura");
+
+		assertTrue(schema.path("required").toString().contains("factura"));
+		assertTrue(factura.path("required").toString().contains("infoFactura"));
+		assertTrue(factura.path("required").toString().contains("detalle"));
+		assertTrue(infoFactura.path("required").toString().contains("fechaEmision"));
+		assertFalse(infoFactura.path("required").toString().contains("observacion"));
+		assertTrue(factura.path("properties").path("detalle").path("type").asText().equals("array"));
+		assertTrue(factura.path("properties").path("detalle").path("minItems").asInt() == 1);
+		assertTrue(infoFactura.path("required").toString().contains("codigo"));
+		assertFalse(factura.path("properties").has("infoTributaria"));
+		assertFalse(factura.path("properties").has("signature"));
+	}
+
 	@Test
 	void debeExcluirDatosTecnicosDeEsquemaFactura() throws Exception {
 		var definition = new XsdDefinitionSource("urn:test", "factura",
