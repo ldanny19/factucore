@@ -66,4 +66,30 @@ class XsdParserAdapterTest {
 		assertEquals(1, detalle.longitudMinima());
 		assertEquals(300, detalle.longitudMaxima());
 	}
+
+	@Test
+	void debeConservarMinOccursDeUnaReferenciaLocal() {
+		String xsd = """
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+				           targetNamespace="urn:test"
+				           xmlns:t="urn:test">
+				  <xs:element name="opcional" type="xs:string"/>
+				  <xs:element name="raiz" type="t:RaizType"/>
+				  <xs:complexType name="RaizType">
+				    <xs:sequence>
+				      <xs:element ref="t:opcional" minOccurs="0"/>
+				    </xs:sequence>
+				  </xs:complexType>
+				</xs:schema>
+				""";
+
+		var definition = parser.parse(new ByteArrayInputStream(xsd.getBytes(StandardCharsets.UTF_8)), "test.xsd");
+		var opcional = definition.elementos().stream()
+				.filter(elemento -> "raiz.opcional".equals(elemento.ruta()))
+				.findFirst().orElseThrow();
+
+		assertEquals(0, opcional.minOcurrencias());
+		assertTrue(!opcional.esObligatorio());
+	}
+
 }

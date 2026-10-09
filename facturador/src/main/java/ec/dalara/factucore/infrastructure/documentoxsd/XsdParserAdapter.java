@@ -176,6 +176,8 @@ public class XsdParserAdapter implements XsdParserPort {
 			Map<String, Element> simpleTypes, Map<String, Element> globalElements, List<XsdElementSource> elementos,
 			List<XsdAttributeSource> atributos, List<XsdEnumerationSource> enumeraciones, Set<String> typeStack) {
 
+		Integer minOcurrencias = integerAttr(element, "minOccurs", 1);
+		Integer maxOcurrencias = maxOccurs(element);
 		String ref = attr(element, "ref");
 		if (ref != null) {
 			String referenceNamespace = namespaceForQName(element, ref);
@@ -186,8 +188,8 @@ public class XsdParserAdapter implements XsdParserPort {
 			if ("http://www.w3.org/2000/09/xmldsig#".equals(referenceNamespace)) {
 				String name = localTypeName(ref);
 				String path = parentPath.isBlank() ? name : parentPath + "." + name;
-				Integer min = integerAttr(element, "minOccurs", 1);
-				Integer max = maxOccurs(element);
+				Integer min = minOcurrencias;
+				Integer max = maxOcurrencias;
 				String typeName = localTypeName(attr(referenced, "type"));
 
 				elementos.add(new XsdElementSource(path, name, typeName, order, min, max, null, null, null, null, null,
@@ -203,8 +205,8 @@ public class XsdParserAdapter implements XsdParserPort {
 		}
 
 		String path = parentPath.isBlank() ? name : parentPath + "." + name;
-		Integer min = integerAttr(element, "minOccurs", 1);
-		Integer max = maxOccurs(element);
+		Integer min = minOcurrencias;
+		Integer max = maxOcurrencias;
 		String typeName = localTypeName(attr(element, "type"));
 
 		Element complexType = firstChild(element, "complexType");
