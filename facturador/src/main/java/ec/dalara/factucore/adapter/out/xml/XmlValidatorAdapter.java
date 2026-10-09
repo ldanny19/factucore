@@ -208,7 +208,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			registrarError(MessageCodes.XML_VALIDACION_OCURRENCIA_MAXIMA, definicion, definition, cantidad, maximo);
 		}
 
-		if (Boolean.TRUE.equals(definicion.getObligatorio()) && cantidad == 0) {
+		if (Boolean.TRUE.equals(definicion.getObligatorio()) && cantidad == 0
+				&& (minimo == null || minimo == 0)) {
 
 			registrarError(MessageCodes.XML_VALIDACION_ELEMENTO_REQUERIDO, definicion, definition, cantidad);
 		}

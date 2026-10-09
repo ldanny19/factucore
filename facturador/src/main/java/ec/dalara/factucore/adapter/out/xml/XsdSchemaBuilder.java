@@ -80,7 +80,7 @@ public class XsdSchemaBuilder {
 				|| d.getEnumeraciones().stream().anyMatch(v -> Objects.equals(v.getElementoXsdId(), e.getId()));
 
 		if (!restricciones) {
-			x.append(" type=\"").append(base).append("\"");
+			x.append(" type=\"").append(base).append("\"").append(">");
 			return;
 		}
 
