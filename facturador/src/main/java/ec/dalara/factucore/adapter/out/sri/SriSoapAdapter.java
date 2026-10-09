@@ -204,7 +204,7 @@ public class SriSoapAdapter implements SriPort {
 		validarEnvelopeSoap(document, "autorizacion", xml);
 		Element respuesta = obtenerPrimerElemento(document, "RespuestaAutorizacionComprobante");
 		if (respuesta == null) {
-			registrarRespuestaInvalida("autorizacion", null, null, "no contiene RespuestaAutorizacionComprobante", xml, null);
+			registrarRespuestaInvalida("autorizacion", null, null, messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_AUTORIZACION_AUSENTE), xml, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 		Element autorizacion = obtenerPrimerElemento(respuesta, "autorizacion");
