@@ -49,7 +49,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 	@Override
 	@Transactional
-	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition) {
+	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition, String rutaXsd, String hashXsd) {
 		LocalDateTime ahora = LocalDateTime.now();
 
 		DocumentoXsd documento = documentoRepository.findByCodigoForUpdate(request.codigo())
@@ -64,7 +64,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
-				.nombreArchivo(request.nombreArchivo()).namespaceXml(definition.namespaceXml())
+				.nombreArchivo(request.nombreArchivo()).rutaXsd(rutaXsd).hashXsd(hashXsd)
+				.namespaceXml(definition.namespaceXml())
 				.elementoRaiz(definition.elementoRaiz()).plantillaJson(generarPlantillaJson(definition))
 				.esquemaJson(generarEsquemaJson(definition)).fechaInicio(request.fechaInicio())
 				.fechaFin(request.fechaFin()).estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario())

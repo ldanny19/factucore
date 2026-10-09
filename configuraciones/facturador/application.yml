@@ -78,6 +78,7 @@ factucore:
   path:
     base: ${FACTUCORE_PATH_BASE:/app}
     config: ${FACTUCORE_PATH_CONFIG:${factucore.path.base}/config}
+    xsd: ${FACTUCORE_PATH_XSD:${factucore.path.base}/xsd}
     certificados: ${FACTUCORE_PATH_CERTIFICADOS:${factucore.path.base}/certificados}
     jasper: ${FACTUCORE_PATH_JASPER:${factucore.path.base}/jasper}
     documentos: ${FACTUCORE_PATH_DOCUMENTOS:${factucore.path.base}/documentos}

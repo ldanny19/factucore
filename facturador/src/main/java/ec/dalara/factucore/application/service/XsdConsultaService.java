@@ -99,8 +99,9 @@ public class XsdConsultaService {
 
 	private VersionDocumentoXsdModel crearVersionModel(VersionDocumentoXsd version) {
 		return new VersionDocumentoXsdModel(version.getId(), version.getDocumentoXsd().getId(), version.getVersion(),
-				version.getNombreArchivo(), version.getNamespaceXml(), version.getElementoRaiz(),
-				version.getPlantillaJson(), version.getEsquemaJson(), version.getFechaInicio(), version.getFechaFin());
+				version.getNombreArchivo(), version.getRutaXsd(), version.getHashXsd(), version.getNamespaceXml(),
+				version.getElementoRaiz(), version.getPlantillaJson(), version.getEsquemaJson(),
+				version.getFechaInicio(), version.getFechaFin());
 	}
 
 	private ElementoXsdModel crearElementoModel(ElementoXsd elemento) {

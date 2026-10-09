@@ -43,6 +43,12 @@ public class VersionDocumentoXsd implements EstadoRegistroEntity {
 	@Column(name = "nombre_archivo", length = 300)
 	private String nombreArchivo;
 
+	@Column(name = "ruta_xsd", nullable = false, length = 2000)
+	private String rutaXsd;
+
+	@Column(name = "hash_xsd", nullable = false, length = 64)
+	private String hashXsd;
+
 	@Column(name = "namespace_xml", length = 1000)
 	private String namespaceXml;
 

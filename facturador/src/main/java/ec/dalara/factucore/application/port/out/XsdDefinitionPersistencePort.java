@@ -6,5 +6,5 @@ import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportResult;
 
 public interface XsdDefinitionPersistencePort {
 
-	XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition);
+	XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition, String rutaXsd, String hashXsd);
 }

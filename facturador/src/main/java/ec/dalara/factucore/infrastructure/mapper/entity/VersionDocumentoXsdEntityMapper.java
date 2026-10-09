@@ -15,8 +15,8 @@ public interface VersionDocumentoXsdEntityMapper {
 		}
 
 		return new VersionDocumentoXsdModel(e.getId(), e.getDocumentoXsd().getId(), e.getVersion(),
-				e.getNombreArchivo(), e.getNamespaceXml(), e.getElementoRaiz(), e.getPlantillaJson(),
-				e.getEsquemaJson(), e.getFechaInicio(), e.getFechaFin());
+				e.getNombreArchivo(), e.getRutaXsd(), e.getHashXsd(), e.getNamespaceXml(), e.getElementoRaiz(),
+				e.getPlantillaJson(), e.getEsquemaJson(), e.getFechaInicio(), e.getFechaFin());
 	}
 
 	@Mapping(target = "id", ignore = true)

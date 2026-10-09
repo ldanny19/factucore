@@ -83,6 +83,8 @@ CREATE TABLE certificado_firma (
     id BIGINT PRIMARY KEY,
     empresa_id BIGINT NOT NULL,
     nombre_archivo VARCHAR(300),
+    ruta_xsd VARCHAR(2000) NOT NULL,
+    hash_xsd VARCHAR(64) NOT NULL,
     ruta_certificado VARCHAR(1000) NOT NULL,
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,

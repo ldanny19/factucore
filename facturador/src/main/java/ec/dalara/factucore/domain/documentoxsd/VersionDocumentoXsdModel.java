@@ -10,6 +10,8 @@ public final class VersionDocumentoXsdModel {
 	private final Long documentoXsdId;
 	private final String version;
 	private final String nombreArchivo;
+	private final String rutaXsd;
+	private final String hashXsd;
 	private final String namespaceXml;
 	private final String elementoRaiz;
 	private final String plantillaJson;
@@ -18,8 +20,8 @@ public final class VersionDocumentoXsdModel {
 	private final LocalDateTime fechaFin;
 
 	public VersionDocumentoXsdModel(Long id, Long documentoXsdId, String version, String nombreArchivo,
-			String namespaceXml, String elementoRaiz, String plantillaJson, String esquemaJson,
-			LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+			String rutaXsd, String hashXsd, String namespaceXml, String elementoRaiz, String plantillaJson,
+			String esquemaJson, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
 
 		if (documentoXsdId == null) {
 			throw new DomainException("FACTUCORE.VERSION_DOCUMENTO_XSD.DOCUMENTO.REQUERIDO");
@@ -38,6 +40,8 @@ public final class VersionDocumentoXsdModel {
 		this.documentoXsdId = documentoXsdId;
 		this.version = version;
 		this.nombreArchivo = nombreArchivo;
+		this.rutaXsd = rutaXsd;
+		this.hashXsd = hashXsd;
 		this.namespaceXml = namespaceXml;
 		this.elementoRaiz = elementoRaiz;
 		this.plantillaJson = plantillaJson;
@@ -67,6 +71,14 @@ public final class VersionDocumentoXsdModel {
 
 	public String getNombreArchivo() {
 		return nombreArchivo;
+	}
+
+	public String getRutaXsd() {
+		return rutaXsd;
+	}
+
+	public String getHashXsd() {
+		return hashXsd;
 	}
 
 	public String getNamespaceXml() {

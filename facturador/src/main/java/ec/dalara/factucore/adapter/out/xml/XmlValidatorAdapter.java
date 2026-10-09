@@ -1,6 +1,10 @@
 package ec.dalara.factucore.adapter.out.xml;
 
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
@@ -9,6 +13,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.springframework.stereotype.Component;
@@ -33,7 +38,6 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(XmlValidatorAdapter.class);
 
-	private final XsdSchemaBuilder schemaBuilder;
 	private final MessageResolver messageResolver;
 	private final ThreadLocal<ComprobanteValidationResult> resultadoActual = new ThreadLocal<>();
 
@@ -76,10 +80,30 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 	}
 
 	private void validarContraEsquema(String xml, DocumentDefinitionModel definition) throws Exception {
-		Schema schema = schemaBuilder.construir(definition);
+		String rutaXsd = definition.getVersion().getRutaXsd();
+		String hashEsperado = definition.getVersion().getHashXsd();
+		if (rutaXsd == null || rutaXsd.isBlank() || hashEsperado == null || hashEsperado.isBlank()) {
+			throw new IllegalStateException("La definición no contiene la ruta y el hash del XSD original.");
+		}
+
+		Path archivoXsd = Path.of(rutaXsd).toAbsolutePath().normalize();
+		if (!Files.isRegularFile(archivoXsd)) {
+			throw new java.io.FileNotFoundException("No se encuentra el XSD registrado para la definición.");
+		}
+		String hashReal = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(archivoXsd)));
+		if (!MessageDigest.isEqual(hashEsperado.getBytes(java.nio.charset.StandardCharsets.US_ASCII),
+				hashReal.getBytes(java.nio.charset.StandardCharsets.US_ASCII))) {
+			throw new SecurityException("El hash del XSD almacenado no coincide con la definición registrada.");
+		}
+
+		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+		factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+		factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");
+		Schema schema = factory.newSchema(archivoXsd.toFile());
 		Validator validator = schema.newValidator();
 		validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-		validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+		validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");
 		validator.validate(new StreamSource(new StringReader(xml)));
 	}
 

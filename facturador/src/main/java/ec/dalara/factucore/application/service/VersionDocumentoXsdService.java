@@ -1,6 +1,10 @@
 package ec.dalara.factucore.application.service;
 
 import java.time.LocalDateTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +34,19 @@ public class VersionDocumentoXsdService extends BaseService<VersionDocumentoXsd>
 	@Transactional
 	public VersionDocumentoXsd guardar(VersionDocumentoXsd entity) {
 		validar(entity);
+		try {
+			Path ruta = Path.of(entity.getRutaXsd()).toAbsolutePath().normalize();
+			if (!Files.isRegularFile(ruta)) {
+				throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_INVALIDA, entity.getRutaXsd());
+			}
+			entity.setRutaXsd(ruta.toString());
+			entity.setHashXsd(HexFormat.of().formatHex(
+					MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(ruta))));
+		} catch (ApplicationException exception) {
+			throw exception;
+		} catch (Exception exception) {
+			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_INVALIDA, entity.getRutaXsd());
+		}
 		boolean dup = entity.getId() == null
 				? versionDocumentoXsdRepository.existsByDocumentoXsdIdAndVersion(entity.getDocumentoXsd().getId(),
 						entity.getVersion())
@@ -61,6 +78,8 @@ public class VersionDocumentoXsdService extends BaseService<VersionDocumentoXsd>
 			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_REQUERIDA);
 		if (e.getDocumentoXsd() == null || e.getDocumentoXsd().getId() == null)
 			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_DOCUMENTO_REQUERIDO);
+		if (e.getRutaXsd() == null || e.getRutaXsd().isBlank())
+			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_REQUERIDA);
 		if (e.getVersion() == null || e.getVersion().isBlank())
 			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_VERSION_REQUERIDA);
 		if (e.getFechaInicio() == null)
