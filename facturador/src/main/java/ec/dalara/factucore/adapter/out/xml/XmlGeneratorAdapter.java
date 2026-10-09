@@ -231,7 +231,8 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
     private String obtenerRutaOrigenElemento(ElementoXsdModel elemento, DocumentDefinitionModel definition) {
         MapeoXsdModel directo = obtenerMapeoElemento(elemento, definition);
         if (directo != null && "JSON".equalsIgnoreCase(directo.getTipoOrigen())) {
-            return directo.getOrigen();
+            String ruta = recortarRuta(directo.getOrigen(), elemento.getNombre());
+            return ruta == null ? directo.getOrigen() : ruta;
         }
 
         for (MapeoXsdModel mapeo : definition.getMapeos()) {

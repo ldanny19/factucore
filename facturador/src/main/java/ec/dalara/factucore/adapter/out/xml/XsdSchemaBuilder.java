@@ -93,15 +93,26 @@ public class XsdSchemaBuilder {
 			x.append("<xs:totalDigits value=\"").append(e.getDigitosTotales()).append("\"/>");
 		if (e.getDecimales() != null)
 			x.append("<xs:fractionDigits value=\"").append(e.getDecimales()).append("\"/>");
-		if (e.getValorMinimo() != null)
-			x.append("<xs:minInclusive value=\"").append(escape(e.getValorMinimo().toPlainString())).append("\"/>");
-		if (e.getValorMaximo() != null)
-			x.append("<xs:maxInclusive value=\"").append(escape(e.getValorMaximo().toPlainString())).append("\"/>");
+		if (admiteLimitesNumericos(base)) {
+			if (e.getValorMinimo() != null)
+				x.append("<xs:minInclusive value=\"").append(escape(e.getValorMinimo().toPlainString()))
+						.append("\"/>");
+			if (e.getValorMaximo() != null)
+				x.append("<xs:maxInclusive value=\"").append(escape(e.getValorMaximo().toPlainString()))
+						.append("\"/>");
+		}
 		if (e.getPatron() != null && !e.getPatron().isBlank())
 			x.append("<xs:pattern value=\"").append(escape(e.getPatron())).append("\"/>");
 		d.getEnumeraciones().stream().filter(v -> Objects.equals(v.getElementoXsdId(), e.getId()))
 				.forEach(v -> x.append("<xs:enumeration value=\"").append(escape(v.getValor())).append("\"/>"));
 		x.append("</xs:restriction></xs:simpleType>");
+	}
+
+	private boolean admiteLimitesNumericos(String tipoBase) {
+		return switch (tipoBase) {
+		case "xs:decimal", "xs:long", "xs:double", "xs:float", "xs:date", "xs:dateTime" -> true;
+		default -> false;
+		};
 	}
 
 	private void appendAttributes(StringBuilder x, ElementoXsdModel e, DocumentDefinitionModel d) {
