@@ -63,8 +63,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 		String sql = "select e.\"" + columna + "\" from \"" + tabla
 				+ "\" e where e.\"id\" = :id";
 
-		Object resultado = entityManager.createNativeQuery(sql).setParameter("id", id).getResultStream().findFirst()
-				.orElse(null);
+		Object resultado = entityManager.createNativeQuery(sql).setParameter("id", id).getResultList().stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
 
 		return new ValorOrigen(resultado, tipoDato(atributo.getJavaType()));
 	}
@@ -91,7 +90,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 				+ "order by i.\"orden\" asc, i.\"id\" asc limit 1";
 
 		Object resultado = entityManager.createNativeQuery(sql).setParameter("catalogo", partes.claveCatalogo())
-				.getResultStream().findFirst().orElse(null);
+				.getResultList().stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
 
 		return new ValorOrigen(resultado, tipoDato(atributo.getJavaType()));
 	}
@@ -117,7 +116,7 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 				+ "order by e.\"fecha_vigencia_desde\" desc limit 1";
 
 		Object fila = entityManager.createNativeQuery(sql).setParameter("idEmpresa", idEmpresa)
-				.setParameter("clave", partes.campo()).getResultStream().findFirst().orElse(null);
+				.setParameter("clave", partes.campo()).getResultList().stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
 
 		if (fila == null) {
 			return new ValorOrigen(null, "String");
