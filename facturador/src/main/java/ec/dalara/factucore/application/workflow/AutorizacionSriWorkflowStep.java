@@ -4,9 +4,13 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.MessageResolver;
 
 
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
@@ -22,12 +26,15 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class AutorizacionSriWorkflowStep   {
+public class AutorizacionSriWorkflowStep {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(AutorizacionSriWorkflowStep.class);
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
 	private final ComprobanteEvidenciaPort evidenciaPort;
 	private final SriService sriService;
 	private final SriProperties sriProperties;
+	private final MessageResolver messageResolver;
 
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.AUTORIZACION_SRI;
@@ -36,6 +43,16 @@ public class AutorizacionSriWorkflowStep   {
 	/** Ejecuta la lógica de negocio y expone a Camel solo la salida de la etapa. */
 	public String ejecutar(ContextoWorkflow contexto) {
 		return workflowEtapaExecutor.ejecutar(contexto, etapa(), () -> ejecutarResultado(contexto));
+	}
+
+	private void registrarRespuestaSri(ContextoWorkflow contexto, SriResponse respuesta) {
+		if (!LOGGER.isDebugEnabled()) {
+			return;
+		}
+
+		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
+		LOGGER.debug(messageResolver.resolver(MessageCodes.LOG_SRI_RESPUESTA_COMPLETA, idTransaccion,
+				etapa().name(), respuesta.respuestaXml()));
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
@@ -49,6 +66,7 @@ public class AutorizacionSriWorkflowStep   {
 
 		SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
 		contexto.setEstadoSri(respuesta.estado());
+		registrarRespuestaSri(contexto, respuesta);
 
 		if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
 			contexto.setNumeroAutorizacion(respuesta.identificador());

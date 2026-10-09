@@ -210,7 +210,7 @@ public class SriSoapAdapter implements SriPort {
 		Element autorizacion = obtenerPrimerElemento(respuesta, "autorizacion");
 		if (autorizacion == null) {
 			return new SriResponse(false, null, obtenerTexto(respuesta, "claveAccesoConsultada"),
-					obtenerMensajes(respuesta));
+					obtenerMensajes(respuesta), xml);
 		}
 		String estado = obtenerTexto(autorizacion, "estado");
 		String numeroAutorizacion = obtenerTexto(autorizacion, "numeroAutorizacion");
@@ -228,11 +228,25 @@ public class SriSoapAdapter implements SriPort {
 			}
 			Node padre = mensaje.getParentNode();
 			if (padre instanceof Element && "mensajes".equals(padre.getLocalName())) {
-				mensajes.add(new SriMensaje(obtenerTexto(mensaje, "identificador"), obtenerTexto(mensaje, "mensaje"),
+				String identificador = obtenerTexto(mensaje, "identificador");
+				String descripcion = obtenerTexto(mensaje, "mensaje");
+				mensajes.add(new SriMensaje(identificador, quitarCodigoDuplicado(identificador, descripcion),
 						obtenerTexto(mensaje, "informacionAdicional"), obtenerTexto(mensaje, "tipo")));
 			}
 		}
 		return mensajes;
+	}
+
+	private String quitarCodigoDuplicado(String codigo, String mensaje) {
+		if (codigo == null || codigo.isBlank() || mensaje == null) {
+			return mensaje;
+		}
+
+		String descripcion = mensaje.stripLeading();
+		if (descripcion.startsWith(codigo)) {
+			return descripcion.substring(codigo.length()).stripLeading();
+		}
+		return mensaje;
 	}
 
 	private Element obtenerPrimerElemento(Node nodo, String nombre) {
