@@ -1,16 +1,13 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
-
-
 import ec.dalara.factucore.application.port.out.sri.SriResponse;
+import ec.dalara.factucore.application.service.SriCodigoCatalogoService;
 import ec.dalara.factucore.application.service.SriService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -28,6 +25,7 @@ public class EnvioSriWorkflowStep {
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
 	private final SriService sriService;
 	private final MessageResolver messageResolver;
+	private final SriCodigoCatalogoService sriCodigoCatalogoService;
 
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.ENVIO_SRI;
@@ -48,6 +46,15 @@ public class EnvioSriWorkflowStep {
 				etapa().name(), respuesta.respuestaXml()));
 	}
 
+	private void validarCodigosSri(ContextoWorkflow contexto, SriResponse respuesta) {
+		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
+		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador()).filter(codigo -> codigo != null && !codigo.isBlank())
+				.filter(codigo -> !sriCodigoCatalogoService.esCodigoConocido(codigo))
+				.forEach(codigo -> LOGGER.warn(
+						"ID_TRANSACCION={} - Etapa {} - Código SRI no parametrizado en COD_ERROR_SRI: {}",
+						idTransaccion, etapa().name(), codigo));
+	}
+
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getXmlFirmado() == null || contexto.getXmlFirmado().isBlank()) {
 			throw new ApplicationException(MessageCodes.FIRMA_XML_REQUERIDO);
@@ -56,6 +63,7 @@ public class EnvioSriWorkflowStep {
 		SriResponse respuesta = sriService.enviar(contexto.getXmlFirmado());
 		contexto.setEstadoSri(respuesta.estado());
 		registrarRespuestaSri(contexto, respuesta);
+		validarCodigosSri(contexto, respuesta);
 
 		if (respuesta.exitoso()) {
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.ENVIADO_SRI.name());
