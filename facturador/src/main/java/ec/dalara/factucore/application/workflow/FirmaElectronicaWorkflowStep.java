@@ -45,7 +45,7 @@ public class FirmaElectronicaWorkflowStep   {
 			throw new ApplicationException(MessageCodes.FIRMA_XML_REQUERIDO);
 		}
 
-		char[] password = passwordPort.obtenerPassword(contexto.getSolicitud().getIdEmpresa());
+		char[] password = passwordPort.obtenerPassword();
 		try {
 			String xmlFirmado = firmaElectronicaService.firmar(contexto.getSolicitud().getIdEmpresa(),
 					contexto.getXml(), password, contexto.getSolicitud().getFechaInicio());

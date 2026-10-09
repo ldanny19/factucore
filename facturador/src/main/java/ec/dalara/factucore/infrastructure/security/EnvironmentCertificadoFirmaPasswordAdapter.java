@@ -1,27 +1,27 @@
 package ec.dalara.factucore.infrastructure.security;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.CertificadoFirmaPasswordPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class EnvironmentCertificadoFirmaPasswordAdapter implements CertificadoFirmaPasswordPort {
 
-	private static final String PREFIJO = "FACTUCORE_CERTIFICADO_PASSWORD_";
+	private static final String PROPIEDAD_PASSWORD = "FACTUCORE_FIRMA_PASSWORD";
+
+	private final Environment environment;
 
 	@Override
-	public char[] obtenerPassword(Long empresaId) {
-		if (empresaId == null) {
-			throw new ApplicationException(MessageCodes.FIRMA_CERTIFICADO_EMPRESA_REQUERIDA);
-		}
+	public char[] obtenerPassword() {
+		String password = environment.getProperty(PROPIEDAD_PASSWORD);
 
-		String variable = PREFIJO + empresaId;
-		String password = System.getenv(variable);
-
-		if (password == null || password.isEmpty()) {
-			throw new ApplicationException(MessageCodes.FIRMA_CERTIFICADO_PASSWORD_NO_CONFIGURADA, empresaId);
+		if (password == null || password.isBlank()) {
+			throw new ApplicationException(MessageCodes.FIRMA_CERTIFICADO_PASSWORD_NO_CONFIGURADA);
 		}
 
 		return password.toCharArray();
