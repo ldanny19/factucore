@@ -36,7 +36,9 @@ class GeneracionClaveAccesoWorkflowStepTest {
 	void generaClaveDespuesDeAsignarSecuencial() {
 		var comprobanteAuditoriaService = mock(ComprobanteAuditoriaService.class);
 		var comprobanteService = mock(ComprobanteService.class);
-		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService);
+		var persistenciaSeccionesComprobanteService = mock(PersistenciaSeccionesComprobanteService.class);
+		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService,
+				persistenciaSeccionesComprobanteService);
 		var messageResolver = mock(ec.dalara.factucore.application.MessageResolver.class);
 		var workflowEtapaExecutor = new WorkflowEtapaExecutor(workflowResultadoService, messageResolver);
 		var claveAccesoService = mock(ClaveAccesoService.class);
