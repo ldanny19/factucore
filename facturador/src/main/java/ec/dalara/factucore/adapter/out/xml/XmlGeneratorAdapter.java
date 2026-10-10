@@ -132,7 +132,30 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
         agregarHijos(document, xml, elemento, contextoHijos, contextoJson, definition,
                 contextoFactuCore, contextoGenerado, rutaPadre);
 
+        /*
+         * Los elementos contenedores opcionales solo se generan cuando al menos
+         * uno de sus hijos se ha generado. Evita producir etiquetas vacías como
+         * <compensaciones/> cuando no hay datos para sus elementos internos.
+         * Los elementos obligatorios se conservan para que la validación XSD
+         * pueda informar correctamente si falta su contenido.
+         */
+        if (elemento.getElementoPadreId() != null
+                && tieneHijos(elemento, definition)
+                && !tieneHijosGenerados(xml)
+                && esElementoOpcional(elemento)) {
+            return null;
+        }
+
         return xml;
+    }
+
+    private boolean tieneHijosGenerados(Element elemento) {
+        for (int i = 0; i < elemento.getChildNodes().getLength(); i++) {
+            if (elemento.getChildNodes().item(i).getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean esElementoOpcional(ElementoXsdModel elemento) {
