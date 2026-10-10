@@ -81,29 +81,33 @@ public class AutorizacionSriWorkflowStep {
 
 		if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
 			contexto.setNumeroAutorizacion(respuesta.identificador());
-			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZADO.name());
+			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_SRI.name());
+			contexto.getComprobante().setEstadoSri("AUTORIZADO");
 			contexto.getComprobante().setFechaProximoReproceso(null);
 			contexto.getComprobante().setNumeroAutorizacion(respuesta.identificador());
 			evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
 					contexto.getSolicitud().getUsuario());
-			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZADO.name(),
+			return ResultadoEtapa.exitosa(etapa(), "AUTORIZADO",
 					Map.of("numeroAutorizacion", respuesta.identificador() == null ? "" : respuesta.identificador()));
 		}
 
 		if (respuestaEnProceso(respuesta)) {
 			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1000);
+			contexto.getComprobante().setEstadoSri(respuesta.estado());
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
 			contexto.getComprobante()
 					.setFechaProximoReproceso(java.time.LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
 			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name());
 		}
 
-		contexto.getComprobante().setEstadoProceso(EstadoProceso.ERROR.name());
+		contexto.getComprobante().setEstadoSri(respuesta.estado() == null || respuesta.estado().isBlank()
+				? "NO_AUTORIZADO" : respuesta.estado());
+		contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_SRI.name());
 		contexto.getComprobante().setFechaProximoReproceso(null);
 		evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
 				contexto.getSolicitud().getUsuario());
 		var mensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
-		return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
+		return ResultadoEtapa.fallida(etapa(), "NO_AUTORIZADO",
 				mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: mensaje.identificador(),
 				mensaje == null ? null : sriCodigoCatalogoService.resolverDescripcion(mensaje.identificador(), mensaje.mensaje()));

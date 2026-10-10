@@ -68,13 +68,11 @@ public class GeneracionRideWorkflowStep {
 		} catch (ApplicationException exception) {
 			throw exception;
 		} catch (RuntimeException exception) {
-			comprobante.setEstadoProceso(EstadoProceso.ERROR.name());
-			comprobante.setFechaProximoReproceso(null);
 			String mensaje = messageResolver.resolver(MessageCodes.RIDE_GENERACION_ERROR);
 			String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
 			LOGGER.error(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_ERROR, idTransaccion, etapa(),
 					MessageCodes.RIDE_GENERACION_ERROR, mensaje), exception);
-			return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(), MessageCodes.RIDE_GENERACION_ERROR, mensaje);
+			return ResultadoEtapa.fallida(etapa(), null, MessageCodes.RIDE_GENERACION_ERROR, mensaje);
 		}
 	}
 }

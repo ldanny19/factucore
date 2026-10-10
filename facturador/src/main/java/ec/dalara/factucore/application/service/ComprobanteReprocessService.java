@@ -35,15 +35,16 @@ public class ComprobanteReprocessService {
 
 		var contexto = ContextoWorkflow.existente(comprobante, null);
 		var resultadoAutorizacion = ejecutarYAuditar(contexto, autorizacionSri);
+		ResultadoEtapa resultadoRide = null;
 
-		if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
-			ejecutarYAuditar(contexto, generacionRide);
+		if ("AUTORIZADO".equals(resultadoAutorizacion.getEstado())) {
+			resultadoRide = ejecutarYAuditar(contexto, generacionRide);
 		}
 
 		if (!resultadoAutorizacion.isExitosa()) {
 			comprobante.setCodigoError(resultadoAutorizacion.getCodigoError());
 			comprobante.setMensajeError(resultadoAutorizacion.getMensaje());
-		} else if (EstadoProceso.AUTORIZADO.name().equals(resultadoAutorizacion.getEstado())) {
+		} else if (resultadoRide == null || resultadoRide.isExitosa()) {
 			comprobante.setCodigoError(null);
 			comprobante.setMensajeError(null);
 		}

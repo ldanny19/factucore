@@ -93,6 +93,9 @@ public class GeneracionXmlWorkflowStep  {
 				contextoFactuCore,
 				contextoGenerado);
 		contexto.setXml(xml);
+		if (contexto.getComprobante() != null) {
+			contexto.getComprobante().setEstadoProceso(ec.dalara.factucore.domain.workflow.EstadoProceso.XML_GENERADO.name());
+		}
 
 		log.debug(messageResolver.resolver(MessageCodes.LOG_XML_GENERADO, xml));
 

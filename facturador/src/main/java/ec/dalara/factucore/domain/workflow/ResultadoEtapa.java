@@ -65,10 +65,7 @@ public final class ResultadoEtapa {
 		if (etapa == EtapaWorkflow.ENVIO_SRI && "RECHAZADO".equals(estado)) {
 			return "RECHAZADO";
 		}
-		if (!exitosa) {
-			return "ERROR";
-		}
-		if (etapa == EtapaWorkflow.ENVIO_SRI && "ENVIADO_SRI".equals(estado)) {
+		if (etapa == EtapaWorkflow.ENVIO_SRI && exitosa && "ENVIADO_SRI".equals(estado)) {
 			return "RECIBIDO";
 		}
 		if (etapa == EtapaWorkflow.AUTORIZACION_SRI) {
@@ -78,7 +75,12 @@ public final class ResultadoEtapa {
 			if ("AUTORIZACION_PENDIENTE".equals(estado)) {
 				return "EN_PROCESO";
 			}
-			return "NO_AUTORIZADO";
+			if ("NO_AUTORIZADO".equals(estado)) {
+				return "NO_AUTORIZADO";
+			}
+		}
+		if (!exitosa) {
+			return "ERROR";
 		}
 		return "OK";
 	}

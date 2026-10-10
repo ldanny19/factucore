@@ -54,8 +54,9 @@ public class FirmaElectronicaWorkflowStep   {
 			String ruta = evidenciaPort.guardarXmlFirmado(contexto.getComprobanteId(), xmlFirmado,
 					contexto.getSolicitud().getUsuario());
 			contexto.getComprobante().setRutaXmlFirmado(ruta);
+			contexto.getComprobante().setEstadoProceso(EstadoProceso.FIRMADO.name());
 
-			return ResultadoEtapa.exitosa(etapa(), "COMPLETADA");
+			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.FIRMADO.name());
 		} finally {
 			Arrays.fill(password, '\0');
 		}

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
 import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
@@ -32,10 +31,7 @@ public class WorkflowResultadoService {
 			if (!resultado.isExitosa()) {
 				contexto.getComprobante().setCodigoError(resultado.getCodigoError());
 				contexto.getComprobante().setMensajeError(resultado.getMensaje());
-				if (resultado.getEstado() != null) {
-					contexto.getComprobante().setEstadoProceso(resultado.getEstado());
-				}
-			} else if (!EstadoProceso.ERROR.name().equals(resultado.getEstado())) {
+			} else {
 				contexto.getComprobante().setCodigoError(null);
 				contexto.getComprobante().setMensajeError(null);
 			}

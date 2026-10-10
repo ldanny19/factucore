@@ -105,6 +105,9 @@ public class Comprobante implements EstadoRegistroEntity {
 	@Column(name = "estado_proceso", nullable = false, length = 50)
 	private String estadoProceso;
 
+	@Column(name = "estado_sri", length = 50)
+	private String estadoSri;
+
 	@Column(name = "ruta_xml_firmado", length = 1000)
 	private String rutaXmlFirmado;
 

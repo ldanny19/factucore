@@ -53,7 +53,8 @@ public class NotificacionWorkflowStep {
 
 		try {
 			notificacionPort.publicar(contexto);
-			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.RIDE_GENERADO.name(),
+			comprobante.setEstadoProceso(EstadoProceso.NOTIFICACION_PUBLICADA.name());
+			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.NOTIFICACION_PUBLICADA.name(),
 					Map.of("notificacionPublicada", true));
 		} catch (RuntimeException exception) {
 			String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();

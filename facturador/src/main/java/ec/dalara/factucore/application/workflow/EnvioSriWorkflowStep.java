@@ -64,12 +64,15 @@ public class EnvioSriWorkflowStep {
 		registrarRespuestaSri(contexto, respuesta);
 		validarCodigosSri(contexto, respuesta);
 
+		contexto.getComprobante().setEstadoSri(respuesta.estado() == null || respuesta.estado().isBlank()
+				? (respuesta.exitoso() ? "RECIBIDO" : "RECHAZADO")
+				: respuesta.estado());
+
 		if (respuesta.exitoso()) {
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.ENVIADO_SRI.name());
 			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.ENVIADO_SRI.name());
 		}
 
-		contexto.getComprobante().setEstadoProceso(EstadoProceso.ERROR.name());
 		return ResultadoEtapa.fallida(etapa(), "RECHAZADO",
 				respuesta.mensajes().isEmpty() ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: respuesta.mensajes().get(0).identificador(),

@@ -99,6 +99,8 @@ public final class ContextoWorkflow {
 
 		contexto.fechaAutorizacion = comprobante.getFechaAutorizacion();
 
+		contexto.estadoSri = comprobante.getEstadoSri();
+
 		return contexto;
 	}
 

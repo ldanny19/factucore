@@ -47,7 +47,7 @@ public class WorkflowEtapaExecutor {
 					? applicationException.getParametros()
 					: new Object[] { etapa.name() };
 			String mensaje = messageResolver.resolver(codigo, parametros);
-			ResultadoEtapa resultadoError = ResultadoEtapa.fallida(etapa, EstadoProceso.ERROR.name(), codigo, mensaje);
+			ResultadoEtapa resultadoError = ResultadoEtapa.fallida(etapa, null, codigo, mensaje);
 			if (contexto != null) {
 				workflowResultadoService.registrar(contexto, resultadoError);
 			}
