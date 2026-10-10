@@ -13,6 +13,25 @@ public class SriCodigoCatalogoService {
 	private final CatalogoService catalogoService;
 	private final CatalogoItemService catalogoItemService;
 
+	public String resolverDescripcion(String codigo, String mensajeAlternativo) {
+		if (codigo != null && !codigo.isBlank()) {
+			var item = catalogoService.obtenerPorCodigo(CATALOGO_CODIGO)
+					.filter(catalogo -> EstadoRegistro.ACTIVO.equals(catalogo.getEstadoRegistro()))
+					.flatMap(catalogo -> catalogoItemService.obtenerPorCatalogoYCodigo(catalogo.getId(), codigo));
+			if (item.isPresent()) {
+				String descripcion = item.get().getDescripcion();
+				if (descripcion != null && !descripcion.isBlank()) {
+					return descripcion;
+				}
+				String nombre = item.get().getNombre();
+				if (nombre != null && !nombre.isBlank()) {
+					return nombre;
+				}
+			}
+		}
+		return mensajeAlternativo;
+	}
+
 	public boolean esCodigoConocido(String codigo) {
 		if (codigo == null || codigo.isBlank()) {
 			return false;

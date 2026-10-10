@@ -56,9 +56,7 @@ public class AutorizacionSriWorkflowStep {
 		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
 		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador()).filter(codigo -> codigo != null && !codigo.isBlank())
 				.filter(codigo -> !sriCodigoCatalogoService.esCodigoConocido(codigo))
-				.forEach(codigo -> LOGGER.warn(
-						"ID_TRANSACCION={} - Etapa {} - Código SRI no parametrizado en COD_ERROR_SRI: {}",
-						idTransaccion, etapa().name(), codigo));
+				.forEach(codigo -> LOGGER.warn(messageResolver.resolver(MessageCodes.LOG_SRI_CODIGO_NO_PARAMETRIZADO, idTransaccion, etapa().name(), codigo)));
 	}
 
 	private boolean respuestaEnProceso(SriResponse respuesta) {
@@ -108,7 +106,7 @@ public class AutorizacionSriWorkflowStep {
 		return ResultadoEtapa.fallida(etapa(), EstadoProceso.ERROR.name(),
 				mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: mensaje.identificador(),
-				mensaje == null ? null : mensaje.mensaje());
+				mensaje == null ? null : sriCodigoCatalogoService.resolverDescripcion(mensaje.identificador(), mensaje.mensaje()));
 	}
 
 	private void esperar(long esperaMs) {
@@ -118,7 +116,7 @@ public class AutorizacionSriWorkflowStep {
 			Thread.sleep(esperaMs);
 		} catch (InterruptedException exception) {
 			Thread.currentThread().interrupt();
-			throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
+			throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION, exception);
 		}
 	}
 }

@@ -50,9 +50,7 @@ public class EnvioSriWorkflowStep {
 		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
 		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador()).filter(codigo -> codigo != null && !codigo.isBlank())
 				.filter(codigo -> !sriCodigoCatalogoService.esCodigoConocido(codigo))
-				.forEach(codigo -> LOGGER.warn(
-						"ID_TRANSACCION={} - Etapa {} - Código SRI no parametrizado en COD_ERROR_SRI: {}",
-						idTransaccion, etapa().name(), codigo));
+				.forEach(codigo -> LOGGER.warn(messageResolver.resolver(MessageCodes.LOG_SRI_CODIGO_NO_PARAMETRIZADO, idTransaccion, etapa().name(), codigo)));
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
@@ -75,6 +73,6 @@ public class EnvioSriWorkflowStep {
 		return ResultadoEtapa.fallida(etapa(), "RECHAZADO",
 				respuesta.mensajes().isEmpty() ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: respuesta.mensajes().get(0).identificador(),
-				respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0).mensaje());
+				respuesta.mensajes().isEmpty() ? null : sriCodigoCatalogoService.resolverDescripcion(respuesta.mensajes().get(0).identificador(), respuesta.mensajes().get(0).mensaje()));
 	}
 }

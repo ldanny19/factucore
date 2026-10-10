@@ -13,6 +13,7 @@ import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionRe
 import ec.dalara.factucore.application.contract.response.MensajeResponse;
 import ec.dalara.factucore.application.contract.response.ResultadoResponse;
 import ec.dalara.factucore.application.port.out.sri.SriMensaje;
+import ec.dalara.factucore.application.service.SriCodigoCatalogoService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class ComprobanteWorkflowResponseFactory {
 
 	private final MessageResolver messageResolver;
+	private final SriCodigoCatalogoService sriCodigoCatalogoService;
 
 	public ComprobanteGeneracionResponse crear(ContextoWorkflow contexto) {
 		var comprobante = contexto == null ? null : contexto.getComprobante();
@@ -54,7 +56,7 @@ public class ComprobanteWorkflowResponseFactory {
 			for (SriMensaje mensajeSri : contexto.getMensajesSri()) {
 				MensajeResponse mensajeResponse = MensajeResponse.builder()
 						.codigo(mensajeSri.identificador())
-						.mensaje(mensajeSri.mensaje())
+						.mensaje(sriCodigoCatalogoService.resolverDescripcion(mensajeSri.identificador(), mensajeSri.mensaje()))
 						.campo(null)
 						.informacionAdicional(mensajeSri.informacionAdicional())
 						.build();
