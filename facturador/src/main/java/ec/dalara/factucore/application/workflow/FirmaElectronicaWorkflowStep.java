@@ -15,6 +15,7 @@ import ec.dalara.factucore.application.service.FirmaElectronicaService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
+import ec.dalara.factucore.domain.workflow.EstadoProceso;
 
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
