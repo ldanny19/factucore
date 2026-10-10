@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="30">
 	<Properties>
+		<Property name="LOG_PATH">${env:FACTUCORE_PATH_LOGS:-/app/logs}</Property>
 		<Property name="LOG_FILE">facturador.log</Property>
 		<Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t]
 			%c{1.} - %msg%n</Property>
@@ -10,8 +11,8 @@
 			<PatternLayout pattern="${LOG_PATTERN}" />
 		</Console>
 		<RollingFile name="File"
-			fileName="/app/logs/${LOG_FILE}"
-			filePattern="/app/logs/${date:yyyy-MM}/factucore-%d{yyyy-MM-dd}-%i.log.gz">
+			fileName="${LOG_PATH}/${LOG_FILE}"
+			filePattern="${LOG_PATH}/${date:yyyy-MM}/factucore-%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="${LOG_PATTERN}" />
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" />
