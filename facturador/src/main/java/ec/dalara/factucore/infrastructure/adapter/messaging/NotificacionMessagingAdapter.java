@@ -23,6 +23,11 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 
 	private static final String XML_AUTORIZADO = "XML_AUTORIZADO";
 	private static final String RIDE = "RIDE";
+	private static final String INFORMACION_ADICIONAL = "infoAdicional";
+	private static final String CAMPO_ADICIONAL = "campoAdicional";
+	private static final String NOMBRE = "nombre";
+	private static final String VALOR = "valor";
+	private static final String CORREO = "Correo";
 
 	private final PublicadorMensajes publicadorMensajes;
 	private final ObjectMapper objectMapper;
@@ -45,7 +50,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 				.findByComprobanteIdAndTipoEvidenciaAndActualTrue(comprobante.getId(), RIDE)
 				.orElseThrow(() -> new IllegalStateException(MessageCodes.NOTIFICACION_RIDE_REQUERIDO));
 
-		String correo = obtenerDato(contexto, "correo", "email", "correoCliente", "correo_cliente");
+		String correo = obtenerCorreo(contexto);
 
 		String nombreCliente = comprobante.getRazonSocialReceptor();
 		String nombreEmpresa = obtenerNombreEmpresa(comprobante);
@@ -73,13 +78,28 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		return comprobante.getRazonSocialEmisor();
 	}
 
-	private String obtenerDato(ContextoWorkflow contexto, String... claves) {
+	private String obtenerCorreo(ContextoWorkflow contexto) {
 		if (contexto.getSolicitud() == null || contexto.getSolicitud().getDatos() == null) {
 			return null;
 		}
 
 		JsonNode datos = contexto.getSolicitud().getDatos();
-		return buscarDato(datos, claves);
+		JsonNode camposAdicionales = datos.path(INFORMACION_ADICIONAL).path(CAMPO_ADICIONAL);
+
+		if (camposAdicionales.isArray()) {
+			for (JsonNode campo : camposAdicionales) {
+				String nombre = campo.path(NOMBRE).asText();
+				if (CORREO.equalsIgnoreCase(nombre)) {
+					JsonNode valor = campo.path(VALOR);
+					if (!valor.isMissingNode() && !valor.isNull() && !valor.isContainerNode()) {
+						return valor.asText();
+					}
+				}
+			}
+		}
+
+		// Compatibilidad con solicitudes que envían el correo como una propiedad directa.
+		return buscarDato(datos, "correo", "email", "correoCliente", "correo_cliente");
 	}
 
 	private String buscarDato(JsonNode nodo, String... claves) {
