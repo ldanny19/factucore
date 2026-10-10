@@ -240,6 +240,13 @@
 			<version>6.21.5</version>
 		</dependency>
 
+		<!-- Barcode4J requerido por las plantillas Jasper que generan códigos de barras -->
+		<dependency>
+			<groupId>net.sf.barcode4j</groupId>
+			<artifactId>barcode4j</artifactId>
+			<version>2.1</version>
+		</dependency>
+
 		<!-- Mensajeria generica Kafka/RabbitMQ -->
 		<dependency>
 			<groupId>ec.dalara.factucore</groupId>
