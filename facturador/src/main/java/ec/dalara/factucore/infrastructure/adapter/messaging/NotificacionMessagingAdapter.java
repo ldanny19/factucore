@@ -1,5 +1,8 @@
 package ec.dalara.factucore.infrastructure.adapter.messaging;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -56,9 +59,19 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		String nombreCliente = comprobante.getRazonSocialReceptor();
 		String nombreEmpresa = obtenerNombreEmpresa(comprobante);
 
-		if (nombreCliente == null || nombreCliente.isBlank() || correo == null || correo.isBlank()
-				|| nombreEmpresa == null || nombreEmpresa.isBlank()) {
-			throw new IllegalStateException(MessageCodes.NOTIFICACION_DATOS_CLIENTE_REQUERIDOS);
+		List<String> datosFaltantes = new ArrayList<>();
+		if (nombreCliente == null || nombreCliente.isBlank()) {
+			datosFaltantes.add("razonSocialReceptor");
+		}
+		if (correo == null || correo.isBlank()) {
+			datosFaltantes.add("correo destinatario (infoAdicional.campoAdicional[nombre=Correo].valor)");
+		}
+		if (nombreEmpresa == null || nombreEmpresa.isBlank()) {
+			datosFaltantes.add("razonSocialEmisor/nombreComercialEmisor");
+		}
+		if (!datosFaltantes.isEmpty()) {
+			throw new IllegalStateException(MessageCodes.NOTIFICACION_DATOS_CLIENTE_REQUERIDOS
+					+ ": " + String.join(", ", datosFaltantes));
 		}
 
 		var payload = new ComprobanteAutorizado(comprobante.getIdTransaccion(), nombreCliente, correo,

@@ -16,6 +16,8 @@ import ec.dalara.factucore.application.port.out.sri.SriMensaje;
 import ec.dalara.factucore.application.service.SriCodigoCatalogoService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
+import ec.dalara.factucore.infrastructure.persistence.repository.EstablecimientoRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.PuntoEmisionRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -31,14 +33,35 @@ public class ComprobanteWorkflowResponseFactory {
 
 	private final MessageResolver messageResolver;
 	private final SriCodigoCatalogoService sriCodigoCatalogoService;
+	private final EstablecimientoRepository establecimientoRepository;
+	private final PuntoEmisionRepository puntoEmisionRepository;
+
+	private String obtenerNumeroComprobante(ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+		if (comprobante == null || comprobante.getEstablecimiento() == null || comprobante.getPuntoEmision() == null) {
+			return null;
+		}
+
+		Long establecimientoId = comprobante.getEstablecimiento().getId();
+		Long puntoEmisionId = comprobante.getPuntoEmision().getId();
+		if (establecimientoId == null || puntoEmisionId == null) {
+			return null;
+		}
+
+		var establecimiento = establecimientoRepository.findById(establecimientoId).orElse(null);
+		var puntoEmision = puntoEmisionRepository.findById(puntoEmisionId).orElse(null);
+		if (establecimiento == null || puntoEmision == null) {
+			return null;
+		}
+
+		return comprobante.getCodigoDocumento() + "-" + establecimiento.getCodigo() + "-"
+				+ puntoEmision.getCodigo() + "-" + comprobante.getSecuencial();
+	}
 
 	public ComprobanteGeneracionResponse crear(ContextoWorkflow contexto) {
 		var comprobante = contexto == null ? null : contexto.getComprobante();
 		var request = contexto == null ? null : contexto.getSolicitud();
 
-		String numeroComprobante = comprobante == null ? null
-				: comprobante.getCodigoDocumento() + "-" + comprobante.getEstablecimiento().getCodigo() + "-"
-						+ comprobante.getPuntoEmision().getCodigo() + "-" + comprobante.getSecuencial();
+		String numeroComprobante = obtenerNumeroComprobante(comprobante);
 
 		var ultimo = contexto == null ? null : contexto.getUltimoResultado();
 		boolean exitoso = contexto != null && Boolean.TRUE.equals(contexto.getExitosoFinal());
