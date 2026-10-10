@@ -23,6 +23,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 
 	private static final String XML_AUTORIZADO = "XML_AUTORIZADO";
 	private static final String RIDE = "RIDE";
+	private static final String FACTURA = "factura";
 	private static final String INFORMACION_ADICIONAL = "infoAdicional";
 	private static final String CAMPO_ADICIONAL = "campoAdicional";
 	private static final String NOMBRE = "nombre";
@@ -84,7 +85,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		}
 
 		JsonNode datos = contexto.getSolicitud().getDatos();
-		JsonNode camposAdicionales = datos.path(INFORMACION_ADICIONAL).path(CAMPO_ADICIONAL);
+		JsonNode camposAdicionales = datos.path(FACTURA).path(INFORMACION_ADICIONAL).path(CAMPO_ADICIONAL);
 
 		if (camposAdicionales.isArray()) {
 			for (JsonNode campo : camposAdicionales) {
