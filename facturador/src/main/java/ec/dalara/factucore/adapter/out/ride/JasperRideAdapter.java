@@ -75,7 +75,7 @@ public class JasperRideAdapter implements RidePort {
 		Path plantilla = directorio.resolve(nombrePlantilla + ".jrxml");
 
 		if (!Files.isDirectory(directorio) || !Files.isRegularFile(plantilla)) {
-			throw new ApplicationException(MessageCodes.RIDE_PLANTILLA_NO_ENCONTRADA, nombrePlantilla);
+			throw new ApplicationException(MessageCodes.RIDE_PLANTILLA_NO_ENCONTRADA, plantilla.getFileName().toString());
 		}
 
 		Path directorioCompilado = null;
