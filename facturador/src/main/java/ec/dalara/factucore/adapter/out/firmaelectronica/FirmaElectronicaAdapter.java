@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -23,10 +24,14 @@ import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.Pkcs12SignatureToken;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.reference.DSSReference;
+import eu.europa.esig.dss.xades.reference.EnvelopedSignatureTransform;
 import eu.europa.esig.dss.xades.signature.XAdESService;
 
 @Component
 public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
+
+	private static final String URI_COMPROBANTE = "#comprobante";
 
 	@Override
 	public String firmar(String xml, CertificadoFirmaModel certificado, char[] password) {
@@ -42,7 +47,7 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 			DSSDocument documento = new eu.europa.esig.dss.model.InMemoryDocument(xml.getBytes(StandardCharsets.UTF_8),
 					"comprobante.xml");
 
-			XAdESSignatureParameters parameters = crearParametros(privateKey);
+			XAdESSignatureParameters parameters = crearParametros(privateKey, documento);
 
 			CommonCertificateVerifier certificateVerifier = new CommonCertificateVerifier();
 
@@ -101,7 +106,7 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 		return claves.get(0);
 	}
 
-	private XAdESSignatureParameters crearParametros(DSSPrivateKeyEntry privateKey) {
+	private XAdESSignatureParameters crearParametros(DSSPrivateKeyEntry privateKey, DSSDocument documento) {
 		XAdESSignatureParameters parameters = new XAdESSignatureParameters();
 
 		parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
@@ -113,6 +118,16 @@ public class FirmaElectronicaAdapter implements FirmaElectronicaPort {
 		parameters.setSigningCertificate(privateKey.getCertificate());
 
 		parameters.setCertificateChain(privateKey.getCertificateChain());
+
+		DSSReference referenciaComprobante = new DSSReference();
+		referenciaComprobante.setId("Reference-ID-comprobante");
+		referenciaComprobante.setUri(URI_COMPROBANTE);
+		referenciaComprobante.setContents(documento);
+		referenciaComprobante.setDigestMethodAlgorithm(DigestAlgorithm.SHA256);
+		referenciaComprobante.setTransforms(List.of(new EnvelopedSignatureTransform()));
+
+		parameters.setReferences(List.of(referenciaComprobante));
+		parameters.setSignKeyInfo(true);
 
 		return parameters;
 	}
