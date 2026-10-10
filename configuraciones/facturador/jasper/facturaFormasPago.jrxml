@@ -41,14 +41,14 @@
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement x="4" y="3" width="200" height="9" uuid="76a2c15a-293b-4661-943d-e150bd676905"/>
 				<textElement>
-					<font fontName="Arial" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{formaPago}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement stretchType="RelativeToTallestObject" x="205" y="3" width="46" height="9" uuid="bd8fc27c-0a40-4169-b79e-2bbb7a44462e"/>
 				<textElement textAlignment="Right">
-					<font fontName="Arial" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{valor}]]></textFieldExpression>
 			</textField>
