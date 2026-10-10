@@ -341,7 +341,10 @@ public class XsdParserAdapter implements XsdParserPort {
 
 		// Las enumeraciones de atributos no son enumeraciones del elemento padre.
 		// El modelo actual persiste enumeraciones asociadas a elementos, por lo que no deben mezclarse.
-		atributos.add(new XsdAttributeSource(parentPath, name, typeName, "required".equals(attr(attribute, "use")),
+		String uso = attr(attribute, "use");
+		boolean atributoRaiz = parentPath.indexOf('.') < 0;
+		boolean obligatorio = "required".equals(uso) || (uso == null && atributoRaiz);
+		atributos.add(new XsdAttributeSource(parentPath, name, typeName, obligatorio,
 				firstNonBlank(attr(attribute, "default"), attr(attribute, "fixed")), restriction.pattern));
 	}
 

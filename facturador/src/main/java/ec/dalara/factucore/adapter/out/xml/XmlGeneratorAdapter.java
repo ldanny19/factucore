@@ -362,7 +362,10 @@ public class XmlGeneratorAdapter implements XmlGeneratorPort {
 
         return switch (mapeo.getTipoOrigen().toUpperCase()) {
         case "FACTUCORE" -> factuCoreSourcePort.resolver(mapeo.getOrigen(), contextoFactuCore).resultado();
-        case "GENERADO" -> obtenerRuta(contextoGenerado, mapeo.getOrigen());
+        case "GENERADO" -> {
+            Object valorGenerado = obtenerRuta(contextoGenerado, mapeo.getOrigen());
+            yield valorGenerado != null ? valorGenerado : mapeo.getOrigen();
+        }
         case "JSON" -> {
             Object valor = obtenerRuta(contexto, obtenerRutaRelativa(mapeo.getOrigen(), rutaPadre));
             if (valor == null) {
