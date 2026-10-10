@@ -55,6 +55,11 @@ public class EnvioSriWorkflowStep {
 						idTransaccion, etapa().name(), codigo));
 	}
 
+	private boolean respuestaEnProceso(SriResponse respuesta) {
+		return "EN PROCESO".equalsIgnoreCase(respuesta.estado())
+				|| respuesta.mensajes().stream().anyMatch(mensaje -> "70".equals(mensaje.identificador()));
+	}
+
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
 		if (contexto == null || contexto.getXmlFirmado() == null || contexto.getXmlFirmado().isBlank()) {
 			throw new ApplicationException(MessageCodes.FIRMA_XML_REQUERIDO);
@@ -66,7 +71,12 @@ public class EnvioSriWorkflowStep {
 		registrarRespuestaSri(contexto, respuesta);
 		validarCodigosSri(contexto, respuesta);
 
-		if (respuesta.exitoso()) {
+		if (respuesta.exitoso() || respuestaEnProceso(respuesta)) {
+			String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
+			if (!respuesta.exitoso()) {
+				LOGGER.debug("ID_TRANSACCION={} - Etapa {} - Código SRI 70: comprobante en procesamiento; se continúa con la consulta de autorización.",
+						idTransaccion, etapa().name());
+			}
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.ENVIADO_SRI.name());
 			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.ENVIADO_SRI.name());
 		}
