@@ -240,6 +240,13 @@
 			<version>6.21.5</version>
 		</dependency>
 
+		<!-- Batik Bridge requerido por JasperReports para procesar contenido SVG -->
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-bridge</artifactId>
+			<version>1.17</version>
+		</dependency>
+
 		<!-- Barcode4J requerido por las plantillas Jasper que generan códigos de barras -->
 		<dependency>
 			<groupId>net.sf.barcode4j</groupId>
