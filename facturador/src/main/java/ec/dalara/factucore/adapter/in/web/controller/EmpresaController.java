@@ -38,7 +38,7 @@ public class EmpresaController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<EmpresaResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<EmpresaResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<EmpresaRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -46,7 +46,7 @@ public class EmpresaController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<EmpresaResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<EmpresaResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerEmpresa(id)));
 	}
 
@@ -56,19 +56,19 @@ public class EmpresaController {
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarEmpresa(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarEmpresa(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarEmpresa(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

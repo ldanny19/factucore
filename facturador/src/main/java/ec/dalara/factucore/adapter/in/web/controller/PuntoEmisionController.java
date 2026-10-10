@@ -39,7 +39,7 @@ public class PuntoEmisionController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<PuntoEmisionResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<PuntoEmisionResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<PuntoEmisionRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -47,30 +47,30 @@ public class PuntoEmisionController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<PuntoEmisionResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<PuntoEmisionResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerPuntoEmision(id)));
 	}
 
 	@GetMapping
 	public ResponseEntity<AdministracionResponse<List<PuntoEmisionResponse>>> listar(
-			@RequestParam Long idEstablecimiento) {
+			@RequestParam("idEstablecimiento") Long idEstablecimiento) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.listarPuntosEmision(idEstablecimiento)));
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarPuntoEmision(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarPuntoEmision(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarPuntoEmision(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

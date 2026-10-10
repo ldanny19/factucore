@@ -39,7 +39,7 @@ public class ConfiguracionEmpresaController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<ConfiguracionEmpresaResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<ConfiguracionEmpresaResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<ConfiguracionEmpresaRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -47,30 +47,30 @@ public class ConfiguracionEmpresaController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<ConfiguracionEmpresaResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<ConfiguracionEmpresaResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerConfiguracion(id)));
 	}
 
 	@GetMapping
 	public ResponseEntity<AdministracionResponse<List<ConfiguracionEmpresaResponse>>> listar(
-			@RequestParam Long idEmpresa) {
+			@RequestParam("idEmpresa") Long idEmpresa) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.listarConfiguraciones(idEmpresa)));
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarConfiguracion(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarConfiguracion(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarConfiguracion(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

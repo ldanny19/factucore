@@ -39,7 +39,7 @@ public class EstablecimientoController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<EstablecimientoResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<EstablecimientoResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<EstablecimientoRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -47,29 +47,29 @@ public class EstablecimientoController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<EstablecimientoResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<EstablecimientoResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerEstablecimiento(id)));
 	}
 
 	@GetMapping
-	public ResponseEntity<AdministracionResponse<List<EstablecimientoResponse>>> listar(@RequestParam Long idEmpresa) {
+	public ResponseEntity<AdministracionResponse<List<EstablecimientoResponse>>> listar(@RequestParam("idEmpresa") Long idEmpresa) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.listarEstablecimientos(idEmpresa)));
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarEstablecimiento(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarEstablecimiento(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarEstablecimiento(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

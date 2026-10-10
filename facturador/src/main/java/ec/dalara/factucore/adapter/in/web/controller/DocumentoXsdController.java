@@ -44,7 +44,7 @@ public class DocumentoXsdController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<DocumentoXsdRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -52,7 +52,7 @@ public class DocumentoXsdController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerDocumentoXsd(id)));
 	}
 
@@ -63,41 +63,41 @@ public class DocumentoXsdController {
 
 	@GetMapping("/{id}/versiones")
 	public ResponseEntity<AdministracionResponse<List<VersionDocumentoXsdModel>>> listarVersiones(
-			@PathVariable Long id) {
+			@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(consulta.listarVersiones(id)));
 	}
 
 	@GetMapping("/versiones/{id}")
-	public ResponseEntity<AdministracionResponse<DocumentDefinitionModel>> obtenerDefinicion(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<DocumentDefinitionModel>> obtenerDefinicion(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(consulta.obtenerDefinicion(id)));
 	}
 
 	@GetMapping(value = "/versiones/{id}/plantilla-json", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> descargarPlantilla(@PathVariable Long id) {
+	public ResponseEntity<String> descargarPlantilla(@PathVariable("id") Long id) {
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=plantilla.json")
 				.contentType(MediaType.APPLICATION_JSON).body(consulta.obtenerPlantilla(id));
 	}
 
 	@GetMapping(value = "/versiones/{id}/esquema-json", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> descargarEsquema(@PathVariable Long id) {
+	public ResponseEntity<String> descargarEsquema(@PathVariable("id") Long id) {
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=esquema.json")
 				.contentType(MediaType.APPLICATION_JSON).body(consulta.obtenerEsquema(id));
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarDocumentoXsd(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarDocumentoXsd(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarDocumentoXsd(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

@@ -38,7 +38,7 @@ public class SecuencialController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<SecuencialResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<SecuencialResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<SecuencialRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -46,7 +46,7 @@ public class SecuencialController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<SecuencialResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<SecuencialResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerSecuencial(id)));
 	}
 
@@ -56,19 +56,19 @@ public class SecuencialController {
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarSecuencial(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarSecuencial(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarSecuencial(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

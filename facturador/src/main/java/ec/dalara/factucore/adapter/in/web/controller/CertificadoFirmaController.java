@@ -40,7 +40,7 @@ public class CertificadoFirmaController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<CertificadoFirmaResponse>> actualizar(@PathVariable Long id,
+	public ResponseEntity<AdministracionResponse<CertificadoFirmaResponse>> actualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AdministracionRequest<CertificadoFirmaRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
@@ -48,29 +48,29 @@ public class CertificadoFirmaController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<CertificadoFirmaResponse>> obtener(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<CertificadoFirmaResponse>> obtener(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.obtenerCertificadoFirma(id)));
 	}
 
 	@GetMapping
-	public ResponseEntity<AdministracionResponse<List<CertificadoFirmaResponse>>> listar(@RequestParam Long idEmpresa) {
+	public ResponseEntity<AdministracionResponse<List<CertificadoFirmaResponse>>> listar(@RequestParam("idEmpresa") Long idEmpresa) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(port.listarCertificadosFirma(idEmpresa)));
 	}
 
 	@PatchMapping("/{id}/inactivar")
-	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> inactivar(@PathVariable("id") Long id) {
 		port.inactivarCertificadoFirma(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@PatchMapping("/{id}/reactivar")
-	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> reactivar(@PathVariable("id") Long id) {
 		port.reactivarCertificadoFirma(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable Long id) {
+	public ResponseEntity<AdministracionResponse<Void>> eliminar(@PathVariable("id") Long id) {
 		port.eliminarCertificadoFirma(id);
 		return ResponseEntity.ok(respuestas.exitoConsulta(null));
 	}

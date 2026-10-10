@@ -39,7 +39,7 @@ public class MapeoXsdController {
 
 	@GetMapping("/version/{versionDocumentoXsdId}")
 	public ResponseEntity<AdministracionResponse<List<MapeoXsdResponse>>> listarPorVersion(
-			@PathVariable Long versionDocumentoXsdId) {
+			@PathVariable("versionDocumentoXsdId") Long versionDocumentoXsdId) {
 		return ResponseEntity.ok(respuestas.exitoConsulta(mapeoXsdService.listarPorVersion(versionDocumentoXsdId)));
 	}
 }

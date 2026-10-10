@@ -27,7 +27,7 @@ public class ComprobanteController {
 	}
 
 	@PostMapping("/{id}/reprocesar")
-	public ResponseEntity<ComprobanteGeneracionResponse> reprocesar(@PathVariable Long id) {
+	public ResponseEntity<ComprobanteGeneracionResponse> reprocesar(@PathVariable("id") Long id) {
 		workflowPort.reprocesar(id);
 		return ResponseEntity.ok(ComprobanteGeneracionResponse.builder().exitoso(true).build());
 	}
