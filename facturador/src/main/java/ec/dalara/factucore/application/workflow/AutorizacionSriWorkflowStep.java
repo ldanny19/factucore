@@ -77,6 +77,7 @@ public class AutorizacionSriWorkflowStep {
 
 		SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
 		contexto.setEstadoSri(respuesta.estado());
+		contexto.setMensajesSri(respuesta.mensajes());
 		registrarRespuestaSri(contexto, respuesta);
 		validarCodigosSri(contexto, respuesta);
 

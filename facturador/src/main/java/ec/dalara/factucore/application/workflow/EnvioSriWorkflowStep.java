@@ -62,6 +62,7 @@ public class EnvioSriWorkflowStep {
 
 		SriResponse respuesta = sriService.enviar(contexto.getXmlFirmado());
 		contexto.setEstadoSri(respuesta.estado());
+		contexto.setMensajesSri(respuesta.mensajes());
 		registrarRespuestaSri(contexto, respuesta);
 		validarCodigosSri(contexto, respuesta);
 

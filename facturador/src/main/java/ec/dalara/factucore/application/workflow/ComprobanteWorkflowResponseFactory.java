@@ -2,7 +2,9 @@ package ec.dalara.factucore.application.workflow;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Component;
 
@@ -10,6 +12,7 @@ import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.contract.response.MensajeResponse;
 import ec.dalara.factucore.application.contract.response.ResultadoResponse;
+import ec.dalara.factucore.application.port.out.sri.SriMensaje;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import lombok.RequiredArgsConstructor;
@@ -42,13 +45,41 @@ public class ComprobanteWorkflowResponseFactory {
 
 		List<MensajeResponse> errores = contexto == null ? List.of() : contexto.getErroresValidacion();
 		List<MensajeResponse> advertencias = List.of();
+		List<MensajeResponse> mensajesInformativos = List.of();
+		List<MensajeResponse> erroresSri = new ArrayList<>();
+		List<MensajeResponse> advertenciasSri = new ArrayList<>();
+		List<MensajeResponse> mensajesSri = new ArrayList<>();
+
+		if (contexto != null && !contexto.getMensajesSri().isEmpty()) {
+			for (SriMensaje mensajeSri : contexto.getMensajesSri()) {
+				MensajeResponse mensajeResponse = MensajeResponse.builder()
+						.codigo(mensajeSri.identificador())
+						.mensaje(mensajeSri.mensaje())
+						.campo(null)
+						.informacionAdicional(mensajeSri.informacionAdicional())
+						.build();
+
+				String tipo = mensajeSri.tipo() == null ? "" : mensajeSri.tipo().trim().toUpperCase(Locale.ROOT);
+				switch (tipo) {
+				case "ERROR" -> erroresSri.add(mensajeResponse);
+				case "ADVERTENCIA", "WARNING" -> advertenciasSri.add(mensajeResponse);
+				default -> mensajesSri.add(mensajeResponse);
+				}
+			}
+			errores = erroresSri;
+			advertencias = advertenciasSri;
+			mensajesInformativos = mensajesSri;
+		}
+
 		List<MensajeResponse> validacionMensajes = List.of();
 		if (contexto != null && contexto.getValidacionXsd() != null) {
 			errores = contexto.getValidacionXsd().getErrores();
 			advertencias = contexto.getValidacionXsd().getAdvertencias();
 			validacionMensajes = contexto.getValidacionXsd().getMensajes();
 		}
-		if (errores.isEmpty() && ultimo != null && !ultimo.isExitosa()) {
+
+		if ((contexto == null || contexto.getMensajesSri().isEmpty())
+				&& errores.isEmpty() && ultimo != null && !ultimo.isExitosa()) {
 			errores = List.of(MensajeResponse.builder().codigo(ultimo.getCodigoError()).mensaje(ultimo.getMensaje()).build());
 		}
 		if (!exitoso && (codigo == null || mensaje == null) && !errores.isEmpty()) {
@@ -56,7 +87,7 @@ public class ComprobanteWorkflowResponseFactory {
 			mensaje = errores.get(0).getMensaje();
 		}
 
-		List<MensajeResponse> mensajes = contexto != null && contexto.isErrorNotificacion()
+		List<MensajeResponse> mensajesNotificacion = contexto != null && contexto.isErrorNotificacion()
 				? List.of(MensajeResponse.builder()
 						.codigo(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)
 						.mensaje(messageResolver.resolver(MessageCodes.NOTIFICACION_PUBLICACION_ERROR))
@@ -66,7 +97,8 @@ public class ComprobanteWorkflowResponseFactory {
 		ResultadoResponse resultado = ResultadoResponse.builder()
 				.errores(errores)
 				.advertencias(advertencias)
-				.mensajes(validacionMensajes.isEmpty() ? mensajes : validacionMensajes)
+				.mensajes(!validacionMensajes.isEmpty() ? validacionMensajes
+						: (!mensajesInformativos.isEmpty() ? mensajesInformativos : mensajesNotificacion))
 				.build();
 
 		return ComprobanteGeneracionResponse.builder()

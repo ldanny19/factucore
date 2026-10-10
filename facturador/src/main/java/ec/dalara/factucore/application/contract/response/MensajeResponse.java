@@ -16,4 +16,6 @@ public class MensajeResponse {
 	private String mensaje;
 
 	private String campo;
+
+	private String informacionAdicional;
 }

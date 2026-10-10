@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
+import ec.dalara.factucore.application.port.out.sri.SriMensaje;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
@@ -43,6 +44,8 @@ public final class ContextoWorkflow {
 	private LocalDateTime fechaAutorizacion;
 
 	private String estadoSri;
+
+	private List<SriMensaje> mensajesSri = List.of();
 
 	private EtapaWorkflow etapaActual;
 
@@ -318,6 +321,14 @@ public final class ContextoWorkflow {
 
 	public void setEstadoSri(String estadoSri) {
 		this.estadoSri = estadoSri;
+	}
+
+	public List<SriMensaje> getMensajesSri() {
+		return mensajesSri;
+	}
+
+	public void setMensajesSri(List<SriMensaje> mensajesSri) {
+		this.mensajesSri = mensajesSri == null ? List.of() : List.copyOf(mensajesSri);
 	}
 
 	public EtapaWorkflow getEtapaActual() {
