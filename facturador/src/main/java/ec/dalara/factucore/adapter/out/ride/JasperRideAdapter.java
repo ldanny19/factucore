@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.application.service.ComprobanteDetalleImpuestoService;
 import ec.dalara.factucore.application.service.ComprobanteDetalleService;
@@ -53,6 +54,7 @@ public class JasperRideAdapter implements RidePort {
 	private final ComprobanteDetalleImpuestoService comprobanteDetalleImpuestoService;
 	private final ComprobantePagoService comprobantePagoService;
 	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
+	private final MessageResolver messageResolver;
 
 	@Value("${factucore.path.jasper}")
 	private String rutaJasper;
@@ -65,7 +67,7 @@ public class JasperRideAdapter implements RidePort {
 		}
 
 		if (nombreComprobante == null || nombreComprobante.isBlank()) {
-			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, "Nombre del comprobante requerido");
+			throw new ApplicationException(MessageCodes.RIDE_NOMBRE_COMPROBANTE_REQUERIDO);
 		}
 
 		String nombrePlantilla = normalizarNombre(nombreComprobante);
@@ -73,8 +75,7 @@ public class JasperRideAdapter implements RidePort {
 		Path plantilla = directorio.resolve(nombrePlantilla + ".jrxml");
 
 		if (!Files.isDirectory(directorio) || !Files.isRegularFile(plantilla)) {
-			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR,
-					"No existe la plantilla RIDE para el comprobante: " + plantilla);
+			throw new ApplicationException(MessageCodes.RIDE_PLANTILLA_NO_ENCONTRADA, nombrePlantilla);
 		}
 
 		Path directorioCompilado = null;
@@ -90,9 +91,9 @@ public class JasperRideAdapter implements RidePort {
 
 			return JasperExportManager.exportReportToPdf(jasperPrint);
 		} catch (JRException exception) {
-			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
+			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception);
 		} catch (IOException exception) {
-			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception.getMessage());
+			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception);
 		} finally {
 			eliminarDirectorioTemporal(directorioCompilado);
 		}
@@ -258,15 +259,16 @@ public class JasperRideAdapter implements RidePort {
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		List<Map<String, Object>> resultado = new ArrayList<>();
-		resultado.add(total("Subtotal sin impuestos", subtotal, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_SIN_IMPUESTOS), subtotal, false));
 		if (descuento.signum() != 0) {
-			resultado.add(total("Descuento", descuento, true));
+			resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_DESCUENTO), descuento, true));
 		}
 		for (ComprobanteDetalleImpuesto impuesto : impuestos) {
-			String descripcion = "Impuesto " + impuesto.getCodigoImpuesto() + " - " + impuesto.getCodigoPorcentaje();
+			String descripcion = messageResolver.resolver(MessageCodes.RIDE_TOTAL_IMPUESTO,
+					impuesto.getCodigoImpuesto(), impuesto.getCodigoPorcentaje());
 			resultado.add(total(descripcion, impuesto.getValor(), false));
 		}
-		resultado.add(total("Total", subtotal.add(totalImpuestos), false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_TOTAL), subtotal.add(totalImpuestos), false));
 
 		return resultado;
 	}
