@@ -123,7 +123,7 @@ services:
         condition: service_started
     environment:
       FACTUCORE_CONFIGURACION_ZONA_HORARIA: ${FACTUCORE_CONFIGURACION_ZONA_HORARIA:-America/Guayaquil}
-      FACTUCORE_PATH_LOGS: ${FACTUCORE_PATH_LOGS:-/app/logs}
+      FACTUCORE_PATH_LOGS: /app/logs
       SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://db_factucore:5432/factucore}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-usr_factucore}
       SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
