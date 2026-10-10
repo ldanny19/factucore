@@ -37,6 +37,19 @@ public class Comprobante implements EstadoRegistroEntity {
 	@Column(name = "id_transaccion", nullable = false, length = 100)
 	private String idTransaccion;
 
+	@Column(name = "id_documento_origen")
+	private Long idDocumentoOrigen;
+
+	@Column(name = "hash_identidad", length = 64)
+	private String hashIdentidad;
+
+	@Column(name = "hash_contenido", length = 64)
+	private String hashContenido;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "comprobante_reemplazado_id")
+	private Comprobante comprobanteReemplazado;
+
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "empresa_id", nullable = false)
 	private Empresa empresa;

@@ -1,6 +1,7 @@
 package ec.dalara.factucore.application.service;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class ComprobanteSolicitudEnProcesoService {
 			ps.setLong(1, empresaId);
 			ps.setLong(2, idDocumentoOrigen);
 			ps.setString(3, idTransaccion);
-		}, rs -> rs.next()));
+		}, (ResultSetExtractor<Boolean>) rs -> rs.next()));
 	}
 
 	public void liberar(Long empresaId, Long idDocumentoOrigen, String idTransaccion) {
