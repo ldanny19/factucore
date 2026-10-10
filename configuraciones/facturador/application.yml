@@ -122,6 +122,14 @@ factucore:
     tipo-evento: ${FACTUCORE_NOTIFICACION_TIPO_EVENTO:COMPROBANTE_AUTORIZADO}
     version-evento: ${FACTUCORE_NOTIFICACION_VERSION_EVENTO:1.0}
 
+  comprobantes:
+    hash:
+      identidad:
+        campos: "idEmpresa;idEstablecimiento;idPuntoEmision;idTipoDocumento;versionXsd;datos.factura.infoFactura.identificacionComprador"
+      contenido:
+        campo: "datos"
+        algoritmo: "SHA-256"
+
   workflow:
     motor: apache-camel
     version: 4.10.7

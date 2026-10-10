@@ -69,7 +69,7 @@ public class Comprobante implements EstadoRegistroEntity {
 	@Column(name = "secuencial", nullable = false, length = 9)
 	private String secuencial;
 
-	@Column(name = "clave_acceso", nullable = false, unique = true, length = 49)
+	@Column(name = "clave_acceso", nullable = false, length = 49)
 	private String claveAcceso;
 
 	@Column(name = "fecha_emision", nullable = false)

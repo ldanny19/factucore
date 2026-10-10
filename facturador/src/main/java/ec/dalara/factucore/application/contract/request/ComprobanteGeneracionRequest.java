@@ -23,6 +23,8 @@ public class ComprobanteGeneracionRequest {
 	@Size(max = 100)
 	private String idTransaccion;
 
+	private Long idDocumentoOrigen;
+
 	@NotNull
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
 	private LocalDateTime fechaInicio;

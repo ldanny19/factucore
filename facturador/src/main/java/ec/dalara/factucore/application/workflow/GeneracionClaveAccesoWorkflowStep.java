@@ -53,11 +53,9 @@ public class GeneracionClaveAccesoWorkflowStep   {
 			throw new ApplicationException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
 		}
 
-		if (contexto.getClaveAcceso() != null && !contexto.getClaveAcceso().isBlank()) {
-			if (!claveAccesoService.validar(contexto.getClaveAcceso())) {
-				throw new ApplicationException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
-			}
-			return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "YA_GENERADA");
+		boolean claveExistente = contexto.getClaveAcceso() != null && !contexto.getClaveAcceso().isBlank();
+		if (claveExistente && !claveAccesoService.validar(contexto.getClaveAcceso())) {
+			throw new ApplicationException(MessageCodes.CLAVE_ACCESO_FORMATO_INVALIDO);
 		}
 
 		if (contexto.getSecuencial() == null || contexto.getSecuencial().isBlank()) {
@@ -86,6 +84,12 @@ public class GeneracionClaveAccesoWorkflowStep   {
 		contexto.setValorGenerado("tipoDocumento", documento.getTipoDocumento());
 		contexto.setValorGenerado("idDocumentoXml", "comprobante");
 		contexto.setValorGenerado("versionDocumento", definition.getVersion().getVersion());
+
+		if (claveExistente) {
+			contexto.setValorGenerado("claveAcceso", contexto.getClaveAcceso());
+			contexto.setValorGenerado("secuencial", contexto.getSecuencial());
+			return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "YA_GENERADA");
+		}
 
 		var datos = new ClaveAccesoDatos(LocalDate.from(solicitud.getFechaInicio()),
 				definition.getDocumento().getCodigo(), empresa.getRuc(), ambiente,

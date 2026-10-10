@@ -28,10 +28,6 @@ public class ComprobanteService extends BaseService<Comprobante> {
 	@Transactional
 	public Comprobante guardar(Comprobante e) {
 		validar(e);
-		boolean dup = e.getId() == null ? comprobanteRepository.existsByClaveAcceso(e.getClaveAcceso())
-				: comprobanteRepository.existsByClaveAccesoAndIdNot(e.getClaveAcceso(), e.getId());
-		if (dup)
-			throw new ApplicationException(MessageCodes.COMPROBANTE_CLAVE_ACCESO_DUPLICADA, e.getClaveAcceso());
 		if (comprobanteRepository.findByEmpresaIdAndIdTransaccion(e.getEmpresa().getId(), e.getIdTransaccion())
 				.filter(c -> e.getId() == null || !c.getId().equals(e.getId())).isPresent())
 			throw new ApplicationException(MessageCodes.COMPROBANTE_ID_TRANSACCION_DUPLICADA, e.getIdTransaccion());
@@ -72,6 +68,12 @@ public class ComprobanteService extends BaseService<Comprobante> {
 	public Optional<Comprobante> obtenerPorEmpresaEIdTransaccion(Long empresaId, String idTransaccion) {
 		return comprobanteRepository.findByEmpresaIdAndIdTransaccion(empresaId, idTransaccion)
 				.filter(c -> EstadoRegistro.ACTIVO.equals(c.getEstadoRegistro()));
+	}
+
+	public Optional<Comprobante> obtenerPorEmpresaEIdDocumentoOrigen(Long empresaId, Long idDocumentoOrigen) {
+		return comprobanteRepository
+				.findFirstByEmpresaIdAndIdDocumentoOrigenAndEstadoRegistroOrderByFechaCreacionDesc(
+						empresaId, idDocumentoOrigen, EstadoRegistro.ACTIVO);
 	}
 
 	public Optional<Comprobante> obtenerPorClaveAcceso(String claveAcceso) {

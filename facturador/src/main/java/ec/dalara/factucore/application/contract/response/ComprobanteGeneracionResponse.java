@@ -15,6 +15,10 @@ public class ComprobanteGeneracionResponse {
 
 	private String idTransaccion;
 
+	private Long idComprobante;
+
+	private String numeroAutorizacion;
+
 	private OffsetDateTime fechaInicio;
 
 	private OffsetDateTime fechaFin;

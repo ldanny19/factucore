@@ -42,6 +42,12 @@ public class AsignacionSecuencialWorkflowStep  {
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
+		if (contexto.getComprobanteReemplazado() != null) {
+			contexto.setSecuencial(contexto.getComprobanteReemplazado().getSecuencial());
+			contexto.setClaveAcceso(contexto.getComprobanteReemplazado().getClaveAcceso());
+			return ResultadoEtapa.exitosa(EtapaWorkflow.ASIGNACION_SECUENCIAL, "CORRECCION");
+		}
+
 		var solicitud = contexto.getSolicitud();
 
 		var emision = emisionService.resolver(solicitud.getIdEmpresa(), solicitud.getIdEstablecimiento(),

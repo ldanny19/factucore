@@ -45,6 +45,12 @@ public class ComprobanteWorkflowResponseFactory {
 		String codigo = ultimo == null || ultimo.isExitosa() ? null : ultimo.getCodigoError();
 		String mensaje = ultimo == null || ultimo.isExitosa() ? null : ultimo.getMensaje();
 
+		if (contexto != null && contexto.isIdempotente()
+				&& "AUTORIZADO".equalsIgnoreCase(contexto.getEstadoSri())) {
+			codigo = MessageCodes.COMPROBANTE_YA_AUTORIZADO;
+			mensaje = messageResolver.resolver(codigo, contexto.getNumeroAutorizacion());
+		}
+
 		List<MensajeResponse> errores = contexto == null ? List.of() : contexto.getErroresValidacion();
 		List<MensajeResponse> advertencias = List.of();
 		List<MensajeResponse> mensajesInformativos = List.of();
@@ -105,6 +111,8 @@ public class ComprobanteWorkflowResponseFactory {
 
 		return ComprobanteGeneracionResponse.builder()
 				.idTransaccion(request == null ? null : request.getIdTransaccion())
+				.idComprobante(contexto == null ? null : contexto.getComprobanteId())
+				.numeroAutorizacion(contexto == null ? null : contexto.getNumeroAutorizacion())
 				.fechaInicio(contexto == null || contexto.getFechaInicio() == null ? null
 						: contexto.getFechaInicio().atOffset(ZoneOffset.UTC))
 				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC))

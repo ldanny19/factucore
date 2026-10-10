@@ -25,6 +25,12 @@ public final class ContextoWorkflow {
 
 	private Comprobante comprobante;
 
+	private Comprobante comprobanteReemplazado;
+
+	private String hashIdentidad;
+
+	private String hashContenido;
+
 	private boolean idempotente;
 
 	private String secuencial;
@@ -251,6 +257,30 @@ public final class ContextoWorkflow {
 
 	public Comprobante getComprobante() {
 		return comprobante;
+	}
+
+	public Comprobante getComprobanteReemplazado() {
+		return comprobanteReemplazado;
+	}
+
+	public void setComprobanteReemplazado(Comprobante comprobanteReemplazado) {
+		this.comprobanteReemplazado = comprobanteReemplazado;
+	}
+
+	public String getHashIdentidad() {
+		return hashIdentidad;
+	}
+
+	public void setHashIdentidad(String hashIdentidad) {
+		this.hashIdentidad = hashIdentidad;
+	}
+
+	public String getHashContenido() {
+		return hashContenido;
+	}
+
+	public void setHashContenido(String hashContenido) {
+		this.hashContenido = hashContenido;
 	}
 
 	public String getSecuencial() {

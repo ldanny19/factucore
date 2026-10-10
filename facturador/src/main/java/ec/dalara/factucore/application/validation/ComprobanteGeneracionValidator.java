@@ -33,12 +33,20 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 			return resultado;
 		}
 
+		validarDocumentoOrigen(request, resultado);
 		validarTipoDocumento(request, resultado);
 		validarFechaInicio(request, resultado);
 		validarDatos(request, resultado);
 		validarDefinicionYDatos(request, resultado);
 
 		return resultado;
+	}
+
+	private void validarDocumentoOrigen(ComprobanteGeneracionRequest request,
+			ComprobanteValidationResult resultado) {
+		if (request.getIdDocumentoOrigen() == null || request.getIdDocumentoOrigen() <= 0) {
+			resultado.agregarError(MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_REQUERIDO, "idDocumentoOrigen");
+		}
 	}
 
 	private void validarTipoDocumento(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {

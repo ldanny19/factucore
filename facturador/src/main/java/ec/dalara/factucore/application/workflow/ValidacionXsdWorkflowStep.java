@@ -6,6 +6,7 @@ import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
 
@@ -51,6 +52,7 @@ public class ValidacionXsdWorkflowStep {
 	 * comprobante. La persistencia forma parte de esta etapa y no constituye un
 	 * nodo independiente del workflow.
 	 */
+	@Transactional
 	public String ejecutar(ContextoWorkflow contexto) {
 		return workflowEtapaExecutor.ejecutar(contexto, etapa(), () -> ejecutarResultado(contexto));
 	}
@@ -115,12 +117,14 @@ public class ValidacionXsdWorkflowStep {
 		var versionXsd = versionDocumentoXsdService.obtenerPorId(definition.getVersion().getId())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 
-		var existente = comprobanteService.obtenerPorClaveAcceso(contexto.getClaveAcceso())
-				.filter(c -> !EstadoRegistro.ELIMINADO.equals(c.getEstadoRegistro()));
+		if (contexto.getComprobanteReemplazado() == null) {
+			var existente = comprobanteService.obtenerPorClaveAcceso(contexto.getClaveAcceso())
+					.filter(c -> !EstadoRegistro.ELIMINADO.equals(c.getEstadoRegistro()));
 
-		if (existente.isPresent()) {
-			contexto.asignarComprobante(existente.get());
-			return;
+			if (existente.isPresent()) {
+				contexto.asignarComprobante(existente.get());
+				return;
+			}
 		}
 
 		Comprobante comprobante = Comprobante.builder()
@@ -130,6 +134,10 @@ public class ValidacionXsdWorkflowStep {
 				.documentoXsd(documentoXsd)
 				.versionDocumentoXsd(versionXsd)
 				.idTransaccion(solicitud.getIdTransaccion())
+				.idDocumentoOrigen(solicitud.getIdDocumentoOrigen())
+				.hashIdentidad(contexto.getHashIdentidad())
+				.hashContenido(contexto.getHashContenido())
+				.comprobanteReemplazado(contexto.getComprobanteReemplazado())
 				.ambiente(resolverAmbiente(sriProperties.getAmbiente()))
 				.tipoEmision("1")
 				.codigoDocumento(definition.getDocumento().getCodigo())
@@ -148,6 +156,13 @@ public class ValidacionXsdWorkflowStep {
 				.build();
 
 		comprobante = comprobanteService.guardar(comprobante);
+		if (contexto.getComprobanteReemplazado() != null) {
+			var anterior = contexto.getComprobanteReemplazado();
+			anterior.setEstadoRegistro(EstadoRegistro.REEMPLAZADO);
+			anterior.setUsuarioModificacion(solicitud.getUsuario());
+			anterior.setFechaModificacion(LocalDateTime.now());
+			comprobanteService.guardar(anterior);
+		}
 		contexto.asignarComprobante(comprobante);
 	}
 
