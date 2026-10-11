@@ -41,7 +41,7 @@ factucore:
   notificacion:
     path:
       config: __CONFIG__
-    topico: ${FACTUCORE_NOTIFICACION_TOPICO:factucore.notificacion.comprobante}
+    topico: ${FACTUCORE_NOTIFICACION_TOPICO:notificacion}
     correo:
       remitente: ${FACTUCORE_NOTIFICACION_CORREO_REMITENTE}
       asunto: ${FACTUCORE_NOTIFICACION_CORREO_ASUNTO:Comprobante electrónico autorizado}
