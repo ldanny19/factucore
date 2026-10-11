@@ -45,21 +45,22 @@ public class PersistenciaSeccionesComprobanteService {
             return;
         }
 
-        Number existentes = (Number) entityManager.createNativeQuery(
-                "select (select count(*) from comprobante_detalle where comprobante_id = :id) + "
-                + "(select count(*) from comprobante_pago where comprobante_id = :id) + "
-                + "(select count(*) from comprobante_informacion_adicional where comprobante_id = :id) + "
-                + "(select count(*) from comprobante_retencion where comprobante_id = :id)")
-                .setParameter("id", comprobante.getId()).getSingleResult();
-        if (existentes.longValue() > 0) {
-            return;
-        }
+        /*
+         * La existencia de datos en una sección no debe impedir persistir las
+         * demás. Cada sección se controla por separado para permitir completar
+         * comprobantes parcialmente persistidos sin duplicar registros.
+         */
+        boolean persistirDetalles = !existenRegistros("comprobante_detalle", comprobante.getId());
+        boolean persistirPagos = !existenRegistros("comprobante_pago", comprobante.getId());
+        boolean persistirInformacionAdicional = !existenRegistros(
+                "comprobante_informacion_adicional", comprobante.getId());
+        boolean persistirRetenciones = !existenRegistros("comprobante_retencion", comprobante.getId());
 
         String usuarioAuditoria = usuario == null || usuario.isBlank() ? "FACTUCORE" : usuario;
         LocalDateTime ahora = LocalDateTime.now();
 
         JsonNode detalles = factura.path("detalles").path("detalle");
-        if (detalles.isArray()) {
+        if (persistirDetalles && detalles.isArray()) {
             int numeroLinea = 1;
             for (JsonNode detalleJson : detalles) {
                 ComprobanteDetalle detalle = new ComprobanteDetalle();
@@ -91,14 +92,16 @@ public class PersistenciaSeccionesComprobanteService {
                         entityManager.persist(impuesto);
                     }
                 }
-                persistirInformacionAdicional(comprobante,
-                        detalleJson.path("detallesAdicionales").path("detAdicional"), usuarioAuditoria, ahora);
+                if (persistirInformacionAdicional) {
+                    persistirInformacionAdicional(comprobante,
+                            detalleJson.path("detallesAdicionales").path("detAdicional"), usuarioAuditoria, ahora);
+                }
                 numeroLinea++;
             }
         }
 
         JsonNode pagos = factura.path("infoFactura").path("pagos").path("pago");
-        if (pagos.isArray()) {
+        if (persistirPagos && pagos.isArray()) {
             for (JsonNode pagoJson : pagos) {
                 ComprobantePago pago = new ComprobantePago();
                 pago.setComprobante(comprobante);
@@ -111,9 +114,25 @@ public class PersistenciaSeccionesComprobanteService {
             }
         }
 
-        persistirInformacionAdicional(comprobante,
-                factura.path("infoAdicional").path("campoAdicional"), usuarioAuditoria, ahora);
-        persistirRetenciones(comprobante, factura.path("impuestos").path("impuesto"), usuarioAuditoria, ahora);
+        if (persistirInformacionAdicional) {
+            persistirInformacionAdicional(comprobante,
+                    factura.path("infoAdicional").path("campoAdicional"), usuarioAuditoria, ahora);
+        }
+        if (persistirRetenciones) {
+            persistirRetenciones(comprobante, factura.path("impuestos").path("impuesto"), usuarioAuditoria, ahora);
+        }
+    }
+
+    /**
+     * Comprueba la existencia de registros de una sección para el comprobante.
+     * El nombre de tabla procede exclusivamente de constantes internas.
+     */
+    private boolean existenRegistros(String tabla, Long comprobanteId) {
+        Number cantidad = (Number) entityManager.createNativeQuery(
+                "select count(*) from " + tabla + " where comprobante_id = :id")
+                .setParameter("id", comprobanteId)
+                .getSingleResult();
+        return cantidad.longValue() > 0;
     }
 
     private void persistirRetenciones(Comprobante comprobante, JsonNode nodos, String usuario, LocalDateTime ahora) {
