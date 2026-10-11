@@ -10,7 +10,7 @@ public class PropertiesMessageResolver implements MessageResolver {
 
 	public PropertiesMessageResolver() {
 		messageSource = new ReloadableResourceBundleMessageSource();
-		messageSource.setBasenames("file:/app/config/messaging/message", "classpath:factucore-messaging-messages");
+		messageSource.setBasenames("file:/app/messaging-config/message", "classpath:factucore-messaging-messages");
 		messageSource.setDefaultEncoding("UTF-8");
 		messageSource.setFallbackToSystemLocale(false);
 		messageSource.setCacheSeconds(60);
