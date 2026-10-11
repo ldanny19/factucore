@@ -364,6 +364,8 @@ C:\factucore\
 
 Esto permite separar configuración, secretos, certificados y datos persistentes del código fuente.
 
+Los mensajes de la librería compartida se externalizan en `C:\\factucore\\messaging\\message.properties`. El archivo de referencia versionado está en `compose/messaging/message.properties`; debe copiarse a la ruta externa antes de iniciar los servicios. Docker Compose monta ese directorio como solo lectura en Facturador y Notification. El resolver consulta primero el catálogo externo y conserva el catálogo incluido en la librería como respaldo para entornos de desarrollo o claves que no estén externalizadas. Los cambios del archivo externo se detectan según la caché configurada (60 segundos).
+
 ## Estructura relevante del repositorio
 
 ```text
