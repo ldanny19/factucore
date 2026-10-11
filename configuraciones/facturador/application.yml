@@ -106,7 +106,7 @@ factucore:
         conexion: broker-principal
         nombre: auditoria
       notificacion:
-        conexion: kafka-principal
+        conexion: broker-principal
         nombre: notificacion
 
   path:
