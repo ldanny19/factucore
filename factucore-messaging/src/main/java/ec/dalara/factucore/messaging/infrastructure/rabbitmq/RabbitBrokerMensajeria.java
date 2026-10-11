@@ -14,6 +14,8 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.retry.RepublishMessageRecoverer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -22,13 +24,18 @@ import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.api.TipoBroker;
 import ec.dalara.factucore.messaging.config.MessagingProperties;
+import ec.dalara.factucore.messaging.config.MessageCodes;
+import ec.dalara.factucore.messaging.config.MessageResolver;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class RabbitBrokerMensajeria implements BrokerMensajeria {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(RabbitBrokerMensajeria.class);
+
 	private final MessagingProperties properties;
 	private final ObjectMapper objectMapper;
+	private final MessageResolver messageResolver;
 	private final Map<String, CachingConnectionFactory> connectionFactories = new ConcurrentHashMap<>();
 	private final Map<String, RabbitTemplate> templates = new ConcurrentHashMap<>();
 	private final Map<String, RabbitAdmin> admins = new ConcurrentHashMap<>();
@@ -59,7 +66,8 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 			template.convertAndSend(exchange.getName(), configuracion.getNombre(),
 					objectMapper.writeValueAsBytes(evento));
 		} catch (Exception e) {
-			throw new IllegalStateException("No fue posible publicar el mensaje", e);
+			LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
+			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
 		}
 	}
 
@@ -103,7 +111,8 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 					consumidor.consumir(evento);
 				}
 			} catch (Exception e) {
-				throw new IllegalStateException("No fue posible procesar el mensaje", e);
+				LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
+				throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
 			}
 		});
 
@@ -113,10 +122,10 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 	private MessagingProperties.DestinoProperties destino(String nombre) {
 		var destino = properties.getDestinos().get(nombre);
 		if (destino == null || destino.getNombre() == null || destino.getNombre().isBlank()) {
-			throw new IllegalStateException("Destino de mensajería no configurado: " + nombre);
+			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_NO_CONFIGURADO, nombre));
 		}
 		if (!soporta(nombre)) {
-			throw new IllegalStateException("El destino no pertenece a una conexión RabbitMQ: " + nombre);
+			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_BROKER_INVALIDO, nombre, tipo()));
 		}
 		return destino;
 	}
@@ -124,7 +133,7 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 	private MessagingProperties.ConexionProperties conexion(String nombre) {
 		var conexion = properties.getConexiones().get(nombre);
 		if (conexion == null) {
-			throw new IllegalStateException("Conexión de mensajería no configurada: " + nombre);
+			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_CONEXION_NO_CONFIGURADA, nombre));
 		}
 		return conexion;
 	}

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.messaging.api.BrokerMensajeria;
 import ec.dalara.factucore.messaging.config.MessagingProperties;
+import ec.dalara.factucore.messaging.config.MessageResolver;
 
 @AutoConfiguration
 @EnableConfigurationProperties(MessagingProperties.class)
@@ -16,7 +17,8 @@ import ec.dalara.factucore.messaging.config.MessagingProperties;
 public class RabbitMessagingConfiguration {
 
 	@Bean
-	BrokerMensajeria rabbitBrokerMensajeria(MessagingProperties properties, ObjectMapper objectMapper) {
-		return new RabbitBrokerMensajeria(properties, objectMapper);
+	BrokerMensajeria rabbitBrokerMensajeria(MessagingProperties properties, ObjectMapper objectMapper,
+			MessageResolver messageResolver) {
+		return new RabbitBrokerMensajeria(properties, objectMapper, messageResolver);
 	}
 }
