@@ -9,6 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "factucore.auditoria.peticion")
 public class AuditoriaMessagingProperties {
 
-    private String topico = "factucore.auditoria.peticion";
+    private String topico = "auditoria";
     private String grupoConsumidor = "factucore-auditoria";
 }

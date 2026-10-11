@@ -17,6 +17,7 @@ factucore:
 
   auditoria:
     peticion:
+      topico: auditoria
       grupo-consumidor: ${FACTUCORE_AUDITORIA_PETICION_GRUPO:factucore-auditoria}
 
 management:
