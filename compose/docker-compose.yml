@@ -165,16 +165,6 @@ services:
       retries: 12
       start_period: 15s
 
-  kafka-init:
-    image: apache/kafka:4.0.2
-    container_name: factucore-kafka-init
-    restart: "no"
-    depends_on:
-      kafka:
-        condition: service_healthy
-    entrypoint: ["/bin/bash", "/scripts/inicializar-topics.sh"]
-    volumes:
-      - ./kafka/scripts:/scripts:ro
 
   facturador:
     image: factucore-facturador:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
@@ -189,8 +179,6 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
       auth-server:
         condition: service_healthy
     environment:
@@ -238,8 +226,6 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
       facturador:
         condition: service_healthy
     environment:
