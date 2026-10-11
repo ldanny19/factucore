@@ -35,9 +35,14 @@ public class PersistenciaSeccionesComprobanteService {
             return;
         }
 
-        JsonNode factura = datos.path("factura");
-        if (factura.isMissingNode() || !factura.isObject()) {
-            factura = datos;
+        JsonNode comprobanteJson = datos.path("comprobante");
+        if (!comprobanteJson.isObject()) {
+            return;
+        }
+
+        JsonNode factura = comprobanteJson.path("factura");
+        if (!factura.isObject()) {
+            return;
         }
 
         Number existentes = (Number) entityManager.createNativeQuery(

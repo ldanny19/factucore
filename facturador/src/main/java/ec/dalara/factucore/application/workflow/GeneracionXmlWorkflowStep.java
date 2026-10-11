@@ -59,9 +59,11 @@ public class GeneracionXmlWorkflowStep  {
 			contexto.setDefinicionDocumento(definition);
 		}
 
-		var datos = solicitud.getDatos() == null || solicitud.getDatos().isNull() || !solicitud.getDatos().isObject()
+		var comprobanteJson = solicitud.getDatos() == null ? null : solicitud.getDatos().path("comprobante");
+		var datos = comprobanteJson == null || comprobanteJson.isMissingNode() || comprobanteJson.isNull()
+				|| !comprobanteJson.isObject()
 				? new LinkedHashMap<String, Object>()
-				: objectMapper.convertValue(solicitud.getDatos(),
+				: objectMapper.convertValue(comprobanteJson,
 						new TypeReference<LinkedHashMap<String, Object>>() {
 						});
 

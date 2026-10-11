@@ -51,6 +51,12 @@ public class NotificacionWorkflowStep {
 			return ResultadoEtapa.exitosa(etapa(), "NOTIFICACION_ERROR");
 		}
 
+		if (comprobante.getCorreoComprador() == null || comprobante.getCorreoComprador().isBlank()) {
+			String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
+			LOGGER.warn(messageResolver.resolver(MessageCodes.NOTIFICACION_CORREO_AUSENTE, idTransaccion));
+			return ResultadoEtapa.exitosa(etapa(), "NOTIFICACION_OMITIDA");
+		}
+
 		try {
 			notificacionPort.publicar(contexto);
 			comprobante.setEstadoProceso(EstadoProceso.NOTIFICACION_PUBLICADA.name());

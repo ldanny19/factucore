@@ -44,7 +44,8 @@ class ComprobanteGeneracionRequestValidationTest {
 	void requestConDatosJson_aceptaEstructuraJerarquica() throws Exception {
 		var datos = new ObjectMapper().readTree("""
 				{
-				  "factura": {
+				  "comprobante": {
+				    "factura": {
 				    "infoFactura": {
 				      "razonSocialComprador": "CLIENTE DEMO"
 				    },
@@ -56,6 +57,7 @@ class ComprobanteGeneracionRequestValidationTest {
 				        }
 				      ]
 				    }
+				    }
 				  }
 				}
 				""");
@@ -65,8 +67,8 @@ class ComprobanteGeneracionRequestValidationTest {
 				.idPuntoEmision(1L).idTipoDocumento(1L).datos(datos).build();
 
 		assertTrue(validator.validate(request).isEmpty());
-		assertNotNull(request.getDatos().get("factura"));
-		assertTrue(request.getDatos().get("factura").get("detalles").get("detalle").isArray());
+		assertNotNull(request.getDatos().get("comprobante").get("factura"));
+		assertTrue(request.getDatos().get("comprobante").get("factura").get("detalles").get("detalle").isArray());
 	}
 
 	@Test

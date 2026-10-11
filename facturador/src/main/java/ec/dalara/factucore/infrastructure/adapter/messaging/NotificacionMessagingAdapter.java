@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.application.port.out.NotificacionPort;
@@ -27,13 +26,6 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 
 	private static final String XML_AUTORIZADO = "XML_AUTORIZADO";
 	private static final String RIDE = "RIDE";
-	private static final String FACTURA = "factura";
-	private static final String RAZON_SOCIAL_COMPRADOR = "razonSocialComprador";
-	private static final String INFORMACION_ADICIONAL = "infoAdicional";
-	private static final String CAMPO_ADICIONAL = "campoAdicional";
-	private static final String NOMBRE = "nombre";
-	private static final String VALOR = "valor";
-	private static final String CORREO = "Correo";
 
 	private final PublicadorMensajes publicadorMensajes;
 	private final ObjectMapper objectMapper;
@@ -57,9 +49,9 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 				.findByComprobanteIdAndTipoEvidenciaAndActualTrue(comprobante.getId(), RIDE)
 				.orElseThrow(() -> new IllegalStateException(MessageCodes.NOTIFICACION_RIDE_REQUERIDO));
 
-		String correo = obtenerCorreo(contexto);
+		String correo = comprobante.getCorreoComprador();
 
-		String nombreCliente = obtenerNombreCliente(contexto);
+		String nombreCliente = comprobante.getRazonSocialReceptor();
 		String nombreEmpresa = obtenerNombreEmpresa(comprobante);
 
 		List<String> datosFaltantes = new ArrayList<>();
@@ -67,7 +59,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 			datosFaltantes.add("factura.razonSocialComprador");
 		}
 		if (correo == null || correo.isBlank()) {
-			datosFaltantes.add("correo destinatario (infoAdicional.campoAdicional[nombre=Correo].valor)");
+			datosFaltantes.add("correo destinatario persistido en comprobante");
 		}
 		if (nombreEmpresa == null || nombreEmpresa.isBlank()) {
 			datosFaltantes.add("Empresa.nombreComercial/razonSocial");
@@ -86,17 +78,6 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		publicadorMensajes.publicar(DESTINO_NOTIFICACION, evento);
 	}
 
-	private String obtenerNombreCliente(ContextoWorkflow contexto) {
-		if (contexto.getSolicitud() == null || contexto.getSolicitud().getDatos() == null) {
-			return null;
-		}
-
-		JsonNode nombreCliente = contexto.getSolicitud().getDatos().path(FACTURA).path(RAZON_SOCIAL_COMPRADOR);
-		return nombreCliente.isMissingNode() || nombreCliente.isNull() || nombreCliente.isContainerNode()
-				? null
-				: nombreCliente.asText();
-	}
-
 	private String obtenerNombreEmpresa(
 			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
 		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
@@ -113,29 +94,4 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		return empresa.getRazonSocial();
 	}
 
-	private String obtenerCorreo(ContextoWorkflow contexto) {
-		if (contexto.getSolicitud() == null || contexto.getSolicitud().getDatos() == null) {
-			return null;
-		}
-
-		JsonNode datos = contexto.getSolicitud().getDatos();
-		JsonNode factura = datos.path(FACTURA);
-		JsonNode camposAdicionales = factura.path(INFORMACION_ADICIONAL).path(CAMPO_ADICIONAL);
-		if (!camposAdicionales.isArray()) {
-			camposAdicionales = datos.path(INFORMACION_ADICIONAL).path(CAMPO_ADICIONAL);
-		}
-
-		if (camposAdicionales.isArray()) {
-			for (JsonNode campo : camposAdicionales) {
-				String nombre = campo.path(NOMBRE).asText();
-				if (CORREO.equalsIgnoreCase(nombre)) {
-					JsonNode valor = campo.path(VALOR);
-					if (!valor.isMissingNode() && !valor.isNull() && !valor.isContainerNode()) {
-						return valor.asText();
-					}
-				}
-			}
-		}
-		return null;
-	}
 }

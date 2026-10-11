@@ -25,10 +25,10 @@ public class ComprobanteHashService {
 
 	private final ObjectMapper objectMapper;
 
-	@Value("${factucore.comprobantes.hash.identidad.campos:idEmpresa;idEstablecimiento;idPuntoEmision;idTipoDocumento;versionXsd;datos.factura.infoFactura.identificacionComprador}")
+	@Value("${factucore.comprobantes.hash.identidad.campos:idEmpresa;idEstablecimiento;idPuntoEmision;idTipoDocumento;versionXsd;datos.comprobante.factura.infoFactura.identificacionComprador}")
 	private String camposIdentidad;
 
-	@Value("${factucore.comprobantes.hash.contenido.campo:datos}")
+	@Value("${factucore.comprobantes.hash.contenido.campo:datos.comprobante}")
 	private String campoContenido;
 
 	@Value("${factucore.comprobantes.hash.contenido.algoritmo:SHA-256}")

@@ -125,9 +125,9 @@ factucore:
   comprobantes:
     hash:
       identidad:
-        campos: "idEmpresa;idEstablecimiento;idPuntoEmision;idTipoDocumento;versionXsd;datos.factura.infoFactura.identificacionComprador"
+        campos: "idEmpresa;idEstablecimiento;idPuntoEmision;idTipoDocumento;versionXsd;datos.comprobante.factura.infoFactura.identificacionComprador"
       contenido:
-        campo: "datos"
+        campo: "datos.comprobante"
         algoritmo: "SHA-256"
 
   workflow:

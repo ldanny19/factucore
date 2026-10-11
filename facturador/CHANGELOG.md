@@ -1,5 +1,14 @@
 # Changelog — Facturador
 
+## Ajustes XML/RIDE y persistencia de comprobantes — 2026-10-11
+
+- El request de generación encapsula los datos tributarios en datos.comprobante; datos.correo es opcional.
+- La validación tributaria continúa utilizando el JSON Schema documental existente y valida únicamente datos.comprobante.
+- Se persiste el correo resuelto, priorizando el correo externo y utilizando infoAdicional.campoAdicional como respaldo.
+- La ausencia de correo omite la notificación sin fallar la generación del comprobante.
+- Se calculan subtotal, descuento, total sin impuestos, impuestos, propina y total a pagar al persistir el comprobante.
+- Se agregan las columnas correspondientes mediante una nueva migración Flyway.
+
 ## 1.0.0
 
 Versión inicial del módulo.

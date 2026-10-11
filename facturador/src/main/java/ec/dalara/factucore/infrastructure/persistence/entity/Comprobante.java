@@ -1,5 +1,6 @@
 package ec.dalara.factucore.infrastructure.persistence.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -114,6 +115,27 @@ public class Comprobante implements EstadoRegistroEntity {
 
 	@Column(name = "direccion_receptor", length = 500)
 	private String direccionReceptor;
+
+	@Column(name = "correo_comprador", length = 320)
+	private String correoComprador;
+
+	@Column(name = "subtotal", precision = 18, scale = 2)
+	private BigDecimal subtotal;
+
+	@Column(name = "total_descuento", precision = 18, scale = 2)
+	private BigDecimal totalDescuento;
+
+	@Column(name = "total_sin_impuestos", precision = 18, scale = 2)
+	private BigDecimal totalSinImpuestos;
+
+	@Column(name = "total_impuestos", precision = 18, scale = 2)
+	private BigDecimal totalImpuestos;
+
+	@Column(name = "total_propina", precision = 18, scale = 2)
+	private BigDecimal totalPropina;
+
+	@Column(name = "total_a_pagar", precision = 18, scale = 2)
+	private BigDecimal totalAPagar;
 
 	@Column(name = "estado_proceso", nullable = false, length = 50)
 	private String estadoProceso;

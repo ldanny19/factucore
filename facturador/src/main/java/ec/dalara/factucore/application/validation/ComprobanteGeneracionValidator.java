@@ -63,8 +63,9 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 
 	private void validarDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		JsonNode datos = request.getDatos();
-		if (datos == null || !datos.isObject() || datos.isEmpty()) {
-			resultado.agregarError(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS, "datos");
+		JsonNode comprobante = datos == null ? null : datos.get("comprobante");
+		if (comprobante == null || !comprobante.isObject() || comprobante.isEmpty()) {
+			resultado.agregarError(MessageCodes.COMPROBANTE_DATOS_REQUERIDOS, "datos.comprobante");
 		}
 	}
 
@@ -92,7 +93,8 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 			return;
 		}
 
-		jsonSchemaComprobanteValidator.validar(esquemaJson, request.getDatos(), resultado);
+		jsonSchemaComprobanteValidator.validar(esquemaJson,
+				request.getDatos() == null ? null : request.getDatos().path("comprobante"), resultado);
 	}
 
 	private Map<String, Object> convertirDatos(JsonNode datos) {
