@@ -31,6 +31,8 @@ import ec.dalara.factucore.application.service.ComprobanteDetalleService;
 import ec.dalara.factucore.application.service.ComprobanteInformacionAdicionalService;
 import ec.dalara.factucore.application.service.ComprobantePagoService;
 import ec.dalara.factucore.application.service.ConfiguracionEmpresaService;
+import ec.dalara.factucore.application.service.CatalogoItemService;
+import ec.dalara.factucore.application.service.CatalogoService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
@@ -62,6 +64,8 @@ public class JasperRideAdapter implements RidePort {
 	private final ComprobanteDetalleImpuestoService comprobanteDetalleImpuestoService;
 	private final ComprobantePagoService comprobantePagoService;
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
+	private final CatalogoService catalogoService;
+	private final CatalogoItemService catalogoItemService;
 	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
 	private final ComprobanteRepository comprobanteRepository;
 	private final MessageResolver messageResolver;
@@ -119,7 +123,7 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("LOGO", obtenerLogo(comprobante));
 		parametros.put("NUM_AUT", comprobante.getNumeroAutorizacion());
 		parametros.put("FECHA_AUT", formatearFecha(comprobante.getFechaAutorizacion()));
-		parametros.put("TIPO_EMISION", obtenerConfiguracion(comprobante, "TIPO_EMISION_SRI", "TIPO_EMISION"));
+		parametros.put("TIPO_EMISION", obtenerValorCatalogoConfiguracion(comprobante, "TIPO_EMISION"));
 		parametros.put("CLAVE_ACC", comprobante.getClaveAcceso());
 		parametros.put("RAZON_SOCIAL", comprobante.getRazonSocialEmisor());
 		parametros.put("DIR_MATRIZ", comprobante.getDireccionMatrizEmisor());
@@ -129,7 +133,7 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("DIRECCION_CLIENTE", comprobante.getDireccionReceptor());
 		parametros.put("FECHA_EMISION", valor(comprobante.getFechaEmision()));
 		parametros.put("NUM_FACT", comprobante.getSecuencial());
-		parametros.put("AMBIENTE", obtenerConfiguracion(comprobante, "AMBIENTE_SRI"));
+		parametros.put("AMBIENTE", obtenerValorCatalogoConfiguracion(comprobante, "AMBIENTE"));
 		parametros.put("NOM_COMERCIAL", comprobante.getNombreComercialEmisor());
 
 		parametros.put("GUIA", null);
@@ -407,20 +411,27 @@ public class JasperRideAdapter implements RidePort {
 		return resultado.toString();
 	}
 
-	private String obtenerConfiguracion(Comprobante comprobante, String... claves) {
+	private String obtenerValorCatalogoConfiguracion(Comprobante comprobante, String clave) {
 		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
 			return null;
 		}
 
-		for (String clave : claves) {
-			var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), clave,
-					LocalDateTime.now());
-			if (configuracion.isPresent() && configuracion.get().getValor() != null
-					&& !configuracion.get().getValor().isBlank()) {
-				return configuracion.get().getValor().trim();
-			}
+		var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), clave,
+				LocalDateTime.now());
+		if (configuracion.isEmpty() || configuracion.get().getValor() == null
+				|| configuracion.get().getValor().isBlank()) {
+			return null;
 		}
-		return null;
+
+		var catalogo = catalogoService.obtenerPorCodigo(clave);
+		if (catalogo.isEmpty()) {
+			return null;
+		}
+
+		return catalogoItemService.obtenerPorCatalogoYCodigo(catalogo.get().getId(),
+				configuracion.get().getValor().trim())
+				.map(item -> item.getNombre())
+				.orElse(null);
 	}
 
 	private String formatearFecha(LocalDateTime fecha) {
