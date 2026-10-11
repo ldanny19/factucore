@@ -3,6 +3,7 @@ package ec.dalara.factucore.messaging.infrastructure.kafka;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -64,8 +65,9 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 	public void publicar(String destino, EventoMensaje evento) {
 		try {
 			var configuracion = destino(destino);
-			template(configuracion.getConexion()).send(configuracion.getNombre(), evento.id(),
-					objectMapper.writeValueAsString(evento));
+			template(configuracion.getConexion())
+					.send(configuracion.getNombre(), evento.id(), objectMapper.writeValueAsString(evento))
+					.get(properties.getResiliencia().getTimeout().getEnvioMs(), TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
 			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);

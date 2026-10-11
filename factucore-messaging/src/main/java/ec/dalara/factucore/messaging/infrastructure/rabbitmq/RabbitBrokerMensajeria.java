@@ -10,6 +10,7 @@ import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory.CacheMode;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
@@ -146,6 +147,12 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 			factory.setUsername(p.getUsername());
 			factory.setPassword(p.getPassword());
 			factory.setVirtualHost(p.getVirtualHost());
+			factory.setConnectionTimeout(p.getConnectionTimeoutMs());
+			factory.setChannelCacheSize(p.getChannelCacheSize());
+			if (p.getConnectionLimit() != null && p.getConnectionLimit() > 0) {
+				factory.setConnectionLimit(p.getConnectionLimit());
+				factory.setCacheMode(CacheMode.CONNECTION);
+			}
 			return factory;
 		});
 	}

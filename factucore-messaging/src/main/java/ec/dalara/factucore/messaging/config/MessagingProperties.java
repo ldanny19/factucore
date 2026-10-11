@@ -16,7 +16,7 @@ public class MessagingProperties {
 
 	private Map<String, DestinoProperties> destinos = new LinkedHashMap<>();
 
-	private RetryProperties retry = new RetryProperties();
+	private ResilienciaProperties resiliencia = new ResilienciaProperties();
 
 	public boolean isEnabled() {
 		return enabled;
@@ -42,12 +42,17 @@ public class MessagingProperties {
 		this.destinos = destinos;
 	}
 
-	public RetryProperties getRetry() {
-		return retry;
+	public ResilienciaProperties getResiliencia() {
+		return resiliencia;
 	}
 
-	public void setRetry(RetryProperties retry) {
-		this.retry = retry;
+	public void setResiliencia(ResilienciaProperties resiliencia) {
+		this.resiliencia = resiliencia;
+	}
+
+	@Deprecated
+	public RetryProperties getRetry() {
+		return resiliencia.getReintentos();
 	}
 
 	public static class ConexionProperties {
@@ -223,6 +228,12 @@ public class MessagingProperties {
 
 		private Integer concurrency;
 
+		private Integer connectionTimeoutMs = 5000;
+
+		private Integer channelCacheSize = 25;
+
+		private Integer connectionLimit = 10;
+
 		public String getAddresses() {
 			return addresses;
 		}
@@ -286,17 +297,87 @@ public class MessagingProperties {
 		public void setConcurrency(Integer concurrency) {
 			this.concurrency = concurrency;
 		}
+
+		public Integer getConnectionTimeoutMs() {
+			return connectionTimeoutMs;
+		}
+
+		public void setConnectionTimeoutMs(Integer connectionTimeoutMs) {
+			this.connectionTimeoutMs = connectionTimeoutMs;
+		}
+
+		public Integer getChannelCacheSize() {
+			return channelCacheSize;
+		}
+
+		public void setChannelCacheSize(Integer channelCacheSize) {
+			this.channelCacheSize = channelCacheSize;
+		}
+
+		public Integer getConnectionLimit() {
+			return connectionLimit;
+		}
+
+		public void setConnectionLimit(Integer connectionLimit) {
+			this.connectionLimit = connectionLimit;
+		}
+	}
+
+	public static class ResilienciaProperties {
+
+		private RetryProperties reintentos = new RetryProperties();
+
+		private TimeoutProperties timeout = new TimeoutProperties();
+
+		public RetryProperties getReintentos() {
+			return reintentos;
+		}
+
+		public void setReintentos(RetryProperties reintentos) {
+			this.reintentos = reintentos;
+		}
+
+		public TimeoutProperties getTimeout() {
+			return timeout;
+		}
+
+		public void setTimeout(TimeoutProperties timeout) {
+			this.timeout = timeout;
+		}
+	}
+
+	public static class TimeoutProperties {
+
+		private Long conexionMs = 5000L;
+
+		private Long envioMs = 10000L;
+
+		public Long getConexionMs() {
+			return conexionMs;
+		}
+
+		public void setConexionMs(Long conexionMs) {
+			this.conexionMs = conexionMs;
+		}
+
+		public Long getEnvioMs() {
+			return envioMs;
+		}
+
+		public void setEnvioMs(Long envioMs) {
+			this.envioMs = envioMs;
+		}
 	}
 
 	public static class RetryProperties {
 
-		private Long intervaloMs;
+		private Long intervaloMs = 5000L;
 
-		private Long maxIntentos;
+		private Long maxIntentos = 3L;
 
-		private Boolean dlqHabilitada;
+		private Boolean dlqHabilitada = true;
 
-		private String sufijoDlq;
+		private String sufijoDlq = ".DLQ";
 
 		public Long getIntervaloMs() {
 			return intervaloMs;
