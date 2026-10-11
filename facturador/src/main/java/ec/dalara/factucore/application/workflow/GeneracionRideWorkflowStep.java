@@ -15,6 +15,7 @@ import ec.dalara.factucore.application.MessageResolver;
 
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.RidePort;
+import ec.dalara.factucore.application.workflow.PersistenciaSeccionesComprobanteService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EstadoProceso;
@@ -32,6 +33,7 @@ public class GeneracionRideWorkflowStep {
 	private final MessageResolver messageResolver;
 	private final RidePort ridePort;
 	private final ComprobanteEvidenciaPort evidenciaPort;
+	private final PersistenciaSeccionesComprobanteService persistenciaSeccionesComprobanteService;
 
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.GENERACION_RIDE;
@@ -53,6 +55,11 @@ public class GeneracionRideWorkflowStep {
 			if (definicion == null || definicion.getDocumento() == null
 					|| definicion.getDocumento().getNombre() == null) {
 				throw new ApplicationException(MessageCodes.RIDE_DATOS_INVALIDOS);
+			}
+
+			if (contexto.getSolicitud() != null) {
+				persistenciaSeccionesComprobanteService.persistir(comprobante,
+						contexto.getSolicitud().getDatos(), contexto.getSolicitud().getUsuario());
 			}
 
 			byte[] pdf = ridePort.generar(comprobante, definicion.getDocumento().getNombre());
