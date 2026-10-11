@@ -66,48 +66,48 @@ factucore:
     # Politicas comunes para todos los brokers.
     resiliencia:
       reintentos:
-        intervalo-ms: ${FACTUCORE_MESSAGING_REINTENTO_INTERVALO_MS:5000}
-        max-intentos: ${FACTUCORE_MESSAGING_REINTENTO_MAX_INTENTOS:3}
-        dlq-habilitada: ${FACTUCORE_MESSAGING_DLQ_HABILITADA:true}
-        sufijo-dlq: ${FACTUCORE_MESSAGING_DLQ_SUFIJO:.DLQ}
+        intervalo-ms: 5000
+        max-intentos: 3
+        dlq-habilitada: true
+        sufijo-dlq: .DLQ
       timeout:
-        conexion-ms: ${FACTUCORE_MESSAGING_TIMEOUT_CONEXION_MS:5000}
-        envio-ms: ${FACTUCORE_MESSAGING_TIMEOUT_ENVIO_MS:10000}
+        conexion-ms: 5000
+        envio-ms: 10000
 
     # Cada conexion selecciona un broker y sus opciones especificas.
     conexiones:
-      kafka-principal:
-        tipo: ${FACTUCORE_MESSAGING_BROKER:KAFKA}
+      broker-principal:
+        tipo: KAFKA
         kafka:
           bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-          client-id: ${FACTUCORE_MESSAGING_KAFKA_CLIENT_ID:factucore}
-          security-protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+          client-id: factucore
+          security-protocol: PLAINTEXT
           producer:
-            acks: ${FACTUCORE_MESSAGING_KAFKA_ACKS:all}
+            acks: all
           consumer:
-            auto-offset-reset: ${FACTUCORE_MESSAGING_KAFKA_AUTO_OFFSET_RESET:earliest}
-            enable-auto-commit: ${FACTUCORE_MESSAGING_KAFKA_AUTO_COMMIT:false}
-            concurrency: ${FACTUCORE_MESSAGING_KAFKA_CONCURRENCY:1}
+            auto-offset-reset: earliest
+            enable-auto-commit: false
+            concurrency: 1
         rabbitmq:
           addresses: ${RABBITMQ_ADDRESSES:localhost:5672}
           username: ${RABBITMQ_USERNAME:guest}
           password: ${RABBITMQ_PASSWORD:guest}
           virtual-host: ${RABBITMQ_VIRTUAL_HOST:/}
-          exchange-type: ${FACTUCORE_MESSAGING_RABBITMQ_EXCHANGE_TYPE:topic}
-          exchange-prefix: ${FACTUCORE_MESSAGING_RABBITMQ_EXCHANGE_PREFIX:factucore}
-          durable: ${FACTUCORE_MESSAGING_RABBITMQ_DURABLE:true}
-          concurrency: ${FACTUCORE_MESSAGING_RABBITMQ_CONCURRENCY:1}
-          connection-timeout-ms: ${FACTUCORE_MESSAGING_RABBITMQ_CONNECTION_TIMEOUT_MS:5000}
-          channel-cache-size: ${FACTUCORE_MESSAGING_RABBITMQ_CHANNEL_CACHE_SIZE:25}
-          connection-limit: ${FACTUCORE_MESSAGING_RABBITMQ_CONNECTION_LIMIT:10}
+          exchange-type: topic
+          exchange-prefix: factucore
+          durable: true
+          concurrency: 1
+          connection-timeout-ms: 5000
+          channel-cache-size: 25
+          connection-limit: 10
 
     destinos:
       auditoria:
-        conexion: kafka-principal
-        nombre: ${FACTUCORE_AUDITORIA_PETICION_TOPICO:auditoria}
+        conexion: broker-principal
+        nombre: auditoria
       notificacion:
         conexion: kafka-principal
-        nombre: ${FACTUCORE_NOTIFICACION_TOPICO:notificacion}
+        nombre: notificacion
 
   path:
     base: ${FACTUCORE_PATH_BASE:/app}
