@@ -164,6 +164,7 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 		c.put(org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, p.getProducer().getAcks());
 		c.put(org.apache.kafka.clients.producer.ProducerConfig.CLIENT_ID_CONFIG, p.getClientId());
 		c.put("security.protocol", p.getSecurityProtocol());
+		LOGGER.debug("Configuracion del productor Kafka antes de inicializar: {}", c);
 		return new DefaultKafkaProducerFactory<>(c);
 	}
 
