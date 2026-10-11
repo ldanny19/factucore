@@ -197,7 +197,7 @@ services:
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/facturador/config:/app/config:ro
-      - ${FACTUCORE_HOME}/messaging:/app/config/messaging:ro
+      - ${FACTUCORE_HOME}/configuraciones/messaging:/app/config/messaging:ro
       - ${FACTUCORE_HOME}/facturador/jasper:/app/jasper:ro
       - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
       - ${FACTUCORE_HOME}/facturador/certificados:/app/certificados:ro
@@ -232,7 +232,7 @@ services:
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/notificacion/config:/app/config:ro
-      - ${FACTUCORE_HOME}/messaging:/app/config/messaging:ro
+      - ${FACTUCORE_HOME}/configuraciones/messaging:/app/config/messaging:ro
       - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
       - ${FACTUCORE_HOME}/notificacion/logs:/app/logs
     ports:
