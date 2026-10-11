@@ -1,6 +1,11 @@
 package ec.dalara.factucore.adapter.out.ride;
 
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.file.InvalidPathException;
+import java.util.Base64;
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +29,7 @@ import ec.dalara.factucore.application.service.ComprobanteDetalleImpuestoService
 import ec.dalara.factucore.application.service.ComprobanteDetalleService;
 import ec.dalara.factucore.application.service.ComprobanteInformacionAdicionalService;
 import ec.dalara.factucore.application.service.ComprobantePagoService;
+import ec.dalara.factucore.application.service.ConfiguracionEmpresaService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
@@ -53,6 +59,7 @@ public class JasperRideAdapter implements RidePort {
 	private final ComprobanteDetalleService comprobanteDetalleService;
 	private final ComprobanteDetalleImpuestoService comprobanteDetalleImpuestoService;
 	private final ComprobantePagoService comprobantePagoService;
+	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
 	private final MessageResolver messageResolver;
 
@@ -99,10 +106,11 @@ public class JasperRideAdapter implements RidePort {
 		}
 	}
 
-	private Map<String, Object> construirParametros(Comprobante comprobante) {
+	private Map<String, Object> construirParametros(Comprobante comprobante) throws IOException {
 		Map<String, Object> parametros = new LinkedHashMap<>();
 
 		parametros.put("RUC", comprobante.getRucEmisor());
+		parametros.put("LOGO", obtenerLogo(comprobante));
 		parametros.put("NUM_AUT", comprobante.getNumeroAutorizacion());
 		parametros.put("FECHA_AUT", valor(comprobante.getFechaAutorizacion()));
 		parametros.put("TIPO_EMISION", comprobante.getTipoEmision());
@@ -120,7 +128,7 @@ public class JasperRideAdapter implements RidePort {
 
 		parametros.put("GUIA", null);
 		parametros.put("CONT_ESPECIAL", null);
-		parametros.put("LLEVA_CONTABILIDAD", null);
+		parametros.put("LLEVA_CONTABILIDAD", comprobante.getEmpresa() == null ? null : comprobante.getEmpresa().getObligadoContabilidad());
 		parametros.put("NEGOCIABLE", null);
 		parametros.put("REGIMEN_TRIBUTARIO", null);
 		parametros.put("AGENTE_RETENCION", null);
@@ -132,9 +140,11 @@ public class JasperRideAdapter implements RidePort {
 				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
-		BigDecimal iva = impuestos.stream().filter(impuesto -> "2".equals(impuesto.getCodigoImpuesto()))
-				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal iva = sumarImpuestos(impuestos, "2", null);
+		BigDecimal iva12 = sumarImpuestos(impuestos, "2", "2");
+		BigDecimal iva0 = sumarImpuestos(impuestos, "2", "0");
+		BigDecimal noObjetoIva = sumarBasesImponibles(impuestos, "2", "6");
+		BigDecimal exentoIva = sumarBasesImponibles(impuestos, "2", "7");
 		BigDecimal ice = impuestos.stream().filter(impuesto -> "3".equals(impuesto.getCodigoImpuesto()))
 				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -146,11 +156,11 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("TOTAL_SIN_SUBSIDIO", totalSinImpuestos);
 		parametros.put("IVA", iva);
 		parametros.put("ICE", ice);
-		parametros.put("TOTAL", total);
-		parametros.put("IVA_12", iva);
-		parametros.put("IVA_0", BigDecimal.ZERO);
-		parametros.put("NO_OBJETO_IVA", BigDecimal.ZERO);
-		parametros.put("EXENTO_IVA", BigDecimal.ZERO);
+		parametros.put("TOTAL", total.add(comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina()));
+		parametros.put("IVA_12", iva12);
+		parametros.put("IVA_0", iva0);
+		parametros.put("NO_OBJETO_IVA", noObjetoIva);
+		parametros.put("EXENTO_IVA", exentoIva);
 		parametros.put("PORCENTAJE_IVA", null);
 		parametros.put("AHORRO_POR_SUBSIDIO", BigDecimal.ZERO);
 
@@ -186,7 +196,7 @@ public class JasperRideAdapter implements RidePort {
 
 		Collection<Map<String, Object>> infoAdicional = construirInformacionAdicional(comprobante.getId());
 		Collection<Map<String, Object>> formasPago = construirFormasPago(comprobante.getId());
-		Collection<Map<String, Object>> totales = construirTotales(comprobante.getId());
+		Collection<Map<String, Object>> totales = construirTotales(comprobante.getId(), comprobante);
 
 		for (Map<String, Object> fila : filas) {
 			fila.put("infoAdicional", infoAdicional);
@@ -233,6 +243,34 @@ public class JasperRideAdapter implements RidePort {
 		return resultado;
 	}
 
+	private InputStream obtenerLogo(Comprobante comprobante) throws IOException {
+		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
+			return null;
+		}
+		var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), "LOGO",
+				LocalDateTime.now()).orElse(null);
+		if (configuracion == null || configuracion.getValor() == null || configuracion.getValor().isBlank()) {
+			return null;
+		}
+		String valor = configuracion.getValor().trim();
+		if (valor.startsWith("data:image/")) {
+			int separador = valor.indexOf(',');
+			if (separador >= 0) {
+				valor = valor.substring(separador + 1);
+			}
+		}
+		try {
+			return new ByteArrayInputStream(Base64.getDecoder().decode(valor));
+		} catch (IllegalArgumentException exception) {
+			try {
+				Path archivo = Path.of(valor);
+				return Files.isRegularFile(archivo) ? new ByteArrayInputStream(Files.readAllBytes(archivo)) : null;
+			} catch (InvalidPathException invalidPathException) {
+				return null;
+			}
+		}
+	}
+
 	private Collection<Map<String, Object>> construirInformacionAdicional(Long comprobanteId) {
 		List<Map<String, Object>> resultado = new ArrayList<>();
 
@@ -247,7 +285,7 @@ public class JasperRideAdapter implements RidePort {
 		return resultado;
 	}
 
-	private Collection<Map<String, Object>> construirTotales(Long comprobanteId) {
+	private Collection<Map<String, Object>> construirTotales(Long comprobanteId, Comprobante comprobante) {
 		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobanteId);
 		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
 
@@ -263,13 +301,21 @@ public class JasperRideAdapter implements RidePort {
 		if (descuento.signum() != 0) {
 			resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_DESCUENTO), descuento, true));
 		}
+		Map<String, BigDecimal> impuestosAgrupados = new LinkedHashMap<>();
 		for (ComprobanteDetalleImpuesto impuesto : impuestos) {
-			String descripcion = messageResolver.resolver(MessageCodes.RIDE_TOTAL_IMPUESTO,
-					impuesto.getCodigoImpuesto(), impuesto.getCodigoPorcentaje());
-			resultado.add(total(descripcion, impuesto.getValor(), false));
+			String clave = String.valueOf(impuesto.getCodigoImpuesto()) + "|" + impuesto.getCodigoPorcentaje();
+			impuestosAgrupados.merge(clave, impuesto.getValor() == null ? BigDecimal.ZERO : impuesto.getValor(),
+					BigDecimal::add);
 		}
-		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_TOTAL), subtotal.add(totalImpuestos), false));
-
+		for (Map.Entry<String, BigDecimal> impuesto : impuestosAgrupados.entrySet()) {
+			String[] codigos = impuesto.getKey().split("\\|", -1);
+			String descripcion = messageResolver.resolver(MessageCodes.RIDE_TOTAL_IMPUESTO, codigos[0], codigos[1]);
+			resultado.add(total(descripcion, impuesto.getValue(), false));
+		}
+		BigDecimal totalCalculado = subtotal.add(totalImpuestos)
+				.add(comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina());
+		BigDecimal totalFinal = comprobante.getTotalAPagar() == null ? totalCalculado : comprobante.getTotalAPagar();
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_TOTAL), totalFinal, false));
 		return resultado;
 	}
 
@@ -287,6 +333,24 @@ public class JasperRideAdapter implements RidePort {
 			impuestos.addAll(comprobanteDetalleImpuestoService.listarPorComprobanteDetalle(detalle.getId()));
 		}
 		return impuestos;
+	}
+
+	private BigDecimal sumarImpuestos(List<ComprobanteDetalleImpuesto> impuestos, String codigoImpuesto,
+			String codigoPorcentaje) {
+		return impuestos.stream()
+				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
+				.filter(impuesto -> codigoPorcentaje == null || codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
+				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	private BigDecimal sumarBasesImponibles(List<ComprobanteDetalleImpuesto> impuestos, String codigoImpuesto,
+			String codigoPorcentaje) {
+		return impuestos.stream()
+				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
+				.filter(impuesto -> codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
+				.map(ComprobanteDetalleImpuesto::getBaseImponible).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
 
 	private boolean noNulo(BigDecimal valor) {

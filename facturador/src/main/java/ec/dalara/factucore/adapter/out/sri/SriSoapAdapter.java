@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -215,7 +217,25 @@ public class SriSoapAdapter implements SriPort {
 		String estado = obtenerTexto(autorizacion, "estado");
 		String numeroAutorizacion = obtenerTexto(autorizacion, "numeroAutorizacion");
 		List<SriMensaje> mensajes = obtenerMensajes(autorizacion);
-		return new SriResponse("AUTORIZADO".equalsIgnoreCase(estado), estado, numeroAutorizacion, mensajes, xml);
+		LocalDateTime fechaAutorizacion = parsearFechaAutorizacion(obtenerTexto(autorizacion, "fechaAutorizacion"));
+		return new SriResponse("AUTORIZADO".equalsIgnoreCase(estado), estado, numeroAutorizacion, mensajes, xml,
+				fechaAutorizacion);
+	}
+
+	private LocalDateTime parsearFechaAutorizacion(String fecha) {
+		if (fecha == null || fecha.isBlank()) {
+			return null;
+		}
+		try {
+			return LocalDateTime.parse(fecha);
+		} catch (java.time.format.DateTimeParseException exception) {
+			try {
+				return OffsetDateTime.parse(fecha).toLocalDateTime();
+			} catch (java.time.format.DateTimeParseException ignored) {
+				LOGGER.warn("La fecha de autorización recibida del SRI no tiene un formato reconocido: {}", fecha);
+				return null;
+			}
+		}
 	}
 
 	private List<SriMensaje> obtenerMensajes(Element contenedor) {

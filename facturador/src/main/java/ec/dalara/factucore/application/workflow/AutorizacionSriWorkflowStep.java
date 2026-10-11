@@ -85,6 +85,8 @@ public class AutorizacionSriWorkflowStep {
 			contexto.getComprobante().setEstadoSri("AUTORIZADO");
 			contexto.getComprobante().setFechaProximoReproceso(null);
 			contexto.getComprobante().setNumeroAutorizacion(respuesta.identificador());
+			contexto.setFechaAutorizacion(respuesta.fechaAutorizacion());
+			contexto.getComprobante().setFechaAutorizacion(respuesta.fechaAutorizacion());
 			evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
 					contexto.getSolicitud().getUsuario());
 			return ResultadoEtapa.exitosa(etapa(), "AUTORIZADO",
