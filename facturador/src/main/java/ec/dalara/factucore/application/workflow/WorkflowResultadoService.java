@@ -34,7 +34,12 @@ public class WorkflowResultadoService {
 
     private void calcularDatosPersistidos(Comprobante comprobante, JsonNode datos) {
         if (datos == null || !datos.isObject()) return;
-        JsonNode factura = datos.path("comprobante").path("factura");
+        JsonNode datosDocumento = datos.has("datos") && datos.path("datos").isObject()
+                ? datos.path("datos") : datos;
+        JsonNode factura = datosDocumento.path("comprobante").path("factura");
+        if (!factura.isObject()) {
+            factura = datosDocumento.path("factura");
+        }
         if (!factura.isObject()) return;
         JsonNode infoFactura = factura.path("infoFactura");
         String razonSocial = texto(infoFactura, "razonSocialComprador");
@@ -83,7 +88,9 @@ public class WorkflowResultadoService {
     }
 
     private String resolverCorreo(JsonNode datos, JsonNode factura) {
-        String externo = texto(datos, "correo");
+        JsonNode datosDocumento = datos != null && datos.has("datos") && datos.path("datos").isObject()
+                ? datos.path("datos") : datos;
+        String externo = texto(datosDocumento, "correo");
         if (externo != null && !externo.isBlank()) return externo.trim();
         JsonNode campos = factura.path("infoAdicional").path("campoAdicional");
         if (campos.isArray()) for (JsonNode campo : campos) {

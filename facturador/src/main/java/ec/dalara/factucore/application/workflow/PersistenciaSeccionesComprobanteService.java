@@ -3,12 +3,16 @@ package ec.dalara.factucore.application.workflow;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.domain.shared.EstadoRegistroEntity;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
@@ -35,23 +39,21 @@ public class PersistenciaSeccionesComprobanteService {
             return;
         }
 
-        JsonNode comprobanteJson = datos.path("comprobante");
-        if (!comprobanteJson.isObject()) {
-            return;
+        JsonNode datosDocumento = datos.has("datos") && datos.path("datos").isObject()
+                ? datos.path("datos") : datos;
+        JsonNode factura = datosDocumento.path("comprobante").path("factura");
+        if (!factura.isObject()) {
+            factura = datosDocumento.path("factura");
         }
-
-        JsonNode factura = comprobanteJson.path("factura");
         if (!factura.isObject()) {
             return;
         }
 
         /*
-         * La existencia de datos en una sección no debe impedir persistir las
-         * demás. Cada sección se controla por separado para permitir completar
-         * comprobantes parcialmente persistidos sin duplicar registros.
+         * Detalles, impuestos y pagos se sincronizan por clave funcional para
+         * completar registros existentes y mantener la operación idempotente.
+         * Las secciones auxiliares conservan la protección contra duplicados.
          */
-        boolean persistirDetalles = !existenRegistros("comprobante_detalle", comprobante.getId());
-        boolean persistirPagos = !existenRegistros("comprobante_pago", comprobante.getId());
         boolean persistirInformacionAdicional = !existenRegistros(
                 "comprobante_informacion_adicional", comprobante.getId());
         boolean persistirRetenciones = !existenRegistros("comprobante_retencion", comprobante.getId());
@@ -60,12 +62,22 @@ public class PersistenciaSeccionesComprobanteService {
         LocalDateTime ahora = LocalDateTime.now();
 
         JsonNode detalles = factura.path("detalles").path("detalle");
-        if (persistirDetalles && detalles.isArray()) {
+        if (detalles.isArray()) {
             int numeroLinea = 1;
             for (JsonNode detalleJson : detalles) {
-                ComprobanteDetalle detalle = new ComprobanteDetalle();
-                detalle.setComprobante(comprobante);
-                detalle.setNumeroLinea(detalleJson.path("numeroLinea").asInt(numeroLinea));
+                int linea = detalleJson.path("numeroLinea").asInt(numeroLinea);
+                if (linea <= 0) {
+                    linea = numeroLinea;
+                }
+
+                ComprobanteDetalle detalle = buscarDetalle(comprobante.getId(), linea);
+                boolean nuevo = detalle == null;
+                if (nuevo) {
+                    detalle = new ComprobanteDetalle();
+                    detalle.setComprobante(comprobante);
+                    detalle.setNumeroLinea(linea);
+                }
+
                 detalle.setCodigoPrincipal(texto(detalleJson, "codigoPrincipal"));
                 detalle.setCodigoAuxiliar(texto(detalleJson, "codigoAuxiliar"));
                 detalle.setDescripcion(texto(detalleJson, "descripcion"));
@@ -73,25 +85,20 @@ public class PersistenciaSeccionesComprobanteService {
                 detalle.setPrecioUnitario(decimal(detalleJson, "precioUnitario"));
                 detalle.setDescuento(decimal(detalleJson, "descuento"));
                 detalle.setPrecioTotalSinImpuesto(decimal(detalleJson, "precioTotalSinImpuesto"));
-                auditar(detalle, usuarioAuditoria, ahora);
-                entityManager.persist(detalle);
+                if (nuevo) {
+                    auditar(detalle, usuarioAuditoria, ahora);
+                    entityManager.persist(detalle);
+                } else {
+                    auditarModificacion(detalle, usuarioAuditoria, ahora);
+                    detalle.setEstadoRegistro(EstadoRegistro.ACTIVO);
+                }
                 entityManager.flush();
 
                 JsonNode impuestos = detalleJson.path("impuestos").path("impuesto");
                 if (impuestos.isArray()) {
-                    for (JsonNode impuestoJson : impuestos) {
-                        ComprobanteDetalleImpuesto impuesto = new ComprobanteDetalleImpuesto();
-                        impuesto.setComprobanteDetalle(detalle);
-                        impuesto.setCodigoImpuesto(texto(impuestoJson, "codigo"));
-                        impuesto.setCodigoPorcentaje(texto(impuestoJson, "codigoPorcentaje"));
-                        impuesto.setTarifa(decimal(impuestoJson, "tarifa"));
-                        impuesto.setBaseImponible(decimal(impuestoJson, "baseImponible"));
-                        impuesto.setValor(decimal(impuestoJson, "valor"));
-                        impuesto.setValorDevolucionIva(decimal(impuestoJson, "valorDevolucionIva"));
-                        auditar(impuesto, usuarioAuditoria, ahora);
-                        entityManager.persist(impuesto);
-                    }
+                    sincronizarImpuestos(detalle, impuestos, usuarioAuditoria, ahora);
                 }
+
                 if (persistirInformacionAdicional) {
                     persistirInformacionAdicional(comprobante,
                             detalleJson.path("detallesAdicionales").path("detAdicional"), usuarioAuditoria, ahora);
@@ -101,17 +108,8 @@ public class PersistenciaSeccionesComprobanteService {
         }
 
         JsonNode pagos = factura.path("infoFactura").path("pagos").path("pago");
-        if (persistirPagos && pagos.isArray()) {
-            for (JsonNode pagoJson : pagos) {
-                ComprobantePago pago = new ComprobantePago();
-                pago.setComprobante(comprobante);
-                pago.setCodigoFormaPago(texto(pagoJson, "formaPago"));
-                pago.setTotal(decimal(pagoJson, "total"));
-                pago.setPlazo(entero(pagoJson, "plazo"));
-                pago.setUnidadTiempo(texto(pagoJson, "unidadTiempo"));
-                auditar(pago, usuarioAuditoria, ahora);
-                entityManager.persist(pago);
-            }
+        if (pagos.isArray()) {
+            sincronizarPagos(comprobante, pagos, usuarioAuditoria, ahora);
         }
 
         if (persistirInformacionAdicional) {
@@ -120,6 +118,103 @@ public class PersistenciaSeccionesComprobanteService {
         }
         if (persistirRetenciones) {
             persistirRetenciones(comprobante, factura.path("impuestos").path("impuesto"), usuarioAuditoria, ahora);
+        }
+    }
+
+    private ComprobanteDetalle buscarDetalle(Long comprobanteId, Integer numeroLinea) {
+        return entityManager.createQuery(
+                "select d from ComprobanteDetalle d "
+                        + "where d.comprobante.id = :comprobanteId and d.numeroLinea = :numeroLinea",
+                ComprobanteDetalle.class)
+                .setParameter("comprobanteId", comprobanteId)
+                .setParameter("numeroLinea", numeroLinea)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void sincronizarImpuestos(ComprobanteDetalle detalle, JsonNode nodos, String usuario, LocalDateTime ahora) {
+        List<ComprobanteDetalleImpuesto> existentes = entityManager.createQuery(
+                "select i from ComprobanteDetalleImpuesto i "
+                        + "where i.comprobanteDetalle.id = :detalleId order by i.id",
+                ComprobanteDetalleImpuesto.class)
+                .setParameter("detalleId", detalle.getId())
+                .getResultList();
+        Set<ComprobanteDetalleImpuesto> procesados = new HashSet<>();
+
+        for (JsonNode nodo : nodos) {
+            String codigo = texto(nodo, "codigo");
+            String porcentaje = texto(nodo, "codigoPorcentaje");
+            ComprobanteDetalleImpuesto impuesto = existentes.stream()
+                    .filter(actual -> !procesados.contains(actual))
+                    .filter(actual -> java.util.Objects.equals(actual.getCodigoImpuesto(), codigo))
+                    .filter(actual -> java.util.Objects.equals(actual.getCodigoPorcentaje(), porcentaje))
+                    .findFirst()
+                    .orElse(null);
+            boolean nuevo = impuesto == null;
+            if (nuevo) {
+                impuesto = new ComprobanteDetalleImpuesto();
+                impuesto.setComprobanteDetalle(detalle);
+            }
+
+            impuesto.setCodigoImpuesto(codigo);
+            impuesto.setCodigoPorcentaje(porcentaje);
+            impuesto.setTarifa(decimal(nodo, "tarifa"));
+            impuesto.setBaseImponible(decimal(nodo, "baseImponible"));
+            impuesto.setValor(decimal(nodo, "valor"));
+            impuesto.setValorDevolucionIva(decimal(nodo, "valorDevolucionIva"));
+            impuesto.setEstadoRegistro(EstadoRegistro.ACTIVO);
+            if (nuevo) {
+                auditar(impuesto, usuario, ahora);
+                entityManager.persist(impuesto);
+            } else {
+                auditarModificacion(impuesto, usuario, ahora);
+                procesados.add(impuesto);
+            }
+        }
+
+        for (ComprobanteDetalleImpuesto impuesto : existentes) {
+            if (!procesados.contains(impuesto)) {
+                impuesto.setEstadoRegistro(EstadoRegistro.ELIMINADO);
+                auditarModificacion(impuesto, usuario, ahora);
+            }
+        }
+    }
+
+    private void sincronizarPagos(Comprobante comprobante, JsonNode nodos, String usuario, LocalDateTime ahora) {
+        List<ComprobantePago> existentes = entityManager.createQuery(
+                "select p from ComprobantePago p where p.comprobante.id = :comprobanteId order by p.id",
+                ComprobantePago.class)
+                .setParameter("comprobanteId", comprobante.getId())
+                .getResultList();
+
+        int indice = 0;
+        for (JsonNode nodo : nodos) {
+            ComprobantePago pago = indice < existentes.size() ? existentes.get(indice) : null;
+            boolean nuevo = pago == null;
+            if (nuevo) {
+                pago = new ComprobantePago();
+                pago.setComprobante(comprobante);
+            }
+
+            pago.setCodigoFormaPago(texto(nodo, "formaPago"));
+            pago.setTotal(decimal(nodo, "total"));
+            pago.setPlazo(entero(nodo, "plazo"));
+            pago.setUnidadTiempo(texto(nodo, "unidadTiempo"));
+            pago.setEstadoRegistro(EstadoRegistro.ACTIVO);
+            if (nuevo) {
+                auditar(pago, usuario, ahora);
+                entityManager.persist(pago);
+            } else {
+                auditarModificacion(pago, usuario, ahora);
+            }
+            indice++;
+        }
+
+        for (int i = indice; i < existentes.size(); i++) {
+            ComprobantePago pago = existentes.get(i);
+            pago.setEstadoRegistro(EstadoRegistro.ELIMINADO);
+            auditarModificacion(pago, usuario, ahora);
         }
     }
 
@@ -185,6 +280,25 @@ public class PersistenciaSeccionesComprobanteService {
             e.setUsuarioCreacion(usuario); e.setFechaCreacion(ahora);
         } else if (entidad instanceof ComprobanteRetencion e) {
             e.setUsuarioCreacion(usuario); e.setFechaCreacion(ahora);
+        }
+    }
+
+    private void auditarModificacion(EstadoRegistroEntity entidad, String usuario, LocalDateTime ahora) {
+        if (entidad instanceof ComprobanteDetalle e) {
+            e.setUsuarioModificacion(usuario);
+            e.setFechaModificacion(ahora);
+        } else if (entidad instanceof ComprobanteDetalleImpuesto e) {
+            e.setUsuarioModificacion(usuario);
+            e.setFechaModificacion(ahora);
+        } else if (entidad instanceof ComprobantePago e) {
+            e.setUsuarioModificacion(usuario);
+            e.setFechaModificacion(ahora);
+        } else if (entidad instanceof ComprobanteInformacionAdicional e) {
+            e.setUsuarioModificacion(usuario);
+            e.setFechaModificacion(ahora);
+        } else if (entidad instanceof ComprobanteRetencion e) {
+            e.setUsuarioModificacion(usuario);
+            e.setFechaModificacion(ahora);
         }
     }
 
