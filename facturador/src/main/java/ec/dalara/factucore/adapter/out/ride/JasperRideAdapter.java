@@ -36,6 +36,7 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalleImpuesto;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteInformacionAdicional;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
+import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
@@ -61,6 +62,7 @@ public class JasperRideAdapter implements RidePort {
 	private final ComprobantePagoService comprobantePagoService;
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
+	private final ComprobanteRepository comprobanteRepository;
 	private final MessageResolver messageResolver;
 
 	@Value("${factucore.path.jasper}")
@@ -76,6 +78,9 @@ public class JasperRideAdapter implements RidePort {
 		if (nombreComprobante == null || nombreComprobante.isBlank()) {
 			throw new ApplicationException(MessageCodes.RIDE_NOMBRE_COMPROBANTE_REQUERIDO);
 		}
+
+		comprobante = comprobanteRepository.buscarParaRide(comprobante.getId())
+				.orElseThrow(() -> new ApplicationException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO));
 
 		String nombrePlantilla = normalizarNombre(nombreComprobante);
 		Path directorio = Path.of(rutaJasper);

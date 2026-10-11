@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,10 @@ import org.springframework.data.repository.query.Param;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 
 public interface ComprobanteRepository extends BaseRepository<Comprobante, Long> {
+
+	@EntityGraph(attributePaths = "empresa")
+	@Query("select c from Comprobante c where c.id = :id")
+	Optional<Comprobante> buscarParaRide(@Param("id") Long id);
 
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
 
