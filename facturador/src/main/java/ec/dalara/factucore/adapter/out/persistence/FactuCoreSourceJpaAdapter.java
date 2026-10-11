@@ -22,6 +22,8 @@ import jakarta.persistence.metamodel.SingularAttribute;
 @Component
 public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
+	private static final String ESTADO_REGISTRO_ACTIVO = "A";
+
 	private final EntityManager entityManager;
 
 	public FactuCoreSourceJpaAdapter(EntityManager entityManager) {
