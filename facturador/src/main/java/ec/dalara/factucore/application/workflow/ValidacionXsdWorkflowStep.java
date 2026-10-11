@@ -45,6 +45,7 @@ public class ValidacionXsdWorkflowStep {
 	private final DocumentoDefinitionProvider definitionProvider;
 	private final DocumentoXsdService documentoXsdService;
 	private final VersionDocumentoXsdService versionDocumentoXsdService;
+	private final PersistenciaSeccionesComprobanteService persistenciaSeccionesComprobanteService;
 	private final SriProperties sriProperties;
 
 	public EtapaWorkflow etapa() {
