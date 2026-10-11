@@ -86,12 +86,13 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 		String sql = "select i.\"" + columnaItem + "\" from \"" + tablaItem + "\" i "
 				+ "join \"catalogo\" c on c.\"id\" = i.\"" + columnaCatalogo + "\" "
-				+ "where c.\"codigo\" = :catalogo and c.\"estado_registro\" = 'ACTIVO' "
-				+ "and i.\"estado_registro\" = 'ACTIVO' "
+				+ "where c.\"codigo\" = :catalogo and c.\"estado_registro\" = :estadoActivo "
+				+ "and i.\"estado_registro\" = :estadoActivo "
 				+ "order by i.\"orden\" asc, i.\"id\" asc limit 1";
 
 		Object resultado = entityManager.createNativeQuery(sql).setParameter("catalogo", partes.claveCatalogo())
-				.getResultList().stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
+				.setParameter("estadoActivo", EstadoRegistro.ACTIVO).getResultList().stream()
+				.filter(java.util.Objects::nonNull).findFirst().orElse(null);
 
 		return new ValorOrigen(resultado, tipoDato(atributo.getJavaType()));
 	}
@@ -111,13 +112,15 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 
 		String sql = "select e.\"" + columnaValor + "\", e.\"tipo_dato\" from \"" + tabla
 				+ "\" e where e.\"" + columnaEmpresa + "\" = :idEmpresa and e.\"" + columnaClave
-				+ "\" = :clave and e.\"estado_registro\" = 'ACTIVO' "
+				+ "\" = :clave and e.\"estado_registro\" = :estadoActivo "
 				+ "and (e.\"fecha_vigencia_hasta\" is null or e.\"fecha_vigencia_hasta\" >= CURRENT_TIMESTAMP) "
 				+ "and e.\"fecha_vigencia_desde\" <= CURRENT_TIMESTAMP "
 				+ "order by e.\"fecha_vigencia_desde\" desc limit 1";
 
 		Object fila = entityManager.createNativeQuery(sql).setParameter("idEmpresa", idEmpresa)
-				.setParameter("clave", partes.campo()).getResultList().stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
+				.setParameter("clave", partes.campo())
+				.setParameter("estadoActivo", EstadoRegistro.ACTIVO).getResultList().stream()
+				.filter(java.util.Objects::nonNull).findFirst().orElse(null);
 
 		if (fila == null) {
 			return new ValorOrigen(null, "String");
