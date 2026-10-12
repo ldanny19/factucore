@@ -1,0 +1,15 @@
+{
+  "idTransaccion": "{{idTransaccion}}",
+  "fechaInicio": "{{fechaInicioActual}}",
+  "canal": "WEB",
+  "idEmpresa": {{idEmpresaActual}},
+  "datos": {
+    "idCatalogoItem": 804,
+    "codigoImpuesto": "2",
+    "codigoPorcentaje": "4",
+    "tarifa": 15.00,
+    "fechaVigenciaDesde": "2024-04-01",
+    "fechaVigenciaHasta": null,
+    "observacion": "Tarifa IVA 15% vigente desde el 1 de abril de 2024."
+  }
+}
