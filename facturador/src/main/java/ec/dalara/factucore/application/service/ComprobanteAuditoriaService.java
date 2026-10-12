@@ -2,6 +2,7 @@ package ec.dalara.factucore.application.service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -83,6 +84,15 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 	private int siguienteIntento(Long comprobanteId, String etapa) {
 		return comprobanteAuditoriaRepository.findByComprobanteIdAndEtapaOrderByIntentoDesc(comprobanteId, etapa)
 				.stream().findFirst().map(ComprobanteAuditoria::getIntento).map(actual -> actual + 1).orElse(1);
+	}
+
+	public LocalDateTime obtenerFechaPrimerEnvio(Long comprobanteId) {
+		return listarPorComprobante(comprobanteId).stream()
+				.filter(auditoria -> "ENVIO_SRI".equals(auditoria.getEtapa()))
+				.map(ComprobanteAuditoria::getFechaInicio)
+				.filter(fecha -> fecha != null)
+				.min(Comparator.naturalOrder())
+				.orElse(null);
 	}
 
 	public List<ComprobanteAuditoria> listarPorComprobante(Long comprobanteId) {
