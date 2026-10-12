@@ -1,27 +1,34 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   config:
-    import: optional:configtree:/run/secrets/
+    import: "optional:configtree:/run/secrets/"
   application:
     name: factucore-notificacion
   messages:
     basename: "file:${notificacion.path.config}/messages"
+    encoding: UTF-8
+    fallback-to-system-locale: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/db_notificaciones}
     username: ${SPRING_DATASOURCE_USERNAME:usr_notificaciones}
     password: ${postgres_notificaciones_password}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
   flyway:
     enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
   mail:
-    host: REEMPLAZAR_SMTP_HOST
-    port: 587
-    username: REEMPLAZAR_SMTP_USUARIO
+    host: ${FACTUCORE_NOTIFICACION_SMTP_HOST}
+    port: ${FACTUCORE_NOTIFICACION_SMTP_PORT:587}
+    username: ${FACTUCORE_NOTIFICACION_SMTP_USUARIO}
+    password: ${smtp_notificaciones_password}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
@@ -31,32 +38,61 @@ factucore:
     nivel: ${FACTUCORE_LOGGING_NIVEL:INFO}
     ruta: ${FACTUCORE_LOGGING_RUTA:./logs}
     archivo: ${FACTUCORE_LOGGING_ARCHIVO:factucore-notificacion.log}
+
   messaging:
-    enabled: true
-    broker: KAFKA
-    kafka:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
-      consumer:
-        auto-offset-reset: earliest
-        enable-auto-commit: false
-        concurrency: 1
-    rabbitmq:
-      addresses: ${FACTUCORE_MESSAGING_RABBITMQ_ADDRESSES:localhost:5672}
-      username: ${FACTUCORE_MESSAGING_RABBITMQ_USERNAME:guest}
-      password: ${FACTUCORE_MESSAGING_RABBITMQ_PASSWORD:guest}
-      virtual-host: ${FACTUCORE_MESSAGING_RABBITMQ_VIRTUAL_HOST:/}
+    enabled: ${FACTUCORE_MESSAGING_ENABLED:true}
+
+    resiliencia:
+      reintentos:
+        intervalo-ms: ${FACTUCORE_MESSAGING_REINTENTOS_INTERVALO_MS:5000}
+        max-intentos: ${FACTUCORE_MESSAGING_REINTENTOS_MAX_INTENTOS:3}
+        dlq-habilitada: ${FACTUCORE_MESSAGING_DLQ_HABILITADA:true}
+        sufijo-dlq: ${FACTUCORE_MESSAGING_DLQ_SUFIJO:.DLQ}
+      timeout:
+        conexion-ms: ${FACTUCORE_MESSAGING_TIMEOUT_CONEXION_MS:5000}
+        envio-ms: ${FACTUCORE_MESSAGING_TIMEOUT_ENVIO_MS:10000}
+
+    conexiones:
+      broker-principal:
+        tipo: ${FACTUCORE_MESSAGING_BROKER_PRINCIPAL_TIPO:KAFKA}
+        kafka:
+          bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          client-id: ${FACTUCORE_MESSAGING_KAFKA_CLIENT_ID:factucore-notificacion}
+          security-protocol: ${FACTUCORE_MESSAGING_KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+          producer:
+            acks: ${FACTUCORE_MESSAGING_KAFKA_PRODUCER_ACKS:all}
+          consumer:
+            auto-offset-reset: ${FACTUCORE_MESSAGING_KAFKA_CONSUMER_AUTO_OFFSET_RESET:earliest}
+            enable-auto-commit: ${FACTUCORE_MESSAGING_KAFKA_CONSUMER_ENABLE_AUTO_COMMIT:false}
+            concurrency: ${FACTUCORE_MESSAGING_KAFKA_CONSUMER_CONCURRENCY:1}
+        rabbitmq:
+          addresses: ${FACTUCORE_MESSAGING_RABBITMQ_ADDRESSES:localhost:5672}
+          username: ${FACTUCORE_MESSAGING_RABBITMQ_USERNAME:guest}
+          password: ${FACTUCORE_MESSAGING_RABBITMQ_PASSWORD:guest}
+          virtual-host: ${FACTUCORE_MESSAGING_RABBITMQ_VIRTUAL_HOST:/}
+          exchange-type: ${FACTUCORE_MESSAGING_RABBITMQ_EXCHANGE_TYPE:topic}
+          exchange-prefix: ${FACTUCORE_MESSAGING_RABBITMQ_EXCHANGE_PREFIX:factucore}
+          durable: ${FACTUCORE_MESSAGING_RABBITMQ_DURABLE:true}
+          concurrency: ${FACTUCORE_MESSAGING_RABBITMQ_CONCURRENCY:1}
+          connection-timeout-ms: ${FACTUCORE_MESSAGING_RABBITMQ_CONNECTION_TIMEOUT_MS:5000}
+          channel-cache-size: ${FACTUCORE_MESSAGING_RABBITMQ_CHANNEL_CACHE_SIZE:25}
+          connection-limit: ${FACTUCORE_MESSAGING_RABBITMQ_CONNECTION_LIMIT:10}
+
+    destinos:
+      notificacion:
+        conexion: broker-principal
+        nombre: ${FACTUCORE_NOTIFICACION_DESTINO:notificacion}
 
 notificacion:
   path:
-    config: __CONFIG__
-  topico: ${FACTUCORE_NOTIFICACION_TOPICO:notificacion}
+    config: ${FACTUCORE_NOTIFICACION_PATH_CONFIG:${FACTUCORE_PATH_CONFIG:/app/config}}
   correo:
     remitente: ${FACTUCORE_NOTIFICACION_CORREO_REMITENTE}
     asunto: ${FACTUCORE_NOTIFICACION_CORREO_ASUNTO:Comprobante electrónico autorizado}
   plantilla:
     ruta: ${FACTUCORE_NOTIFICACION_PLANTILLA_RUTA:/app/config/plantillas/comprobante-autorizado.html}
   reintentos:
-    max-intentos: 5
-    espera-reintento-ms: 60000
+    max-intentos: ${FACTUCORE_NOTIFICACION_MAX_INTENTOS:5}
+    espera-reintento-ms: ${FACTUCORE_NOTIFICACION_ESPERA_REINTENTO_MS:60000}
   recuperacion:
-    intervalo-ms: 30000
+    intervalo-ms: ${FACTUCORE_NOTIFICACION_RECUPERACION_INTERVALO_MS:30000}
