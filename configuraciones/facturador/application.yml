@@ -20,6 +20,7 @@ spring:
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
+    password: ${postgres_facturador_password}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: FactuCoreHikariCP
