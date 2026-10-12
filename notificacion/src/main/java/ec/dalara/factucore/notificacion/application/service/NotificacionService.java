@@ -5,8 +5,12 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
 import ec.dalara.factucore.messaging.api.notificacion.ComprobanteAutorizado;
 import ec.dalara.factucore.notificacion.application.port.out.CorreoPort;
 import ec.dalara.factucore.notificacion.infrastructure.config.NotificacionProperties;
@@ -18,6 +22,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class NotificacionService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionService.class);
+
     private final CorreoPort correoPort;
     private final PlantillaCorreoService plantillaCorreoService;
     private final NotificacionProperties properties;
@@ -27,6 +34,7 @@ public class NotificacionService {
         if (comprobante == null) {
             throw new IllegalArgumentException(messageResolver.resolver(MessageCodes.COMPROBANTE_REQUERIDO));
         }
+
         validar(comprobante);
         Path xml = Path.of(comprobante.rutaXmlAutorizado());
         Path ride = Path.of(comprobante.rutaRide());
@@ -34,9 +42,36 @@ public class NotificacionService {
                 "nombreCliente", valor(comprobante.nombreCliente()),
                 "nombreEmpresa", valor(comprobante.nombreEmpresa()),
                 "fechaComprobante", comprobante.fechaComprobante() == null ? "" : comprobante.fechaComprobante().toString()));
-        correoPort.enviar(comprobante.correo(), properties.getCorreo().getAsunto(), contenido,
-                new CorreoPort.AdjuntoCorreo(nombreZip(xml), "application/zip", comprimirXml(xml)),
-                new CorreoPort.AdjuntoCorreo(ride.getFileName().toString(), "application/pdf", leer(ride)));
+
+        int maxIntentos = Math.max(properties.getReintentos().getMaxIntentos(), 1);
+        for (int intento = 1; intento <= maxIntentos; intento++) {
+            try {
+                correoPort.enviar(comprobante.correo(), properties.getCorreo().getAsunto(), contenido,
+                        new CorreoPort.AdjuntoCorreo(nombreZip(xml), "application/zip", comprimirXml(xml)),
+                        new CorreoPort.AdjuntoCorreo(ride.getFileName().toString(), "application/pdf", leer(ride)));
+                return;
+            } catch (RuntimeException exception) {
+                if (intento >= maxIntentos) {
+                    throw exception;
+                }
+
+                LOGGER.warn("Falló el envío de notificación. Intento {} de {}.", intento, maxIntentos, exception);
+                esperar(properties.getReintentos().getEsperaReintentoMs());
+            }
+        }
+    }
+
+    private void esperar(long esperaMs) {
+        if (esperaMs <= 0) {
+            return;
+        }
+
+        try {
+            Thread.sleep(esperaMs);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Se interrumpió la espera entre intentos de notificación.", exception);
+        }
     }
 
     private void validar(ComprobanteAutorizado comprobante) {

@@ -11,10 +11,8 @@ public class NotificacionProperties {
 
     private Correo correo = new Correo();
     private Plantilla plantilla = new Plantilla();
+    private Reintentos reintentos = new Reintentos();
     private String topico = "factucore.notificacion.comprobante";
-
-    public String getTopico() { return topico; }
-    public void setTopico(String topico) { this.topico = topico; }
 
     @Getter
     @Setter
@@ -27,5 +25,12 @@ public class NotificacionProperties {
     @Setter
     public static class Plantilla {
         private String ruta;
+    }
+
+    @Getter
+    @Setter
+    public static class Reintentos {
+        private int maxIntentos = 5;
+        private long esperaReintentoMs = 60000;
     }
 }

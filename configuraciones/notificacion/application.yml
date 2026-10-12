@@ -47,4 +47,6 @@ factucore:
       asunto: ${FACTUCORE_NOTIFICACION_CORREO_ASUNTO:Comprobante electrónico autorizado}
     plantilla:
       ruta: ${FACTUCORE_NOTIFICACION_PLANTILLA_RUTA:/app/config/plantillas/comprobante-autorizado.html}
-
+    reintentos:
+      max-intentos: ${FACTUCORE_NOTIFICACION_MAX_INTENTOS:5}
+      espera-reintento-ms: ${FACTUCORE_NOTIFICACION_ESPERA_REINTENTO_MS:60000}
