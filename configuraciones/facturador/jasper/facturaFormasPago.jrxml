@@ -22,10 +22,16 @@
 			</rectangle>
 			<staticText>
 				<reportElement x="68" y="1" width="128" height="13" uuid="6b1e2e9a-c3ac-4a29-938a-441bfa5a09e4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
 				<text><![CDATA[Forma de Pago]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="212" y="0" width="31" height="13" uuid="507144df-e26f-4173-a4a2-59f95b673925"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
 				<text><![CDATA[Valor]]></text>
 			</staticText>
 			<line>

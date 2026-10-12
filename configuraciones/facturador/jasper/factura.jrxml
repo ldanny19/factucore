@@ -424,7 +424,7 @@
 			</staticText>
 			<staticText>
 				<reportElement x="371" y="5" width="62" height="19" uuid="8a438748-c4be-4ef4-9cdb-ba31aeeb4cb8"/>
-				<textElement textAlignment="Center" verticalAlignment="Bottom">
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Precio Unitario]]></text>
@@ -450,7 +450,7 @@
 			</line>
 			<staticText>
 				<reportElement x="437" y="5" width="50" height="19" uuid="6ed714b5-9a8b-4f9d-b682-96e273a9fdd6"/>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Descuento]]></text>
