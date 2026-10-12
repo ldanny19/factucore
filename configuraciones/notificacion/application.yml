@@ -25,13 +25,18 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
   mail:
-    host: ${FACTUCORE_NOTIFICACION_SMTP_HOST}
+    host: ${FACTUCORE_NOTIFICACION_SMTP_HOST:smtp.gmail.com}
     port: ${FACTUCORE_NOTIFICACION_SMTP_PORT:587}
     username: ${FACTUCORE_NOTIFICACION_SMTP_USUARIO}
-    password: ${smtp_notificaciones_password}
+    password: ${smtp_notificaciones_password:${FACTUCORE_NOTIFICACION_SMTP_PASSWORD}}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.ssl.enable: false
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 
 factucore:
   logging:
@@ -87,7 +92,7 @@ notificacion:
   path:
     config: ${FACTUCORE_NOTIFICACION_PATH_CONFIG:${FACTUCORE_PATH_CONFIG:/app/config}}
   correo:
-    remitente: ${FACTUCORE_NOTIFICACION_CORREO_REMITENTE}
+    remitente: ${FACTUCORE_NOTIFICACION_CORREO_REMITENTE:${FACTUCORE_NOTIFICACION_SMTP_USUARIO}}
     asunto: ${FACTUCORE_NOTIFICACION_CORREO_ASUNTO:Comprobante electrónico autorizado}
   plantilla:
     ruta: ${FACTUCORE_NOTIFICACION_PLANTILLA_RUTA:/app/config/plantillas/comprobante-autorizado.html}
