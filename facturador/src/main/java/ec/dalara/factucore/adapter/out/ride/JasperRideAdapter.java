@@ -3,8 +3,6 @@ package ec.dalara.factucore.adapter.out.ride;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.file.InvalidPathException;
-import java.util.Base64;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.math.BigDecimal;
@@ -257,28 +255,21 @@ public class JasperRideAdapter implements RidePort {
 		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
 			return null;
 		}
+
 		var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), "LOGO",
 				LocalDateTime.now()).orElse(null);
 		if (configuracion == null || configuracion.getValor() == null || configuracion.getValor().isBlank()) {
 			return null;
 		}
-		String valor = configuracion.getValor().trim();
-		if (valor.startsWith("data:image/")) {
-			int separador = valor.indexOf(',');
-			if (separador >= 0) {
-				valor = valor.substring(separador + 1);
-			}
-		}
+
+		Path archivo;
 		try {
-			return new ByteArrayInputStream(Base64.getDecoder().decode(valor));
-		} catch (IllegalArgumentException exception) {
-			try {
-				Path archivo = Path.of(valor);
-				return Files.isRegularFile(archivo) ? new ByteArrayInputStream(Files.readAllBytes(archivo)) : null;
-			} catch (InvalidPathException invalidPathException) {
-				return null;
-			}
+			archivo = Path.of(configuracion.getValor().trim());
+		} catch (java.nio.file.InvalidPathException exception) {
+			return null;
 		}
+
+		return Files.isRegularFile(archivo) && Files.isReadable(archivo) ? Files.newInputStream(archivo) : null;
 	}
 
 	private Collection<Map<String, Object>> construirInformacionAdicional(Long comprobanteId) {
