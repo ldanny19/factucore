@@ -27,7 +27,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/tarifas-tributarias/vigencias")
+@RequestMapping("/api/v1/tarifas-tributarias")
 @RequiredArgsConstructor
 public class TarifaTributariaVigenciaController {
 
@@ -39,6 +39,7 @@ public class TarifaTributariaVigenciaController {
             @Valid @RequestBody AdministracionGlobalRequest<TarifaTributariaVigenciaRequest> request) {
         respuestas.validarFechaInicio(request.getFechaInicio());
         TarifaTributariaVigencia tarifa = toEntity(null, request.getDatos());
+        tarifa.setEstadoRegistro(EstadoRegistro.ACTIVO);
         tarifa.setUsuarioCreacion(request.getCanal());
         tarifa.setFechaCreacion(LocalDateTime.now());
         tarifa = tarifaService.guardar(tarifa);
@@ -114,7 +115,7 @@ public class TarifaTributariaVigenciaController {
                 .catalogoItem(CatalogoItem.builder().id(request.getIdCatalogoItem()).build())
                 .codigoImpuesto(request.getCodigoImpuesto()).codigoPorcentaje(request.getCodigoPorcentaje())
                 .tarifa(request.getTarifa()).fechaVigenciaDesde(request.getFechaVigenciaDesde())
-                .fechaVigenciaHasta(request.getFechaVigenciaHasta()).estadoRegistro(EstadoRegistro.ACTIVO)
+                .fechaVigenciaHasta(request.getFechaVigenciaHasta())
                 .observacion(request.getObservacion()).build();
     }
 

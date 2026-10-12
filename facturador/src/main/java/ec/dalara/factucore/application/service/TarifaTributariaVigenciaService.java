@@ -59,7 +59,7 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
         if (codigoImpuesto == null || codigoImpuesto.isBlank() || fecha == null) {
             return List.of();
         }
-        return tarifaRepository.buscarVigentesPorImpuesto(codigoImpuesto, EstadoRegistro.ACTIVO, fecha);
+        return tarifaRepository.buscarVigentesPorImpuesto(codigoImpuesto, fecha);
     }
 
     @Transactional(readOnly = true)
@@ -69,7 +69,7 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
                 || codigoPorcentaje.isBlank() || fecha == null) {
             return Optional.empty();
         }
-        return tarifaRepository.buscarVigente(codigoImpuesto, codigoPorcentaje, EstadoRegistro.ACTIVO, fecha);
+        return tarifaRepository.buscarVigente(codigoImpuesto, codigoPorcentaje, fecha);
     }
 
     private void validar(TarifaTributariaVigencia tarifa) {
