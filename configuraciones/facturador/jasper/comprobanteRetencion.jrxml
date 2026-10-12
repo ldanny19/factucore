@@ -48,14 +48,14 @@
 			<staticText>
 				<reportElement uuid="21867966-8d25-432f-a854-851322a78ee1" mode="Transparent" x="301" y="11" width="65" height="20"/>
 				<textElement verticalAlignment="Middle">
-					<font size="12" isBold="true"/>
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[R.U.C.:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="305208e5-f891-40eb-b6a9-111202158746" mode="Transparent" x="301" y="42" width="247" height="21"/>
 				<textElement verticalAlignment="Middle">
-					<font size="14" isBold="true"/>
+					<font size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[COMPROBANTE DE RETENCIÓN]]></text>
 			</staticText>
@@ -96,7 +96,7 @@
 			<textField>
 				<reportElement uuid="21f91fd0-ee8f-4123-835f-7cff0bd5583a" mode="Transparent" x="301" y="115" width="253" height="25"/>
 				<textElement verticalAlignment="Middle">
-					<font size="9" isBold="true"/>
+					<font size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($P{NUM_AUT}==null)?"NO ENVIADA":$P{NUM_AUT}]]></textFieldExpression>
 			</textField>
@@ -127,14 +127,14 @@
 			<staticText>
 				<reportElement uuid="f083eac7-1599-4343-9fb7-642786ffe32e" mode="Transparent" x="1" y="379" width="209" height="13"/>
 				<textElement verticalAlignment="Middle">
-					<font size="9" isBold="true"/>
+					<font size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Razón Social / Nombres y Apellidos:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="5e376151-976f-45be-9b5e-7d04ca942c4a" mode="Transparent" x="369" y="379" width="66" height="13"/>
 				<textElement verticalAlignment="Middle">
-					<font size="9" isBold="true"/>
+					<font size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Identificación:]]></text>
 			</staticText>
@@ -151,7 +151,7 @@
 			<staticText>
 				<reportElement uuid="40cd2a76-7047-49f5-a6aa-6f9d48dae9e0" mode="Transparent" x="301" y="71" width="31" height="13"/>
 				<textElement verticalAlignment="Middle">
-					<font size="12" isBold="true"/>
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[No.]]></text>
 			</staticText>
@@ -163,14 +163,14 @@
 			<staticText>
 				<reportElement uuid="c7c89a73-eb5d-4dec-9970-b76375792240" mode="Transparent" x="301" y="188" width="63" height="20"/>
 				<textElement verticalAlignment="Middle">
-					<font isBold="true"/>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[AMBIENTE:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="39e43fce-d35f-4fcc-a4d2-076f38d0c6d3" mode="Transparent" x="303" y="213" width="55" height="20"/>
 				<textElement verticalAlignment="Middle">
-					<font isBold="true"/>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[EMISIÓN:]]></text>
 			</staticText>
@@ -189,7 +189,7 @@
 			<staticText>
 				<reportElement uuid="3b0fbf33-ca05-41c5-ae8c-f8b5233e2ba6" x="15" y="234" width="48" height="30"/>
 				<textElement verticalAlignment="Top">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Dirección Matriz:]]></text>
 			</staticText>
@@ -205,14 +205,14 @@
 					<printWhenExpression><![CDATA[$P{CONT_ESPECIAL}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Contribuyente Especial Nro ]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="28212bb5-1a61-471d-bc40-b95e8c3b0693" x="16" y="318" width="177" height="14"/>
 				<textElement verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[OBLIGADO A LLEVAR CONTABILIDAD]]></text>
 			</staticText>
@@ -226,7 +226,7 @@
 			<staticText>
 				<reportElement uuid="f50c2650-c3d3-42d6-bf00-8fdd42cdf49a" x="15" y="268" width="51" height="30"/>
 				<textElement verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Dirección Sucursal:]]></text>
 			</staticText>
@@ -240,14 +240,14 @@
 			<textField isBlankWhenNull="true">
 				<reportElement uuid="ffc0dea1-ff17-4eba-a68f-dc2ae3feb687" x="210" y="302" width="85" height="14"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
-					<font size="7" isBold="true"/>
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{CONT_ESPECIAL}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement uuid="d5b2f0f5-6888-4be3-8bfa-40da86dd1d3a" x="210" y="316" width="59" height="14"/>
 				<textElement verticalAlignment="Middle">
-					<font size="7" isBold="true"/>
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{LLEVA_CONTABILIDAD}]]></textFieldExpression>
 			</textField>
@@ -256,7 +256,7 @@
 					<printWhenExpression><![CDATA[$P{REGIMEN_RIMPE}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement>
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[CONTRIBUYENTE RÉGIMEN RIMPE]]></text>
 			</staticText>
@@ -265,7 +265,7 @@
 					<printWhenExpression><![CDATA[$P{AGENTE_RETENCION}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement>
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Agente de Retención Resolución No.]]></text>
 			</staticText>
@@ -286,7 +286,7 @@
 			<staticText>
 				<reportElement uuid="a311970d-b9cf-4b01-ade7-2086c70cd1d9" x="2" y="403" width="120" height="13"/>
 				<textElement>
-					<font isBold="true"/>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Fecha de Emisión]]></text>
 			</staticText>
@@ -303,28 +303,28 @@
 			<staticText>
 				<reportElement uuid="7fe6a2b4-1c4e-4cc8-a3f7-e5d20d3d98da" mode="Transparent" x="254" y="0" width="80" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Base Imponible para la Retención ]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="635582c8-5389-43ce-8eaa-0a7858e4cc03" mode="Transparent" x="353" y="0" width="51" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[IMPUESTO]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="ce81c746-8fbc-41ad-8c0c-ec0952306a48" mode="Transparent" x="421" y="0" width="59" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Porcentaje Retención]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="49eef277-2900-4d70-ae24-26501afe938a" mode="Transparent" x="481" y="0" width="71" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Valor Retenido]]></text>
 			</staticText>
@@ -343,7 +343,7 @@
 			<staticText>
 				<reportElement uuid="f7154d7f-c7e5-489e-a917-fd41b49393ae" mode="Transparent" x="194" y="0" width="51" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Ejercicio Fiscal]]></text>
 			</staticText>
@@ -356,14 +356,14 @@
 			<staticText>
 				<reportElement uuid="537eb80c-6908-48a0-b310-28f4de2413f2" mode="Transparent" x="2" y="0" width="63" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Comprobante]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="63a3a47d-7fa1-4c19-a0e7-b48e1e88f251" mode="Transparent" x="71" y="0" width="51" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Número]]></text>
 			</staticText>
@@ -373,7 +373,7 @@
 			<staticText>
 				<reportElement uuid="ab220188-b351-4ba0-831c-6685caad7ae5" mode="Transparent" x="127" y="0" width="58" height="28"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="8" isBold="true"/>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Fecha Emisión]]></text>
 			</staticText>
@@ -484,7 +484,7 @@
 			<staticText>
 				<reportElement uuid="b7965416-79aa-4e93-93c4-4160fe3664eb" mode="Transparent" x="8" y="21" width="152" height="13"/>
 				<textElement>
-					<font isBold="true"/>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Información Adicional]]></text>
 			</staticText>

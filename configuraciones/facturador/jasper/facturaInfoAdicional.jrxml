@@ -23,7 +23,7 @@
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement x="0" y="2" width="128" height="18" uuid="76a2c15a-293b-4661-943d-e150bd676905"/>
 				<textElement>
-					<font fontName="SansSerif" size="8" isBold="true"/>
+					<font fontName="SansSerif" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
 			</textField>
