@@ -25,6 +25,7 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
   mail:
+    password: ${notificacion_smtp_password}
     host: smtp.gmail.com
     port: 587
     username: ing.dlamilla@gmail.com
