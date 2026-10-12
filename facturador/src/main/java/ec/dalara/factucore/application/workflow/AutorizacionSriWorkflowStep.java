@@ -106,13 +106,20 @@ public class AutorizacionSriWorkflowStep {
 			if (intentosPrevios + 1 >= maxIntentos) {
 				contexto.getComprobante().setFechaProximoReproceso(null);
 				var ultimoMensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
-				contexto.getComprobante().setCodigoError(ultimoMensaje == null ? MessageCodes.SRI_RESPUESTA_INVALIDA
-						: ultimoMensaje.identificador());
-				contexto.getComprobante().setMensajeError(ultimoMensaje == null ? respuesta.estado()
-						: sriCodigoCatalogoService.resolverDescripcion(ultimoMensaje.identificador(), ultimoMensaje.mensaje()));
+				String codigoError = ultimoMensaje == null || ultimoMensaje.identificador() == null
+						|| ultimoMensaje.identificador().isBlank()
+						? MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS
+						: ultimoMensaje.identificador();
+				String mensajeError = ultimoMensaje == null || ultimoMensaje.mensaje() == null
+						|| ultimoMensaje.mensaje().isBlank()
+						? messageResolver.resolver(MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS)
+						: sriCodigoCatalogoService.resolverDescripcion(codigoError, ultimoMensaje.mensaje());
+				contexto.getComprobante().setCodigoError(codigoError);
+				contexto.getComprobante().setMensajeError(mensajeError);
 				evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
 						contexto.getSolicitud().getUsuario());
-				return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name());
+				return ResultadoEtapa.fallida(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name(),
+						codigoError, mensajeError);
 			}
 
 			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1000);
