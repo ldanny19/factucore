@@ -1,0 +1,2 @@
+"id","catalogo_item_id","codigo_impuesto","codigo_porcentaje","tarifa","fecha_vigencia_desde","fecha_vigencia_hasta","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,804,"2","4",15.0000,"2024-04-01",NULL,"A","jucarsa",NULL,"2026-10-11 18:16:31.570201",NULL,"Tarifa IVA 15% vigente desde el 1 de abril de 2024."

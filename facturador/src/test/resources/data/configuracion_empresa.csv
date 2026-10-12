@@ -1,0 +1,6 @@
+"id","empresa_id","clave","valor","tipo_dato","fecha_vigencia_desde","fecha_vigencia_hasta","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,4,"AMBIENTE","1","STRING","2025-12-31 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-05 11:08:44.941533",NULL,NULL
+2,4,"LOGO","/app/imagenes/logo.jpg","STRING","2025-12-31 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-11 07:44:39.751036",NULL,NULL
+3,4,"TIPO_EMISION","1","STRING","2025-12-31 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-11 07:47:12.400131",NULL,NULL
+4,4,"TIEMPO_MAX_COD_70","86400","INTEGER","2025-12-31 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-12 05:49:56.818025",NULL,NULL
+5,4,"TIEMPO_INTERVALO_COD_70","60","INTEGER","2025-12-31 19:00:00",NULL,"A","jucarsa",NULL,"2026-10-12 05:50:28.436526",NULL,NULL
