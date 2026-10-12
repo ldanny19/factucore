@@ -28,7 +28,6 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: ing.dlamilla@gmail.com
-    password: ${smtp_notificaciones_password}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
@@ -73,7 +72,7 @@ factucore:
         rabbitmq:
           addresses: ${RABBITMQ_ADDRESSES:localhost:5672}
           username: ${RABBITMQ_USERNAME:guest}
-          password: ${rabbitmq_password}
+          password: ${rabbitmq_password:}
           virtual-host: /
           exchange-type: topic
           exchange-prefix: factucore
