@@ -13,6 +13,7 @@ import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.TarifaTributariaVigencia;
 import ec.dalara.factucore.infrastructure.persistence.repository.BaseRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.TarifaTributariaVigenciaRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.CatalogoItemRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,6 +23,7 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
     private static final LocalDate FECHA_MAXIMA = LocalDate.of(9999, 12, 31);
 
     private final TarifaTributariaVigenciaRepository tarifaRepository;
+    private final CatalogoItemRepository catalogoItemRepository;
 
     @Override
     protected BaseRepository<TarifaTributariaVigencia, Long> getRepository() {
@@ -32,6 +34,10 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
     @Transactional
     public TarifaTributariaVigencia guardar(TarifaTributariaVigencia tarifa) {
         validar(tarifa);
+        tarifa.setCatalogoItem(catalogoItemRepository.findByIdAndEstadoRegistro(
+                tarifa.getCatalogoItem().getId(), EstadoRegistro.ACTIVO)
+                .orElseThrow(() -> new ApplicationException(
+                        MessageCodes.TARIFA_TRIBUTARIA_VIGENCIA_CATALOGO_ITEM_REQUERIDO)));
         Long id = tarifa.getId() == null ? -1L : tarifa.getId();
         if (tarifaRepository.existeSolapamiento(tarifa.getCodigoImpuesto(), tarifa.getCodigoPorcentaje(),
                 tarifa.getFechaVigenciaDesde(), tarifa.getFechaVigenciaHasta(), id, FECHA_MAXIMA)) {
