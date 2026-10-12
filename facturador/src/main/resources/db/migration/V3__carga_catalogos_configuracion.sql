@@ -65,19 +65,20 @@ INSERT INTO catalogo_item (
     (41, 7, '37', 'ERROR - AUTORIZACION - RUC sin autorización de emisión', 'Verificar que el RUC tenga autorización para emitir comprobantes electrónicos.', 8, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
     (42, 7, '39', 'ERROR - AUTORIZACION - Firma inválida', 'Verificar la firma electrónica del emisor.', 9, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
     (43, 7, '40', 'ERROR - AUTORIZACION - Error en el certificado', 'Verificar que el certificado exista y pueda convertirse a X509.', 10, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (44, 7, '59', 'ADVERTENCIA - AUTORIZACION - Identificación no existe', 'Verificar la identificación del adquirente.', 11, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (45, 7, '60', 'ADVERTENCIA - AUTORIZACION - Ambiente de ejecución', 'Advertencia esperada en ambiente de pruebas/certificación.', 12, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (46, 7, '62', 'ADVERTENCIA - AUTORIZACION - Identificación incorrecta', 'Verificar el número de identificación del adquirente.', 13, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (47, 7, '68', 'ADVERTENCIA - AUTORIZACION - Documento sustento', 'Verificar la existencia del comprobante relacionado.', 14, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (48, 7, '70', 'ESTADO - AUTORIZACION - Clave de acceso en procesamiento', 'No reenviar ni generar otra clave/secuencial; esperar respuesta final del SRI.', 15, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (49, 7, '80', 'ERROR - AUTORIZACION - Estructura de clave de acceso', 'Verificar que la clave tenga 49 dígitos numéricos y que el parámetro no esté vacío.', 16, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
-    (50, 8, '0', 'Código IVA 0', 'Código de porcentaje IVA 0.', 1, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
-    (51, 8, '2', 'Código IVA 2', 'Código de porcentaje IVA 2.', 2, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
-    (52, 8, '3', 'Código IVA 3', 'Código de porcentaje IVA 3.', 3, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
-    (53, 8, '4', 'Código IVA 4', 'Código de porcentaje IVA 4.', 4, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
-    (54, 8, '5', 'Código IVA 5', 'Código de porcentaje IVA 5.', 5, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
-    (55, 8, '6', 'IVA no objeto', 'Código de IVA no objeto.', 6, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
-    (56, 8, '7', 'IVA exento', 'Código de IVA exento.', 7, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL)
+    (44, 7, '45', 'ERROR - RECEPCION - Secuencial registrado', 'El secuencial del comprobante ya se encuentra registrado en la base de datos del SRI.', 11, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (45, 7, '59', 'ADVERTENCIA - AUTORIZACION - Identificación no existe', 'Verificar la identificación del adquirente.', 12, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (46, 7, '60', 'ADVERTENCIA - AUTORIZACION - Ambiente de ejecución', 'Advertencia esperada en ambiente de pruebas/certificación.', 13, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (47, 7, '62', 'ADVERTENCIA - AUTORIZACION - Identificación incorrecta', 'Verificar el número de identificación del adquirente.', 14, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (48, 7, '68', 'ADVERTENCIA - AUTORIZACION - Documento sustento', 'Verificar la existencia del comprobante relacionado.', 15, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (49, 7, '70', 'ESTADO - AUTORIZACION - Clave de acceso en procesamiento', 'No reenviar ni generar otra clave/secuencial; esperar respuesta final del SRI.', 16, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (50, 7, '80', 'ERROR - AUTORIZACION - Estructura de clave de acceso', 'Verificar que la clave tenga 49 dígitos numéricos y que el parámetro no esté vacío.', 17, 'A', 'FLYWAY', NULL, '2026-10-09 21:54:32.464338', NULL, NULL),
+    (51, 8, '0', 'IVA 0%', 'Tarifa de IVA 0%.', 1, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
+	(52, 8, '2', 'IVA 12%', 'Tarifa de IVA 12%.', 2, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
+	(53, 8, '3', 'IVA 14%', 'Tarifa de IVA 14%.', 3, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
+	(54, 8, '4', 'IVA 15%', 'Tarifa de IVA 15%.', 4, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
+	(55, 8, '5', 'IVA 5%', 'Tarifa de IVA 5%.', 5, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
+	(56, 8, '6', 'IVA no objeto de impuesto', 'No objeto de impuesto al valor agregado.', 6, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
+	(57, 8, '7', 'IVA exento', 'Exento del impuesto al valor agregado.', 7, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL)
 ON CONFLICT (catalogo_id, codigo) DO NOTHING;
 /*
 INSERT INTO configuracion_empresa (
