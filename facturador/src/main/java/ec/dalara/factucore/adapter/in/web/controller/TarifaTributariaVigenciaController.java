@@ -39,7 +39,7 @@ public class TarifaTributariaVigenciaController {
             @Valid @RequestBody AdministracionGlobalRequest<TarifaTributariaVigenciaRequest> request) {
         respuestas.validarFechaInicio(request.getFechaInicio());
         TarifaTributariaVigencia tarifa = toEntity(null, request.getDatos());
-        tarifa.setEstadoRegistro(EstadoRegistro.ACTIVO);
+        tarifa.setEstadoRegistro("A");
         tarifa.setUsuarioCreacion(request.getCanal());
         tarifa.setFechaCreacion(LocalDateTime.now());
         tarifa = tarifaService.guardar(tarifa);
