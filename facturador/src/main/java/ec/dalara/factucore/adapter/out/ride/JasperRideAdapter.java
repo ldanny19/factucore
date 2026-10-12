@@ -135,7 +135,7 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("NOM_COMERCIAL", comprobante.getNombreComercialEmisor());
 
 		parametros.put("GUIA", null);
-		parametros.put("CONT_ESPECIAL", null);
+		parametros.put("NUM_RESOLUCION", obtenerValorConfiguracion(comprobante, "NUM_RESOLUCION"));
 		parametros.put("LLEVA_CONTABILIDAD", comprobante.getEmpresa() == null ? null : comprobante.getEmpresa().getObligadoContabilidad());
 		parametros.put("NEGOCIABLE", null);
 		parametros.put("REGIMEN_TRIBUTARIO", null);
@@ -400,6 +400,19 @@ public class JasperRideAdapter implements RidePort {
 		}
 
 		return resultado.toString();
+	}
+
+
+	private String obtenerValorConfiguracion(Comprobante comprobante, String clave) {
+		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
+			return null;
+		}
+
+		return configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), clave, LocalDateTime.now())
+				.map(configuracion -> configuracion.getValor())
+				.filter(valor -> valor != null && !valor.isBlank())
+				.map(String::trim)
+				.orElse(null);
 	}
 
 	private String obtenerValorCatalogoConfiguracion(Comprobante comprobante, String clave) {

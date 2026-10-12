@@ -35,7 +35,7 @@
 	<parameter name="RAZON_SOCIAL" class="java.lang.String"/>
 	<parameter name="DIR_MATRIZ" class="java.lang.String"/>
 	<parameter name="DIR_SUCURSAL" class="java.lang.String"/>
-	<parameter name="CONT_ESPECIAL" class="java.lang.String"/>
+	<parameter name="NUM_RESOLUCION" class="java.lang.String"/>
 	<parameter name="LLEVA_CONTABILIDAD" class="java.lang.String"/>
 	<parameter name="RS_COMPRADOR" class="java.lang.String"/>
 	<parameter name="RUC_COMPRADOR" class="java.lang.String"/>
@@ -146,12 +146,12 @@
 			</staticText>
 			<staticText>
 				<reportElement mode="Opaque" x="7" y="150" width="169" height="14" uuid="f49dc8cf-0e15-4cb8-893d-1f410517fbf6">
-					<printWhenExpression><![CDATA[$P{CONT_ESPECIAL}!=null]]></printWhenExpression>
+					<printWhenExpression><![CDATA[$P{NUM_RESOLUCION} != null && !$P{NUM_RESOLUCION}.trim().isEmpty()]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Contribuyente Especial Nro ]]></text>
+				<text><![CDATA[Contribuyente Especial Nro:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement mode="Opaque" x="7" y="165" width="177" height="14" uuid="377a8104-9c05-4ecd-a343-ac9ed26f2390"/>
@@ -235,7 +235,7 @@
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{CONT_ESPECIAL}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{NUM_RESOLUCION}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement mode="Opaque" x="209" y="165" width="51" height="14" uuid="0d053631-1d67-4ec5-90b0-8b05cd35900c"/>
