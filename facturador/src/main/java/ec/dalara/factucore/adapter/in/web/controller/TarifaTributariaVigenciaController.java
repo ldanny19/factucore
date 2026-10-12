@@ -21,7 +21,6 @@ import ec.dalara.factucore.application.contract.request.TarifaTributariaVigencia
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.TarifaTributariaVigenciaResponse;
 import ec.dalara.factucore.application.service.TarifaTributariaVigenciaService;
-import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.infrastructure.persistence.entity.CatalogoItem;
 import ec.dalara.factucore.infrastructure.persistence.entity.TarifaTributariaVigencia;
 import jakarta.validation.Valid;
@@ -50,14 +49,12 @@ public class TarifaTributariaVigenciaController {
     @PutMapping("/{id}")
     public ResponseEntity<AdministracionResponse<TarifaTributariaVigenciaResponse>> actualizar(
             @PathVariable Long id,
-            @Valid @RequestBody AdministracionRequest<TarifaTributariaVigenciaRequest> request) {
+            @Valid @RequestBody AdministracionGlobalRequest<TarifaTributariaVigenciaRequest> request) {
         respuestas.validarFechaInicio(request.getFechaInicio());
         TarifaTributariaVigencia actual = tarifaService.obtenerPorId(id)
                 .orElseThrow(() -> new ec.dalara.factucore.application.ApplicationException(
                         ec.dalara.factucore.domain.shared.MessageCodes.REGISTRO_NO_ENCONTRADO, id));
         TarifaTributariaVigencia cambios = toEntity(id, request.getDatos());
-        cambios.setUsuarioModificacion(request.getCanal());
-        cambios.setFechaModificacion(LocalDateTime.now());
         cambios.setEstadoRegistro(actual.getEstadoRegistro());
         cambios.setUsuarioCreacion(actual.getUsuarioCreacion());
         cambios.setFechaCreacion(actual.getFechaCreacion());
