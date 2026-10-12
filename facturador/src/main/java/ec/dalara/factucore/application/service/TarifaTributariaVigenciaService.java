@@ -55,6 +55,14 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
     }
 
     @Transactional(readOnly = true)
+    public List<TarifaTributariaVigencia> listarVigentesPorImpuesto(String codigoImpuesto, LocalDate fecha) {
+        if (codigoImpuesto == null || codigoImpuesto.isBlank() || fecha == null) {
+            return List.of();
+        }
+        return tarifaRepository.buscarVigentesPorImpuesto(codigoImpuesto, EstadoRegistro.ACTIVO, fecha);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<TarifaTributariaVigencia> obtenerVigente(String codigoImpuesto, String codigoPorcentaje,
             LocalDate fecha) {
         if (codigoImpuesto == null || codigoImpuesto.isBlank() || codigoPorcentaje == null

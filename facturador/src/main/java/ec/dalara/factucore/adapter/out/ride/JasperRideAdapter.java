@@ -38,6 +38,7 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalleImpuesto;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteInformacionAdicional;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
+import ec.dalara.factucore.infrastructure.persistence.entity.TarifaTributariaVigencia;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -310,21 +311,24 @@ public class JasperRideAdapter implements RidePort {
 		BigDecimal irbpnr = sumarImpuestos(impuestos, "5", null);
 		BigDecimal propina = comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina();
 
-		String codigoPorcentajeIva = impuestos.stream()
-				.filter(impuesto -> "2".equals(impuesto.getCodigoImpuesto()))
-				.map(ComprobanteDetalleImpuesto::getCodigoPorcentaje)
-				.filter(codigo -> codigo != null && !List.of("0", "6", "7").contains(codigo))
-				.findFirst().orElse("2");
-		String porcentajeIva = tarifaTributariaVigenciaService
-				.obtenerVigente("2", codigoPorcentajeIva, comprobante.getFechaEmision())
-				.map(tarifa -> tarifa.getTarifa().stripTrailingZeros().toPlainString())
-				.orElse(null);
-		String descripcionSubtotalIva = porcentajeIva == null
-				? messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA)
-				: messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA_PORCENTAJE, porcentajeIva);
+		List<TarifaTributariaVigencia> tarifasIvaVigentes = tarifaTributariaVigenciaService
+				.listarVigentesPorImpuesto("2", comprobante.getFechaEmision()).stream()
+				.filter(tarifa -> !List.of("0", "6", "7").contains(tarifa.getCodigoPorcentaje()))
+				.toList();
 
 		List<Map<String, Object>> resultado = new ArrayList<>();
-		resultado.add(total(descripcionSubtotalIva, sumarBasesImponibles(impuestos, "2", codigoPorcentajeIva), false));
+		if (tarifasIvaVigentes.isEmpty()) {
+			resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA),
+					sumarBasesImponibles(impuestos, "2", null), false));
+		} else {
+			for (var tarifa : tarifasIvaVigentes) {
+				String porcentaje = tarifa.getTarifa().stripTrailingZeros().toPlainString();
+				String descripcion = messageResolver.resolver(
+						MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA_PORCENTAJE, porcentaje);
+				resultado.add(total(descripcion,
+						sumarBasesImponibles(impuestos, "2", tarifa.getCodigoPorcentaje()), false));
+			}
+		}
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_CERO), subtotalCero, false));
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_NO_OBJETO), subtotalNoObjeto, false));
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_EXENTO), subtotalExento, false));
