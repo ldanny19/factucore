@@ -33,7 +33,7 @@ public class CamelWorkflowExecutionAdapter implements WorkflowExecutionPort {
 
 	@Override
 	public ComprobanteGeneracionResponse reprocesar(ContextoWorkflow contexto) {
-		return producerTemplate.requestBody("direct:facturador.workflow.reprocesar", contexto,
+		return producerTemplate.requestBodyAndHeader(ENDPOINT_PROCESAR, contexto, "workflow.reprocesar", true,
 				ComprobanteGeneracionResponse.class);
 	}
 }

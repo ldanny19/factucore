@@ -20,42 +20,45 @@
 -->
 <routes xmlns="http://camel.apache.org/schema/spring">
 
-    <!-- Reanudación de un comprobante existente. El grafo decide la siguiente
-         etapa; tanto el hilo como el endpoint manual invocan este mismo nodo. -->
-    <route id="facturador-workflow-reprocesar">
-        <from uri="direct:facturador.workflow.reprocesar"/>
-        <choice>
-            <when>
-                <simple>${body.comprobante.estadoProceso} == 'XML_GENERADO'</simple>
-                <to uri="direct:facturador.workflow.nodo.VALIDACION_XSD"/>
-            </when>
-            <when>
-                <simple>${body.comprobante.estadoProceso} == 'XSD_VALIDADO'</simple>
-                <to uri="direct:facturador.workflow.nodo.FIRMA_ELECTRONICA"/>
-            </when>
-            <when>
-                <simple>${body.comprobante.estadoProceso} == 'FIRMADO'</simple>
-                <to uri="direct:facturador.workflow.nodo.ENVIO_SRI"/>
-            </when>
-            <when>
-                <simple>${body.comprobante.estadoProceso} == 'ENVIADO_SRI' || ${body.comprobante.estadoProceso} == 'AUTORIZACION_PENDIENTE'</simple>
-                <to uri="direct:facturador.workflow.nodo.AUTORIZACION_SRI"/>
-            </when>
-            <when>
-                <simple>${body.comprobante.estadoProceso} == 'AUTORIZACION_SRI' && ${body.comprobante.estadoSri} == 'AUTORIZADO'</simple>
-                <to uri="direct:facturador.workflow.nodo.GENERACION_RIDE"/>
-            </when>
-            <when>
-                <simple>${body.comprobante.estadoProceso} == 'RIDE_GENERADO'</simple>
-                <to uri="direct:facturador.workflow.nodo.NOTIFICACION"/>
-            </when>
-        </choice>
-    </route>
-
+    <!-- Entrada única del workflow. Las solicitudes nuevas inician en INICIO;
+         las existentes retoman desde la siguiente etapa pendiente. -->
     <route id="facturador-workflow-procesar">
         <from uri="direct:facturador.workflow.procesar"/>
-        <bean ref="workflowContextFactory" method="crear"/>
-        <to uri="direct:facturador.workflow.nodo.INICIO"/>
+        <choice>
+            <when>
+                <simple>${header.workflow.reprocesar} == true</simple>
+                <choice>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'XML_GENERADO'</simple>
+                        <to uri="direct:facturador.workflow.nodo.VALIDACION_XSD"/>
+                    </when>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'XSD_VALIDADO'</simple>
+                        <to uri="direct:facturador.workflow.nodo.FIRMA_ELECTRONICA"/>
+                    </when>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'FIRMADO'</simple>
+                        <to uri="direct:facturador.workflow.nodo.ENVIO_SRI"/>
+                    </when>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'ENVIADO_SRI' || ${body.comprobante.estadoProceso} == 'AUTORIZACION_PENDIENTE'</simple>
+                        <to uri="direct:facturador.workflow.nodo.AUTORIZACION_SRI"/>
+                    </when>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'AUTORIZACION_SRI' && ${body.comprobante.estadoSri} == 'AUTORIZADO'</simple>
+                        <to uri="direct:facturador.workflow.nodo.GENERACION_RIDE"/>
+                    </when>
+                    <when>
+                        <simple>${body.comprobante.estadoProceso} == 'RIDE_GENERADO'</simple>
+                        <to uri="direct:facturador.workflow.nodo.NOTIFICACION"/>
+                    </when>
+                </choice>
+            </when>
+            <otherwise>
+                <bean ref="workflowContextFactory" method="crear"/>
+                <to uri="direct:facturador.workflow.nodo.INICIO"/>
+            </otherwise>
+        </choice>
     </route>
 
     <!-- Nodo INICIO: punto de entrada del workflow para una nueva solicitud. -->
