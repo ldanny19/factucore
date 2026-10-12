@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
 import ec.dalara.factucore.application.port.in.ComprobanteWorkflowPort;
+import ec.dalara.factucore.application.service.ComprobanteReprocessService;
 
 @ExtendWith(MockitoExtension.class)
 class ComprobanteControllerTest {
@@ -23,11 +24,14 @@ class ComprobanteControllerTest {
 	@Mock
 	private ComprobanteWorkflowPort workflowPort;
 
+	@Mock
+	private ComprobanteReprocessService reprocessService;
+
 	private ComprobanteController controller;
 
 	@BeforeEach
 	void setUp() {
-		controller = new ComprobanteController(workflowPort);
+		controller = new ComprobanteController(workflowPort, reprocessService);
 	}
 
 	@Test
@@ -46,5 +50,17 @@ class ComprobanteControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertEquals(expected, response.getBody());
 		verify(workflowPort).procesar(request);
+	}
+
+	@Test
+	void reprocesar_debeDelegarAlServicioYRetornarRespuesta() {
+		var expected = ComprobanteGeneracionResponse.builder().idTransaccion("TX-002").exitoso(true).build();
+		when(reprocessService.reprocesar(12L)).thenReturn(expected);
+
+		ResponseEntity<ComprobanteGeneracionResponse> response = controller.reprocesar(12L);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertEquals(expected, response.getBody());
+		verify(reprocessService).reprocesar(12L);
 	}
 }

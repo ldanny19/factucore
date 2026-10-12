@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
@@ -36,7 +37,9 @@ class GeneracionClaveAccesoWorkflowStepTest {
 	void generaClaveDespuesDeAsignarSecuencial() {
 		var comprobanteAuditoriaService = mock(ComprobanteAuditoriaService.class);
 		var comprobanteService = mock(ComprobanteService.class);
-		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService);
+		var eventPublisher = mock(ApplicationEventPublisher.class);
+		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService,
+				eventPublisher);
 		var messageResolver = mock(ec.dalara.factucore.application.MessageResolver.class);
 		var workflowEtapaExecutor = new WorkflowEtapaExecutor(workflowResultadoService, messageResolver);
 		var claveAccesoService = mock(ClaveAccesoService.class);
