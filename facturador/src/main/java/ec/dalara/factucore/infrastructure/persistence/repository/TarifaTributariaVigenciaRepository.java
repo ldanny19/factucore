@@ -20,28 +20,24 @@ public interface TarifaTributariaVigenciaRepository
             FROM TarifaTributariaVigencia t
             WHERE t.codigoImpuesto = :codigoImpuesto
               AND t.codigoPorcentaje = :codigoPorcentaje
-              AND t.estadoRegistro = :estadoRegistro
               AND t.fechaVigenciaDesde <= :fecha
               AND (t.fechaVigenciaHasta IS NULL OR t.fechaVigenciaHasta >= :fecha)
             """)
     Optional<TarifaTributariaVigencia> buscarVigente(
             @Param("codigoImpuesto") String codigoImpuesto,
             @Param("codigoPorcentaje") String codigoPorcentaje,
-            @Param("estadoRegistro") String estadoRegistro,
             @Param("fecha") LocalDate fecha);
 
     @Query("""
             SELECT t
             FROM TarifaTributariaVigencia t
             WHERE t.codigoImpuesto = :codigoImpuesto
-              AND t.estadoRegistro = :estadoRegistro
               AND t.fechaVigenciaDesde <= :fecha
               AND (t.fechaVigenciaHasta IS NULL OR t.fechaVigenciaHasta >= :fecha)
             ORDER BY t.tarifa DESC
             """)
     List<TarifaTributariaVigencia> buscarVigentesPorImpuesto(
             @Param("codigoImpuesto") String codigoImpuesto,
-            @Param("estadoRegistro") String estadoRegistro,
             @Param("fecha") LocalDate fecha);
 
     @Query("""
