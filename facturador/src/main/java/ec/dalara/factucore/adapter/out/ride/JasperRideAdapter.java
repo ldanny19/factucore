@@ -31,12 +31,14 @@ import ec.dalara.factucore.application.service.ComprobantePagoService;
 import ec.dalara.factucore.application.service.ConfiguracionEmpresaService;
 import ec.dalara.factucore.application.service.CatalogoItemService;
 import ec.dalara.factucore.application.service.CatalogoService;
+import ec.dalara.factucore.application.service.TarifaTributariaVigenciaService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalleImpuesto;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteInformacionAdicional;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
+import ec.dalara.factucore.infrastructure.persistence.entity.TarifaTributariaVigencia;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -64,6 +66,7 @@ public class JasperRideAdapter implements RidePort {
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final CatalogoService catalogoService;
 	private final CatalogoItemService catalogoItemService;
+	private final TarifaTributariaVigenciaService tarifaTributariaVigenciaService;
 	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
 	private final ComprobanteRepository comprobanteRepository;
 	private final MessageResolver messageResolver;
@@ -243,7 +246,12 @@ public class JasperRideAdapter implements RidePort {
 
 		for (ComprobantePago pago : comprobantePagoService.listarPorComprobante(comprobanteId)) {
 			Map<String, Object> fila = new LinkedHashMap<>();
-			fila.put("formaPago", pago.getCodigoFormaPago());
+			String descripcionFormaPago = catalogoService.obtenerPorCodigo("FORMA_PAGO")
+                    .flatMap(catalogo -> catalogoItemService.obtenerPorCatalogoYCodigo(
+                            catalogo.getId(), pago.getCodigoFormaPago()))
+                    .map(item -> item.getNombre())
+                    .orElse(pago.getCodigoFormaPago());
+            fila.put("formaPago", descripcionFormaPago);
 			fila.put("valor", valor(pago.getTotal()));
 			resultado.add(fila);
 		}
@@ -290,31 +298,48 @@ public class JasperRideAdapter implements RidePort {
 		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobanteId);
 		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
 
-		BigDecimal subtotal = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto).filter(this::noNulo)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
-		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento).filter(this::noNulo)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
-		BigDecimal totalImpuestos = impuestos.stream().map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal subtotal = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		BigDecimal subtotalCero = sumarBasesImponibles(impuestos, "2", "0");
+		BigDecimal subtotalNoObjeto = sumarBasesImponibles(impuestos, "2", "6");
+		BigDecimal subtotalExento = sumarBasesImponibles(impuestos, "2", "7");
+		BigDecimal iva = sumarImpuestos(impuestos, "2", null);
+		BigDecimal ice = sumarImpuestos(impuestos, "3", null);
+		BigDecimal irbpnr = sumarImpuestos(impuestos, "5", null);
+		BigDecimal propina = comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina();
+
+		List<TarifaTributariaVigencia> tarifasIvaVigentes = tarifaTributariaVigenciaService
+				.listarVigentesPorImpuesto("2", comprobante.getFechaEmision()).stream()
+				.filter(tarifa -> !List.of("0", "6", "7").contains(tarifa.getCodigoPorcentaje()))
+				.toList();
 
 		List<Map<String, Object>> resultado = new ArrayList<>();
+		if (tarifasIvaVigentes.isEmpty()) {
+			resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA),
+					sumarBasesImponibles(impuestos, "2", null), false));
+		} else {
+			for (var tarifa : tarifasIvaVigentes) {
+				String porcentaje = tarifa.getTarifa().stripTrailingZeros().toPlainString();
+				String descripcion = messageResolver.resolver(
+						MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA_PORCENTAJE, porcentaje);
+				resultado.add(total(descripcion,
+						sumarBasesImponibles(impuestos, "2", tarifa.getCodigoPorcentaje()), false));
+			}
+		}
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_CERO), subtotalCero, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_NO_OBJETO), subtotalNoObjeto, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_EXENTO), subtotalExento, false));
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_SIN_IMPUESTOS), subtotal, false));
-		if (descuento.signum() != 0) {
-			resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_DESCUENTO), descuento, true));
-		}
-		Map<String, BigDecimal> impuestosAgrupados = new LinkedHashMap<>();
-		for (ComprobanteDetalleImpuesto impuesto : impuestos) {
-			String clave = String.valueOf(impuesto.getCodigoImpuesto()) + "|" + impuesto.getCodigoPorcentaje();
-			impuestosAgrupados.merge(clave, impuesto.getValor() == null ? BigDecimal.ZERO : impuesto.getValor(),
-					BigDecimal::add);
-		}
-		for (Map.Entry<String, BigDecimal> impuesto : impuestosAgrupados.entrySet()) {
-			String[] codigos = impuesto.getKey().split("\\|", -1);
-			String descripcion = messageResolver.resolver(MessageCodes.RIDE_TOTAL_IMPUESTO, codigos[0], codigos[1]);
-			resultado.add(total(descripcion, impuesto.getValue(), false));
-		}
-		BigDecimal totalCalculado = subtotal.add(totalImpuestos)
-				.add(comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina());
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_DESCUENTO), descuento, true));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_ICE), ice, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_IVA), iva, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_IRBPNR), irbpnr, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_PROPINA), propina, false));
+
+		BigDecimal totalCalculado = subtotal.add(iva).add(ice).add(irbpnr).add(propina);
 		BigDecimal totalFinal = comprobante.getTotalAPagar() == null ? totalCalculado : comprobante.getTotalAPagar();
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_TOTAL), totalFinal, false));
 		return resultado;
