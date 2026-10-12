@@ -22,6 +22,7 @@ import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
 import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteRetencion;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Persiste las secciones canónicas que tienen representación en el modelo
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PersistenciaSeccionesComprobanteService {
 
     private final EntityManager entityManager;
@@ -85,6 +87,9 @@ public class PersistenciaSeccionesComprobanteService {
                 detalle.setPrecioUnitario(decimal(detalleJson, "precioUnitario"));
                 detalle.setDescuento(decimal(detalleJson, "descuento"));
                 detalle.setPrecioTotalSinImpuesto(decimal(detalleJson, "precioTotalSinImpuesto"));
+                log.debug("ID_TRANSACCION={} - Detalle línea {} antes de persistir: cantidad={}, precioUnitario={}, descuento={}, precioTotalSinImpuesto={}",
+                        comprobante.getIdTransaccion(), linea, detalle.getCantidad(), detalle.getPrecioUnitario(),
+                        detalle.getDescuento(), detalle.getPrecioTotalSinImpuesto());
                 if (nuevo) {
                     auditar(detalle, usuarioAuditoria, ahora);
                     entityManager.persist(detalle);
@@ -202,6 +207,9 @@ public class PersistenciaSeccionesComprobanteService {
             pago.setPlazo(entero(nodo, "plazo"));
             pago.setUnidadTiempo(texto(nodo, "unidadTiempo"));
             pago.setEstadoRegistro(EstadoRegistro.ACTIVO);
+            log.debug("ID_TRANSACCION={} - Pago {} antes de persistir: formaPago={}, total={}, plazo={}, unidadTiempo={}",
+                    comprobante.getIdTransaccion(), indice + 1, pago.getCodigoFormaPago(), pago.getTotal(),
+                    pago.getPlazo(), pago.getUnidadTiempo());
             if (nuevo) {
                 auditar(pago, usuario, ahora);
                 entityManager.persist(pago);
@@ -309,7 +317,21 @@ public class PersistenciaSeccionesComprobanteService {
 
     private BigDecimal decimal(JsonNode nodo, String campo) {
         JsonNode valor = nodo == null ? null : nodo.get(campo);
-        return valor == null || valor.isNull() || valor.asText().isBlank() ? null : valor.decimalValue();
+        if (valor == null || valor.isNull() || valor.isContainerNode()) {
+            return null;
+        }
+
+        String texto = valor.asText();
+        if (texto == null || texto.isBlank()) {
+            return null;
+        }
+
+        try {
+            return new BigDecimal(texto.trim());
+        } catch (NumberFormatException exception) {
+            log.debug("No se pudo convertir a decimal el campo '{}': '{}'", campo, texto);
+            return null;
+        }
     }
 
     private Integer entero(JsonNode nodo, String campo) {

@@ -32,9 +32,11 @@ import ec.dalara.factucore.application.validation.ComprobanteValidationResult;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ValidacionXsdWorkflowStep {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;	private final XmlValidatorPort xmlValidator;
@@ -84,10 +86,12 @@ public class ValidacionXsdWorkflowStep {
 
 		// La persistencia ocurre solamente después de validar correctamente el XML.
 		boolean comprobanteNuevo = persistirComprobante(contexto, definition);
-		if (comprobanteNuevo) {
-			persistenciaSeccionesComprobanteService.persistir(contexto.getComprobante(),
-					contexto.getSolicitud().getDatos(), contexto.getSolicitud().getUsuario());
+		if (!comprobanteNuevo) {
+			log.debug("ID_TRANSACCION={} - Reanudando persistencia de secciones del comprobante {}",
+					contexto.getSolicitud().getIdTransaccion(), contexto.getComprobanteId());
 		}
+		persistenciaSeccionesComprobanteService.persistir(contexto.getComprobante(),
+				contexto.getSolicitud().getDatos(), contexto.getSolicitud().getUsuario());
 
 		evidenciaPort.guardarXmlGenerado(contexto.getComprobanteId(), contexto.getXml(),
 				contexto.getSolicitud().getUsuario());
@@ -131,7 +135,14 @@ public class ValidacionXsdWorkflowStep {
 					.filter(c -> !EstadoRegistro.ELIMINADO.equals(c.getEstadoRegistro()));
 
 			if (existente.isPresent()) {
-				contexto.asignarComprobante(existente.get());
+				Comprobante comprobanteExistente = existente.get();
+				calcularDatosPersistidos(comprobanteExistente, solicitud.getDatos());
+				comprobanteExistente.setUsuarioModificacion(solicitud.getUsuario());
+				comprobanteExistente.setFechaModificacion(LocalDateTime.now());
+				comprobanteExistente = comprobanteService.guardar(comprobanteExistente);
+				contexto.asignarComprobante(comprobanteExistente);
+				log.debug("ID_TRANSACCION={} - Cabecera del comprobante {} sincronizada desde la solicitud",
+						solicitud.getIdTransaccion(), comprobanteExistente.getId());
 				return false;
 			}
 		}
@@ -165,6 +176,10 @@ public class ValidacionXsdWorkflowStep {
 				.build();
 
 		calcularDatosPersistidos(comprobante, solicitud.getDatos());
+		log.debug("ID_TRANSACCION={} - Importes de cabecera antes de persistir: subtotal={}, descuento={}, sinImpuestos={}, impuestos={}, propina={}, total={}",
+				solicitud.getIdTransaccion(), comprobante.getSubtotal(), comprobante.getTotalDescuento(),
+				comprobante.getTotalSinImpuestos(), comprobante.getTotalImpuestos(),
+				comprobante.getTotalPropina(), comprobante.getTotalAPagar());
 		comprobante = comprobanteService.guardar(comprobante);
 		if (contexto.getComprobanteReemplazado() != null) {
 			var anterior = contexto.getComprobanteReemplazado();
@@ -252,10 +267,22 @@ public class ValidacionXsdWorkflowStep {
 	}
 
 	private BigDecimal decimal(JsonNode nodo, String campo) {
-	    JsonNode valor = nodo == null ? null : nodo.get(campo);
-	    return valor == null || valor.isNull() || valor.isContainerNode() || valor.asText().isBlank()
-	            ? null : valor.decimalValue();
-	}
+		JsonNode valor = nodo == null ? null : nodo.get(campo);
+		if (valor == null || valor.isNull() || valor.isContainerNode()) {
+			return null;
+		}
+
+		String texto = valor.asText();
+		if (texto == null || texto.isBlank()) {
+			return null;
+		}
+
+		try {
+			return new BigDecimal(texto.trim());
+		} catch (NumberFormatException exception) {
+			log.debug("No se pudo convertir a decimal el campo '{}': '{}'", campo, texto);
+			return null;
+		}
 
 	private BigDecimal cero(BigDecimal valor) { return valor == null ? BigDecimal.ZERO : valor; }
 	private BigDecimal redondear(BigDecimal valor) { return valor.setScale(2, RoundingMode.HALF_UP); }
