@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -311,9 +313,16 @@ public class JasperRideAdapter implements RidePort {
 		BigDecimal irbpnr = sumarImpuestos(impuestos, "5", null);
 		BigDecimal propina = comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina();
 
+		Set<String> codigosPorcentajeIva = impuestos.stream()
+				.filter(impuesto -> "2".equals(impuesto.getCodigoImpuesto()))
+				.map(ComprobanteDetalleImpuesto::getCodigoPorcentaje)
+				.filter(codigo -> codigo != null && !List.of("0", "6", "7").contains(codigo))
+				.collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+
 		List<TarifaTributariaVigencia> tarifasIvaVigentes = tarifaTributariaVigenciaService
 				.listarVigentesPorImpuesto("2", comprobante.getFechaEmision()).stream()
-				.filter(tarifa -> !List.of("0", "6", "7").contains(tarifa.getCodigoPorcentaje()))
+				.filter(tarifa -> tarifa.getCodigoPorcentaje() != null)
+				.filter(tarifa -> codigosPorcentajeIva.contains(tarifa.getCodigoPorcentaje()))
 				.toList();
 
 		List<Map<String, Object>> resultado = new ArrayList<>();
@@ -374,7 +383,8 @@ public class JasperRideAdapter implements RidePort {
 			String codigoPorcentaje) {
 		return impuestos.stream()
 				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
-				.filter(impuesto -> codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
+				.filter(impuesto -> codigoPorcentaje != null
+						&& codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
 				.map(ComprobanteDetalleImpuesto::getBaseImponible).filter(this::noNulo)
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
