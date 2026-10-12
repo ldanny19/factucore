@@ -1,0 +1,246 @@
+name: factucore
+
+services:
+
+  vault:
+    image: hashicorp/vault:1.20
+    container_name: factucore-vault
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      SKIP_CHOWN: "true"
+    entrypoint: ["/vault/scripts/entrypoint.sh"]
+    command: ["-config=/vault/config/vault.hcl"]
+    volumes:
+      - ${FACTUCORE_HOME}/vault/data:/vault/data
+      - ${FACTUCORE_HOME}/vault/config:/vault/config:ro
+      - ${FACTUCORE_HOME}/vault/scripts:/vault/scripts:ro
+      - ${FACTUCORE_HOME}/vault/policy:/vault/policy:ro
+      - ${FACTUCORE_HOME}/secrets:/vault/secrets-persist
+      - factucore_vault_agent_token:/vault/agent-token
+      - type: tmpfs
+        target: /vault/logs
+      - type: tmpfs
+        target: /vault/file
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'vault status >/dev/null 2>&1'
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  vault-agent:
+    image: hashicorp/vault:1.20
+    container_name: factucore-vault-agent
+    restart: unless-stopped
+    depends_on:
+      vault:
+        condition: service_healthy
+    entrypoint: ["/vault/agent/entrypoint.sh"]
+    command: ["agent", "-config=/vault/agent/config.hcl"]
+    environment:
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - ${FACTUCORE_HOME}/vault/agent:/vault/agent:ro
+      - factucore_vault_agent_token:/run/secrets:ro
+      - factucore_vault_secrets:/vault/secrets
+      - type: tmpfs
+        target: /vault/logs
+      - type: tmpfs
+        target: /vault/file
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "test -s /vault/secrets/postgres_admin_password && test -s /vault/secrets/postgres_facturador_password && test -s /vault/secrets/postgres_auth_password && test -s /vault/secrets/postgres_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/spring.mail.password && test -s /vault/secrets/FACTUCORE_FIRMA_PASSWORD"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  db_factucore:
+    image: postgres:17
+    container_name: db_factucore
+    restart: unless-stopped
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_admin_password
+    volumes:
+      - ${FACTUCORE_HOME}/data/postgres:/var/lib/postgresql/data
+      - factucore_vault_secrets:/vault/secrets:ro
+      - ${FACTUCORE_HOME}/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d postgres"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  auth-server:
+    image: keycloak/keycloak:26.7.4
+    container_name: auth-server
+    restart: unless-stopped
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+      db_factucore:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - >
+        export KC_DB_URL="jdbc:postgresql://db_factucore:5432/db_auth";
+        export KC_DB_USERNAME="usr_auth";
+        export KC_DB_PASSWORD="$$(cat /vault/secrets/postgres_auth_password)";
+        exec /opt/keycloak/bin/kc.sh start
+        --http-port=8080
+        --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}"
+        --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
+      KC_HOSTNAME: ${KC_HOSTNAME:-auth.factucore.local}
+      KC_DB: ${KC_DB:-postgres}
+      KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - factucore_vault_secrets:/vault/secrets:ro
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '200' <&3"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  kafka:
+    image: apache/kafka:4.0.2
+    container_name: factucore-kafka
+    restart: unless-stopped
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+
+  facturador:
+    image: factucore-facturador:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
+    container_name: factucore-facturador
+    user: factucore
+    restart: unless-stopped
+    depends_on:
+      db_factucore:
+        condition: service_healthy
+        restart: true
+      vault-agent:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      auth-server:
+        condition: service_healthy
+    environment:
+      FACTUCORE_CONFIGURACION_ZONA_HORARIA: ${FACTUCORE_CONFIGURACION_ZONA_HORARIA:-America/Guayaquil}
+      FACTUCORE_PATH_LOGS: /app/logs
+      SPRING_DATASOURCE_URL: ${DB_FACTURADOR_URL:-jdbc:postgresql://db_factucore:5432/db_factucore}
+      SPRING_DATASOURCE_USERNAME: ${DB_FACTURADOR_USERNAME:-usr_factucore}
+      SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
+      SPRING_DATASOURCE_PASSWORD_FILE: /vault/secrets/postgres_facturador_password
+      FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://auth.factucore.local:8180/realms/facturador}
+      FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI:-http://auth-server:8080/realms/facturador/protocol/openid-connect/certs}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      FACTUCORE_AUDITORIA_PETICION_HABILITADA: ${FACTUCORE_AUDITORIA_PETICION_HABILITADA:-true}
+      FACTUCORE_AUDITORIA_PETICION_TOPICO: auditoria
+      FACTUCORE_NOTIFICACION_TOPICO: notificacion
+      FACTUCORE_SRI_AMBIENTE: ${FACTUCORE_SRI_AMBIENTE:-PRUEBAS}
+    volumes:
+      - factucore_vault_secrets:/run/secrets:ro
+      - ${FACTUCORE_HOME}/facturador/config:/app/config:ro
+      - ${FACTUCORE_HOME}/messaging/config:/app/messaging-config:ro
+      - ${FACTUCORE_HOME}/facturador/jasper:/app/jasper:ro
+      - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
+      - ${FACTUCORE_HOME}/facturador/certificados:/app/certificados:ro
+      - ${FACTUCORE_HOME}/facturador/imagenes:/app/imagenes:ro
+      - ${FACTUCORE_HOME}/facturador/logs:/app/logs
+    ports:
+      - "${FACTURADOR_PORT:-8081}:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://127.0.0.1:8080/factucore-api/actuator/health || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  notificacion:
+    image: factucore-notificacion:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
+    container_name: factucore-notificacion
+    user: factucore
+    restart: unless-stopped
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      facturador:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      FACTUCORE_NOTIFICACION_TOPICO: notificacion
+    volumes:
+      - factucore_vault_secrets:/run/secrets:ro
+      - ${FACTUCORE_HOME}/notificacion/config:/app/config:ro
+      - ${FACTUCORE_HOME}/messaging/config:/app/messaging-config:ro
+      - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
+      - ${FACTUCORE_HOME}/notificacion/logs:/app/logs
+    ports:
+      - "${NOTIFICACION_PORT:-8082}:8080"
+
+volumes:
+  factucore_vault_secrets:
+  factucore_vault_agent_token:

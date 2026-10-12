@@ -1,0 +1,15 @@
+# Variables de entorno locales
+.env
+.env.*
+!.env.example
+
+# Secretos generados localmente por el bootstrap de Vault
+/secrets/
+
+# Artefactos generados
+**/target/
+
+# Configuración local de Eclipse
+**/.classpath
+**/.project
+**/.settings/

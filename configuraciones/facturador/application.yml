@@ -1,0 +1,179 @@
+# ============================================================
+# FACTUCORE - FACTURADOR
+# CONFIGURACION EXTERNA
+# ============================================================
+
+spring:
+  config:
+    import: "optional:configtree:/run/secrets/"
+  application:
+    name: facturador
+
+  messages:
+    basename: "file:${factucore.path.config}/messages"
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  main:
+    banner-mode: off
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: FactuCoreHikariCP
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: ${factucore.configuracion.zona-horaria}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    clean-disabled: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /factucore-api
+
+camel:
+  main:
+    routes-include-pattern: ${factucore.workflow.rutas.facturacion}
+
+factucore:
+  configuracion:
+    zona-horaria: ${FACTUCORE_CONFIGURACION_ZONA_HORARIA:America/Guayaquil}
+
+  messaging:
+    enabled: true
+
+    # Politicas comunes para todos los brokers.
+    resiliencia:
+      reintentos:
+        intervalo-ms: 5000
+        max-intentos: 3
+        dlq-habilitada: true
+        sufijo-dlq: .DLQ
+      timeout:
+        conexion-ms: 5000
+        envio-ms: 10000
+
+    # Cada conexion selecciona un broker y sus opciones especificas.
+    conexiones:
+      broker-principal:
+        tipo: KAFKA
+        kafka:
+          bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          client-id: factucore
+          security-protocol: PLAINTEXT
+          producer:
+            acks: all
+          consumer:
+            auto-offset-reset: earliest
+            enable-auto-commit: false
+            concurrency: 1
+        rabbitmq:
+          addresses: ${RABBITMQ_ADDRESSES:localhost:5672}
+          username: ${RABBITMQ_USERNAME:guest}
+          password: ${RABBITMQ_PASSWORD:guest}
+          virtual-host: ${RABBITMQ_VIRTUAL_HOST:/}
+          exchange-type: topic
+          exchange-prefix: factucore
+          durable: true
+          concurrency: 1
+          connection-timeout-ms: 5000
+          channel-cache-size: 25
+          connection-limit: 10
+
+    destinos:
+      auditoria:
+        conexion: broker-principal
+        nombre: auditoria
+      notificacion:
+        conexion: broker-principal
+        nombre: notificacion
+
+  path:
+    base: ${FACTUCORE_PATH_BASE:/app}
+    config: ${FACTUCORE_PATH_CONFIG:${factucore.path.base}/config}
+    xsd: ${FACTUCORE_PATH_XSD:${factucore.path.base}/xsd}
+    certificados: ${FACTUCORE_PATH_CERTIFICADOS:${factucore.path.base}/certificados}
+    jasper: ${FACTUCORE_PATH_JASPER:${factucore.path.base}/jasper}
+    documentos: ${FACTUCORE_PATH_DOCUMENTOS:${factucore.path.base}/documentos}
+    documentos-xml: ${FACTUCORE_PATH_DOCUMENTOS_XML:${factucore.path.documentos}/xml}
+    documentos-pdf: ${FACTUCORE_PATH_DOCUMENTOS_PDF:${factucore.path.documentos}/pdf}
+    logs: ${FACTUCORE_PATH_LOGS:${factucore.path.base}/logs}
+
+  firma:
+    password: ${FACTUCORE_FIRMA_PASSWORD}
+
+  sri:
+    ambiente: ${FACTUCORE_SRI_AMBIENTE:PRUEBAS}
+
+    pruebas:
+      recepcion-url: ${FACTUCORE_SRI_PRUEBAS_RECEPCION_URL:https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline}
+      autorizacion-url: ${FACTUCORE_SRI_PRUEBAS_AUTORIZACION_URL:https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline}
+
+    produccion:
+      recepcion-url: ${FACTUCORE_SRI_PRODUCCION_RECEPCION_URL:https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline}
+      autorizacion-url: ${FACTUCORE_SRI_PRODUCCION_AUTORIZACION_URL:https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline}
+
+    envio:
+      max-intentos: ${FACTUCORE_SRI_ENVIO_MAX_INTENTOS:3}
+      espera-reintento-ms: ${FACTUCORE_SRI_ENVIO_ESPERA_REINTENTO_MS:5000}
+
+    autorizacion:
+      espera-inicial-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_INICIAL_MS:5000}
+      max-intentos: ${FACTUCORE_SRI_AUTORIZACION_MAX_INTENTOS:3}
+      espera-reintento-ms: ${FACTUCORE_SRI_AUTORIZACION_ESPERA_REINTENTO_MS:5000}
+
+  logging:
+    ruta: ${factucore.path.logs}
+
+  auditoria:
+    peticion:
+      habilitada: ${FACTUCORE_AUDITORIA_PETICION_HABILITADA:true}
+      tipo-evento: ${FACTUCORE_AUDITORIA_PETICION_TIPO_EVENTO:REGISTRO_AUDITORIA_HTTP}
+      version-evento: ${FACTUCORE_AUDITORIA_PETICION_VERSION_EVENTO:1.0}
+
+  notificacion:
+    tipo-evento: ${FACTUCORE_NOTIFICACION_TIPO_EVENTO:COMPROBANTE_AUTORIZADO}
+    version-evento: ${FACTUCORE_NOTIFICACION_VERSION_EVENTO:1.0}
+
+  comprobantes:
+    hash:
+      identidad:
+        campos: "idEmpresa;idEstablecimiento;idPuntoEmision;idTipoDocumento;versionXsd;datos.comprobante.factura.infoFactura.identificacionComprador"
+      contenido:
+        campo: "datos.comprobante"
+        algoritmo: "SHA-256"
+
+  workflow:
+    motor: apache-camel
+    version: 4.10.7
+    rutas:
+      facturacion: ${FACTUCORE_WORKFLOW_RUTA_FACTURACION:file:${factucore.path.config}/workflow/facturacion.xml}
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

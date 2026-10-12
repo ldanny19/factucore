@@ -1,0 +1,2 @@
+"id","codigo","nombre","descripcion","tipo_documento","prefijo_archivo","estado_registro","usuario_creacion","usuario_modificacion","fecha_creacion","fecha_modificacion","observacion"
+1,"FACTURA","Factura electrónica","Definición XSD para factura electrónica","01","factura","A","jucarsa",NULL,"2026-10-06 08:11:35.460995",NULL,NULL

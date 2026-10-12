@@ -1,0 +1,489 @@
+package ec.dalara.factucore.adapter.out.ride;
+
+import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import ec.dalara.factucore.application.ApplicationException;
+import ec.dalara.factucore.application.MessageResolver;
+import ec.dalara.factucore.application.port.out.RidePort;
+import ec.dalara.factucore.application.service.ComprobanteDetalleImpuestoService;
+import ec.dalara.factucore.application.service.ComprobanteDetalleService;
+import ec.dalara.factucore.application.service.ComprobanteInformacionAdicionalService;
+import ec.dalara.factucore.application.service.ComprobantePagoService;
+import ec.dalara.factucore.application.service.ConfiguracionEmpresaService;
+import ec.dalara.factucore.application.service.CatalogoItemService;
+import ec.dalara.factucore.application.service.CatalogoService;
+import ec.dalara.factucore.application.service.TarifaTributariaVigenciaService;
+import ec.dalara.factucore.domain.shared.MessageCodes;
+import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalle;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteDetalleImpuesto;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteInformacionAdicional;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobantePago;
+import ec.dalara.factucore.infrastructure.persistence.entity.TarifaTributariaVigencia;
+import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
+import lombok.RequiredArgsConstructor;
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
+
+@Component
+@RequiredArgsConstructor
+public class JasperRideAdapter implements RidePort {
+
+	private static final String FACTURA = "factura";
+	private static final String NOTA_CREDITO = "notaCredito";
+	private static final String NOTA_DEBITO = "notaDebito";
+	private static final String GUIA_REMISION = "guiaRemision";
+	private static final String COMPROBANTE_RETENCION = "comprobanteRetencion";
+
+	private final ComprobanteDetalleService comprobanteDetalleService;
+	private final ComprobanteDetalleImpuestoService comprobanteDetalleImpuestoService;
+	private final ComprobantePagoService comprobantePagoService;
+	private final ConfiguracionEmpresaService configuracionEmpresaService;
+	private final CatalogoService catalogoService;
+	private final CatalogoItemService catalogoItemService;
+	private final TarifaTributariaVigenciaService tarifaTributariaVigenciaService;
+	private final ComprobanteInformacionAdicionalService comprobanteInformacionAdicionalService;
+	private final ComprobanteRepository comprobanteRepository;
+	private final MessageResolver messageResolver;
+
+	@Value("${factucore.path.jasper}")
+	private String rutaJasper;
+
+	@Override
+	@Transactional(readOnly = true)
+	public byte[] generar(Comprobante comprobante, String nombreComprobante) {
+		if (comprobante == null || comprobante.getId() == null) {
+			throw new ApplicationException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO);
+		}
+
+		if (nombreComprobante == null || nombreComprobante.isBlank()) {
+			throw new ApplicationException(MessageCodes.RIDE_NOMBRE_COMPROBANTE_REQUERIDO);
+		}
+
+		comprobante = comprobanteRepository.buscarParaRide(comprobante.getId())
+				.orElseThrow(() -> new ApplicationException(MessageCodes.RIDE_COMPROBANTE_REQUERIDO));
+
+		String nombrePlantilla = normalizarNombre(nombreComprobante);
+		Path directorio = Path.of(rutaJasper);
+		Path plantilla = directorio.resolve(nombrePlantilla + ".jrxml");
+
+		if (!Files.isDirectory(directorio) || !Files.isRegularFile(plantilla)) {
+			throw new ApplicationException(MessageCodes.RIDE_PLANTILLA_NO_ENCONTRADA, plantilla.getFileName().toString());
+		}
+
+		Path directorioCompilado = null;
+
+		try {
+			Map<String, Object> parametros = construirParametros(comprobante);
+			directorioCompilado = Files.createTempDirectory("factucore-jasper-");
+			compilarSubreportes(nombrePlantilla, directorio, directorioCompilado, parametros);
+
+			JasperReport reporte = JasperCompileManager.compileReport(plantilla.toString());
+			JRDataSource dataSource = crearDataSource(nombrePlantilla, comprobante, parametros);
+			JasperPrint jasperPrint = JasperFillManager.fillReport(reporte, parametros, dataSource);
+
+			return JasperExportManager.exportReportToPdf(jasperPrint);
+		} catch (JRException exception) {
+			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception);
+		} catch (IOException exception) {
+			throw new ApplicationException(MessageCodes.RIDE_GENERACION_ERROR, exception);
+		} finally {
+			eliminarDirectorioTemporal(directorioCompilado);
+		}
+	}
+
+	private Map<String, Object> construirParametros(Comprobante comprobante) throws IOException {
+		Map<String, Object> parametros = new LinkedHashMap<>();
+
+		parametros.put("RUC", comprobante.getRucEmisor());
+		parametros.put("LOGO", obtenerLogo(comprobante));
+		parametros.put("NUM_AUT", comprobante.getNumeroAutorizacion());
+		parametros.put("FECHA_AUT", formatearFecha(comprobante.getFechaAutorizacion()));
+		parametros.put("TIPO_EMISION", obtenerValorCatalogoConfiguracion(comprobante, "TIPO_EMISION"));
+		parametros.put("CLAVE_ACC", comprobante.getClaveAcceso());
+		parametros.put("RAZON_SOCIAL", comprobante.getRazonSocialEmisor());
+		parametros.put("DIR_MATRIZ", comprobante.getDireccionMatrizEmisor());
+		parametros.put("DIR_SUCURSAL", comprobante.getDireccionEstablecimientoEmisor());
+		parametros.put("RS_COMPRADOR", comprobante.getRazonSocialReceptor());
+		parametros.put("RUC_COMPRADOR", comprobante.getIdentificacionReceptor());
+		parametros.put("DIRECCION_CLIENTE", comprobante.getDireccionReceptor());
+		parametros.put("FECHA_EMISION", valor(comprobante.getFechaEmision()));
+		parametros.put("NUM_FACT", comprobante.getSecuencial());
+		parametros.put("AMBIENTE", obtenerValorCatalogoConfiguracion(comprobante, "AMBIENTE"));
+		parametros.put("NOM_COMERCIAL", comprobante.getNombreComercialEmisor());
+
+		parametros.put("GUIA", null);
+		parametros.put("NUM_RESOLUCION", obtenerValorConfiguracion(comprobante, "NUM_RESOLUCION"));
+		parametros.put("LLEVA_CONTABILIDAD", comprobante.getEmpresa() == null ? null : comprobante.getEmpresa().getObligadoContabilidad());
+		parametros.put("NEGOCIABLE", null);
+		parametros.put("REGIMEN_TRIBUTARIO", null);
+		parametros.put("AGENTE_RETENCION", null);
+
+		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobante.getId());
+		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal totalSinImpuestos = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
+		BigDecimal iva = sumarImpuestos(impuestos, "2", null);
+		BigDecimal iva12 = sumarImpuestos(impuestos, "2", "2");
+		BigDecimal iva0 = sumarImpuestos(impuestos, "2", "0");
+		BigDecimal noObjetoIva = sumarBasesImponibles(impuestos, "2", "6");
+		BigDecimal exentoIva = sumarBasesImponibles(impuestos, "2", "7");
+		BigDecimal ice = impuestos.stream().filter(impuesto -> "3".equals(impuesto.getCodigoImpuesto()))
+				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal total = totalSinImpuestos.add(impuestos.stream().map(ComprobanteDetalleImpuesto::getValor)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add));
+
+		parametros.put("DESCUENTO", descuento);
+		parametros.put("TOTAL_SIN_IMP", totalSinImpuestos);
+		parametros.put("TOTAL_SIN_SUBSIDIO", totalSinImpuestos);
+		parametros.put("IVA", iva);
+		parametros.put("ICE", ice);
+		parametros.put("TOTAL", total.add(comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina()));
+		parametros.put("IVA_12", iva12);
+		parametros.put("IVA_0", iva0);
+		parametros.put("NO_OBJETO_IVA", noObjetoIva);
+		parametros.put("EXENTO_IVA", exentoIva);
+		parametros.put("PORCENTAJE_IVA", null);
+		parametros.put("AHORRO_POR_SUBSIDIO", BigDecimal.ZERO);
+
+		parametros.put("RAZON_MODIF", null);
+		parametros.put("DOC_MODIFICADO", null);
+		parametros.put("NUM_DOC_MODIFICADO", null);
+		parametros.put("FECHA_EMISION_DOC_SUSTENTO", null);
+		parametros.put("EJERCICIO_FISCAL", null);
+		parametros.put("FECHA_INI_TRANSPORTE", null);
+		parametros.put("FECHA_FIN_TRANSPORTE", null);
+		parametros.put("RUC_TRANSPORTISTA", null);
+		parametros.put("RS_TRANSPORTISTA", null);
+		parametros.put("PLACA", null);
+		parametros.put("PUNTO_PARTIDA", null);
+
+		parametros.put("INFO_ADICIONAL", construirInformacionAdicional(comprobante.getId()));
+
+		return parametros;
+	}
+
+	private JRDataSource crearDataSource(String nombrePlantilla, Comprobante comprobante,
+			Map<String, Object> parametros) {
+		List<Map<String, Object>> filas = new ArrayList<>();
+
+		if (FACTURA.equals(nombrePlantilla) || NOTA_CREDITO.equals(nombrePlantilla)
+				|| GUIA_REMISION.equals(nombrePlantilla)) {
+			filas = construirFilasDetalle(comprobante.getId());
+		}
+
+		if (filas.isEmpty()) {
+			filas.add(new LinkedHashMap<>());
+		}
+
+		Collection<Map<String, Object>> infoAdicional = construirInformacionAdicional(comprobante.getId());
+		Collection<Map<String, Object>> formasPago = construirFormasPago(comprobante.getId());
+		Collection<Map<String, Object>> totales = construirTotales(comprobante.getId(), comprobante);
+
+		for (Map<String, Object> fila : filas) {
+			fila.put("infoAdicional", infoAdicional);
+			fila.put("formasPago", formasPago);
+			fila.put("totalesComprobante", totales);
+		}
+
+		parametros.put("INFO_ADICIONAL", infoAdicional);
+		return new JRMapCollectionDataSource(new ArrayList<Map<String, ?>>(filas));
+	}
+
+	private List<Map<String, Object>> construirFilasDetalle(Long comprobanteId) {
+		List<Map<String, Object>> filas = new ArrayList<>();
+
+		for (ComprobanteDetalle detalle : comprobanteDetalleService.listarPorComprobante(comprobanteId)) {
+			Map<String, Object> fila = new LinkedHashMap<>();
+			fila.put("codigoPrincipal", detalle.getCodigoPrincipal());
+			fila.put("codigoAuxiliar", detalle.getCodigoAuxiliar());
+			fila.put("cantidad", detalle.getCantidad());
+			fila.put("descripcion", detalle.getDescripcion());
+			fila.put("precioUnitario", detalle.getPrecioUnitario());
+			fila.put("precioSinSubsidio", null);
+			fila.put("precioTotalSinImpuesto", detalle.getPrecioTotalSinImpuesto());
+			fila.put("detalle1", null);
+			fila.put("detalle2", null);
+			fila.put("detalle3", null);
+			fila.put("descuento", detalle.getDescuento());
+			filas.add(fila);
+		}
+
+		return filas;
+	}
+
+	private Collection<Map<String, Object>> construirFormasPago(Long comprobanteId) {
+		List<Map<String, Object>> resultado = new ArrayList<>();
+
+		for (ComprobantePago pago : comprobantePagoService.listarPorComprobante(comprobanteId)) {
+			Map<String, Object> fila = new LinkedHashMap<>();
+			String descripcionFormaPago = catalogoService.obtenerPorCodigo("FORMA_PAGO")
+                    .flatMap(catalogo -> catalogoItemService.obtenerPorCatalogoYCodigo(
+                            catalogo.getId(), pago.getCodigoFormaPago()))
+                    .map(item -> item.getNombre())
+                    .orElse(pago.getCodigoFormaPago());
+            fila.put("formaPago", descripcionFormaPago);
+			fila.put("valor", valor(pago.getTotal()));
+			resultado.add(fila);
+		}
+
+		return resultado;
+	}
+
+	private InputStream obtenerLogo(Comprobante comprobante) throws IOException {
+		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
+			return null;
+		}
+
+		var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), "LOGO",
+				LocalDateTime.now()).orElse(null);
+		if (configuracion == null || configuracion.getValor() == null || configuracion.getValor().isBlank()) {
+			return null;
+		}
+
+		Path archivo;
+		try {
+			archivo = Path.of(configuracion.getValor().trim());
+		} catch (java.nio.file.InvalidPathException exception) {
+			return null;
+		}
+
+		return Files.isRegularFile(archivo) && Files.isReadable(archivo) ? Files.newInputStream(archivo) : null;
+	}
+
+	private Collection<Map<String, Object>> construirInformacionAdicional(Long comprobanteId) {
+		List<Map<String, Object>> resultado = new ArrayList<>();
+
+		for (ComprobanteInformacionAdicional informacion : comprobanteInformacionAdicionalService
+				.listarPorComprobante(comprobanteId)) {
+			Map<String, Object> fila = new LinkedHashMap<>();
+			fila.put("nombre", informacion.getNombre());
+			fila.put("valor", informacion.getValor());
+			resultado.add(fila);
+		}
+
+		return resultado;
+	}
+
+	private Collection<Map<String, Object>> construirTotales(Long comprobanteId, Comprobante comprobante) {
+		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobanteId);
+		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
+
+		BigDecimal subtotal = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento)
+				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		BigDecimal subtotalCero = sumarBasesImponibles(impuestos, "2", "0");
+		BigDecimal subtotalNoObjeto = sumarBasesImponibles(impuestos, "2", "6");
+		BigDecimal subtotalExento = sumarBasesImponibles(impuestos, "2", "7");
+		BigDecimal iva = sumarImpuestos(impuestos, "2", null);
+		BigDecimal ice = sumarImpuestos(impuestos, "3", null);
+		BigDecimal irbpnr = sumarImpuestos(impuestos, "5", null);
+		BigDecimal propina = comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina();
+
+		List<TarifaTributariaVigencia> tarifasIvaVigentes = tarifaTributariaVigenciaService
+				.listarVigentesPorImpuesto("2", comprobante.getFechaEmision()).stream()
+				.filter(tarifa -> !List.of("0", "6", "7").contains(tarifa.getCodigoPorcentaje()))
+				.toList();
+
+		List<Map<String, Object>> resultado = new ArrayList<>();
+		if (tarifasIvaVigentes.isEmpty()) {
+			resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA),
+					sumarBasesImponibles(impuestos, "2", null), false));
+		} else {
+			for (var tarifa : tarifasIvaVigentes) {
+				String porcentaje = tarifa.getTarifa().stripTrailingZeros().toPlainString();
+				String descripcion = messageResolver.resolver(
+						MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA_PORCENTAJE, porcentaje);
+				resultado.add(total(descripcion,
+						sumarBasesImponibles(impuestos, "2", tarifa.getCodigoPorcentaje()), false));
+			}
+		}
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_CERO), subtotalCero, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_NO_OBJETO), subtotalNoObjeto, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_EXENTO), subtotalExento, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_SIN_IMPUESTOS), subtotal, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_DESCUENTO), descuento, true));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_ICE), ice, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_IVA), iva, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_IRBPNR), irbpnr, false));
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_PROPINA), propina, false));
+
+		BigDecimal totalCalculado = subtotal.add(iva).add(ice).add(irbpnr).add(propina);
+		BigDecimal totalFinal = comprobante.getTotalAPagar() == null ? totalCalculado : comprobante.getTotalAPagar();
+		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_TOTAL), totalFinal, false));
+		return resultado;
+	}
+
+	private Map<String, Object> total(String descripcion, BigDecimal valor, boolean esNegativo) {
+		Map<String, Object> fila = new LinkedHashMap<>();
+		fila.put("descripcion", descripcion);
+		fila.put("valor", valor);
+		fila.put("esNegativo", esNegativo);
+		return fila;
+	}
+
+	private List<ComprobanteDetalleImpuesto> obtenerImpuestos(List<ComprobanteDetalle> detalles) {
+		List<ComprobanteDetalleImpuesto> impuestos = new ArrayList<>();
+		for (ComprobanteDetalle detalle : detalles) {
+			impuestos.addAll(comprobanteDetalleImpuestoService.listarPorComprobanteDetalle(detalle.getId()));
+		}
+		return impuestos;
+	}
+
+	private BigDecimal sumarImpuestos(List<ComprobanteDetalleImpuesto> impuestos, String codigoImpuesto,
+			String codigoPorcentaje) {
+		return impuestos.stream()
+				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
+				.filter(impuesto -> codigoPorcentaje == null || codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
+				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	private BigDecimal sumarBasesImponibles(List<ComprobanteDetalleImpuesto> impuestos, String codigoImpuesto,
+			String codigoPorcentaje) {
+		return impuestos.stream()
+				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
+				.filter(impuesto -> codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
+				.map(ComprobanteDetalleImpuesto::getBaseImponible).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	private boolean noNulo(BigDecimal valor) {
+		return valor != null;
+	}
+
+	private void compilarSubreportes(String nombrePlantilla, Path origen, Path destino, Map<String, Object> parametros)
+			throws JRException {
+		List<String> subreportes = switch (nombrePlantilla) {
+		case FACTURA -> List.of("facturaInfoAdicional.jrxml", "facturaFormasPago.jrxml", "totalesComprobante.jrxml");
+		case NOTA_CREDITO -> List.of("facturaInfoAdicional.jrxml", "totalesComprobante.jrxml");
+		case NOTA_DEBITO ->
+			List.of("facturaInfoAdicional.jrxml", "facturaFormasPago.jrxml", "totalesComprobante.jrxml");
+		case GUIA_REMISION -> List.of("guiaRemisionDetalles.jrxml", "facturaInfoAdicional.jrxml");
+		case COMPROBANTE_RETENCION -> List.of("facturaInfoAdicional.jrxml");
+		default -> Collections.emptyList();
+		};
+
+		for (String subreporte : subreportes) {
+			Path archivo = origen.resolve(subreporte);
+			Path compilado = destino.resolve(subreporte.replace(".jrxml", ".jasper"));
+			JasperCompileManager.compileReportToFile(archivo.toString(), compilado.toString());
+		}
+
+		String directorio = destino.toAbsolutePath().toString() + java.io.File.separator;
+		parametros.put("SUBREPORT_DIR", directorio);
+		parametros.put("SUBREPORT_INFO_ADICIONAL", directorio);
+		parametros.put("SUBREPORT_PAGOS", directorio);
+		parametros.put("SUBREPORT_TOTALES", directorio);
+	}
+
+	private String normalizarNombre(String nombre) {
+		String sinAcentos = Normalizer.normalize(nombre, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+		String limpio = sinAcentos.replaceAll("[^A-Za-z0-9]+", " ").trim().toLowerCase(Locale.ROOT);
+		StringBuilder resultado = new StringBuilder();
+
+		for (String parte : limpio.split(" ")) {
+			if (parte.isBlank()) {
+				continue;
+			}
+			if (resultado.isEmpty()) {
+				resultado.append(parte);
+			} else {
+				resultado.append(Character.toUpperCase(parte.charAt(0))).append(parte.substring(1));
+			}
+		}
+
+		return resultado.toString();
+	}
+
+
+	private String obtenerValorConfiguracion(Comprobante comprobante, String clave) {
+		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
+			return null;
+		}
+
+		return configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), clave, LocalDateTime.now())
+				.map(configuracion -> configuracion.getValor())
+				.filter(valor -> valor != null && !valor.isBlank())
+				.map(String::trim)
+				.orElse(null);
+	}
+
+	private String obtenerValorCatalogoConfiguracion(Comprobante comprobante, String clave) {
+		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
+			return null;
+		}
+
+		var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), clave,
+				LocalDateTime.now());
+		if (configuracion.isEmpty() || configuracion.get().getValor() == null
+				|| configuracion.get().getValor().isBlank()) {
+			return null;
+		}
+
+		var catalogo = catalogoService.obtenerPorCodigo(clave);
+		if (catalogo.isEmpty()) {
+			return null;
+		}
+
+		return catalogoItemService.obtenerPorCatalogoYCodigo(catalogo.get().getId(),
+				configuracion.get().getValor().trim())
+				.map(item -> item.getNombre())
+				.orElse(null);
+	}
+
+	private String formatearFecha(LocalDateTime fecha) {
+		return fecha == null ? null : fecha.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	}
+
+	private String valor(Object valor) {
+		return valor == null ? null : String.valueOf(valor);
+	}
+
+	private void eliminarDirectorioTemporal(Path directorio) {
+		if (directorio == null || !Files.exists(directorio)) {
+			return;
+		}
+
+		try (var archivos = Files.walk(directorio)) {
+			archivos.sorted((a, b) -> b.compareTo(a)).forEach(archivo -> {
+				try {
+					Files.deleteIfExists(archivo);
+				} catch (IOException ignored) {
+				}
+			});
+		} catch (IOException ignored) {
+		}
+	}
+}
