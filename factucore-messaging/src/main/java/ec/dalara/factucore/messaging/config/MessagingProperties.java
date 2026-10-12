@@ -166,6 +166,11 @@ public class MessagingProperties {
 
 	public static class ProducerProperties {
 
+		private Map<String, Object> propiedadesAdicionales = new LinkedHashMap<>();
+
+		public Map<String, Object> getPropiedadesAdicionales() { return propiedadesAdicionales; }
+		public void setPropiedadesAdicionales(Map<String, Object> value) { propiedadesAdicionales = value; }
+
 		private String acks;
 
 		public String getAcks() {
@@ -184,6 +189,11 @@ public class MessagingProperties {
 		private Boolean enableAutoCommit;
 
 		private Integer concurrency;
+
+		private Map<String, Object> propiedadesAdicionales = new LinkedHashMap<>();
+
+		public Map<String, Object> getPropiedadesAdicionales() { return propiedadesAdicionales; }
+		public void setPropiedadesAdicionales(Map<String, Object> value) { propiedadesAdicionales = value; }
 
 		public String getAutoOffsetReset() {
 			return autoOffsetReset;
@@ -233,6 +243,20 @@ public class MessagingProperties {
 		private Integer channelCacheSize = 25;
 
 		private Integer connectionLimit = 10;
+
+		private Map<String, Object> propiedadesConexion = new LinkedHashMap<>();
+		private Map<String, Object> propiedadesCliente = new LinkedHashMap<>();
+		private Map<String, Object> propiedadesPublicador = new LinkedHashMap<>();
+		private Map<String, Object> propiedadesConsumidor = new LinkedHashMap<>();
+
+		public Map<String, Object> getPropiedadesConexion() { return propiedadesConexion; }
+		public void setPropiedadesConexion(Map<String, Object> value) { propiedadesConexion = value; }
+		public Map<String, Object> getPropiedadesCliente() { return propiedadesCliente; }
+		public void setPropiedadesCliente(Map<String, Object> value) { propiedadesCliente = value; }
+		public Map<String, Object> getPropiedadesPublicador() { return propiedadesPublicador; }
+		public void setPropiedadesPublicador(Map<String, Object> value) { propiedadesPublicador = value; }
+		public Map<String, Object> getPropiedadesConsumidor() { return propiedadesConsumidor; }
+		public void setPropiedadesConsumidor(Map<String, Object> value) { propiedadesConsumidor = value; }
 
 		public String getAddresses() {
 			return addresses;

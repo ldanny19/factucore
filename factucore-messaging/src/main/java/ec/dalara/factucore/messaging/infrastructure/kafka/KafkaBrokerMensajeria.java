@@ -145,27 +145,42 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 	private ConsumerFactory<String, String> crearConsumerFactory(MessagingProperties.ConexionProperties conexion) {
 		var p = conexion.getKafka();
 		var c = new HashMap<String, Object>();
-		c.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, p.getBootstrapServers());
-		c.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-		c.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-		c.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, p.getConsumer().getAutoOffsetReset());
-		c.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, p.getConsumer().isEnableAutoCommit());
-		c.put(ConsumerConfig.CLIENT_ID_CONFIG, p.getClientId());
-		c.put("security.protocol", p.getSecurityProtocol());
+		agregarSiConfigurado(c, ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, p.getBootstrapServers());
+		agregarSiConfigurado(c, ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		agregarSiConfigurado(c, ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		agregarSiConfigurado(c, ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, p.getConsumer().getAutoOffsetReset());
+		agregarSiConfigurado(c, ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, p.getConsumer().isEnableAutoCommit());
+		agregarSiConfigurado(c, ConsumerConfig.CLIENT_ID_CONFIG, p.getClientId());
+		agregarSiConfigurado(c, "security.protocol", p.getSecurityProtocol());
+		agregarPropiedades(c, p.getConsumer().getPropiedadesAdicionales());
 		return new DefaultKafkaConsumerFactory<>(c);
 	}
 
 	private ProducerFactory<String, String> crearProducerFactory(MessagingProperties.ConexionProperties conexion) {
 		var p = conexion.getKafka();
 		var c = new HashMap<String, Object>();
-		c.put(org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, p.getBootstrapServers());
-		c.put(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		c.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		c.put(org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, p.getProducer().getAcks());
-		c.put(org.apache.kafka.clients.producer.ProducerConfig.CLIENT_ID_CONFIG, p.getClientId());
-		c.put("security.protocol", p.getSecurityProtocol());
-		LOGGER.debug("Configuracion del productor Kafka antes de inicializar: {}", c);
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, p.getBootstrapServers());
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, p.getProducer().getAcks());
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.CLIENT_ID_CONFIG, p.getClientId());
+		agregarSiConfigurado(c, "security.protocol", p.getSecurityProtocol());
+		agregarPropiedades(c, p.getProducer().getPropiedadesAdicionales());
+		LOGGER.debug("Propiedades configuradas para el productor Kafka: {}", c.keySet());
 		return new DefaultKafkaProducerFactory<>(c);
+	}
+
+	private void agregarPropiedades(Map<String, Object> destino, Map<String, Object> adicionales) {
+		if (adicionales != null) {
+			adicionales.forEach((clave, valor) -> agregarSiConfigurado(destino, clave, valor));
+		}
+	}
+
+	private void agregarSiConfigurado(Map<String, Object> destino, String clave, Object valor) {
+		if (clave != null && !clave.isBlank() && valor != null
+				&& (!(valor instanceof String texto) || !texto.isBlank())) {
+			destino.put(clave, valor);
+		}
 	}
 
 	private boolean aceptaEvento(ConsumidorMensajes consumidor, EventoMensaje evento) {

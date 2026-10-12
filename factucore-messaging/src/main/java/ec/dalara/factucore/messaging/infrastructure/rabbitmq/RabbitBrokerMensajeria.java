@@ -1,6 +1,9 @@
 package ec.dalara.factucore.messaging.infrastructure.rabbitmq;
 
 import java.util.Map;
+
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.PropertyAccessorFactory;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.amqp.core.AcknowledgeMode;
@@ -90,6 +93,7 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 		container.setQueueNames(queue.getName());
 		container.setConcurrentConsumers(Math.toIntExact(conexion(conexion).getRabbitmq().getConcurrency()));
 		container.setAcknowledgeMode(AcknowledgeMode.AUTO);
+		aplicarPropiedades(container, conexion(conexion).getRabbitmq().getPropiedadesConsumidor());
 
 		if (properties.getRetry().isDlqHabilitada()) {
 			var dlqExchange = exchange(conexion, configuracion.getNombre() + properties.getRetry().getSufijoDlq());
@@ -149,6 +153,8 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 			factory.setVirtualHost(p.getVirtualHost());
 			factory.setConnectionTimeout(p.getConnectionTimeoutMs());
 			factory.setChannelCacheSize(p.getChannelCacheSize());
+			aplicarPropiedades(factory, p.getPropiedadesConexion());
+			aplicarPropiedades(factory.getRabbitConnectionFactory(), p.getPropiedadesCliente());
 			if (p.getConnectionLimit() != null && p.getConnectionLimit() > 0) {
 				factory.setConnectionLimit(p.getConnectionLimit());
 				factory.setCacheMode(CacheMode.CONNECTION);
@@ -158,7 +164,28 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 	}
 
 	private RabbitTemplate template(String conexion) {
-		return templates.computeIfAbsent(conexion, nombre -> new RabbitTemplate(connectionFactory(nombre)));
+		return templates.computeIfAbsent(conexion, nombre -> {
+			var template = new RabbitTemplate(connectionFactory(nombre));
+			aplicarPropiedades(template, conexion(nombre).getRabbitmq().getPropiedadesPublicador());
+			return template;
+		});
+	}
+
+	private void aplicarPropiedades(Object bean, Map<String, Object> propiedades) {
+		if (propiedades == null || propiedades.isEmpty()) {
+			return;
+		}
+		BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
+		propiedades.forEach((nombre, valor) -> {
+			if (nombre == null || nombre.isBlank() || valor == null) {
+				return;
+			}
+			if (!wrapper.isWritableProperty(nombre)) {
+				throw new IllegalArgumentException("Propiedad RabbitMQ no compatible con "
+						+ bean.getClass().getSimpleName() + ": " + nombre);
+			}
+			wrapper.setPropertyValue(nombre, valor);
+		});
 	}
 
 	private RabbitAdmin admin(String conexion) {
