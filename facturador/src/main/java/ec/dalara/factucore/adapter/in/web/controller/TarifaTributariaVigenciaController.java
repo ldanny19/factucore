@@ -1,6 +1,7 @@
 package ec.dalara.factucore.adapter.in.web.controller;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
-import ec.dalara.factucore.application.contract.request.AdministracionRequest;
+import ec.dalara.factucore.application.contract.request.AdministracionGlobalRequest;
 import ec.dalara.factucore.application.contract.request.TarifaTributariaVigenciaRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.TarifaTributariaVigenciaResponse;
@@ -36,9 +37,12 @@ public class TarifaTributariaVigenciaController {
 
     @PostMapping
     public ResponseEntity<AdministracionResponse<TarifaTributariaVigenciaResponse>> crear(
-            @Valid @RequestBody AdministracionRequest<TarifaTributariaVigenciaRequest> request) {
+            @Valid @RequestBody AdministracionGlobalRequest<TarifaTributariaVigenciaRequest> request) {
         respuestas.validarFechaInicio(request.getFechaInicio());
-        TarifaTributariaVigencia tarifa = tarifaService.guardar(toEntity(null, request.getDatos()));
+        TarifaTributariaVigencia tarifa = toEntity(null, request.getDatos());
+        tarifa.setUsuarioCreacion(request.getCanal());
+        tarifa.setFechaCreacion(LocalDateTime.now());
+        tarifa = tarifaService.guardar(tarifa);
         return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
                 toResponse(tarifa)));
     }
@@ -52,10 +56,13 @@ public class TarifaTributariaVigenciaController {
                 .orElseThrow(() -> new ec.dalara.factucore.application.ApplicationException(
                         ec.dalara.factucore.domain.shared.MessageCodes.REGISTRO_NO_ENCONTRADO, id));
         TarifaTributariaVigencia cambios = toEntity(id, request.getDatos());
+        cambios.setUsuarioModificacion(request.getCanal());
+        cambios.setFechaModificacion(LocalDateTime.now());
         cambios.setEstadoRegistro(actual.getEstadoRegistro());
         cambios.setUsuarioCreacion(actual.getUsuarioCreacion());
         cambios.setFechaCreacion(actual.getFechaCreacion());
         cambios.setUsuarioModificacion(request.getCanal());
+        cambios.setFechaModificacion(LocalDateTime.now());
         cambios.setObservacion(request.getDatos().getObservacion());
         return ResponseEntity.ok(respuestas.exito(request.getIdTransaccion(), request.getFechaInicio(),
                 toResponse(tarifaService.guardar(cambios))));
