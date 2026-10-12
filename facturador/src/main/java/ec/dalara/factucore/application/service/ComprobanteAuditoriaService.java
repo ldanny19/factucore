@@ -88,11 +88,8 @@ public class ComprobanteAuditoriaService extends BaseService<ComprobanteAuditori
 
 	public LocalDateTime obtenerFechaPrimerEnvio(Long comprobanteId) {
 		return listarPorComprobante(comprobanteId).stream()
-				.filter(auditoria -> "ENVIO_SRI".equals(auditoria.getEtapa()))
-				.map(ComprobanteAuditoria::getFechaInicio)
-				.filter(fecha -> fecha != null)
-				.min(Comparator.naturalOrder())
-				.orElse(null);
+				.filter(auditoria -> "ENVIO_SRI".equals(auditoria.getEtapa())).map(ComprobanteAuditoria::getFechaInicio)
+				.filter(fecha -> fecha != null).min(Comparator.naturalOrder()).orElse(null);
 	}
 
 	public List<ComprobanteAuditoria> listarPorComprobante(Long comprobanteId) {

@@ -65,8 +65,8 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 			datosFaltantes.add("Empresa.nombreComercial/razonSocial");
 		}
 		if (!datosFaltantes.isEmpty()) {
-			throw new IllegalStateException(MessageCodes.NOTIFICACION_DATOS_CLIENTE_REQUERIDOS
-					+ ": " + String.join(", ", datosFaltantes));
+			throw new IllegalStateException(
+					MessageCodes.NOTIFICACION_DATOS_CLIENTE_REQUERIDOS + ": " + String.join(", ", datosFaltantes));
 		}
 
 		var payload = new ComprobanteAutorizado(comprobante.getIdTransaccion(), nombreCliente, correo,
@@ -78,8 +78,7 @@ public class NotificacionMessagingAdapter implements NotificacionPort {
 		publicadorMensajes.publicar(DESTINO_NOTIFICACION, evento);
 	}
 
-	private String obtenerNombreEmpresa(
-			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+	private String obtenerNombreEmpresa(ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
 		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
 			return null;
 		}

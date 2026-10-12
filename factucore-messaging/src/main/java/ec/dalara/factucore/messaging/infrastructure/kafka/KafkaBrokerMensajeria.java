@@ -11,6 +11,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -22,8 +24,6 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.util.backoff.FixedBackOff;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,9 +31,9 @@ import ec.dalara.factucore.messaging.api.BrokerMensajeria;
 import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.api.TipoBroker;
-import ec.dalara.factucore.messaging.config.MessagingProperties;
 import ec.dalara.factucore.messaging.config.MessageCodes;
 import ec.dalara.factucore.messaging.config.MessageResolver;
+import ec.dalara.factucore.messaging.config.MessagingProperties;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -70,7 +70,8 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 					.get(properties.getResiliencia().getTimeout().getEnvioMs(), TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
 		}
 	}
 
@@ -107,8 +108,10 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 					consumidor.consumir(evento);
 				}
 			} catch (Exception e) {
-				LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
-				throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
+				LOGGER.error(
+						messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
+				throw new IllegalStateException(
+						messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
 			}
 		});
 		container.start();
@@ -117,10 +120,12 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 	private MessagingProperties.DestinoProperties destino(String nombre) {
 		var destino = properties.getDestinos().get(nombre);
 		if (destino == null || destino.getNombre() == null || destino.getNombre().isBlank()) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_NO_CONFIGURADO, nombre));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_NO_CONFIGURADO, nombre));
 		}
 		if (!soporta(nombre)) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_BROKER_INVALIDO, nombre, tipo()));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_BROKER_INVALIDO, nombre, tipo()));
 		}
 		return destino;
 	}
@@ -128,7 +133,8 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 	private MessagingProperties.ConexionProperties conexion(String nombre) {
 		var conexion = properties.getConexiones().get(nombre);
 		if (conexion == null) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_CONEXION_NO_CONFIGURADA, nombre));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_CONEXION_NO_CONFIGURADA, nombre));
 		}
 		return conexion;
 	}
@@ -159,10 +165,14 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 	private ProducerFactory<String, String> crearProducerFactory(MessagingProperties.ConexionProperties conexion) {
 		var p = conexion.getKafka();
 		var c = new HashMap<String, Object>();
-		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, p.getBootstrapServers());
-		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, p.getProducer().getAcks());
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+				p.getBootstrapServers());
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+				StringSerializer.class);
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+				StringSerializer.class);
+		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG,
+				p.getProducer().getAcks());
 		agregarSiConfigurado(c, org.apache.kafka.clients.producer.ProducerConfig.CLIENT_ID_CONFIG, p.getClientId());
 		agregarSiConfigurado(c, "security.protocol", p.getSecurityProtocol());
 		agregarPropiedades(c, p.getProducer().getPropiedadesAdicionales());

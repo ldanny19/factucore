@@ -67,32 +67,27 @@ public class ComprobanteReprocessService {
 	@Transactional(readOnly = true)
 	public boolean estaPendienteAutorizacion(Long comprobanteId) {
 		return comprobanteRepository.findByIdAndEstadoRegistro(comprobanteId, EstadoRegistro.ACTIVO)
-				.map(Comprobante::getEstadoProceso)
-				.filter(EstadoProceso.AUTORIZACION_PENDIENTE.name()::equals)
+				.map(Comprobante::getEstadoProceso).filter(EstadoProceso.AUTORIZACION_PENDIENTE.name()::equals)
 				.isPresent();
 	}
 
 	private ComprobanteGeneracionRequest crearSolicitudDeReproceso(Comprobante comprobante) {
-		return ComprobanteGeneracionRequest.builder()
-				.idTransaccion(comprobante.getIdTransaccion())
-				.idDocumentoOrigen(comprobante.getIdDocumentoOrigen())
-				.fechaInicio(comprobante.getFechaCreacion())
+		return ComprobanteGeneracionRequest.builder().idTransaccion(comprobante.getIdTransaccion())
+				.idDocumentoOrigen(comprobante.getIdDocumentoOrigen()).fechaInicio(comprobante.getFechaCreacion())
 				.versionXsd(comprobante.getVersionDocumentoXsd().getVersion())
 				.usuario(comprobante.getUsuarioModificacion() == null || comprobante.getUsuarioModificacion().isBlank()
-						? comprobante.getUsuarioCreacion() : comprobante.getUsuarioModificacion())
-				.canal("REPROCESO")
-				.idEmpresa(comprobante.getEmpresa().getId())
+						? comprobante.getUsuarioCreacion()
+						: comprobante.getUsuarioModificacion())
+				.canal("REPROCESO").idEmpresa(comprobante.getEmpresa().getId())
 				.idEstablecimiento(comprobante.getEstablecimiento().getId())
 				.idPuntoEmision(comprobante.getPuntoEmision().getId())
-				.idTipoDocumento(comprobante.getDocumentoXsd().getId())
-				.build();
+				.idTipoDocumento(comprobante.getDocumentoXsd().getId()).build();
 	}
 
 	private void validarEstadoReprocesable(Comprobante comprobante) {
 		String estado = comprobante.getEstadoProceso();
 		boolean reprocesable = EstadoProceso.XML_GENERADO.name().equals(estado)
-				|| EstadoProceso.XSD_VALIDADO.name().equals(estado)
-				|| EstadoProceso.FIRMADO.name().equals(estado)
+				|| EstadoProceso.XSD_VALIDADO.name().equals(estado) || EstadoProceso.FIRMADO.name().equals(estado)
 				|| EstadoProceso.ENVIADO_SRI.name().equals(estado)
 				|| EstadoProceso.AUTORIZACION_PENDIENTE.name().equals(estado)
 				|| (EstadoProceso.AUTORIZACION_SRI.name().equals(estado)
@@ -104,19 +99,17 @@ public class ComprobanteReprocessService {
 	}
 
 	private boolean requiereXmlGenerado(String estado) {
-		return EstadoProceso.XML_GENERADO.name().equals(estado)
-				|| EstadoProceso.XSD_VALIDADO.name().equals(estado);
+		return EstadoProceso.XML_GENERADO.name().equals(estado) || EstadoProceso.XSD_VALIDADO.name().equals(estado);
 	}
 
 	private boolean requiereXmlFirmado(String estado) {
-		return EstadoProceso.FIRMADO.name().equals(estado)
-				|| EstadoProceso.ENVIADO_SRI.name().equals(estado)
+		return EstadoProceso.FIRMADO.name().equals(estado) || EstadoProceso.ENVIADO_SRI.name().equals(estado)
 				|| EstadoProceso.AUTORIZACION_PENDIENTE.name().equals(estado);
 	}
 
 	private String leerXmlGenerado(Comprobante comprobante) {
-		var evidencia = evidenciaRepository.findByComprobanteIdAndTipoEvidenciaAndActualTrue(
-				comprobante.getId(), XML_GENERADO)
+		var evidencia = evidenciaRepository
+				.findByComprobanteIdAndTipoEvidenciaAndActualTrue(comprobante.getId(), XML_GENERADO)
 				.orElseThrow(() -> new ApplicationException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 		try {
 			return Files.readString(Path.of(evidencia.getRutaArchivo()));

@@ -340,7 +340,8 @@ public class XsdParserAdapter implements XsdParserPort {
 		Restriction restriction = resolveRestriction(simpleType, simpleTypes);
 
 		// Las enumeraciones de atributos no son enumeraciones del elemento padre.
-		// El modelo actual persiste enumeraciones asociadas a elementos, por lo que no deben mezclarse.
+		// El modelo actual persiste enumeraciones asociadas a elementos, por lo que no
+		// deben mezclarse.
 		String uso = attr(attribute, "use");
 		boolean atributoRaiz = parentPath.indexOf('.') < 0;
 		boolean obligatorio = "required".equals(uso) || (uso == null && atributoRaiz);

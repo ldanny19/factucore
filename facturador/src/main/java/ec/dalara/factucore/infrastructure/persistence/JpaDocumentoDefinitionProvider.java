@@ -74,11 +74,10 @@ public class JpaDocumentoDefinitionProvider implements DocumentoDefinitionProvid
 				.filter(enumeracion -> EstadoRegistro.ACTIVO.equals(enumeracion.getEstadoRegistro()))
 				.map(this::crearEnumeracionModel).toList();
 
-		List<MapeoXsd> mapeos = mapeoXsdRepository
-				.findByVersionDocumentoXsdIdAndEstadoRegistro(idVersionDocumentoXsd, EstadoRegistro.ACTIVO);
+		List<MapeoXsd> mapeos = mapeoXsdRepository.findByVersionDocumentoXsdIdAndEstadoRegistro(idVersionDocumentoXsd,
+				EstadoRegistro.ACTIVO);
 
-		List<MapeoXsdModel> mapeoModels = mapeos.stream()
-				.map(this::crearMapeoModel).toList();
+		List<MapeoXsdModel> mapeoModels = mapeos.stream().map(this::crearMapeoModel).toList();
 
 		DocumentoXsdModel documentoModel = new DocumentoXsdModel(documento.getCodigo(), documento.getNombre(),
 				documento.getDescripcion(), documento.getTipoDocumento(), documento.getPrefijoArchivo());

@@ -30,8 +30,8 @@ public class SpringMessageResolver implements MessageResolver {
 	private String resolverObligatorio(String codigo, Object[] parametros, Locale locale) {
 		String mensaje = messageSource.getMessage(codigo, parametros, null, locale);
 		if (mensaje == null) {
-			throw new IllegalStateException(messageSource.getMessage(
-					MessageCodes.MENSAJE_CODIGO_NO_CONFIGURADO, new Object[] { codigo }, locale));
+			throw new IllegalStateException(messageSource.getMessage(MessageCodes.MENSAJE_CODIGO_NO_CONFIGURADO,
+					new Object[] { codigo }, locale));
 		}
 		return mensaje;
 	}

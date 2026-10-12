@@ -1,8 +1,5 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
-
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -11,8 +8,6 @@ import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
-
-
 import ec.dalara.factucore.application.port.out.NotificacionPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
@@ -64,7 +59,9 @@ public class NotificacionWorkflowStep {
 					Map.of("notificacionPublicada", true));
 		} catch (RuntimeException exception) {
 			String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
-			LOGGER.error(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_ERROR, idTransaccion, etapa(), MessageCodes.NOTIFICACION_PUBLICACION_ERROR, messageResolver.resolver(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)), exception);
+			LOGGER.error(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_ERROR, idTransaccion, etapa(),
+					MessageCodes.NOTIFICACION_PUBLICACION_ERROR,
+					messageResolver.resolver(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)), exception);
 			return ResultadoEtapa.exitosa(etapa(), "NOTIFICACION_ERROR");
 		}
 	}

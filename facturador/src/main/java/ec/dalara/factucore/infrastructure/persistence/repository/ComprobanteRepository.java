@@ -1,6 +1,5 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.contract.response.ComprobanteGeneracionResponse;
@@ -32,8 +31,8 @@ public class ComprobanteWorkflowService implements ComprobanteWorkflowPort {
 			return workflowExecutionPort.ejecutar(request);
 		}
 
-		boolean reclamada = solicitudEnProcesoService.reclamar(request.getIdEmpresa(),
-				request.getIdDocumentoOrigen(), request.getIdTransaccion());
+		boolean reclamada = solicitudEnProcesoService.reclamar(request.getIdEmpresa(), request.getIdDocumentoOrigen(),
+				request.getIdTransaccion());
 		if (!reclamada) {
 			return respuestaEnProceso(request);
 		}
@@ -41,8 +40,8 @@ public class ComprobanteWorkflowService implements ComprobanteWorkflowPort {
 		try {
 			return workflowExecutionPort.ejecutar(request);
 		} finally {
-			solicitudEnProcesoService.liberar(request.getIdEmpresa(),
-					request.getIdDocumentoOrigen(), request.getIdTransaccion());
+			solicitudEnProcesoService.liberar(request.getIdEmpresa(), request.getIdDocumentoOrigen(),
+					request.getIdTransaccion());
 		}
 	}
 
@@ -52,15 +51,8 @@ public class ComprobanteWorkflowService implements ComprobanteWorkflowPort {
 		MensajeResponse error = MensajeResponse.builder().codigo(codigo).mensaje(mensaje).build();
 		OffsetDateTime inicio = request.getFechaInicio() == null ? null
 				: request.getFechaInicio().atOffset(ZoneOffset.UTC);
-		return ComprobanteGeneracionResponse.builder()
-				.idTransaccion(request.getIdTransaccion())
-				.fechaInicio(inicio)
-				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC))
-				.exitoso(false)
-				.codigo(codigo)
-				.mensaje(mensaje)
-				.estadoSri("EN_PROCESO")
-				.resultado(ResultadoResponse.builder().errores(List.of(error)).build())
-				.build();
+		return ComprobanteGeneracionResponse.builder().idTransaccion(request.getIdTransaccion()).fechaInicio(inicio)
+				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC)).exitoso(false).codigo(codigo).mensaje(mensaje)
+				.estadoSri("EN_PROCESO").resultado(ResultadoResponse.builder().errores(List.of(error)).build()).build();
 	}
 }

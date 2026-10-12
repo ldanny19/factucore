@@ -1,12 +1,11 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
 import java.time.LocalDate;
 import java.util.Locale;
 
 import org.springframework.stereotype.Component;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.service.ClaveAccesoService;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
@@ -16,10 +15,7 @@ import ec.dalara.factucore.domain.claveacceso.ClaveAccesoDatos;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
-
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
-import ec.dalara.factucore.application.ApplicationException;
-
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
 import lombok.RequiredArgsConstructor;
 
@@ -42,8 +38,8 @@ public class GeneracionClaveAccesoWorkflowStep {
 	}
 
 	/**
-	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
-	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel. El Bean
+	 * no conoce ni decide el siguiente nodo del workflow.
 	 */
 	public String ejecutar(ContextoWorkflow contexto) {
 		return workflowEtapaExecutor.ejecutar(contexto, etapa(), () -> ejecutarResultado(contexto));
@@ -74,8 +70,7 @@ public class GeneracionClaveAccesoWorkflowStep {
 		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
-		var definition = definitionProvider
-				.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
+		var definition = definitionProvider.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		String ambiente = resolverAmbiente(sriProperties.getAmbiente());

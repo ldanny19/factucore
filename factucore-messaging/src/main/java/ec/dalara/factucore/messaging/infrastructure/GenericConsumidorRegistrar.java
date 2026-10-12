@@ -19,10 +19,10 @@ public class GenericConsumidorRegistrar implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() {
-		consumidores.forEach(
-				consumidor -> brokers.stream().filter(broker -> broker.soporta(consumidor.destino())).findFirst()
-						.orElseThrow(() -> new IllegalStateException(
-								messageResolver.resolver(MessageCodes.MENSAJERIA_BROKER_NO_CONFIGURADO, consumidor.destino())))
-						.registrar(consumidor));
+		consumidores.forEach(consumidor -> brokers.stream().filter(broker -> broker.soporta(consumidor.destino()))
+				.findFirst()
+				.orElseThrow(() -> new IllegalStateException(
+						messageResolver.resolver(MessageCodes.MENSAJERIA_BROKER_NO_CONFIGURADO, consumidor.destino())))
+				.registrar(consumidor));
 	}
 }

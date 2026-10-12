@@ -18,26 +18,26 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TarifaTributariaVigenciaRequest {
 
-    @NotNull
-    private Long idCatalogoItem;
+	@NotNull
+	private Long idCatalogoItem;
 
-    @NotBlank
-    @Size(max = 2)
-    private String codigoImpuesto;
+	@NotBlank
+	@Size(max = 2)
+	private String codigoImpuesto;
 
-    @NotBlank
-    @Size(max = 4)
-    private String codigoPorcentaje;
+	@NotBlank
+	@Size(max = 4)
+	private String codigoPorcentaje;
 
-    @NotNull
-    @DecimalMin("0.0")
-    private BigDecimal tarifa;
+	@NotNull
+	@DecimalMin("0.0")
+	private BigDecimal tarifa;
 
-    @NotNull
-    private LocalDate fechaVigenciaDesde;
+	@NotNull
+	private LocalDate fechaVigenciaDesde;
 
-    private LocalDate fechaVigenciaHasta;
+	private LocalDate fechaVigenciaHasta;
 
-    @Size(max = 500)
-    private String observacion;
+	@Size(max = 500)
+	private String observacion;
 }

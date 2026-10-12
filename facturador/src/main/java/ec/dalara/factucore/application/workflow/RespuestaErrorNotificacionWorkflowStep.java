@@ -1,27 +1,21 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
-
-
-
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
-
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
-
-
+import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
 /**
  * Prepara la respuesta cuando falla exclusivamente la entrega de correo.
  *
- * <p>El fallo de notificación no invalida la facturación. Por eso esta etapa
- * marca el proceso como exitoso, agrega la condición de notificación al
- * contexto y prepara una respuesta que contiene el mensaje informativo
- * correspondiente. Después devuelve {@code OK} para continuar a {@code FIN}.</p>
+ * <p>
+ * El fallo de notificación no invalida la facturación. Por eso esta etapa marca
+ * el proceso como exitoso, agrega la condición de notificación al contexto y
+ * prepara una respuesta que contiene el mensaje informativo correspondiente.
+ * Después devuelve {@code OK} para continuar a {@code FIN}.
+ * </p>
  */
 @Component
 @RequiredArgsConstructor
@@ -45,4 +39,5 @@ public class RespuestaErrorNotificacionWorkflowStep {
 			contexto.setRespuesta(responseFactory.crear(contexto));
 		}
 		return ResultadoEtapa.exitosa(etapa(), "COMPLETADA");
-	}}
+	}
+}

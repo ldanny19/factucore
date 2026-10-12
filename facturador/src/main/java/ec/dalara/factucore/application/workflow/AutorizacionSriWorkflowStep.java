@@ -56,15 +56,17 @@ public class AutorizacionSriWorkflowStep {
 		}
 
 		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
-		LOGGER.debug(messageResolver.resolver(MessageCodes.LOG_SRI_RESPUESTA_COMPLETA, idTransaccion,
-				etapa().name(), respuesta.respuestaXml()));
+		LOGGER.debug(messageResolver.resolver(MessageCodes.LOG_SRI_RESPUESTA_COMPLETA, idTransaccion, etapa().name(),
+				respuesta.respuestaXml()));
 	}
 
 	private void validarCodigosSri(ContextoWorkflow contexto, SriResponse respuesta) {
 		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
-		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador()).filter(codigo -> codigo != null && !codigo.isBlank())
+		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador())
+				.filter(codigo -> codigo != null && !codigo.isBlank())
 				.filter(codigo -> !sriCodigoCatalogoService.esCodigoConocido(codigo))
-				.forEach(codigo -> LOGGER.warn(messageResolver.resolver(MessageCodes.LOG_SRI_CODIGO_NO_PARAMETRIZADO, idTransaccion, etapa().name(), codigo)));
+				.forEach(codigo -> LOGGER.warn(messageResolver.resolver(MessageCodes.LOG_SRI_CODIGO_NO_PARAMETRIZADO,
+						idTransaccion, etapa().name(), codigo)));
 	}
 
 	private String obtenerUsuario(ContextoWorkflow contexto) {
@@ -81,15 +83,14 @@ public class AutorizacionSriWorkflowStep {
 				|| respuesta.mensajes().stream().anyMatch(mensaje -> "70".equals(mensaje.identificador()));
 	}
 
-
 	private String obtenerCodigoRespuesta(SriResponse respuesta) {
 		return respuesta.mensajes().stream().map(mensaje -> mensaje.identificador())
 				.filter(codigo -> codigo != null && !codigo.isBlank()).findFirst().orElse(null);
 	}
 
 	private Long obtenerTiempoConfiguradoSegundos(ContextoWorkflow contexto, String clave) {
-		Long empresaId = contexto.getComprobante().getEmpresa() == null
-				? null : contexto.getComprobante().getEmpresa().getId();
+		Long empresaId = contexto.getComprobante().getEmpresa() == null ? null
+				: contexto.getComprobante().getEmpresa().getId();
 		if (empresaId == null) {
 			return null;
 		}
@@ -116,8 +117,7 @@ public class AutorizacionSriWorkflowStep {
 			return;
 		}
 		Long intervaloSegundos = obtenerTiempoConfiguradoSegundos(contexto, PREFIJO_TIEMPO_INTERVALO + codigo);
-		long intervaloMs = intervaloSegundos == null
-				? sriProperties.getAutorizacion().getEsperaReintentoMs()
+		long intervaloMs = intervaloSegundos == null ? sriProperties.getAutorizacion().getEsperaReintentoMs()
 				: intervaloSegundos * 1_000L;
 		intervaloMs = Math.max(intervaloMs, 1L);
 		LocalDateTime siguiente = ahora.plusNanos(intervaloMs * 1_000_000L);
@@ -187,36 +187,35 @@ public class AutorizacionSriWorkflowStep {
 			}
 
 			String codigoRespuestaFinal = codigoReintento;
-			var ultimoMensaje = respuesta.mensajes().stream()
-					.filter(mensaje -> codigoRespuestaFinal != null && codigoRespuestaFinal.equals(mensaje.identificador())).findFirst()
-					.orElse(respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0));
+			var ultimoMensaje = respuesta.mensajes().stream().filter(
+					mensaje -> codigoRespuestaFinal != null && codigoRespuestaFinal.equals(mensaje.identificador()))
+					.findFirst().orElse(respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0));
 			String codigoError = ultimoMensaje == null || ultimoMensaje.identificador() == null
-					|| ultimoMensaje.identificador().isBlank()
-					? MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS
-					: ultimoMensaje.identificador();
+					|| ultimoMensaje.identificador().isBlank() ? MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS
+							: ultimoMensaje.identificador();
 			String mensajeError = ultimoMensaje == null || ultimoMensaje.mensaje() == null
 					|| ultimoMensaje.mensaje().isBlank()
-					? messageResolver.resolver(MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS)
-					: sriCodigoCatalogoService.resolverDescripcion(codigoError, ultimoMensaje.mensaje());
+							? messageResolver.resolver(MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS)
+							: sriCodigoCatalogoService.resolverDescripcion(codigoError, ultimoMensaje.mensaje());
 			contexto.getComprobante().setCodigoError(codigoError);
 			contexto.getComprobante().setMensajeError(mensajeError);
 			evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
 					obtenerUsuario(contexto));
-			return ResultadoEtapa.fallida(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name(),
-					codigoError, mensajeError);
+			return ResultadoEtapa.fallida(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name(), codigoError,
+					mensajeError);
 		}
 
-		contexto.getComprobante().setEstadoSri(respuesta.estado() == null || respuesta.estado().isBlank()
-				? "NO_AUTORIZADO" : respuesta.estado());
+		contexto.getComprobante().setEstadoSri(
+				respuesta.estado() == null || respuesta.estado().isBlank() ? "NO_AUTORIZADO" : respuesta.estado());
 		contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_SRI.name());
 		contexto.getComprobante().setFechaProximoReproceso(null);
-		evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
-				obtenerUsuario(contexto));
+		evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta, obtenerUsuario(contexto));
 		var mensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
 		return ResultadoEtapa.fallida(etapa(), "NO_AUTORIZADO",
 				mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: mensaje.identificador(),
-				mensaje == null ? null : sriCodigoCatalogoService.resolverDescripcion(mensaje.identificador(), mensaje.mensaje()));
+				mensaje == null ? null
+						: sriCodigoCatalogoService.resolverDescripcion(mensaje.identificador(), mensaje.mensaje()));
 	}
 
 	private void esperar(long esperaMs) {

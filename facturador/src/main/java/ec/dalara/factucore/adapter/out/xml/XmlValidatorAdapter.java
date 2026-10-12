@@ -1,11 +1,11 @@
 package ec.dalara.factucore.adapter.out.xml;
 
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HexFormat;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,15 +16,15 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
-import ec.dalara.factucore.application.validation.ComprobanteValidationResult;
 import ec.dalara.factucore.application.port.out.XmlValidatorPort;
+import ec.dalara.factucore.application.validation.ComprobanteValidationResult;
 import ec.dalara.factucore.domain.documentoxsd.AtributoXsdModel;
 import ec.dalara.factucore.domain.documentoxsd.DocumentDefinitionModel;
 import ec.dalara.factucore.domain.documentoxsd.ElementoXsdModel;
@@ -47,12 +47,14 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		resultadoActual.set(resultado);
 		if (xml == null || xml.isBlank()) {
 			registrarErrorSinTag(MessageCodes.XML_VALIDACION_XML_REQUERIDO);
-			resultadoActual.remove(); return resultado;
+			resultadoActual.remove();
+			return resultado;
 		}
 
 		if (definition == null) {
 			registrarErrorSinTag(MessageCodes.XML_VALIDACION_DEFINITION_REQUERIDA);
-			resultadoActual.remove(); return resultado;
+			resultadoActual.remove();
+			return resultado;
 		}
 
 		try {
@@ -71,7 +73,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 		} catch (Exception exception) {
 			String tag = documentTag(xml);
-			LOGGER.error(messageResolver.resolver(MessageCodes.XML_VALIDACION_ERROR, exception.getMessage()), exception);
+			LOGGER.error(messageResolver.resolver(MessageCodes.XML_VALIDACION_ERROR, exception.getMessage()),
+					exception);
 			resultado.agregarError(MessageCodes.XML_VALIDACION_ERROR, documentTag(xml), exception.getMessage());
 		}
 		resultadoActual.remove();
@@ -82,14 +85,17 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		String rutaXsd = definition.getVersion().getRutaXsd();
 		String hashEsperado = definition.getVersion().getHashXsd();
 		if (rutaXsd == null || rutaXsd.isBlank() || hashEsperado == null || hashEsperado.isBlank()) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_RUTA_HASH_REQUERIDOS));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_RUTA_HASH_REQUERIDOS));
 		}
 
 		Path archivoXsd = Path.of(rutaXsd).toAbsolutePath().normalize();
 		if (!Files.isRegularFile(archivoXsd)) {
-			throw new java.io.FileNotFoundException(messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_ARCHIVO_NO_ENCONTRADO));
+			throw new java.io.FileNotFoundException(
+					messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_ARCHIVO_NO_ENCONTRADO));
 		}
-		String hashReal = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(archivoXsd)));
+		String hashReal = HexFormat.of()
+				.formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(archivoXsd)));
 		if (!MessageDigest.isEqual(hashEsperado.getBytes(java.nio.charset.StandardCharsets.US_ASCII),
 				hashReal.getBytes(java.nio.charset.StandardCharsets.US_ASCII))) {
 			throw new SecurityException(messageResolver.resolver(MessageCodes.XML_VALIDACION_XSD_HASH_INVALIDO));
@@ -138,7 +144,9 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		if (!Objects.equals(
 				elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(),
 				raiz.getNombre())) {
-			registrarError(MessageCodes.XML_VALIDACION_RAIZ_INVALIDA, elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(), null);
+			registrarError(MessageCodes.XML_VALIDACION_RAIZ_INVALIDA,
+					elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(),
+					null);
 		}
 
 		String namespaceEsperado = definition.getVersion().getNamespaceXml();
@@ -146,7 +154,9 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		if (namespaceEsperado != null && !namespaceEsperado.isBlank()
 				&& !Objects.equals(namespaceEsperado, elementoRaiz.getNamespaceURI())) {
 
-			registrarError(MessageCodes.XML_VALIDACION_NAMESPACE_INVALIDO, elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(), null);
+			registrarError(MessageCodes.XML_VALIDACION_NAMESPACE_INVALIDO,
+					elementoRaiz.getLocalName() != null ? elementoRaiz.getLocalName() : elementoRaiz.getNodeName(),
+					null);
 		}
 	}
 
@@ -155,7 +165,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		ElementoXsdModel definicion = buscarDefinicionElemento(elementoXml, definicionPadre, definition);
 
 		if (definicion == null) {
-			registrarError(MessageCodes.XML_VALIDACION_ELEMENTO_NO_DEFINIDO, elementoXml.getLocalName() != null ? elementoXml.getLocalName() : elementoXml.getNodeName(), null);
+			registrarError(MessageCodes.XML_VALIDACION_ELEMENTO_NO_DEFINIDO,
+					elementoXml.getLocalName() != null ? elementoXml.getLocalName() : elementoXml.getNodeName(), null);
 			return;
 		}
 
@@ -231,8 +242,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			registrarError(MessageCodes.XML_VALIDACION_OCURRENCIA_MAXIMA, definicion, definition, cantidad, maximo);
 		}
 
-		if (Boolean.TRUE.equals(definicion.getObligatorio()) && cantidad == 0
-				&& (minimo == null || minimo == 0)) {
+		if (Boolean.TRUE.equals(definicion.getObligatorio()) && cantidad == 0 && (minimo == null || minimo == 0)) {
 
 			registrarError(MessageCodes.XML_VALIDACION_ELEMENTO_REQUERIDO, definicion, definition, cantidad);
 		}
@@ -271,12 +281,14 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 	private void validarLongitud(String valor, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
 		if (definicion.getLongitudMinima() != null && valor.length() < definicion.getLongitudMinima()) {
 
-			registrarError(MessageCodes.XML_VALIDACION_LONGITUD_MINIMA, definicion, definition, definicion.getLongitudMinima());
+			registrarError(MessageCodes.XML_VALIDACION_LONGITUD_MINIMA, definicion, definition,
+					definicion.getLongitudMinima());
 		}
 
 		if (definicion.getLongitudMaxima() != null && valor.length() > definicion.getLongitudMaxima()) {
 
-			registrarError(MessageCodes.XML_VALIDACION_LONGITUD_MAXIMA, definicion, definition, definicion.getLongitudMaxima());
+			registrarError(MessageCodes.XML_VALIDACION_LONGITUD_MAXIMA, definicion, definition,
+					definicion.getLongitudMaxima());
 		}
 	}
 
@@ -351,12 +363,14 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 		if (definicion.getValorMinimo() != null && numero.compareTo(definicion.getValorMinimo()) < 0) {
 
-			registrarError(MessageCodes.XML_VALIDACION_VALOR_MINIMO, definicion, definition, definicion.getValorMinimo());
+			registrarError(MessageCodes.XML_VALIDACION_VALOR_MINIMO, definicion, definition,
+					definicion.getValorMinimo());
 		}
 
 		if (definicion.getValorMaximo() != null && numero.compareTo(definicion.getValorMaximo()) > 0) {
 
-			registrarError(MessageCodes.XML_VALIDACION_VALOR_MAXIMO, definicion, definition, definicion.getValorMaximo());
+			registrarError(MessageCodes.XML_VALIDACION_VALOR_MAXIMO, definicion, definition,
+					definicion.getValorMaximo());
 		}
 
 		if (definicion.getDigitosTotales() != null) {
@@ -365,7 +379,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			if (digitos > definicion.getDigitosTotales()) {
 
-				registrarError(MessageCodes.XML_VALIDACION_DIGITOS_TOTALES, definicion, definition, definicion.getDigitosTotales());
+				registrarError(MessageCodes.XML_VALIDACION_DIGITOS_TOTALES, definicion, definition,
+						definicion.getDigitosTotales());
 			}
 		}
 
@@ -375,7 +390,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 			if (decimales > definicion.getDecimales()) {
 
-				registrarError(MessageCodes.XML_VALIDACION_DECIMALES, definicion, definition, definicion.getDecimales());
+				registrarError(MessageCodes.XML_VALIDACION_DECIMALES, definicion, definition,
+						definicion.getDecimales());
 			}
 		}
 	}
@@ -427,7 +443,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			if (Boolean.TRUE.equals(atributo.getObligatorio()) && !existe
 					&& atributo.getValorPredeterminado() == null) {
 
-				registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_REQUERIDO, definicion, definition, atributo.getNombre());
+				registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_REQUERIDO, definicion, definition,
+						atributo.getNombre());
 			}
 
 			if (!existe) {
@@ -462,12 +479,14 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 					.anyMatch(atributo -> Objects.equals(atributo.getNombre(), atributoXml.getNodeName()));
 
 			if (!definido) {
-				registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_NO_DEFINIDO, definicion, definition, atributoXml.getNodeName());
+				registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_NO_DEFINIDO, definicion, definition,
+						atributoXml.getNodeName());
 			}
 		}
 	}
 
-	private void validarAtributoTipo(String valor, AtributoXsdModel atributo, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
+	private void validarAtributoTipo(String valor, AtributoXsdModel atributo, ElementoXsdModel definicion,
+			DocumentDefinitionModel definition) {
 		String tipo = atributo.getTipoDato();
 
 		if (tipo == null || tipo.isBlank()) {
@@ -507,17 +526,20 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			}
 
 		} catch (Exception exception) {
-			registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_TIPO_INVALIDO, definicion, definition, atributo.getNombre(), valor);
+			registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_TIPO_INVALIDO, definicion, definition,
+					atributo.getNombre(), valor);
 		}
 	}
 
-	private void validarAtributoPatron(String valor, AtributoXsdModel atributo, ElementoXsdModel definicion, DocumentDefinitionModel definition) {
+	private void validarAtributoPatron(String valor, AtributoXsdModel atributo, ElementoXsdModel definicion,
+			DocumentDefinitionModel definition) {
 		if (atributo.getPatron() == null || atributo.getPatron().isBlank()) {
 			return;
 		}
 
 		if (!valor.matches(atributo.getPatron())) {
-			registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_PATRON_INVALIDO, definicion, definition, atributo.getNombre(), valor);
+			registrarErrorAtributo(MessageCodes.XML_VALIDACION_ATRIBUTO_PATRON_INVALIDO, definicion, definition,
+					atributo.getNombre(), valor);
 		}
 	}
 
@@ -531,23 +553,25 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 		obtenerResultado().agregarError(codigo, tag);
 	}
 
-	private void registrarError(String codigo, ElementoXsdModel definicion,
-			DocumentDefinitionModel definition, Object... parametros) {
+	private void registrarError(String codigo, ElementoXsdModel definicion, DocumentDefinitionModel definition,
+			Object... parametros) {
 		String ruta = obtenerRuta(definicion, definition);
 		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_PARAMETROS, codigo,
 				definicion.getNombre(), ruta, java.util.Arrays.toString(parametros)));
 		obtenerResultado().agregarError(codigo, definicion.getNombre(), parametros);
 	}
 
-	private void registrarErrorAtributo(String codigo, ElementoXsdModel definicion,
-			DocumentDefinitionModel definition, Object... parametros) {
+	private void registrarErrorAtributo(String codigo, ElementoXsdModel definicion, DocumentDefinitionModel definition,
+			Object... parametros) {
 		String ruta = obtenerRuta(definicion, definition);
-		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_ATRIBUTO, codigo,
-				definicion.getNombre(), ruta, parametros.length > 0 ? parametros[0] : null));
+		LOGGER.error(messageResolver.resolver(MessageCodes.LOG_XML_VALIDACION_ATRIBUTO, codigo, definicion.getNombre(),
+				ruta, parametros.length > 0 ? parametros[0] : null));
 		obtenerResultado().agregarError(codigo, definicion.getNombre(), parametros);
 	}
 
-	private ComprobanteValidationResult obtenerResultado() { return resultadoActual.get(); }
+	private ComprobanteValidationResult obtenerResultado() {
+		return resultadoActual.get();
+	}
 
 	private String documentTag(String xml) {
 		try {
@@ -566,10 +590,8 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 			return elemento.getNombre();
 		}
 		return definition.getElementos().stream()
-				.filter(padre -> Objects.equals(padre.getId(), elemento.getElementoPadreId()))
-				.findFirst()
-				.map(padre -> obtenerRuta(padre, definition) + "." + elemento.getNombre())
-				.orElse(elemento.getNombre());
+				.filter(padre -> Objects.equals(padre.getId(), elemento.getElementoPadreId())).findFirst()
+				.map(padre -> obtenerRuta(padre, definition) + "." + elemento.getNombre()).orElse(elemento.getNombre());
 	}
 
 	private ElementoXsdModel obtenerRaiz(DocumentDefinitionModel definition) {
@@ -577,8 +599,7 @@ public class XmlValidatorAdapter implements XmlValidatorPort {
 
 		return definition.getElementos().stream().filter(elemento -> elemento.getElementoPadreId() == null)
 				.filter(elemento -> nombre == null || nombre.isBlank() || Objects.equals(elemento.getNombre(), nombre))
-				.findFirst()
-				.orElse(null);
+				.findFirst().orElse(null);
 	}
 
 	private List<ElementoXsdModel> obtenerHijos(ElementoXsdModel padre, DocumentDefinitionModel definition) {

@@ -13,10 +13,12 @@ import lombok.RequiredArgsConstructor;
  * Adaptador de salida que conecta la aplicación con el workflow ejecutado por
  * Apache Camel.
  *
- * <p>La aplicación conoce únicamente {@code WorkflowExecutionPort}. Este
- * adaptador traduce esa llamada a los endpoints {@code direct:*} definidos en
- * el XML externo. No contiene reglas de negocio ni conoce las transiciones
- * entre etapas.</p>
+ * <p>
+ * La aplicación conoce únicamente {@code WorkflowExecutionPort}. Este adaptador
+ * traduce esa llamada a los endpoints {@code direct:*} definidos en el XML
+ * externo. No contiene reglas de negocio ni conoce las transiciones entre
+ * etapas.
+ * </p>
  */
 @Component
 @RequiredArgsConstructor

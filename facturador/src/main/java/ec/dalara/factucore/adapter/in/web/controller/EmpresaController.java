@@ -2,11 +2,6 @@ package ec.dalara.factucore.adapter.in.web.controller;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +19,10 @@ import ec.dalara.factucore.application.contract.request.EmpresaRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -39,17 +38,17 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
+			@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 
@@ -65,19 +64,19 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
+			@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
 
-		@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
+			@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 
@@ -93,17 +92,17 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
+			@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 
@@ -116,15 +115,15 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 
@@ -137,19 +136,19 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
+			@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
 
-		@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
+			@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 
@@ -163,19 +162,19 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
+			@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
 
-		@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
+			@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 
@@ -189,19 +188,19 @@ public class EmpresaController {
 
 	@ApiResponses(value = {
 
-		@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
+			@ApiResponse(responseCode = "200", description = "Operación ejecutada correctamente"),
 
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
+			@ApiResponse(responseCode = "400", description = "Solicitud inválida o datos de entrada no válidos"),
 
-		@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
+			@ApiResponse(responseCode = "401", description = "No autenticado: se requiere un token JWT válido"),
 
-		@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
+			@ApiResponse(responseCode = "403", description = "No autorizado para ejecutar la operación"),
 
-		@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
+			@ApiResponse(responseCode = "404", description = "No se encontró el recurso solicitado"),
 
-		@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
+			@ApiResponse(responseCode = "409", description = "La operación entra en conflicto con el estado actual del recurso"),
 
-		@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
+			@ApiResponse(responseCode = "500", description = "Error interno al procesar la solicitud")
 
 	})
 

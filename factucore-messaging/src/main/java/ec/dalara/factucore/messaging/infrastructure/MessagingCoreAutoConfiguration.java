@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Bean;
 import ec.dalara.factucore.messaging.api.BrokerMensajeria;
 import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.PublicadorMensajes;
-import ec.dalara.factucore.messaging.config.MessagingProperties;
 import ec.dalara.factucore.messaging.config.MessageResolver;
+import ec.dalara.factucore.messaging.config.MessagingProperties;
 import ec.dalara.factucore.messaging.config.PropertiesMessageResolver;
 
 @AutoConfiguration

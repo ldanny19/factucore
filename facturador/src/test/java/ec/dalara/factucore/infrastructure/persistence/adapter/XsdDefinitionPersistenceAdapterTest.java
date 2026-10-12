@@ -62,26 +62,25 @@ class XsdDefinitionPersistenceAdapterTest {
 		assertFalse(json.path("factura").has("version"));
 	}
 
-
 	@Test
 	void debeGenerarObligatoriedadCardinalidadYExcluirTagsDelEsquema() throws Exception {
 		var definition = new XsdDefinitionSource("urn:test", "factura",
-				List.of(new XsdElementSource("factura", "factura", "FacturaType", 1, 1, 1, null, null, null, null,
-						null, null, null),
+				List.of(new XsdElementSource("factura", "factura", "FacturaType", 1, 1, 1, null, null, null, null, null,
+						null, null),
 						new XsdElementSource("factura.infoTributaria", "infoTributaria", "InfoType", 1, 1, 1, null,
-							null, null, null, null, null, null),
-						new XsdElementSource("factura.infoTributaria.ruc", "ruc", "string", 1, 1, 1, null, null,
-							null, null, null, null, null),
+								null, null, null, null, null, null),
+						new XsdElementSource("factura.infoTributaria.ruc", "ruc", "string", 1, 1, 1, null, null, null,
+								null, null, null, null),
 						new XsdElementSource("factura.infoFactura", "infoFactura", "InfoType", 1, 1, 1, null, null,
-							null, null, null, null, null),
+								null, null, null, null, null),
 						new XsdElementSource("factura.infoFactura.fechaEmision", "fechaEmision", "string", 1, 1, 1,
-							null, null, null, null, null, null, null),
-						new XsdElementSource("factura.infoFactura.observacion", "observacion", "string", 2, 0, 1,
-							null, null, null, null, null, null, null),
+								null, null, null, null, null, null, null),
+						new XsdElementSource("factura.infoFactura.observacion", "observacion", "string", 2, 0, 1, null,
+								null, null, null, null, null, null),
 						new XsdElementSource("factura.detalle", "detalle", "string", 2, 1, null, null, null, null, null,
-							null, null, null),
+								null, null, null),
 						new XsdElementSource("factura.signature", "signature", "SignatureType", 3, 0, 1, null, null,
-							null, null, null, null, null)),
+								null, null, null, null, null)),
 				List.of(new XsdAttributeSource("factura.infoFactura", "codigo", "string", true, null, null),
 						new XsdAttributeSource("factura.signature", "id", "string", true, null, null)),
 				List.<XsdEnumerationSource>of());
@@ -107,18 +106,17 @@ class XsdDefinitionPersistenceAdapterTest {
 		assertFalse(factura.path("properties").has("signature"));
 	}
 
-
 	@Test
 	void esquemaGeneradoDebeAplicarRestriccionesConUnValidadorJsonSchemaReal() throws Exception {
 		var definition = new XsdDefinitionSource("urn:test", "documento",
-				List.of(new XsdElementSource("documento", "documento", "DocumentoType", 1, 1, 1, null, null,
-						null, null, null, null, null),
-						new XsdElementSource("documento.codigo", "codigo", "xs:string", 1, 1, 1, 2, 5, null,
-								null, null, null, "^[A-Z]+$"),
-						new XsdElementSource("documento.importe", "importe", "xs:decimal", 2, 0, 1, null, null,
-								6, 2, null, null, null),
-						new XsdElementSource("documento.estado", "estado", "xs:string", 3, 1, 1, null, null,
-								null, null, null, null, null)),
+				List.of(new XsdElementSource("documento", "documento", "DocumentoType", 1, 1, 1, null, null, null, null,
+						null, null, null),
+						new XsdElementSource("documento.codigo", "codigo", "xs:string", 1, 1, 1, 2, 5, null, null, null,
+								null, "^[A-Z]+$"),
+						new XsdElementSource("documento.importe", "importe", "xs:decimal", 2, 0, 1, null, null, 6, 2,
+								null, null, null),
+						new XsdElementSource("documento.estado", "estado", "xs:string", 3, 1, 1, null, null, null, null,
+								null, null, null)),
 				List.of(), List.of(new XsdEnumerationSource("documento.estado", "ACTIVO", "Activo", 1),
 						new XsdEnumerationSource("documento.estado", "INACTIVO", "Inactivo", 2)));
 		var adapter = new XsdDefinitionPersistenceAdapter(null, null, null, null, null, new ObjectMapper());
@@ -186,9 +184,8 @@ class XsdDefinitionPersistenceAdapterTest {
 		Path xsdPath = Files.isRegularFile(xsdAbsoluto) ? xsdAbsoluto
 				: Files.isRegularFile(xsdRelativoModulo) ? xsdRelativoModulo : xsdRelativoRepositorio;
 
-		assertTrue(Files.isRegularFile(xsdPath),
-				"No se encontro el XSD. Rutas revisadas: " + xsdAbsoluto + ", "
-						+ xsdRelativoModulo.toAbsolutePath() + ", " + xsdRelativoRepositorio.toAbsolutePath());
+		assertTrue(Files.isRegularFile(xsdPath), "No se encontro el XSD. Rutas revisadas: " + xsdAbsoluto + ", "
+				+ xsdRelativoModulo.toAbsolutePath() + ", " + xsdRelativoRepositorio.toAbsolutePath());
 		System.out.println("XSD utilizado para la prueba: " + xsdPath.toAbsolutePath().normalize());
 
 		String contenidoJson;
@@ -198,8 +195,7 @@ class XsdDefinitionPersistenceAdapterTest {
 		}
 
 		contenidoJson = contenidoJson.replace("{{idTransaccion}}", UUID.randomUUID().toString())
-				.replace("{{fechaInicioActual}}", OffsetDateTime.now().toString())
-				.replace("{{idEmpresaActual}}", "1");
+				.replace("{{fechaInicioActual}}", OffsetDateTime.now().toString()).replace("{{idEmpresaActual}}", "1");
 
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode requestJson = mapper.readTree(contenidoJson);
@@ -207,8 +203,7 @@ class XsdDefinitionPersistenceAdapterTest {
 
 		assertTrue(datos.isObject(), "El JSON real debe contener el objeto datos");
 
-		ec.dalara.factucore.application.port.out.XsdParserPort parser =
-				new ec.dalara.factucore.infrastructure.documentoxsd.XsdParserAdapter();
+		ec.dalara.factucore.application.port.out.XsdParserPort parser = new ec.dalara.factucore.infrastructure.documentoxsd.XsdParserAdapter();
 		ec.dalara.factucore.domain.documentoxsd.importacion.XsdDefinitionSource definition;
 		try (InputStream xsdInput = Files.newInputStream(xsdPath)) {
 			definition = parser.parse(xsdInput, xsdPath.toAbsolutePath().normalize().toUri().toString());

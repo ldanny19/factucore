@@ -1,14 +1,13 @@
 package ec.dalara.factucore.adapter.out.ride;
 
 import java.io.IOException;
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,13 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.RidePort;
+import ec.dalara.factucore.application.service.CatalogoItemService;
+import ec.dalara.factucore.application.service.CatalogoService;
 import ec.dalara.factucore.application.service.ComprobanteDetalleImpuestoService;
 import ec.dalara.factucore.application.service.ComprobanteDetalleService;
 import ec.dalara.factucore.application.service.ComprobanteInformacionAdicionalService;
 import ec.dalara.factucore.application.service.ComprobantePagoService;
 import ec.dalara.factucore.application.service.ConfiguracionEmpresaService;
-import ec.dalara.factucore.application.service.CatalogoItemService;
-import ec.dalara.factucore.application.service.CatalogoService;
 import ec.dalara.factucore.application.service.TarifaTributariaVigenciaService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
@@ -93,7 +92,8 @@ public class JasperRideAdapter implements RidePort {
 		Path plantilla = directorio.resolve(nombrePlantilla + ".jrxml");
 
 		if (!Files.isDirectory(directorio) || !Files.isRegularFile(plantilla)) {
-			throw new ApplicationException(MessageCodes.RIDE_PLANTILLA_NO_ENCONTRADA, plantilla.getFileName().toString());
+			throw new ApplicationException(MessageCodes.RIDE_PLANTILLA_NO_ENCONTRADA,
+					plantilla.getFileName().toString());
 		}
 
 		Path directorioCompilado = null;
@@ -139,7 +139,8 @@ public class JasperRideAdapter implements RidePort {
 
 		parametros.put("GUIA", null);
 		parametros.put("NUM_RESOLUCION", obtenerValorConfiguracion(comprobante, "NUM_RESOLUCION"));
-		parametros.put("LLEVA_CONTABILIDAD", comprobante.getEmpresa() == null ? null : comprobante.getEmpresa().getObligadoContabilidad());
+		parametros.put("LLEVA_CONTABILIDAD",
+				comprobante.getEmpresa() == null ? null : comprobante.getEmpresa().getObligadoContabilidad());
 		parametros.put("NEGOCIABLE", null);
 		parametros.put("REGIMEN_TRIBUTARIO", null);
 		parametros.put("AGENTE_RETENCION", null);
@@ -167,7 +168,8 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("TOTAL_SIN_SUBSIDIO", totalSinImpuestos);
 		parametros.put("IVA", iva);
 		parametros.put("ICE", ice);
-		parametros.put("TOTAL", total.add(comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina()));
+		parametros.put("TOTAL",
+				total.add(comprobante.getTotalPropina() == null ? BigDecimal.ZERO : comprobante.getTotalPropina()));
 		parametros.put("IVA_12", iva12);
 		parametros.put("IVA_0", iva0);
 		parametros.put("NO_OBJETO_IVA", noObjetoIva);
@@ -246,12 +248,11 @@ public class JasperRideAdapter implements RidePort {
 
 		for (ComprobantePago pago : comprobantePagoService.listarPorComprobante(comprobanteId)) {
 			Map<String, Object> fila = new LinkedHashMap<>();
-			String descripcionFormaPago = catalogoService.obtenerPorCodigo("FORMA_PAGO")
-                    .flatMap(catalogo -> catalogoItemService.obtenerPorCatalogoYCodigo(
-                            catalogo.getId(), pago.getCodigoFormaPago()))
-                    .map(item -> item.getNombre())
-                    .orElse(pago.getCodigoFormaPago());
-            fila.put("formaPago", descripcionFormaPago);
+			String descripcionFormaPago = catalogoService
+					.obtenerPorCodigo("FORMA_PAGO").flatMap(catalogo -> catalogoItemService
+							.obtenerPorCatalogoYCodigo(catalogo.getId(), pago.getCodigoFormaPago()))
+					.map(item -> item.getNombre()).orElse(pago.getCodigoFormaPago());
+			fila.put("formaPago", descripcionFormaPago);
 			fila.put("valor", valor(pago.getTotal()));
 			resultado.add(fila);
 		}
@@ -264,8 +265,8 @@ public class JasperRideAdapter implements RidePort {
 			return null;
 		}
 
-		var configuracion = configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), "LOGO",
-				LocalDateTime.now()).orElse(null);
+		var configuracion = configuracionEmpresaService
+				.obtenerVigente(comprobante.getEmpresa().getId(), "LOGO", LocalDateTime.now()).orElse(null);
 		if (configuracion == null || configuracion.getValor() == null || configuracion.getValor().isBlank()) {
 			return null;
 		}
@@ -298,10 +299,10 @@ public class JasperRideAdapter implements RidePort {
 		List<ComprobanteDetalle> detalles = comprobanteDetalleService.listarPorComprobante(comprobanteId);
 		List<ComprobanteDetalleImpuesto> impuestos = obtenerImpuestos(detalles);
 
-		BigDecimal subtotal = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto)
-				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
-		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento)
-				.filter(this::noNulo).reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal subtotal = detalles.stream().map(ComprobanteDetalle::getPrecioTotalSinImpuesto).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal descuento = detalles.stream().map(ComprobanteDetalle::getDescuento).filter(this::noNulo)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		BigDecimal subtotalCero = sumarBasesImponibles(impuestos, "2", "0");
 		BigDecimal subtotalNoObjeto = sumarBasesImponibles(impuestos, "2", "6");
@@ -313,8 +314,7 @@ public class JasperRideAdapter implements RidePort {
 
 		List<TarifaTributariaVigencia> tarifasIvaVigentes = tarifaTributariaVigenciaService
 				.listarVigentesPorImpuesto("2", comprobante.getFechaEmision()).stream()
-				.filter(tarifa -> !List.of("0", "6", "7").contains(tarifa.getCodigoPorcentaje()))
-				.toList();
+				.filter(tarifa -> !List.of("0", "6", "7").contains(tarifa.getCodigoPorcentaje())).toList();
 
 		List<Map<String, Object>> resultado = new ArrayList<>();
 		if (tarifasIvaVigentes.isEmpty()) {
@@ -323,14 +323,15 @@ public class JasperRideAdapter implements RidePort {
 		} else {
 			for (var tarifa : tarifasIvaVigentes) {
 				String porcentaje = tarifa.getTarifa().stripTrailingZeros().toPlainString();
-				String descripcion = messageResolver.resolver(
-						MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA_PORCENTAJE, porcentaje);
-				resultado.add(total(descripcion,
-						sumarBasesImponibles(impuestos, "2", tarifa.getCodigoPorcentaje()), false));
+				String descripcion = messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_IVA_PORCENTAJE,
+						porcentaje);
+				resultado.add(
+						total(descripcion, sumarBasesImponibles(impuestos, "2", tarifa.getCodigoPorcentaje()), false));
 			}
 		}
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_CERO), subtotalCero, false));
-		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_NO_OBJETO), subtotalNoObjeto, false));
+		resultado.add(
+				total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_NO_OBJETO), subtotalNoObjeto, false));
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_EXENTO), subtotalExento, false));
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_SUBTOTAL_SIN_IMPUESTOS), subtotal, false));
 		resultado.add(total(messageResolver.resolver(MessageCodes.RIDE_TOTAL_DESCUENTO), descuento, true));
@@ -363,8 +364,7 @@ public class JasperRideAdapter implements RidePort {
 
 	private BigDecimal sumarImpuestos(List<ComprobanteDetalleImpuesto> impuestos, String codigoImpuesto,
 			String codigoPorcentaje) {
-		return impuestos.stream()
-				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
+		return impuestos.stream().filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
 				.filter(impuesto -> codigoPorcentaje == null || codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
 				.map(ComprobanteDetalleImpuesto::getValor).filter(this::noNulo)
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -372,8 +372,7 @@ public class JasperRideAdapter implements RidePort {
 
 	private BigDecimal sumarBasesImponibles(List<ComprobanteDetalleImpuesto> impuestos, String codigoImpuesto,
 			String codigoPorcentaje) {
-		return impuestos.stream()
-				.filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
+		return impuestos.stream().filter(impuesto -> codigoImpuesto.equals(impuesto.getCodigoImpuesto()))
 				.filter(impuesto -> codigoPorcentaje.equals(impuesto.getCodigoPorcentaje()))
 				.map(ComprobanteDetalleImpuesto::getBaseImponible).filter(this::noNulo)
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -427,17 +426,14 @@ public class JasperRideAdapter implements RidePort {
 		return resultado.toString();
 	}
 
-
 	private String obtenerValorConfiguracion(Comprobante comprobante, String clave) {
 		if (comprobante.getEmpresa() == null || comprobante.getEmpresa().getId() == null) {
 			return null;
 		}
 
 		return configuracionEmpresaService.obtenerVigente(comprobante.getEmpresa().getId(), clave, LocalDateTime.now())
-				.map(configuracion -> configuracion.getValor())
-				.filter(valor -> valor != null && !valor.isBlank())
-				.map(String::trim)
-				.orElse(null);
+				.map(configuracion -> configuracion.getValor()).filter(valor -> valor != null && !valor.isBlank())
+				.map(String::trim).orElse(null);
 	}
 
 	private String obtenerValorCatalogoConfiguracion(Comprobante comprobante, String clave) {
@@ -457,10 +453,9 @@ public class JasperRideAdapter implements RidePort {
 			return null;
 		}
 
-		return catalogoItemService.obtenerPorCatalogoYCodigo(catalogo.get().getId(),
-				configuracion.get().getValor().trim())
-				.map(item -> item.getNombre())
-				.orElse(null);
+		return catalogoItemService
+				.obtenerPorCatalogoYCodigo(catalogo.get().getId(), configuracion.get().getValor().trim())
+				.map(item -> item.getNombre()).orElse(null);
 	}
 
 	private String formatearFecha(LocalDateTime fecha) {
