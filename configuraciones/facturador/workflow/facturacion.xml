@@ -289,8 +289,4 @@
         <bean ref="finWorkflowStep" method="respuesta"/>
     </route>
 
-    <route id="facturador-workflow-reprocesar">
-        <from uri="direct:facturador.workflow.reprocesar"/>
-        <bean ref="comprobanteReprocessService" method="reprocesarAutorizacion"/>
-    </route>
 </routes>

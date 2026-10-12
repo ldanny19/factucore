@@ -18,7 +18,6 @@ import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
-import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteAuditoriaRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -33,7 +32,6 @@ public class AutorizacionSriWorkflowStep {
 	private final SriProperties sriProperties;
 	private final MessageResolver messageResolver;
 	private final SriCodigoCatalogoService sriCodigoCatalogoService;
-	private final ComprobanteAuditoriaRepository auditoriaRepository;
 
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.AUTORIZACION_SRI;
@@ -75,11 +73,23 @@ public class AutorizacionSriWorkflowStep {
 			esperar(sriProperties.getAutorizacion().getEsperaInicialMs());
 		}
 
-		SriResponse respuesta = sriService.autorizar(contexto.getClaveAcceso());
-		contexto.setEstadoSri(respuesta.estado());
-		contexto.setMensajesSri(respuesta.mensajes());
-		registrarRespuestaSri(contexto, respuesta);
-		validarCodigosSri(contexto, respuesta);
+		int maxIntentos = Math.max(sriProperties.getAutorizacion().getMaxIntentos(), 1);
+		SriResponse respuesta = null;
+		int intento = 0;
+		do {
+			intento++;
+			respuesta = sriService.autorizar(contexto.getClaveAcceso());
+			contexto.setEstadoSri(respuesta.estado());
+			contexto.setMensajesSri(respuesta.mensajes());
+			registrarRespuestaSri(contexto, respuesta);
+			validarCodigosSri(contexto, respuesta);
+
+			if (!respuestaEnProceso(respuesta) || intento >= maxIntentos) {
+				break;
+			}
+
+			esperar(sriProperties.getAutorizacion().getEsperaReintentoMs());
+		} while (intento < maxIntentos);
 
 		if ("AUTORIZADO".equalsIgnoreCase(respuesta.estado())) {
 			contexto.setNumeroAutorizacion(respuesta.identificador());
@@ -98,34 +108,23 @@ public class AutorizacionSriWorkflowStep {
 		if (respuestaEnProceso(respuesta)) {
 			contexto.getComprobante().setEstadoSri(respuesta.estado());
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
+			contexto.getComprobante().setFechaProximoReproceso(null);
 
-			int intentosPrevios = auditoriaRepository
-					.findByComprobanteIdAndEtapaOrderByIntentoDesc(contexto.getComprobanteId(), etapa().name())
-					.size();
-			int maxIntentos = Math.max(sriProperties.getAutorizacion().getMaxIntentos(), 1);
-			if (intentosPrevios + 1 >= maxIntentos) {
-				contexto.getComprobante().setFechaProximoReproceso(null);
-				var ultimoMensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
-				String codigoError = ultimoMensaje == null || ultimoMensaje.identificador() == null
-						|| ultimoMensaje.identificador().isBlank()
-						? MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS
-						: ultimoMensaje.identificador();
-				String mensajeError = ultimoMensaje == null || ultimoMensaje.mensaje() == null
-						|| ultimoMensaje.mensaje().isBlank()
-						? messageResolver.resolver(MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS)
-						: sriCodigoCatalogoService.resolverDescripcion(codigoError, ultimoMensaje.mensaje());
-				contexto.getComprobante().setCodigoError(codigoError);
-				contexto.getComprobante().setMensajeError(mensajeError);
-				evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
-						contexto.getSolicitud().getUsuario());
-				return ResultadoEtapa.fallida(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name(),
-						codigoError, mensajeError);
-			}
-
-			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1000);
-			contexto.getComprobante()
-					.setFechaProximoReproceso(java.time.LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
-			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name());
+			var ultimoMensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
+			String codigoError = ultimoMensaje == null || ultimoMensaje.identificador() == null
+					|| ultimoMensaje.identificador().isBlank()
+					? MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS
+					: ultimoMensaje.identificador();
+			String mensajeError = ultimoMensaje == null || ultimoMensaje.mensaje() == null
+					|| ultimoMensaje.mensaje().isBlank()
+					? messageResolver.resolver(MessageCodes.SRI_AUTORIZACION_MAX_CONSULTAS)
+					: sriCodigoCatalogoService.resolverDescripcion(codigoError, ultimoMensaje.mensaje());
+			contexto.getComprobante().setCodigoError(codigoError);
+			contexto.getComprobante().setMensajeError(mensajeError);
+			evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
+					contexto.getSolicitud().getUsuario());
+			return ResultadoEtapa.fallida(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name(),
+					codigoError, mensajeError);
 		}
 
 		contexto.getComprobante().setEstadoSri(respuesta.estado() == null || respuesta.estado().isBlank()
