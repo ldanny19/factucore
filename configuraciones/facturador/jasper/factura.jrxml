@@ -472,7 +472,7 @@
 			<rectangle>
 				<reportElement mode="Transparent" x="0" y="0" width="555" height="25" uuid="cf2abc24-11dd-4a65-bf79-79a751c365ff"/>
 			</rectangle>
-			<textField isBlankWhenNull="true">
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
 				<reportElement mode="Transparent" x="79" y="0" width="39" height="24" uuid="44769957-9ef0-468b-8f2f-41423e435d0d"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
