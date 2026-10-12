@@ -63,12 +63,4 @@ public class ComprobanteWorkflowService implements ComprobanteWorkflowPort {
 				.resultado(ResultadoResponse.builder().errores(List.of(error)).build())
 				.build();
 	}
-
-	@Override
-	public void reprocesar(Long comprobanteId) {
-		if (comprobanteId == null) {
-			throw new ApplicationException(MessageCodes.WORKFLOW_COMPROBANTE_REQUERIDO);
-		}
-		workflowExecutionPort.reprocesar(comprobanteId);
-	}
 }
