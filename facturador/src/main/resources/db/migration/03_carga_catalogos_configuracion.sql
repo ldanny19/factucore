@@ -79,7 +79,7 @@ INSERT INTO catalogo_item (
     (55, 8, '6', 'IVA no objeto', 'Código de IVA no objeto.', 6, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL),
     (56, 8, '7', 'IVA exento', 'Código de IVA exento.', 7, 'A', 'MANUAL', NULL, '2026-10-12 03:45:29.093979', NULL, NULL)
 ON CONFLICT (catalogo_id, codigo) DO NOTHING;
-
+/*
 INSERT INTO configuracion_empresa (
     id, empresa_id, clave, valor, tipo_dato, fecha_vigencia_desde, fecha_vigencia_hasta, estado_registro, usuario_creacion, usuario_modificacion, fecha_creacion, fecha_modificacion, observacion
 ) VALUES
@@ -89,5 +89,5 @@ INSERT INTO configuracion_empresa (
     (4, 4, 'TIEMPO_MAX_COD_70', '86400', 'INTEGER', '2025-12-31 19:00:00', NULL, 'A', 'jucarsa', NULL, '2026-10-12 05:49:56.818025', NULL, NULL),
     (5, 4, 'TIEMPO_INTERVALO_COD_70', '60', 'INTEGER', '2025-12-31 19:00:00', NULL, 'A', 'jucarsa', NULL, '2026-10-12 05:50:28.436526', NULL, NULL)
 ON CONFLICT (empresa_id, clave, fecha_vigencia_desde) DO NOTHING;
-
+*/
 COMMIT;
