@@ -97,7 +97,7 @@
 			<staticText>
 				<reportElement mode="Opaque" x="304" y="62" width="79" height="26" uuid="6e25b4fc-b040-4c10-bf7f-3f4a395184f1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="SansSerif" size="8"/>
+					<font fontName="SansSerif" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[FECHA Y HORA DE AUTORIZACIÓN]]></text>
 			</staticText>
@@ -106,7 +106,7 @@
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>
-					<font fontName="SansSerif" size="8"/>
+					<font fontName="SansSerif" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[CLAVE DE ACCESO]]></text>
 			</staticText>
@@ -474,7 +474,7 @@
 			</rectangle>
 			<textField pattern="#,##0.00" isBlankWhenNull="true">
 				<reportElement mode="Transparent" x="79" y="0" width="39" height="24" uuid="44769957-9ef0-468b-8f2f-41423e435d0d"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
@@ -490,21 +490,21 @@
 			</line>
 			<textField isBlankWhenNull="true">
 				<reportElement mode="Transparent" x="490" y="0" width="62" height="24" uuid="f63fd3cb-46f5-43fb-82ff-8d37ea1088f2"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{precioTotalSinImpuesto}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement mode="Transparent" x="0" y="0" width="78" height="24" uuid="0913408d-d2fa-46eb-b8d6-3b7629b66036"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{codigoPrincipal}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="120" y="1" width="246" height="24" uuid="9315ec93-9bfa-4998-b5d6-8ea451958ef5"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
@@ -514,7 +514,7 @@
 			</line>
 			<textField pattern="#,##0.00" isBlankWhenNull="true">
 				<reportElement mode="Transparent" x="371" y="1" width="62" height="22" uuid="132f28bb-28e5-4f55-b209-f1e1cd448f49"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{precioUnitario}]]></textFieldExpression>
@@ -524,7 +524,7 @@
 			</line>
 			<textField>
 				<reportElement x="437" y="2" width="49" height="22" uuid="c1a21a26-630b-4828-8b97-b47eb6222a1d"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descuento}]]></textFieldExpression>
