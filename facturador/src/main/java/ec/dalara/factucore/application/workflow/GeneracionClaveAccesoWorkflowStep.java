@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class GeneracionClaveAccesoWorkflowStep   {
+public class GeneracionClaveAccesoWorkflowStep {
 
 	private static final String TIPO_EMISION_NORMAL = "1";
 
@@ -79,17 +79,20 @@ public class GeneracionClaveAccesoWorkflowStep   {
 				.orElseThrow(() -> new ApplicationException(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA));
 
 		String ambiente = resolverAmbiente(sriProperties.getAmbiente());
+		String numeroComprobante = componerNumeroComprobante(emision.establecimiento().getCodigo(),
+				emision.puntoEmision().getCodigo(), contexto.getSecuencial());
 
+		contexto.setNumComprobante(numeroComprobante);
 		contexto.setValorGenerado("ambiente", ambiente);
 		contexto.setValorGenerado("tipoEmision", TIPO_EMISION_NORMAL);
 		contexto.setValorGenerado("tipoDocumento", documento.getTipoDocumento());
 		contexto.setValorGenerado("idDocumentoXml", "comprobante");
 		contexto.setValorGenerado("versionDocumento", definition.getVersion().getVersion());
+		contexto.setValorGenerado("numComprobante", numeroComprobante);
 
 		if (claveExistente) {
 			contexto.setValorGenerado("claveAcceso", contexto.getClaveAcceso());
 			contexto.setValorGenerado("secuencial", contexto.getSecuencial());
-		contexto.setValorGenerado("numComprobante", numeroComprobante);
 			return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "YA_GENERADA");
 		}
 
@@ -100,9 +103,6 @@ public class GeneracionClaveAccesoWorkflowStep   {
 
 		var resultado = claveAccesoService.generarConCodigoNumerico(datos);
 		contexto.setClaveAcceso(resultado.getClave());
-		String numeroComprobante = componerNumeroComprobante(emision.establecimiento().getCodigo(),
-				emision.puntoEmision().getCodigo(), contexto.getSecuencial());
-		contexto.setNumComprobante(numeroComprobante);
 
 		contexto.setValorGenerado("claveAcceso", resultado.getClave());
 		contexto.setValorGenerado("secuencial", contexto.getSecuencial());
