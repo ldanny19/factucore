@@ -35,6 +35,8 @@ public final class ContextoWorkflow {
 
 	private String secuencial;
 
+	private String numComprobante;
+
 	private String claveAcceso;
 
 	private String xml;
@@ -94,6 +96,7 @@ public final class ContextoWorkflow {
 		contexto.comprobante = comprobante;
 
 		contexto.secuencial = comprobante.getSecuencial();
+		contexto.numComprobante = comprobante.getNumComprobante();
 
 		contexto.claveAcceso = comprobante.getClaveAcceso();
 
@@ -289,6 +292,14 @@ public final class ContextoWorkflow {
 
 	public void setSecuencial(String secuencial) {
 		this.secuencial = secuencial;
+	}
+
+	public String getNumComprobante() {
+		return numComprobante;
+	}
+
+	public void setNumComprobante(String numComprobante) {
+		this.numComprobante = numComprobante;
 	}
 
 	public String getClaveAcceso() {

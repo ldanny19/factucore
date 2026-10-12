@@ -115,6 +115,17 @@ public class ValidacionXsdWorkflowStep {
 
 		// En una reanudación el comprobante ya existe; no se crea otro registro.
 		if (contexto.getComprobante() != null) {
+			Comprobante existente = contexto.getComprobante();
+			if (existente.getNumComprobante() == null || existente.getNumComprobante().isBlank()) {
+				String numero = resolverNumeroComprobante(contexto, existente.getEstablecimiento().getCodigo(),
+						existente.getPuntoEmision().getCodigo());
+				if (numero != null) {
+					existente.setNumComprobante(numero);
+					existente.setUsuarioModificacion(solicitud.getUsuario());
+					existente.setFechaModificacion(LocalDateTime.now());
+					comprobanteService.guardar(existente);
+				}
+			}
 			return false;
 		}
 
@@ -136,6 +147,8 @@ public class ValidacionXsdWorkflowStep {
 
 			if (existente.isPresent()) {
 				Comprobante comprobanteExistente = existente.get();
+				comprobanteExistente.setNumComprobante(resolverNumeroComprobante(contexto,
+						emision.establecimiento().getCodigo(), emision.puntoEmision().getCodigo()));
 				calcularDatosPersistidos(comprobanteExistente, solicitud.getDatos());
 				comprobanteExistente.setUsuarioModificacion(solicitud.getUsuario());
 				comprobanteExistente.setFechaModificacion(LocalDateTime.now());
@@ -162,6 +175,8 @@ public class ValidacionXsdWorkflowStep {
 				.tipoEmision("1")
 				.codigoDocumento(definition.getDocumento().getCodigo())
 				.secuencial(contexto.getSecuencial())
+				.numComprobante(resolverNumeroComprobante(contexto, emision.establecimiento().getCodigo(),
+						emision.puntoEmision().getCodigo()))
 				.claveAcceso(contexto.getClaveAcceso())
 				.fechaEmision(solicitud.getFechaInicio().toLocalDate())
 				.razonSocialEmisor(empresa.getRazonSocial())
@@ -190,6 +205,26 @@ public class ValidacionXsdWorkflowStep {
 		}
 		contexto.asignarComprobante(comprobante);
 		return true;
+	}
+
+	private String resolverNumeroComprobante(ContextoWorkflow contexto, String codigoEstablecimiento,
+			String codigoPuntoEmision) {
+		String numero = contexto.getNumComprobante();
+		if (numero == null || numero.isBlank()) {
+			Object generado = contexto.getValoresGenerados().get("numComprobante");
+			numero = generado == null ? null : generado.toString();
+		}
+		if (numero == null || numero.isBlank()) {
+			String secuencial = contexto.getSecuencial();
+			if (secuencial == null || secuencial.isBlank()) {
+				return null;
+			}
+			numero = String.format(java.util.Locale.ROOT, "%03d-%03d-%09d",
+					Integer.parseInt(codigoEstablecimiento), Integer.parseInt(codigoPuntoEmision),
+					Long.parseLong(secuencial));
+			contexto.setNumComprobante(numero);
+		}
+		return numero;
 	}
 
 	private void calcularDatosPersistidos(Comprobante comprobante, JsonNode datos) {

@@ -133,7 +133,7 @@ public class JasperRideAdapter implements RidePort {
 		parametros.put("RUC_COMPRADOR", comprobante.getIdentificacionReceptor());
 		parametros.put("DIRECCION_CLIENTE", comprobante.getDireccionReceptor());
 		parametros.put("FECHA_EMISION", valor(comprobante.getFechaEmision()));
-		parametros.put("NUM_FACT", comprobante.getSecuencial());
+		parametros.put("NUM_FACT", comprobante.getNumComprobante());
 		parametros.put("AMBIENTE", obtenerValorCatalogoConfiguracion(comprobante, "AMBIENTE"));
 		parametros.put("NOM_COMERCIAL", comprobante.getNombreComercialEmisor());
 

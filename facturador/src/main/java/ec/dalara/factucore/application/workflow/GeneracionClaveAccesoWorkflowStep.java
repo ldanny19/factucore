@@ -3,6 +3,7 @@ package ec.dalara.factucore.application.workflow;
 import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 import org.springframework.stereotype.Component;
 
@@ -88,6 +89,7 @@ public class GeneracionClaveAccesoWorkflowStep   {
 		if (claveExistente) {
 			contexto.setValorGenerado("claveAcceso", contexto.getClaveAcceso());
 			contexto.setValorGenerado("secuencial", contexto.getSecuencial());
+		contexto.setValorGenerado("numComprobante", numeroComprobante);
 			return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "YA_GENERADA");
 		}
 
@@ -98,6 +100,9 @@ public class GeneracionClaveAccesoWorkflowStep   {
 
 		var resultado = claveAccesoService.generarConCodigoNumerico(datos);
 		contexto.setClaveAcceso(resultado.getClave());
+		String numeroComprobante = componerNumeroComprobante(emision.establecimiento().getCodigo(),
+				emision.puntoEmision().getCodigo(), contexto.getSecuencial());
+		contexto.setNumComprobante(numeroComprobante);
 
 		contexto.setValorGenerado("claveAcceso", resultado.getClave());
 		contexto.setValorGenerado("secuencial", contexto.getSecuencial());
@@ -107,6 +112,12 @@ public class GeneracionClaveAccesoWorkflowStep   {
 		}
 
 		return ResultadoEtapa.exitosa(EtapaWorkflow.GENERACION_CLAVE_ACCESO, "GENERADA");
+	}
+
+	private String componerNumeroComprobante(String codigoEstablecimiento, String codigoPuntoEmision,
+			String secuencial) {
+		return String.format(Locale.ROOT, "%03d-%03d-%09d", Integer.parseInt(codigoEstablecimiento),
+				Integer.parseInt(codigoPuntoEmision), Long.parseLong(secuencial));
 	}
 
 	private String resolverAmbiente(String ambiente) {

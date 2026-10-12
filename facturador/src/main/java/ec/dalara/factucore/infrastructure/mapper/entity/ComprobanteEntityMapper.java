@@ -15,8 +15,9 @@ public interface ComprobanteEntityMapper {
 			return null;
 		ComprobanteModel m = new ComprobanteModel(e.getId(), e.getEmpresa().getId(), e.getEstablecimiento().getId(),
 				e.getPuntoEmision().getId(), e.getCodigoDocumento(),
-				new NumeroComprobante(e.getEstablecimiento().getCodigo() + "-" + e.getPuntoEmision().getCodigo() + "-"
-						+ e.getSecuencial()),
+				new NumeroComprobante(e.getNumComprobante() != null ? e.getNumComprobante()
+						: e.getEstablecimiento().getCodigo() + "-" + e.getPuntoEmision().getCodigo() + "-"
+								+ e.getSecuencial()),
 				e.getFechaEmision());
 		if (e.getEstadoProceso() != null)
 			m.cambiarEstadoProceso(e.getEstadoProceso());
