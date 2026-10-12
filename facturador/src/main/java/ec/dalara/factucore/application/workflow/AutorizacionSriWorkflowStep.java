@@ -38,7 +38,8 @@ public class AutorizacionSriWorkflowStep {
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final ComprobanteAuditoriaService comprobanteAuditoriaService;
 
-	private static final String CONFIG_TIEMPO_MAX_COD_70 = "TIEMPO_MAX_COD_70";
+	private static final String PREFIJO_TIEMPO_MAXIMO = "TIEMPO_MAXIMO_COD_";
+	private static final String PREFIJO_TIEMPO_INTERVALO = "TIEMPO_INTERVALO_COD_";
 
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.AUTORIZACION_SRI;
@@ -80,44 +81,45 @@ public class AutorizacionSriWorkflowStep {
 				|| respuesta.mensajes().stream().anyMatch(mensaje -> "70".equals(mensaje.identificador()));
 	}
 
-	private boolean respuestaCodigo70(SriResponse respuesta) {
-		return respuesta.mensajes().stream().anyMatch(mensaje -> "70".equals(mensaje.identificador()));
+
+	private String obtenerCodigoRespuesta(SriResponse respuesta) {
+		return respuesta.mensajes().stream().map(mensaje -> mensaje.identificador())
+				.filter(codigo -> codigo != null && !codigo.isBlank()).findFirst().orElse(null);
 	}
 
-	private Long obtenerTiempoMaximoCodigo70Segundos(ContextoWorkflow contexto) {
+	private Long obtenerTiempoConfiguradoSegundos(ContextoWorkflow contexto, String clave) {
 		Long empresaId = contexto.getComprobante().getEmpresa() == null
 				? null : contexto.getComprobante().getEmpresa().getId();
 		if (empresaId == null) {
 			return null;
 		}
-
-		var configuracion = configuracionEmpresaService.obtenerVigente(empresaId, CONFIG_TIEMPO_MAX_COD_70,
-				LocalDateTime.now());
+		var configuracion = configuracionEmpresaService.obtenerVigente(empresaId, clave, LocalDateTime.now());
 		if (configuracion.isEmpty() || configuracion.get().getValor() == null
 				|| configuracion.get().getValor().isBlank()) {
 			return null;
 		}
-
 		try {
 			long segundos = Long.parseLong(configuracion.get().getValor().trim());
 			return segundos > 0 ? segundos : null;
 		} catch (NumberFormatException exception) {
-			LOGGER.warn("El valor de {} no es un número de segundos válido para la empresa {}.",
-					CONFIG_TIEMPO_MAX_COD_70, empresaId);
+			LOGGER.warn("El valor de {} no es un número de segundos válido para la empresa {}.", clave, empresaId);
 			return null;
 		}
 	}
 
-	private void programarReconsultaCodigo70(ContextoWorkflow contexto, LocalDateTime fechaPrimerEnvio,
-			long tiempoMaximoSegundos) {
+	private void programarReconsultaCodigo(ContextoWorkflow contexto, LocalDateTime fechaPrimerEnvio,
+			long tiempoMaximoSegundos, String codigo) {
 		LocalDateTime limite = fechaPrimerEnvio.plusSeconds(tiempoMaximoSegundos);
 		LocalDateTime ahora = LocalDateTime.now();
 		if (!ahora.isBefore(limite)) {
 			contexto.getComprobante().setFechaProximoReproceso(null);
 			return;
 		}
-
-		long intervaloMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1L);
+		Long intervaloSegundos = obtenerTiempoConfiguradoSegundos(contexto, PREFIJO_TIEMPO_INTERVALO + codigo);
+		long intervaloMs = intervaloSegundos == null
+				? sriProperties.getAutorizacion().getEsperaReintentoMs()
+				: intervaloSegundos * 1_000L;
+		intervaloMs = Math.max(intervaloMs, 1L);
 		LocalDateTime siguiente = ahora.plusNanos(intervaloMs * 1_000_000L);
 		contexto.getComprobante().setFechaProximoReproceso(siguiente.isAfter(limite) ? limite : siguiente);
 	}
@@ -132,11 +134,11 @@ public class AutorizacionSriWorkflowStep {
 		}
 
 		int maxIntentos = Math.max(sriProperties.getAutorizacion().getMaxIntentos(), 1);
-		Long tiempoMaximoCodigo70Segundos = obtenerTiempoMaximoCodigo70Segundos(contexto);
-		LocalDateTime fechaPrimerEnvio = tiempoMaximoCodigo70Segundos == null ? null
-				: comprobanteAuditoriaService.obtenerFechaPrimerEnvio(contexto.getComprobanteId());
-		boolean politicaTiempoCodigo70 = tiempoMaximoCodigo70Segundos != null && fechaPrimerEnvio != null;
 		SriResponse respuesta = null;
+		String codigoReintento = null;
+		Long tiempoMaximoCodigoSegundos = null;
+		LocalDateTime fechaPrimerEnvio = null;
+		boolean politicaTiempoCodigo = false;
 		int intento = 0;
 		do {
 			intento++;
@@ -146,8 +148,15 @@ public class AutorizacionSriWorkflowStep {
 			registrarRespuestaSri(contexto, respuesta);
 			validarCodigosSri(contexto, respuesta);
 
-			if ((politicaTiempoCodigo70 && respuestaCodigo70(respuesta))
-					|| !respuestaEnProceso(respuesta) || intento >= maxIntentos) {
+			codigoReintento = obtenerCodigoRespuesta(respuesta);
+			tiempoMaximoCodigoSegundos = codigoReintento == null ? null
+					: obtenerTiempoConfiguradoSegundos(contexto, PREFIJO_TIEMPO_MAXIMO + codigoReintento);
+			if (tiempoMaximoCodigoSegundos != null && fechaPrimerEnvio == null) {
+				fechaPrimerEnvio = comprobanteAuditoriaService.obtenerFechaPrimerEnvio(contexto.getComprobanteId());
+			}
+			politicaTiempoCodigo = tiempoMaximoCodigoSegundos != null && fechaPrimerEnvio != null;
+			boolean respuestaPendiente = respuestaEnProceso(respuesta) || politicaTiempoCodigo;
+			if (!respuestaPendiente || politicaTiempoCodigo || intento >= maxIntentos) {
 				break;
 			}
 
@@ -168,17 +177,18 @@ public class AutorizacionSriWorkflowStep {
 					Map.of("numeroAutorizacion", respuesta.identificador() == null ? "" : respuesta.identificador()));
 		}
 
-		if (respuestaEnProceso(respuesta)) {
+		if (respuestaEnProceso(respuesta) || politicaTiempoCodigo) {
 			contexto.getComprobante().setEstadoSri(respuesta.estado());
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
-			if (politicaTiempoCodigo70 && respuestaCodigo70(respuesta)) {
-				programarReconsultaCodigo70(contexto, fechaPrimerEnvio, tiempoMaximoCodigo70Segundos);
+			if (politicaTiempoCodigo && codigoReintento != null) {
+				programarReconsultaCodigo(contexto, fechaPrimerEnvio, tiempoMaximoCodigoSegundos, codigoReintento);
 			} else {
 				contexto.getComprobante().setFechaProximoReproceso(null);
 			}
 
+			String codigoRespuestaFinal = codigoReintento;
 			var ultimoMensaje = respuesta.mensajes().stream()
-					.filter(mensaje -> "70".equals(mensaje.identificador())).findFirst()
+					.filter(mensaje -> codigoRespuestaFinal != null && codigoRespuestaFinal.equals(mensaje.identificador())).findFirst()
 					.orElse(respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0));
 			String codigoError = ultimoMensaje == null || ultimoMensaje.identificador() == null
 					|| ultimoMensaje.identificador().isBlank()
@@ -191,7 +201,7 @@ public class AutorizacionSriWorkflowStep {
 			contexto.getComprobante().setCodigoError(codigoError);
 			contexto.getComprobante().setMensajeError(mensajeError);
 			evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
-					contexto.getSolicitud().getUsuario());
+					obtenerUsuario(contexto));
 			return ResultadoEtapa.fallida(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name(),
 					codigoError, mensajeError);
 		}
@@ -201,7 +211,7 @@ public class AutorizacionSriWorkflowStep {
 		contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_SRI.name());
 		contexto.getComprobante().setFechaProximoReproceso(null);
 		evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
-				contexto.getSolicitud().getUsuario());
+				obtenerUsuario(contexto));
 		var mensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
 		return ResultadoEtapa.fallida(etapa(), "NO_AUTORIZADO",
 				mensaje == null || mensaje.identificador() == null ? MessageCodes.SRI_RESPUESTA_INVALIDA

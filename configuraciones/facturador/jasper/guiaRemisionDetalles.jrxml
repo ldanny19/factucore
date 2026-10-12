@@ -3,9 +3,9 @@
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<style name="Title" fontName="Serif" fontSize="50" isBold="true" pdfFontName="Times-Bold"/>
+	<style name="Title" fontName="Serif" fontSize="50" isBold="true" pdfFontName="Helvetica-Bold" pdfFontName="Times-Bold"/>
 	<style name="SubTitle" forecolor="#736343" fontName="SansSerif" fontSize="18"/>
-	<style name="Column header" forecolor="#666666" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="Column header" forecolor="#666666" fontName="SansSerif" fontSize="12" isBold="true" pdfFontName="Helvetica-Bold"/>
 	<style name="Detail" fontName="SansSerif" fontSize="12"/>
 	<style name="Row" mode="Transparent">
 		<conditionalStyle>
@@ -34,28 +34,28 @@
 			<staticText>
 				<reportElement uuid="b8de4930-9660-4dec-aa00-f55ada74202d" x="0" y="0" width="65" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="7" isBold="true"/>
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Cantidad]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="505bf86e-9976-40ab-848a-346fd227bf31" x="67" y="0" width="180" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="7" isBold="true"/>
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Descripcion]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="2931b840-e4c7-4819-9386-be35bfa5efc5" x="250" y="0" width="128" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="7" isBold="true"/>
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Código Principal]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="110f8202-ddd2-46e7-8c09-e4ada9dc1158" x="381" y="0" width="93" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="7" isBold="true"/>
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<text><![CDATA[Código Auxiliar]]></text>
 			</staticText>
