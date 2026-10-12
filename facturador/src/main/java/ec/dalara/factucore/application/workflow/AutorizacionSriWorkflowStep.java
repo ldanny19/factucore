@@ -18,6 +18,7 @@ import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import ec.dalara.factucore.infrastructure.configuration.sri.SriProperties;
+import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteAuditoriaRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -32,6 +33,7 @@ public class AutorizacionSriWorkflowStep {
 	private final SriProperties sriProperties;
 	private final MessageResolver messageResolver;
 	private final SriCodigoCatalogoService sriCodigoCatalogoService;
+	private final ComprobanteAuditoriaRepository auditoriaRepository;
 
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.AUTORIZACION_SRI;
@@ -94,9 +96,26 @@ public class AutorizacionSriWorkflowStep {
 		}
 
 		if (respuestaEnProceso(respuesta)) {
-			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1000);
 			contexto.getComprobante().setEstadoSri(respuesta.estado());
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.AUTORIZACION_PENDIENTE.name());
+
+			int intentosPrevios = auditoriaRepository
+					.findByComprobanteIdAndEtapaOrderByIntentoDesc(contexto.getComprobanteId(), etapa().name())
+					.size();
+			int maxIntentos = Math.max(sriProperties.getAutorizacion().getMaxIntentos(), 1);
+			if (intentosPrevios + 1 >= maxIntentos) {
+				contexto.getComprobante().setFechaProximoReproceso(null);
+				var ultimoMensaje = respuesta.mensajes().isEmpty() ? null : respuesta.mensajes().get(0);
+				contexto.getComprobante().setCodigoError(ultimoMensaje == null ? MessageCodes.SRI_RESPUESTA_INVALIDA
+						: ultimoMensaje.identificador());
+				contexto.getComprobante().setMensajeError(ultimoMensaje == null ? respuesta.estado()
+						: sriCodigoCatalogoService.resolverDescripcion(ultimoMensaje.identificador(), ultimoMensaje.mensaje()));
+				evidenciaPort.guardarRespuestaSriAutorizacion(contexto.getComprobanteId(), respuesta,
+						contexto.getSolicitud().getUsuario());
+				return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name());
+			}
+
+			long esperaMs = Math.max(sriProperties.getAutorizacion().getEsperaReintentoMs(), 1000);
 			contexto.getComprobante()
 					.setFechaProximoReproceso(java.time.LocalDateTime.now().plusNanos(esperaMs * 1_000_000));
 			return ResultadoEtapa.exitosa(etapa(), EstadoProceso.AUTORIZACION_PENDIENTE.name());
