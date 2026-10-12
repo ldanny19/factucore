@@ -28,7 +28,7 @@ spring:
     password: ${notificacion_smtp_password}
     host: smtp.gmail.com
     port: 587
-    username: ing.dlamilla@gmail.com
+    username: cls.dlamilla@gmail.com
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
