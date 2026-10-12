@@ -1,7 +1,6 @@
 package ec.dalara.factucore.adapter.in.web.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,11 +23,5 @@ public class ComprobanteController {
 	public ResponseEntity<ComprobanteGeneracionResponse> generar(
 			@Valid @RequestBody ComprobanteGeneracionRequest request) {
 		return ResponseEntity.ok(workflowPort.procesar(request));
-	}
-
-	@PostMapping("/{id}/reprocesar")
-	public ResponseEntity<ComprobanteGeneracionResponse> reprocesar(@PathVariable("id") Long id) {
-		workflowPort.reprocesar(id);
-		return ResponseEntity.ok(ComprobanteGeneracionResponse.builder().exitoso(true).build());
 	}
 }
