@@ -30,6 +30,15 @@ public class GeneracionRideWorkflowStep {
 	private final MessageResolver messageResolver;
 	private final RidePort ridePort;
 	private final ComprobanteEvidenciaPort evidenciaPort;
+	private String obtenerUsuario(ContextoWorkflow contexto) {
+		if (contexto.getSolicitud() != null && contexto.getSolicitud().getUsuario() != null
+				&& !contexto.getSolicitud().getUsuario().isBlank()) {
+			return contexto.getSolicitud().getUsuario();
+		}
+		String usuario = contexto.getComprobante().getUsuarioModificacion();
+		return usuario == null || usuario.isBlank() ? contexto.getComprobante().getUsuarioCreacion() : usuario;
+	}
+
 	public EtapaWorkflow etapa() {
 		return EtapaWorkflow.GENERACION_RIDE;
 	}
@@ -54,7 +63,7 @@ public class GeneracionRideWorkflowStep {
 byte[] pdf = ridePort.generar(comprobante, definicion.getDocumento().getNombre());
 			contexto.setRide(pdf);
 
-			String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, contexto.getSolicitud().getUsuario());
+			String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, obtenerUsuario(contexto));
 			comprobante.setRutaRide(ruta);
 			comprobante.setEstadoProceso(EstadoProceso.RIDE_GENERADO.name());
 			comprobante.setFechaProximoReproceso(null);
