@@ -63,17 +63,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/spring.datasource.password"
-  contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql/facturador" -}}
-{{ .Data.data.password }}
-{{- end }}
-EOT
-  error_on_missing_key = true
-}
-
-template {
-  destination = "/vault/secrets/spring.mail.password"
+  destination = "/vault/secrets/notificacion_smtp_password"
   contents = <<EOT
 {{- with secret "secret/data/factucore/notificacion/smtp" -}}
 {{ .Data.data.password }}
