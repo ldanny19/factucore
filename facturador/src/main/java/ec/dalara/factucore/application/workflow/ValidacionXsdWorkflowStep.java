@@ -283,6 +283,7 @@ public class ValidacionXsdWorkflowStep {
 			log.debug("No se pudo convertir a decimal el campo '{}': '{}'", campo, texto);
 			return null;
 		}
+	}
 
 	private BigDecimal cero(BigDecimal valor) { return valor == null ? BigDecimal.ZERO : valor; }
 	private BigDecimal redondear(BigDecimal valor) { return valor.setScale(2, RoundingMode.HALF_UP); }
