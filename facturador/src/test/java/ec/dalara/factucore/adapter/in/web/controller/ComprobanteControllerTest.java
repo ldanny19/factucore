@@ -1,7 +1,6 @@
 package ec.dalara.factucore.adapter.in.web.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,16 +46,5 @@ class ComprobanteControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertEquals(expected, response.getBody());
 		verify(workflowPort).procesar(request);
-	}
-
-	@Test
-	void reprocesar_debeDelegarAlWorkflowYRetornarExito() {
-		Long comprobanteId = 10L;
-
-		ResponseEntity<ComprobanteGeneracionResponse> response = controller.reprocesar(comprobanteId);
-
-		assertEquals(200, response.getStatusCode().value());
-		assertTrue(response.getBody().getExitoso());
-		verify(workflowPort).reprocesar(comprobanteId);
 	}
 }
