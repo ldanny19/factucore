@@ -232,6 +232,8 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       FACTUCORE_NOTIFICACION_TOPICO: notificacion
+      SPRING_DATASOURCE_URL: ${DB_NOTIFICACIONES_URL:-jdbc:postgresql://db_factucore:5432/db_notificaciones}
+      SPRING_DATASOURCE_USERNAME: ${DB_NOTIFICACIONES_USERNAME:-usr_notificaciones}
     volumes:
       - factucore_vault_secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/notificacion/config:/app/config:ro

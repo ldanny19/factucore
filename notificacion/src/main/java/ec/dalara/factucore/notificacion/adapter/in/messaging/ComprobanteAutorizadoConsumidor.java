@@ -1,9 +1,11 @@
 package ec.dalara.factucore.notificacion.adapter.in.messaging;
 
+import java.util.Set;
+
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.api.notificacion.ComprobanteAutorizado;
@@ -16,17 +18,23 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ComprobanteAutorizadoConsumidor implements ConsumidorMensajes {
+
     public static final String TIPO_EVENTO = "COMPROBANTE_AUTORIZADO";
+
     private final ObjectMapper objectMapper;
     private final NotificacionService service;
     private final NotificacionProperties properties;
     private final MessageResolver messageResolver;
 
     @Override
-    public String topico() { return properties.getTopico(); }
+    public String topico() {
+        return properties.getTopico();
+    }
 
     @Override
-    public String grupo() { return "factucore-notificacion"; }
+    public String grupo() {
+        return "factucore-notificacion";
+    }
 
     @Override
     public Set<String> tiposEvento() {
@@ -36,10 +44,12 @@ public class ComprobanteAutorizadoConsumidor implements ConsumidorMensajes {
     @Override
     public void consumir(EventoMensaje evento) {
         try {
-            service.notificar(objectMapper.treeToValue(evento.payload(), ComprobanteAutorizado.class));
-        } catch (Exception e) {
+            ComprobanteAutorizado comprobante = objectMapper.treeToValue(evento.payload(),
+                    ComprobanteAutorizado.class);
+            service.notificar(evento, comprobante);
+        } catch (Exception exception) {
             throw new IllegalStateException(
-                    messageResolver.resolver(MessageCodes.EVENTO_PROCESAMIENTO_ERROR, evento.id()), e);
+                    messageResolver.resolver(MessageCodes.EVENTO_PROCESAMIENTO_ERROR, evento.id()), exception);
         }
     }
 }
