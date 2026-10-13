@@ -27,7 +27,7 @@ factucore:
     enabled: true
     broker: KAFKA
     kafka:
-      bootstrap-servers: kafka:9092
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
       consumer:
         auto-offset-reset: earliest
         enable-auto-commit: false

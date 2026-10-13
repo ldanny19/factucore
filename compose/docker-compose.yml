@@ -184,10 +184,8 @@ services:
     environment:
       FACTUCORE_CONFIGURACION_ZONA_HORARIA: ${FACTUCORE_CONFIGURACION_ZONA_HORARIA:-America/Guayaquil}
       FACTUCORE_PATH_LOGS: /app/logs
-      SPRING_DATASOURCE_URL: ${DB_FACTURADOR_URL:-jdbc:postgresql://db_factucore:5432/db_factucore}
-      SPRING_DATASOURCE_USERNAME: ${DB_FACTURADOR_USERNAME:-usr_factucore}
-      SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
-      SPRING_DATASOURCE_PASSWORD_FILE: /vault/secrets/postgres_facturador_password
+      DB_URL: ${DB_FACTURADOR_URL:-jdbc:postgresql://db_factucore:5432/db_factucore}
+      DB_USERNAME: ${DB_FACTURADOR_USERNAME:-usr_factucore}
       FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://auth.factucore.local:8180/realms/facturador}
       FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI:-http://auth-server:8080/realms/facturador/protocol/openid-connect/certs}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
