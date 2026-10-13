@@ -254,6 +254,44 @@ if ! vault secrets list -format=json | grep -q '"secret/"'; then
 fi
 
 # ---------------------------------------------------------------------------
+# Migracion de paths anteriores a la estructura canonica.
+# Conserva los valores existentes y no sobrescribe destinos ya creados.
+# ---------------------------------------------------------------------------
+
+migrate_secret() {
+  OLD_PATH="$1"
+  NEW_PATH="$2"
+
+  if vault kv get "$NEW_PATH" >/dev/null 2>&1; then
+    log "El secreto destino ya existe; se conserva: $NEW_PATH"
+    return
+  fi
+
+  if ! vault kv get "$OLD_PATH" >/dev/null 2>&1; then
+    return
+  fi
+
+  log "Migrando secreto existente: $OLD_PATH -> $NEW_PATH"
+
+  USERNAME=$(vault kv get -field=username "$OLD_PATH" 2>/dev/null || true)
+  PASSWORD=$(vault kv get -field=password "$OLD_PATH" 2>/dev/null || true)
+
+  if [ -n "$USERNAME" ] && [ -n "$PASSWORD" ]; then
+    vault kv put "$NEW_PATH" username="$USERNAME" password="$PASSWORD" >/dev/null
+  elif [ -n "$PASSWORD" ]; then
+    vault kv put "$NEW_PATH" password="$PASSWORD" >/dev/null
+  else
+    fail "No se pudo migrar el secreto $OLD_PATH; no se modifico el origen."
+  fi
+}
+
+migrate_secret "secret/factucore/postgresql/admin" "secret/factucore/basedatos/admin"
+migrate_secret "secret/factucore/postgresql/facturador" "secret/factucore/basedatos/facturador"
+migrate_secret "secret/factucore/postgresql/auth" "secret/factucore/basedatos/auth"
+migrate_secret "secret/factucore/postgresql/notificaciones" "secret/factucore/basedatos/notificaciones"
+migrate_secret "secret/factucore/notificacion/smtp" "secret/factucore/mail"
+
+# ---------------------------------------------------------------------------
 # Generador de secretos
 # ---------------------------------------------------------------------------
 
@@ -274,7 +312,7 @@ NOTIFICACIONES_PASSWORD=$(generate_secret)
 # Credencial PostgreSQL - Administrador
 # ---------------------------------------------------------------------------
 
-if vault kv get secret/factucore/postgresql/admin >/dev/null 2>&1; then
+if vault kv get secret/factucore/basedatos/admin >/dev/null 2>&1; then
 
   log "Credencial PostgreSQL de administrador ya existe; no se sobrescribe."
 
@@ -283,7 +321,7 @@ else
   log "Creando credencial PostgreSQL de administrador"
 
   vault kv put \
-    secret/factucore/postgresql/admin \
+    secret/factucore/basedatos/admin \
     username="postgres" \
     password="$ADMIN_PASSWORD" \
     >/dev/null
@@ -294,7 +332,7 @@ fi
 # Credencial PostgreSQL - Facturador
 # ---------------------------------------------------------------------------
 
-if vault kv get secret/factucore/postgresql/facturador >/dev/null 2>&1; then
+if vault kv get secret/factucore/basedatos/facturador >/dev/null 2>&1; then
 
   log "Credencial PostgreSQL de Facturador ya existe; no se sobrescribe."
 
@@ -303,7 +341,7 @@ else
   log "Creando credencial PostgreSQL de Facturador"
 
   vault kv put \
-    secret/factucore/postgresql/facturador \
+    secret/factucore/basedatos/facturador \
     username="usr_factucore" \
     password="$FACTURADOR_PASSWORD" \
     >/dev/null
@@ -314,7 +352,7 @@ fi
 # Credencial PostgreSQL - Auth Server
 # ---------------------------------------------------------------------------
 
-if vault kv get secret/factucore/postgresql/auth >/dev/null 2>&1; then
+if vault kv get secret/factucore/basedatos/auth >/dev/null 2>&1; then
 
   log "Credencial PostgreSQL de Auth Server ya existe; no se sobrescribe."
 
@@ -323,7 +361,7 @@ else
   log "Creando credencial PostgreSQL de Auth Server"
 
   vault kv put \
-    secret/factucore/postgresql/auth \
+    secret/factucore/basedatos/auth \
     username="usr_auth" \
     password="$AUTH_PASSWORD" \
     >/dev/null
@@ -334,7 +372,7 @@ fi
 # Credencial PostgreSQL - Notificaciones
 # ---------------------------------------------------------------------------
 
-if vault kv get secret/factucore/postgresql/notificaciones >/dev/null 2>&1; then
+if vault kv get secret/factucore/basedatos/notificaciones >/dev/null 2>&1; then
 
   log "Credencial PostgreSQL de Notificaciones ya existe; no se sobrescribe."
 
@@ -343,7 +381,7 @@ else
   log "Creando credencial PostgreSQL de Notificaciones"
 
   vault kv put \
-    secret/factucore/postgresql/notificaciones \
+    secret/factucore/basedatos/notificaciones \
     username="usr_notificaciones" \
     password="$NOTIFICACIONES_PASSWORD" \
     >/dev/null
@@ -354,7 +392,7 @@ fi
 # Credencial SMTP - Notificaciones
 # ---------------------------------------------------------------------------
 
-if vault kv get secret/factucore/notificacion/smtp >/dev/null 2>&1; then
+if vault kv get secret/factucore/mail >/dev/null 2>&1; then
 
   log "Credencial SMTP de Notificaciones ya existe; no se sobrescribe."
 
@@ -365,7 +403,7 @@ else
   log "Creando credencial SMTP de Notificaciones"
 
   vault kv put \
-    secret/factucore/notificacion/smtp \
+    secret/factucore/mail \
     password="$SMTP_PASSWORD" \
     >/dev/null
 
@@ -427,7 +465,7 @@ if [ -n "$AGENT_TOKEN" ]; then
 
   else
 
-    if ! VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/notificacion/smtp >/dev/null 2>&1 ||
+    if ! VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/mail >/dev/null 2>&1 ||
        ! VAULT_TOKEN="$AGENT_TOKEN" vault kv get secret/factucore/firma >/dev/null 2>&1; then
 
       log "Token persistente sin permisos actualizados; se generara uno nuevo."
@@ -488,22 +526,22 @@ chmod 600 "$AGENT_TOKEN_RUNTIME_FILE"
 log "Validando acceso del Vault Agent"
 
 VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/postgresql/admin >/dev/null
+  vault kv get secret/factucore/basedatos/admin >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/postgresql/facturador >/dev/null
+  vault kv get secret/factucore/basedatos/facturador >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/postgresql/auth >/dev/null
+  vault kv get secret/factucore/basedatos/auth >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/postgresql/notificaciones >/dev/null
+  vault kv get secret/factucore/basedatos/notificaciones >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
   vault kv get secret/factucore/keycloak >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/notificacion/smtp >/dev/null
+  vault kv get secret/factucore/mail >/dev/null
 
 VAULT_TOKEN="$AGENT_TOKEN" \
   vault kv get secret/factucore/firma >/dev/null

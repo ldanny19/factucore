@@ -1,16 +1,16 @@
-path "secret/data/factucore/postgresql/admin" {
+path "secret/data/factucore/basedatos/admin" {
   capabilities = ["read"]
 }
 
-path "secret/data/factucore/postgresql/facturador" {
+path "secret/data/factucore/basedatos/facturador" {
   capabilities = ["read"]
 }
 
-path "secret/data/factucore/postgresql/auth" {
+path "secret/data/factucore/basedatos/auth" {
   capabilities = ["read"]
 }
 
-path "secret/data/factucore/postgresql/notificaciones" {
+path "secret/data/factucore/basedatos/notificaciones" {
   capabilities = ["read"]
 }
 
@@ -18,7 +18,7 @@ path "secret/data/factucore/keycloak" {
   capabilities = ["read"]
 }
 
-path "secret/data/factucore/notificacion/smtp" {
+path "secret/data/factucore/mail" {
   capabilities = ["read"]
 }
 

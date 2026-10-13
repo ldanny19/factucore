@@ -15,7 +15,7 @@ auto_auth {
 template {
   destination = "/vault/secrets/postgres_admin_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql/admin" -}}
+{{- with secret "secret/data/factucore/basedatos/admin" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -25,7 +25,7 @@ EOT
 template {
   destination = "/vault/secrets/postgres_facturador_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql/facturador" -}}
+{{- with secret "secret/data/factucore/basedatos/facturador" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -35,7 +35,7 @@ EOT
 template {
   destination = "/vault/secrets/postgres_auth_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql/auth" -}}
+{{- with secret "secret/data/factucore/basedatos/auth" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -45,7 +45,7 @@ EOT
 template {
   destination = "/vault/secrets/postgres_notificaciones_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql/notificaciones" -}}
+{{- with secret "secret/data/factucore/basedatos/notificaciones" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -65,7 +65,7 @@ EOT
 template {
   destination = "/vault/secrets/spring.datasource.password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/postgresql/facturador" -}}
+{{- with secret "secret/data/factucore/basedatos/facturador" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -75,7 +75,7 @@ EOT
 template {
   destination = "/vault/secrets/spring.mail.password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/notificacion/smtp" -}}
+{{- with secret "secret/data/factucore/mail" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
