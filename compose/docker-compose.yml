@@ -228,6 +228,8 @@ services:
       facturador:
         condition: service_healthy
     environment:
+      DB_URL: ${DB_NOTIFICACION_URL:-jdbc:postgresql://db_factucore:5432/db_notificaciones}
+      DB_USERNAME: ${DB_NOTIFICACION_USERNAME:-usr_notificaciones}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       FACTUCORE_NOTIFICACION_TOPICO: notificacion
     volumes:

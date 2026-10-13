@@ -6,6 +6,18 @@ spring:
     import: optional:configtree:/run/secrets/
   application:
     name: factucore-notificacion
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${postgres_notificaciones_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: FactuCoreNotificacionHikariCP
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   messages:
     basename: "file:${factucore.notificacion.path.config}/messages"
 
