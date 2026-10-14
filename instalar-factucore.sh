@@ -233,6 +233,9 @@ store_secret() {
   local secret_path="$1"
   local username="$2"
   local password="$3"
+
+  # Ejecuta Vault CLI dentro del contenedor y envía el valor únicamente por stdin.
+  # No expone la contraseña como argumento ni la imprime en los logs.
   if [ -n "$username" ]; then
     printf '%s' "$password" |
       MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault sh -c '
@@ -240,9 +243,9 @@ store_secret() {
         INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
         ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
         if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \$4; exit }" "$INIT_FILE")
+          ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \\$4; exit }" "$INIT_FILE")
         fi
-        [ -n "$ROOT_TOKEN" ]
+        [ -n "$ROOT_TOKEN" ] || { echo "No se pudo obtener el token administrativo de Vault." >&2; exit 1; }
         export VAULT_TOKEN="$ROOT_TOKEN"
         SECRET_PATH="$1"
         SECRET_USERNAME="$2"
@@ -250,7 +253,8 @@ store_secret() {
           printf "El secreto ya existe; se conserva: %s\n" "$SECRET_PATH"
           exit 0
         fi
-        exec vault kv put "$SECRET_PATH" username="$SECRET_USERNAME" password=@/dev/stdin
+        vault kv put "$SECRET_PATH" username="$SECRET_USERNAME" password=@/dev/stdin >/dev/null
+        vault kv get -field=password "$SECRET_PATH" >/dev/null
       ' sh "$secret_path" "$username" >/dev/null
   else
     printf '%s' "$password" |
@@ -259,20 +263,20 @@ store_secret() {
         INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
         ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
         if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \$4; exit }" "$INIT_FILE")
+          ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \\$4; exit }" "$INIT_FILE")
         fi
-        [ -n "$ROOT_TOKEN" ]
+        [ -n "$ROOT_TOKEN" ] || { echo "No se pudo obtener el token administrativo de Vault." >&2; exit 1; }
         export VAULT_TOKEN="$ROOT_TOKEN"
         SECRET_PATH="$1"
         if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
           printf "El secreto ya existe; se conserva: %s\n" "$SECRET_PATH"
           exit 0
         fi
-        exec vault kv put "$SECRET_PATH" password=@/dev/stdin
+        vault kv put "$SECRET_PATH" password=@/dev/stdin >/dev/null
+        vault kv get -field=password "$SECRET_PATH" >/dev/null
       ' sh "$secret_path" >/dev/null
   fi
 }
-
 verify_required_secrets() {
   local key secret_path username description missing=0
   while IFS='|' read -r key secret_path username description; do
