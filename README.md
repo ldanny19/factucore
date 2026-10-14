@@ -346,25 +346,17 @@ La configuración sensible se entrega mediante volúmenes/configtree y Vault Age
 
 ## Configuración externa
 
-Los archivos de configuración operativa no dependen exclusivamente del repositorio.
+Los archivos de configuración operativa, secretos, certificados, documentos generados, logs y datos persistentes se mantienen fuera del repositorio.
 
-En el entorno local se utilizan rutas externas bajo:
+La raíz de almacenamiento externo se configura mediante la variable `FACTUCORE_HOME` en `compose/.env`. Cada cliente puede definir la ubicación que corresponda a su entorno. Los archivos Compose y los scripts deben construir las rutas a partir de esta variable, sin depender de rutas absolutas fijadas en el código. En el entorno de desarrollo actual se conserva el valor configurado en `compose/.env`.
 
-```text
-C:\factucore\
-├── certificados
-├── documentos
-├── facturador\config
-├── notificacion\config
-├── vault
-├── postgres
-├── logs
-└── secrets
-```
+Dentro de esa raíz, las carpetas se organizan por responsabilidad: `vault`, `base_datos/postgres`, `mensajeria`, `facturador` y `notificacion`. PostgreSQL y Kafka mantienen sus datos persistentes fuera del workspace del repositorio.
 
-Esto permite separar configuración, secretos, certificados y datos persistentes del código fuente.
+Los mensajes de la librería compartida tienen como referencia versionada `configuraciones/messaging/message.properties`. El instalador lo copia, si falta, a `FACTUCORE_HOME/mensajeria/config/message.properties`; Docker Compose monta esa configuración externa como solo lectura en los servicios correspondientes. El resolver consulta el catálogo externo y mantiene el catálogo empaquetado como respaldo.
 
-Los mensajes de la librería compartida se externalizan en `C:\\factucore\\mensajeria\\config\\message.properties`, siguiendo la organización de configuración por módulo. El archivo versionado está en `configuraciones/messaging/message.properties`; debe copiarse a `C:\\factucore\\mensajeria\\config\\message.properties` antes de iniciar los servicios. Docker Compose monta `C:\\factucore\\mensajeria\\config` como solo lectura en `/app/messaging-config` para Facturador y Notification. El resolver consulta primero el catálogo externo y conserva el catálogo incluido en la librería como respaldo para entornos de desarrollo o claves que no estén externalizadas. Los cambios del archivo externo se detectan según la caché configurada (60 segundos).
+## Instalación
+
+La instalación, los requisitos, la configuración de `FACTUCORE_HOME`, los comandos de Git Bash y la operación de Docker Compose se documentan en la [Guía de instalación](instalacion/README.md). Ejecuta el instalador y los comandos de Compose desde la raíz del workspace del repositorio; los datos persistentes y la configuración operativa permanecen en la ubicación externa configurada.
 
 ## Estructura relevante del repositorio
 
