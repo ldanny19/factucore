@@ -9,7 +9,7 @@ spring:
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
-    password: ${postgres_notificaciones_password}
+    password: ${basedatos_notificaciones_password}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: FactuCoreNotificacionHikariCP
@@ -25,6 +25,7 @@ spring:
     host: REEMPLAZAR_SMTP_HOST
     port: 587
     username: REEMPLAZAR_SMTP_USUARIO
+    password: ${mail_password}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true

@@ -13,7 +13,7 @@ auto_auth {
 }
 
 template {
-  destination = "/vault/secrets/postgres_admin_password"
+  destination = "/vault/secrets/basedatos_admin_password"
   contents = <<EOT
 {{- with secret "secret/factucore/basedatos/admin" -}}
 {{ .Data.data.password }}
@@ -23,7 +23,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/postgres_facturador_password"
+  destination = "/vault/secrets/basedatos_facturador_password"
   contents = <<EOT
 {{- with secret "secret/factucore/basedatos/facturador" -}}
 {{ .Data.data.password }}
@@ -33,7 +33,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/postgres_auth_password"
+  destination = "/vault/secrets/basedatos_auth_password"
   contents = <<EOT
 {{- with secret "secret/factucore/basedatos/auth" -}}
 {{ .Data.data.password }}
@@ -43,7 +43,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/postgres_notificaciones_password"
+  destination = "/vault/secrets/basedatos_notificaciones_password"
   contents = <<EOT
 {{- with secret "secret/factucore/basedatos/notificaciones" -}}
 {{ .Data.data.password }}
@@ -63,17 +63,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/spring.datasource.password"
-  contents = <<EOT
-{{- with secret "secret/factucore/basedatos/facturador" -}}
-{{ .Data.data.password }}
-{{- end }}
-EOT
-  error_on_missing_key = true
-}
-
-template {
-  destination = "/vault/secrets/spring.mail.password"
+  destination = "/vault/secrets/mail_password"
   contents = <<EOT
 {{- with secret "secret/factucore/mail" -}}
 {{ .Data.data.password }}
@@ -83,7 +73,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/FACTUCORE_FIRMA_PASSWORD"
+  destination = "/vault/secrets/fima_password"
   contents = <<EOT
 {{- with secret "secret/factucore/firma" -}}
 {{ .Data.data.password }}

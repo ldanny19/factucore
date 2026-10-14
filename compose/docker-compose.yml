@@ -58,7 +58,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "test -s /vault/secrets/postgres_admin_password && test -s /vault/secrets/postgres_facturador_password && test -s /vault/secrets/postgres_auth_password && test -s /vault/secrets/postgres_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/spring.mail.password && test -s /vault/secrets/FACTUCORE_FIRMA_PASSWORD"
+          "test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/fima_password"
         ]
       interval: 5s
       timeout: 3s
@@ -75,7 +75,7 @@ services:
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_admin_password
+      POSTGRES_PASSWORD_FILE: /vault/secrets/basedatos_admin_password
     volumes:
       - ${FACTUCORE_HOME}/base_datos/postgres/data:/var/lib/postgresql/data
       - ${FACTUCORE_HOME}/vault/runtime-secrets:/vault/secrets:ro
@@ -109,7 +109,7 @@ services:
       - >
         export KC_DB_URL="jdbc:postgresql://db_factucore:5432/db_auth";
         export KC_DB_USERNAME="usr_auth";
-        export KC_DB_PASSWORD="$$(cat /vault/secrets/postgres_auth_password)";
+        export KC_DB_PASSWORD="$$(cat /vault/secrets/basedatos_auth_password)";
         exec /opt/keycloak/bin/kc.sh start
         --http-port=8080
         --bootstrap-admin-username="${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}"
