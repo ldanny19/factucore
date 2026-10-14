@@ -43,7 +43,7 @@ FACTUCORE_HOME/
 └── messaging/config/       # Configuración compartida de mensajería
 ```
 
-Keycloak guarda su base `db_auth` en PostgreSQL, por lo que su persistencia queda bajo `postgres/data`; no se crea un almacenamiento duplicado para Keycloak. La carpeta `vault/runtime-secrets` contiene credenciales renderizadas en texto legible para los procesos que las consumen: protege su acceso y no la sincronices ni la versionas. El instalador crea las carpetas y copia configuraciones de referencia solo cuando faltan; no sobrescribe configuraciones locales ni migra automáticamente datos de las rutas antiguas.
+Keycloak guarda su base `db_auth` en PostgreSQL, por lo que su persistencia queda bajo `base_datos/postgres/data`; no se crea un almacenamiento duplicado para Keycloak. La carpeta `vault/runtime-secrets` contiene credenciales renderizadas en texto legible para los procesos que las consumen: protege su acceso y no la sincronices ni la versionas. El instalador crea las carpetas y copia configuraciones de referencia solo cuando faltan; no sobrescribe configuraciones locales ni migra automáticamente datos de las rutas antiguas.
 
 El catálogo canónico es YAML. El instalador requiere Docker Compose v2 y `yq` v4 (mikefarah/yq); valida el catálogo y genera `secretos.conf` en la carpeta externalizada. También copia el YAML para mantener disponible la fuente utilizada. Los scripts de Vault continúan leyendo el archivo plano generado, por lo que no se necesita modificar la imagen oficial de Vault. Una futura implementación de Kubernetes/Helm puede reutilizar el YAML, con su propio adaptador de despliegue.
 

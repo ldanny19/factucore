@@ -47,7 +47,7 @@ HOST_VAULT_CONFIG="$HOST_HOME/vault/config"
 HOST_VAULT_SCRIPTS="$HOST_HOME/vault/scripts"
 HOST_VAULT_POLICY="$HOST_HOME/vault/policy"
 HOST_VAULT_AGENT="$HOST_HOME/vault/agent"
-HOST_POSTGRES_INIT="$HOST_HOME/postgres/init"
+HOST_POSTGRES_INIT="$HOST_HOME/base_datos/postgres/init"
 HOST_FACTURADOR_CONFIG="$HOST_HOME/facturador/config"
 HOST_FACTURADOR_JASPER="$HOST_HOME/facturador/jasper"
 HOST_FACTURADOR_DOCUMENTOS="$HOST_HOME/facturador/documentos"
@@ -56,7 +56,7 @@ HOST_FACTURADOR_IMAGENES="$HOST_HOME/facturador/imagenes"
 HOST_FACTURADOR_LOGS="$HOST_HOME/facturador/logs"
 HOST_NOTIFICACION_CONFIG="$HOST_HOME/notificacion/config"
 HOST_NOTIFICACION_LOGS="$HOST_HOME/notificacion/logs"
-HOST_MESSAGING_CONFIG="$HOST_HOME/messaging/config"
+HOST_MESSAGING_CONFIG="$HOST_HOME/mensajeria/config"
 RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
@@ -64,10 +64,28 @@ COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 # Evitar que un cambio de rutas cree una base de datos o un Vault vacíos
 # mientras los datos existentes permanecen en las ubicaciones anteriores.
 OLD_POSTGRES_DATA="$HOST_HOME/data/postgres"
+PREVIOUS_POSTGRES_DATA="$HOST_HOME/postgres/data"
+OLD_KAFKA_DATA="$HOST_HOME/kafka/data"
+OLD_MESSAGING_CONFIG="$HOST_HOME/messaging/config"
 OLD_SECRETS_DIR="$HOST_HOME/secrets"
 if [ -d "$OLD_POSTGRES_DATA" ] && find "$OLD_POSTGRES_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  if [ ! -d "$HOST_HOME/postgres/data" ] || ! find "$HOST_HOME/postgres/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-    fail "Se detectaron datos PostgreSQL en la ruta anterior $OLD_POSTGRES_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/postgres/data antes de continuar."
+  if [ ! -d "$HOST_HOME/base_datos/postgres/data" ] || ! find "$HOST_HOME/base_datos/postgres/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    fail "Se detectaron datos PostgreSQL en la ruta anterior $OLD_POSTGRES_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/base_datos/postgres/data antes de continuar."
+  fi
+fi
+if [ -d "$PREVIOUS_POSTGRES_DATA" ] && find "$PREVIOUS_POSTGRES_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+  if [ ! -d "$HOST_HOME/base_datos/postgres/data" ] || ! find "$HOST_HOME/base_datos/postgres/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    fail "Se detectaron datos PostgreSQL en la ruta anterior $PREVIOUS_POSTGRES_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/base_datos/postgres/data antes de continuar."
+  fi
+fi
+if [ -d "$OLD_KAFKA_DATA" ] && find "$OLD_KAFKA_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+  if [ ! -d "$HOST_HOME/mensajeria/kafka/data" ] || ! find "$HOST_HOME/mensajeria/kafka/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    fail "Se detectaron datos Kafka en la ruta anterior $OLD_KAFKA_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/mensajeria/kafka/data antes de continuar."
+  fi
+fi
+if [ -d "$OLD_MESSAGING_CONFIG" ] && find "$OLD_MESSAGING_CONFIG" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+  if [ ! -d "$HOST_HOME/mensajeria/config" ] || ! find "$HOST_HOME/mensajeria/config" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    fail "Se detectó configuración de mensajería en la ruta anterior $OLD_MESSAGING_CONFIG. Copia su contenido a $HOST_HOME/mensajeria/config antes de continuar."
   fi
 fi
 if [ -d "$OLD_SECRETS_DIR" ] && find "$OLD_SECRETS_DIR" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
@@ -110,7 +128,7 @@ mkdir -p \
   "$HOST_HOME/vault/data" "$HOST_HOME/vault/secrets" \
   "$HOST_HOME/vault/runtime-secrets" "$HOST_HOME/vault/agent-token" \
   "$HOST_VAULT_CONFIG" "$HOST_VAULT_SCRIPTS" "$HOST_VAULT_POLICY" "$HOST_VAULT_AGENT" \
-  "$HOST_HOME/postgres/data" "$HOST_POSTGRES_INIT" "$HOST_HOME/kafka/data" \
+  "$HOST_HOME/base_datos/postgres/data" "$HOST_POSTGRES_INIT" "$HOST_HOME/mensajeria/kafka/data" \
   "$HOST_FACTURADOR_CONFIG" "$HOST_FACTURADOR_JASPER" "$HOST_FACTURADOR_DOCUMENTOS" \
   "$HOST_FACTURADOR_CERTIFICADOS" "$HOST_FACTURADOR_IMAGENES" "$HOST_FACTURADOR_LOGS" \
   "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_MESSAGING_CONFIG"

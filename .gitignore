@@ -8,8 +8,8 @@
 
 # Persistencia local externa (si FACTUCORE_HOME apunta dentro del repositorio)
 /vault/
-/postgres/data/
-/kafka/data/
+/base_datos/postgres/data/
+/mensajeria/kafka/data/
 /facturador/logs/
 /notificacion/logs/
 
@@ -20,3 +20,4 @@
 **/.classpath
 **/.project
 **/.settings/
+/mensajeria/config/

@@ -54,7 +54,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-usr_factucore}
       POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_password
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/postgres/data:/var/lib/postgresql/data
+      - ${FACTUCORE_HOME:-D:/factucore}/base_datos/postgres/data:/var/lib/postgresql/data
       - ${FACTUCORE_HOME:-D:/factucore}/vault/runtime-secrets:/vault/secrets:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -103,7 +103,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/kafka/data:/var/lib/kafka/data
+      - ${FACTUCORE_HOME:-D:/factucore}/mensajeria/kafka/data:/var/lib/kafka/data
     healthcheck:
       test:
         [
