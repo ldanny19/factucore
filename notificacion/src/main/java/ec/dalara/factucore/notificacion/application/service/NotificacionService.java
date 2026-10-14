@@ -62,9 +62,13 @@ public class NotificacionService {
                     "fechaComprobante",
                     comprobante.fechaComprobante() == null ? "" : comprobante.fechaComprobante().toString()));
             persistenciaService.guardarContenidoHtml(envio.getId(), contenido);
+            LOGGER.info("Plantilla de correo generada y persistida. ID_EVENTO={}, ID_REGISTRO={}.",
+                    evento.id(), envio.getId());
         }
 
         if (!persistenciaService.marcarEnProceso(envio.getId())) {
+            LOGGER.info("Se omite el envío porque la notificación no pudo cambiar a EN_PROCESO. ID_EVENTO={}, ID_REGISTRO={}.",
+                    evento.id(), envio.getId());
             return;
         }
 
@@ -113,6 +117,8 @@ public class NotificacionService {
         if (envio == null || envio.getEstadoEnvio() != EstadoEnvio.PENDIENTE) {
             return;
         }
+        LOGGER.info("Inicia recuperación de notificación pendiente. ID_EVENTO={}, ID_REGISTRO={}.",
+                envio.getIdEvento(), envio.getId());
         try {
             EventoMensaje evento = objectMapper.readValue(envio.getEventoJson(), EventoMensaje.class);
             ComprobanteAutorizado comprobante = objectMapper.treeToValue(evento.payload(),

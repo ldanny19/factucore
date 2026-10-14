@@ -63,6 +63,7 @@ public class NotificacionPersistenciaService {
             envio.setContenidoHtml(contenidoHtml);
         }
         envio.setFechaModificacion(Instant.now());
+        LOGGER.info("Contenido HTML de notificación actualizado. ID_REGISTRO={}.", id);
     }
 
     @Transactional
@@ -99,7 +100,11 @@ public class NotificacionPersistenciaService {
 
     @Transactional(readOnly = true)
     public List<NotificacionEnvio> pendientes() {
-        return repository.findTop50ByEstadoEnvioOrderByFechaRecepcionAsc(EstadoEnvio.PENDIENTE);
+        List<NotificacionEnvio> pendientes = repository.findTop50ByEstadoEnvioOrderByFechaRecepcionAsc(EstadoEnvio.PENDIENTE);
+        if (!pendientes.isEmpty()) {
+            LOGGER.info("Consulta de notificaciones pendientes completada. CANTIDAD={}.", pendientes.size());
+        }
+        return pendientes;
     }
 
     @Transactional(readOnly = true)

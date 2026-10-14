@@ -1,6 +1,9 @@
 package ec.dalara.factucore.notificacion.adapter.out.mail;
 
 import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,12 +17,15 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class SmtpCorreoAdapter implements CorreoPort {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SmtpCorreoAdapter.class);
     private final JavaMailSender mailSender;
     private final NotificacionProperties properties;
     private final MessageResolver messageResolver;
 
     @Override
     public void enviar(String destinatario, String asunto, String contenidoHtml, AdjuntoCorreo... adjuntos) {
+        LOGGER.info("Preparando correo para envío SMTP. ADJUNTOS={}.", adjuntos == null ? 0 : adjuntos.length);
         try {
             var mensaje = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(mensaje, true, "UTF-8");
@@ -33,7 +39,9 @@ public class SmtpCorreoAdapter implements CorreoPort {
                 }
             }
             mailSender.send(mensaje);
+            LOGGER.info("Servidor SMTP aceptó la solicitud de envío de correo.");
         } catch (Exception e) {
+            LOGGER.error("Falló el envío del correo mediante SMTP.", e);
             throw new IllegalStateException(messageResolver.resolver(MessageCodes.CORREO_ENVIO_ERROR), e);
         }
     }
