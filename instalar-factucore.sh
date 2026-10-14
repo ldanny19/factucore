@@ -247,7 +247,7 @@ store_secret() {
         SECRET_PATH="$1"
         SECRET_USERNAME="$2"
         if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
-          printf "El secreto ya existe; se conserva: %s\\n" "$SECRET_PATH"
+          printf "El secreto ya existe; se conserva: %s\n" "$SECRET_PATH"
           exit 0
         fi
         exec vault kv put "$SECRET_PATH" username="$SECRET_USERNAME" password=@/dev/stdin
@@ -265,7 +265,7 @@ store_secret() {
         export VAULT_TOKEN="$ROOT_TOKEN"
         SECRET_PATH="$1"
         if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
-          printf "El secreto ya existe; se conserva: %s\\n" "$SECRET_PATH"
+          printf "El secreto ya existe; se conserva: %s\n" "$SECRET_PATH"
           exit 0
         fi
         exec vault kv put "$SECRET_PATH" password=@/dev/stdin
@@ -278,7 +278,7 @@ verify_required_secrets() {
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
     if ! vault_secret_exists "$secret_path"; then
-      printf 'ERROR: falta el secreto requerido en Vault: %s\\n' "$secret_path" >&2
+      printf 'ERROR: falta el secreto requerido en Vault: %s\n' "$secret_path" >&2
       missing=1
     fi
   done < "$RUNTIME_CATALOG_FILE"
@@ -295,14 +295,14 @@ collect_missing_passwords() {
       continue
     fi
     while true; do
-      printf '\\n%s\\n' "$description"
+      printf '\n%s\n' "$description"
       IFS= read -r -s -p "Contrasena: " password </dev/tty
-      printf '\\n'
-      [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\\n'; continue; }
+      printf '\n'
+      [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\n'; continue; }
       IFS= read -r -s -p "Confirma la contrasena: " confirm_password </dev/tty
-      printf '\\n'
+      printf '\n'
       if [ "$password" = "$confirm_password" ]; then break; fi
-      printf 'Las contrasenas no coinciden. Intentalo de nuevo.\\n'
+      printf 'Las contrasenas no coinciden. Intentalo de nuevo.\n'
       unset password confirm_password
     done
     PASSWORDS+=("$password")

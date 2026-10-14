@@ -5,8 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$ROOT_DIR/compose/docker-compose.yml"
 ENV_FILE="$ROOT_DIR/compose/.env"
 
-log() { printf '\\n==> %s\\n' "$1"; }
-fail() { printf '\\nERROR: %s\\n' "$1" >&2; exit 1; }
+log() { printf '\n==> %s\n' "$1"; }
+fail() { printf '\nERROR: %s\n' "$1" >&2; exit 1; }
 
 command -v docker >/dev/null 2>&1 || fail "Se requiere Docker."
 docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 no esta disponible."
@@ -14,7 +14,6 @@ docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 no esta dispon
 [ -f "$COMPOSE_FILE" ] || fail "No existe $COMPOSE_FILE."
 
 FACTUCORE_HOME_VALUE="${FACTUCORE_HOME:-}"
-if [ -z "$FACTUCORE_HOME_VALUE" ]; then
 if [ -z "$FACTUCORE_HOME_VALUE" ]; then
   FACTUCORE_HOME_VALUE="$(sed -n 's/^FACTUCORE_HOME=//p' "$ENV_FILE" | tail -n 1 | tr -d '\r')"
 fi
