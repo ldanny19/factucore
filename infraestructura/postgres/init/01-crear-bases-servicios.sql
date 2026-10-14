@@ -1,8 +1,8 @@
 \set ON_ERROR_STOP on
 
-\set facturador_password `cat /vault/secrets/postgres_facturador_password`
-\set auth_password `cat /vault/secrets/postgres_auth_password`
-\set notificaciones_password `cat /vault/secrets/postgres_notificaciones_password`
+\set facturador_password `cat /vault/secrets/basedatos_facturador_password`
+\set auth_password `cat /vault/secrets/basedatos_auth_password`
+\set notificaciones_password `cat /vault/secrets/basedatos_notificaciones_password`
 
 SELECT format('CREATE ROLE usr_factucore LOGIN PASSWORD %L;', :'facturador_password')
 WHERE NOT EXISTS (
