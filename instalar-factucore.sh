@@ -217,7 +217,7 @@ wait_for_vault() {
 vault_secret_exists() {
   local secret_path="$1"
   local username="$2"
-  MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault sh -c '
+  MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T --interactive=false vault sh -c '
     set -eu
     INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
     ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
@@ -287,90 +287,68 @@ store_secret() {
       ' sh "$secret_path" >/dev/null
   fi
 }
-verify_required_secrets() {
-  local key secret_path username description missing=0
-  while IFS='|' read -r key secret_path username description; do
-    case "$key" in ""|\#*) continue ;; esac
-    if ! vault_secret_exists "$secret_path" "$username"; then
-      printf 'ERROR: falta el secreto requerido en Vault: %s\n' "$secret_path" >&2
-      missing=1
-    fi
-  done < "$RUNTIME_CATALOG_FILE"
-  [ "$missing" -eq 0 ]
-}
-
-collect_missing_passwords() {
+ensure_required_secrets() {
   local key secret_path username description password confirm_password
-  PASSWORDS=()
+
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
+
     if vault_secret_exists "$secret_path" "$username"; then
-      log "El secreto ya existe y se conservará: $secret_path"
+      printf "  [OK]     %s\n" "$secret_path"
       continue
     fi
+
+    printf "  [FALTA]  %s\n" "$secret_path"
     while true; do
       printf '\n%s\n' "$description"
       IFS= read -r -s -p "Contrasena: " password </dev/tty
       printf '\n'
-      [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\n'; continue; }
+      [ -n "$password" ] || {
+        printf 'La contrasena no puede estar vacia.\n'
+        continue
+      }
+
       IFS= read -r -s -p "Confirma la contrasena: " confirm_password </dev/tty
       printf '\n'
-      if [ "$password" = "$confirm_password" ]; then break; fi
+      if [ "$password" = "$confirm_password" ]; then
+        break
+      fi
+
       printf 'Las contrasenas no coinciden. Intentalo de nuevo.\n'
       unset password confirm_password
     done
-    PASSWORDS+=("$password")
-    unset password confirm_password
-  done < "$RUNTIME_CATALOG_FILE"
-}
 
-store_missing_passwords() {
-  local key secret_path username description index=0
-  while IFS='|' read -r key secret_path username description; do
-    case "$key" in ""|\#*) continue ;; esac
-    if vault_secret_exists "$secret_path" "$username"; then continue; fi
-    [ "$index" -lt "${#PASSWORDS[@]}" ] || fail "No se recibio una contrasena para $secret_path."
-    if ! store_secret "$secret_path" "$username" "${PASSWORDS[$index]}"; then
-      unset PASSWORDS
+    if ! store_secret "$secret_path" "$username" "$password"; then
+      unset password confirm_password
       fail "No se pudo guardar el secreto $secret_path en Vault."
     fi
-    index=$((index + 1))
+    unset password confirm_password
+
+    if ! vault_secret_exists "$secret_path" "$username"; then
+      fail "El secreto guardado no pudo verificarse en Vault: $secret_path"
+    fi
+    printf "  [OK]     %s (guardado y verificado)\n" "$secret_path"
   done < "$RUNTIME_CATALOG_FILE"
-  unset PASSWORDS
 }
 
-if [ -f "$INIT_FILE" ]; then
-  log "Se detecto una instalacion existente de Vault; se conservaran los secretos existentes."
-else
+CREAR_VAULT=false
+if [ ! -f "$INIT_FILE" ]; then
+  CREAR_VAULT=true
+fi
+
+if [ "$CREAR_VAULT" = true ]; then
   log "Preparando una instalacion nueva de Vault."
+else
+  log "Se detecto una instalacion existente de Vault; se conservaran los secretos existentes."
 fi
 
 log "Iniciando unicamente Vault para inicializarlo y dejarlo operativo."
-"${COMPOSE[@]}" up -d vault
+"\${COMPOSE[@]}" up -d vault
 wait_for_vault || fail "Vault no quedo inicializado y desbloqueado. No se levantara el resto de la aplicacion."
 
-log "Validando las siete credenciales configuradas en Vault."
+log "Validando las credenciales definidas en secretos.yml."
 printf "Almacenamiento persistente configurado: %s\n" "$VAULT_DATA_DIR"
-MISSING_COUNT=0
-while IFS='|' read -r key secret_path username description; do
-  case "$key" in ""|\#*) continue ;; esac
-  if vault_secret_exists "$secret_path" "$username"; then
-    printf "  [OK]     %s\n" "$secret_path"
-  else
-    printf "  [FALTA]  %s\n" "$secret_path"
-    MISSING_COUNT=$((MISSING_COUNT + 1))
-  fi
-done < "$RUNTIME_CATALOG_FILE"
-
-if [ "$MISSING_COUNT" -gt 0 ]; then
-  log "Faltan $MISSING_COUNT credenciales. Se solicitaran solo las que no existen en Vault."
-  collect_missing_passwords
-  store_missing_passwords
-else
-  log "Todas las credenciales requeridas ya existen en Vault; no se modificaran."
-fi
-
-verify_required_secrets || fail "No se confirmo la existencia de todos los secretos requeridos. La aplicacion no se levantara."
+ensure_required_secrets
 
 log "Vault esta operativo y todos los secretos requeridos fueron verificados."
 exec "$ROOT_DIR/levanta-aplicacion.sh"
