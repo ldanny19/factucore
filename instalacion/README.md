@@ -1,96 +1,138 @@
-# Instalación y secretos de FactuCore
+# Instalación de FactuCore
 
-## Separación de responsabilidades
+Esta guía describe la instalación inicial y la operación local de FactuCore mediante Docker Compose. Se utiliza **Git Bash** en Windows y se ejecutan los comandos desde la raíz del repositorio.
 
-- `infraestructura/vault/config/secretos.yml`: catálogo canónico YAML de rutas de Vault, usuarios técnicos y descripciones. No contiene contraseñas ni valores sensibles.
-- `$FACTUCORE_HOME/vault/config/secretos.conf`: archivo plano generado automáticamente por el instalador a partir del YAML para que los scripts POSIX de Vault puedan consumir los metadatos sin instalar un parser YAML en la imagen oficial de Vault.
-- `configuraciones/`: configuración versionada de referencia; el instalador copia los archivos faltantes a las carpetas de ejecución sin sobrescribir ajustes locales.
-- `FACTUCORE_HOME`: raíz única de los datos locales. Cada módulo/servicio tiene su propia carpeta y dentro de ella su configuración o persistencia.
-- `infraestructura/vault/`: configuración del servidor Vault, Vault Agent, políticas y scripts propios de Vault.
-- `infraestructura/postgres/`: inicialización de roles y bases de datos PostgreSQL.
-- `infraestructura/keycloak/README.md`: responsabilidades y notas de provisionamiento de Keycloak, independientes del mecanismo de despliegue.
-- `instalar-factucore.sh`: orquestador actual de la instalación inicial con Docker Compose.
-- `compose/`: definición del despliegue Docker Compose y variables específicas de ese mecanismo.
+## 1. Separación entre código y datos
 
+El repositorio contiene código fuente, Docker Compose, scripts y configuraciones de referencia. Los datos persistentes, secretos, certificados, documentos generados, logs y configuraciones operativas deben permanecer fuera del repositorio.
 
-## Estructura local de FACTUCORE_HOME
+La ubicación externa se define mediante la variable de entorno **`FACTUCORE_HOME`**. Cada instalación puede elegir la carpeta raíz que necesite el cliente; los archivos Compose y los scripts deben resolver las rutas a partir de esta variable y no depender de una ruta absoluta escrita en el código.
+
+Para el entorno de desarrollo actual se utiliza el valor definido en `compose/.env`. Si se cambia la ubicación, actualiza esa variable en dicho archivo antes de ejecutar la instalación o Compose. No es necesario cambiar las rutas de los volúmenes individualmente.
+
+La estructura bajo `FACTUCORE_HOME` se organiza por responsabilidad:
 
 ```text
 FACTUCORE_HOME/
 ├── vault/
-│   ├── config/             # Configuración y catálogo de Vault
-│   ├── scripts/            # Bootstrap y scripts operativos
-│   ├── policy/             # Políticas
-│   ├── agent/              # Configuración del Vault Agent
-│   ├── data/               # Persistencia de Vault
-│   ├── secrets/            # Inicialización de Vault y token persistente del Agent
-│   ├── agent-token/        # Token compartido con Vault Agent dentro de Docker
-│   └── runtime-secrets/    # Secretos renderizados para consumo de servicios
+│   ├── config/
+│   ├── scripts/
+│   ├── policy/
+│   ├── agent/
+│   ├── data/
+│   ├── secrets/
+│   ├── agent-token/
+│   └── runtime-secrets/
 ├── base_datos/
-│   └── postgres/\n│       ├── data/           # Datos persistentes de PostgreSQL
-│           └── init/       # SQL de inicialización
-├── mensajeria/\n│   ├── kafka/data/         # Datos persistentes de Kafka\n│   └── config/             # Configuración compartida de mensajería
+│   └── postgres/
+│       ├── data/
+│       └── init/
+├── mensajeria/
+│   ├── kafka/
+│   │   └── data/
+│   └── config/
 ├── facturador/
-│   ├── config/             # application.yml, mensajes y workflow
-│   ├── jasper/             # Plantillas RIDE
-│   ├── documentos/         # XSD y comprobantes/XML generados
-│   ├── certificados/       # Certificados de firma
-│   ├── imagenes/           # Recursos gráficos
-│   └── logs/               # Logs del Facturador
-├── notificacion/
-│   ├── config/             # Configuración y plantillas de correo
-│   └── logs/               # Logs de Notification
-└── messaging/config/       # Configuración compartida de mensajería
+│   ├── config/
+│   ├── jasper/
+│   ├── documentos/
+│   ├── certificados/
+│   ├── imagenes/
+│   └── logs/
+└── notificacion/
+    ├── config/
+    └── logs/
 ```
 
-Keycloak guarda su base `db_auth` en PostgreSQL, por lo que su persistencia queda bajo `base_datos/postgres/data`; no se crea un almacenamiento duplicado para Keycloak. La carpeta `vault/runtime-secrets` contiene credenciales renderizadas en texto legible para los procesos que las consumen: protege su acceso y no la sincronices ni la versionas. El instalador crea las carpetas y copia configuraciones de referencia solo cuando faltan; no sobrescribe configuraciones locales ni migra automáticamente datos de las rutas antiguas.
+Keycloak utiliza PostgreSQL para su base de datos, por lo que su persistencia queda bajo `base_datos/postgres/data`; no necesita un volumen de datos duplicado. La carpeta `vault/runtime-secrets` puede contener secretos renderizados legibles por los procesos que los consumen: protege su acceso y nunca la versionas ni la sincronices a repositorios públicos.
 
-El catálogo canónico es YAML. El instalador requiere Docker Compose v2 y `yq` v4 (mikefarah/yq); valida el catálogo y genera `secretos.conf` en la carpeta externalizada. También copia el YAML para mantener disponible la fuente utilizada. Los scripts de Vault continúan leyendo el archivo plano generado, por lo que no se necesita modificar la imagen oficial de Vault. Una futura implementación de Kubernetes/Helm puede reutilizar el YAML, con su propio adaptador de despliegue.
+## 2. Requisitos
 
-## Instalación inicial con Docker Compose
+- Git Bash.
+- Docker Engine o Docker Desktop con Docker Compose v2.
+- `yq` v4 de Mike Farah, requerido por el instalador para procesar el catálogo YAML de secretos.
+- Acceso al repositorio y sus imágenes/servicios requeridos.
 
-1. Copia `compose/.env.example` a `compose/.env`.
-2. Configura `FACTUCORE_HOME` y `FACTUCORE_VERSION`.
-3. Instala Docker Compose v2 y `yq` v4 (mikefarah/yq).
-4. Desde la raíz del repositorio, ejecuta en Linux o Git Bash:
+Comprueba que `FACTUCORE_HOME` esté definido en `compose/.env` y que la ruta elegida sea accesible para Docker. El archivo `compose/.env.example` sirve como plantilla; crea `compose/.env` a partir de él si todavía no existe y configura las variables necesarias para tu entorno.
 
-   ```bash
-   ./instalar-factucore.sh
-   ```
+## 3. Ejecutar la instalación
 
-El instalador solicita las contraseñas de los secretos catalogados, las oculta al escribir y las transmite por entrada estándar al proceso que las almacena en Vault. No las agrega a archivos de configuración.
+Desde Git Bash, sitúate en la raíz del repositorio, donde se encuentran `instalar-factucore.sh` y la carpeta `compose`.
 
+Comprueba la rama y la ubicación actual, y luego ejecuta el instalador:
 
-## Migración de instalaciones existentes
-
-Antes de levantar la nueva definición Compose, detén los contenedores para evitar copiar datos activos. Si existen estas rutas antiguas, mueve su contenido a las nuevas ubicaciones sin borrar copias de respaldo:
-
-- `%FACTUCORE_HOME%\\data\\postgres` → `%FACTUCORE_HOME%\\postgres\\data`
-- `%FACTUCORE_HOME%\\secrets` → `%FACTUCORE_HOME%\\vault\\secrets`
-
-También migra `%FACTUCORE_HOME%\\\\kafka\\\\data` a `%FACTUCORE_HOME%\\\\mensajeria\\\\kafka\\\\data` y `%FACTUCORE_HOME%\\\\messaging\\\\config` a `%FACTUCORE_HOME%\\\\mensajeria\\\\config`.\n\nEn Windows, con Docker Compose ejecutado desde la raíz del repositorio:
-
-```powershell
-$env:FACTUCORE_HOME = "C:\\factucore"  # Usa aquí la ruta configurada en compose/.env
-docker compose --env-file compose/.env -f compose/docker-compose.yml down
-New-Item -ItemType Directory -Force "$env:FACTUCORE_HOME\\postgres" | Out-Null
-New-Item -ItemType Directory -Force "$env:FACTUCORE_HOME\\vault" | Out-Null
-Move-Item "$env:FACTUCORE_HOME\\data\\postgres" "$env:FACTUCORE_HOME\\postgres\\data"
-Move-Item "$env:FACTUCORE_HOME\\secrets" "$env:FACTUCORE_HOME\\vault\\secrets"
+```bash
+git branch --show-current
+pwd
+bash ./instalar-factucore.sh
 ```
 
-Si ya existe el destino, no ejecutes `Move-Item` a ciegas: compara las carpetas y realiza una migración controlada. El instalador se detiene si detecta datos en las rutas antiguas y la nueva ruta está vacía, para no iniciar accidentalmente un PostgreSQL o Vault nuevos. Conserva el respaldo hasta verificar la instalación.
+El instalador prepara las carpetas externas y copia configuraciones de referencia solo cuando el archivo de destino no existe. No sobrescribe configuraciones operativas locales. También genera el catálogo plano que necesitan los scripts de Vault a partir de `infraestructura/vault/config/secretos.yml`.
 
-## Instalaciones existentes
+Cuando se soliciten secretos, introdúcelos de forma interactiva. El instalador no debe incorporarlos a archivos versionados ni imprimir sus valores. No compartas contraseñas, tokens, claves de unseal ni archivos de inicialización de Vault en logs o conversaciones.
 
-Si existe el archivo de inicialización de Vault, el instalador reutiliza los secretos y no pide nuevas contraseñas. Si el almacenamiento de Vault existe pero falta su archivo de inicialización, se detiene para evitar reinicializar una instancia potencialmente existente. Si falta algún secreto en una instalación existente, se detiene y requiere recuperación controlada.
+Si el instalador informa de rutas antiguas, almacenamiento de Vault existente sin inicialización o secretos ausentes, **detente y revisa el estado antes de continuar**. No borres carpetas ni inicialices de nuevo una instancia existente para intentar resolverlo.
 
-## Operación habitual
+## 4. Validar y ejecutar Docker Compose
 
-Tras una instalación completada, Docker Compose puede seguir utilizándose directamente:
+Docker Compose se ejecuta desde la raíz del workspace del repositorio. Las rutas de los volúmenes se resuelven desde `FACTUCORE_HOME`, de modo que los datos permanezcan fuera del workspace.
+
+Primero valida la configuración efectiva:
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml config --quiet
+```
+
+Si la validación termina correctamente, inicia los servicios:
 
 ```bash
 docker compose --env-file compose/.env -f compose/docker-compose.yml up -d
 ```
 
-No versionar el root token, las claves de unseal, tokens del Agent ni contraseñas.
+Consulta el estado y los logs cuando sea necesario:
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml ps
+docker compose --env-file compose/.env -f compose/docker-compose.yml logs --tail=100
+```
+
+Para detener los servicios sin eliminar los volúmenes ni las carpetas externas:
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml down
+```
+
+No utilices `down -v` como comando rutinario: antes de eliminar volúmenes o datos persistentes, confirma qué almacenamiento se eliminaría y que existe un respaldo válido.
+
+## 5. Configuración externa de mensajería
+
+El archivo de referencia de mensajes se encuentra en `configuraciones/messaging/message.properties`. El instalador lo copia, si falta, a `FACTUCORE_HOME/mensajeria/config/message.properties`. Compose monta esa carpeta como solo lectura para los servicios que la utilizan.
+
+Los cambios operativos deben realizarse en la copia externa, no en el repositorio. El resolver consulta el catálogo externo y conserva el catálogo empaquetado como respaldo según su configuración de caché.
+
+## 6. Secretos y configuración de Vault
+
+Responsabilidades principales:
+
+- `infraestructura/vault/config/secretos.yml`: catálogo canónico de rutas, usuarios técnicos y descripciones; no debe contener contraseñas.
+- `FACTUCORE_HOME/vault/config/secretos.conf`: archivo plano generado por el instalador para los scripts POSIX de Vault.
+- `infraestructura/vault/`: configuración de referencia, políticas, Vault Agent y scripts.
+- `configuraciones/`: configuraciones versionadas de referencia, copiadas sin sobrescribir los archivos locales existentes.
+
+No guardes secretos en `.env`, YAML versionado, SQL, Dockerfiles ni código fuente. El archivo del certificado de firma y los secretos operativos deben mantenerse fuera del repositorio.
+
+## 7. Migrar instalaciones existentes
+
+Antes de cambiar la distribución de carpetas, detén los servicios y realiza un respaldo. Si una instalación anterior guardaba información en rutas distintas, identifica el origen y el destino a partir de `FACTUCORE_HOME` y migra los datos de forma controlada.
+
+No muevas ni combines directorios a ciegas si el destino ya existe. Compara el contenido, conserva una copia de respaldo y verifica la persistencia de PostgreSQL, Kafka y Vault antes de eliminar cualquier copia antigua. El instalador puede detenerse al detectar datos heredados para evitar iniciar accidentalmente una base de datos o un Vault vacíos.
+
+## 8. Operación habitual
+
+Desde la raíz del repositorio, con `compose/.env` configurado:
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml up -d
+docker compose --env-file compose/.env -f compose/docker-compose.yml ps
+```
+
+La guía general, arquitectura y estado del proyecto se documentan en el [README principal](../README.md). Este documento se reserva para la instalación, la configuración del entorno y las tareas operativas.
