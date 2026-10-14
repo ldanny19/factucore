@@ -222,7 +222,7 @@ vault_secret_exists() {
     INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
     ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
     if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(grep "\"root_token\"" "$INIT_FILE" | head -n 1 | sed "s/.*: *\\\"//; s/\\\".*//")
+      ROOT_TOKEN=$(awk -F "\\\"" "/root_token/ { print \\$4; exit }" "$INIT_FILE")
     fi
     [ -n "$ROOT_TOKEN" ] || exit 1
     export VAULT_TOKEN="$ROOT_TOKEN"
