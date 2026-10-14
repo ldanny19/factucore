@@ -206,25 +206,61 @@ wait_for_vault() {
   return 1
 }
 
-verify_existing_secrets() {
-  local key secret_path username description
+missing_secret_count() {
+  local key secret_path username description count=0
   while IFS='|' read -r key secret_path username description; do
-    case "$key" in
-      ""|\#*) continue ;;
-    esac
-    if ! "${COMPOSE[@]}" exec -T vault vault kv get "$secret_path" >/dev/null 2>&1; then
-      fail "Falta el secreto $secret_path. No se modificaron credenciales; se requiere una recuperacion controlada."
+    case "$key" in ""|\#*) continue ;; esac
+    if ! MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault vault kv get "$secret_path" >/dev/null 2>&1; then
+      count=$((count + 1))
     fi
   done < "$RUNTIME_CATALOG_FILE"
+  printf '%s' "$count"
 }
 
+collect_missing_passwords() {
+  local key secret_path username description password confirm_password
+  PASSWORDS=()
+  while IFS='|' read -r key secret_path username description; do
+    case "$key" in ""|\#*) continue ;; esac
+    if MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault vault kv get "$secret_path" >/dev/null 2>&1; then
+      log "El secreto ya existe y se conservará: $secret_path"
+      continue
+    fi
+
+    while true; do
+      printf '\n%s\n' "$description"
+      IFS= read -r -s -p "Contrasena: " password </dev/tty
+      printf '\n'
+      [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\n'; continue; }
+      IFS= read -r -s -p "Confirma la contrasena: " confirm_password </dev/tty
+      printf '\n'
+      if [ "$password" = "$confirm_password" ]; then
+        break
+      fi
+      printf 'Las contrasenas no coinciden. Intentalo de nuevo.\n'
+      unset password confirm_password
+    done
+    PASSWORDS+=("$secret_path|$password")
+    unset password confirm_password
+  done < "$RUNTIME_CATALOG_FILE"
+}
 # Si existe almacenamiento pero no el archivo de inicializacion, no asumir
 # que es una instalacion nueva: podria ser una instalacion incompleta.
 if [ -f "$INIT_FILE" ]; then
-  log "Se detecto una instalacion existente de Vault. No se solicitaran ni cambiaran credenciales."
+  log "Se detecto una instalacion existente de Vault. Se conservaran los secretos que ya existan."
   "${COMPOSE[@]}" up -d vault
-  wait_for_vault || fail "Vault no quedo listo. Se detuvo la instalacion sin modificar secretos."
-  verify_existing_secrets
+  wait_for_vault || fail "Vault no quedo listo. Revisa los logs antes de reintentar."
+
+  MISSING_COUNT="$(missing_secret_count)"
+  if [ "$MISSING_COUNT" -gt 0 ]; then
+    log "Faltan $MISSING_COUNT secretos. Se solicitaran unicamente las credenciales pendientes."
+    collect_missing_passwords
+    printf '%s\n' "${PASSWORDS[@]}" | awk -F '|' 'NF >= 2 { print $2 }' | MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh
+    unset PASSWORDS
+  else
+    log "Todos los secretos requeridos ya existen; no se modificaran."
+  fi
+
   "${COMPOSE[@]}" up -d
   log "Infraestructura FactuCore iniciada reutilizando los secretos existentes."
   exit 0
