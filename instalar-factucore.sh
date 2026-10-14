@@ -126,7 +126,16 @@ HOST_NOTIFICACION_LOGS="$HOST_HOME/notificacion/logs"
 HOST_MESSAGING_CONFIG="$HOST_HOME/mensajeria/config"
 RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
-COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
+# Docker Compose debe recibir rutas Windows para los archivos del host cuando se ejecuta
+# desde Git Bash. Así MSYS_NO_PATHCONV=1 puede proteger las rutas Linux de los
+# comandos dentro del contenedor sin corromper --env-file ni -f.
+ENV_FILE_NATIVE="$ENV_FILE"
+COMPOSE_FILE_NATIVE="$COMPOSE_FILE"
+if command -v cygpath >/dev/null 2>&1; then
+  ENV_FILE_NATIVE="$(cygpath -w "$ENV_FILE")"
+  COMPOSE_FILE_NATIVE="$(cygpath -w "$COMPOSE_FILE")"
+fi
+COMPOSE=(docker compose --env-file "$ENV_FILE_NATIVE" -f "$COMPOSE_FILE_NATIVE")
 
 # Se utiliza exclusivamente la estructura actual bajo FACTUCORE_HOME.
 # Las rutas antiguas no forman parte del proceso de instalación ni de validación.
