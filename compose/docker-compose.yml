@@ -140,6 +140,9 @@ services:
     image: apache/kafka:4.0.2
     container_name: factucore-kafka
     restart: unless-stopped
+    depends_on:
+      vault:
+        condition: service_healthy
     ports:
       - "${KAFKA_PORT:-9092}:9092"
     environment:

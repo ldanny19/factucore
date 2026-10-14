@@ -190,9 +190,8 @@ parse_secret_catalog > "$RUNTIME_CATALOG_FILE.tmp"
 mv "$RUNTIME_CATALOG_FILE.tmp" "$RUNTIME_CATALOG_FILE"
 cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
-cp "$ROOT_DIR/infraestructura/vault/scripts/configurar-secretos.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
 chmod 644 "$RUNTIME_CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
-chmod 755 "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
+chmod 755 "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
 
 install_if_missing "$ROOT_DIR/infraestructura/vault/config/vault.hcl" "$HOST_VAULT_CONFIG/vault.hcl"
 install_if_missing "$ROOT_DIR/infraestructura/vault/scripts/entrypoint.sh" "$HOST_VAULT_SCRIPTS/entrypoint.sh"
@@ -206,7 +205,7 @@ chmod 755 "$HOST_VAULT_SCRIPTS/entrypoint.sh" "$HOST_VAULT_AGENT/entrypoint.sh"
 wait_for_vault() {
   local attempt
   for attempt in $(seq 1 90); do
-    if "${COMPOSE[@]}" exec -T vault vault status -format=json >/dev/null 2>&1; then
+    if MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault vault status -format=json >/dev/null 2>&1; then
       return 0
     fi
     sleep 2
@@ -215,15 +214,75 @@ wait_for_vault() {
   return 1
 }
 
-missing_secret_count() {
-  local key secret_path username description count=0
+vault_secret_exists() {
+  local secret_path="$1"
+  MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault sh -c '
+    set -eu
+    INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
+    ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
+    if [ -z "$ROOT_TOKEN" ]; then
+      ROOT_TOKEN=$(sed -n 's/.*"root_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$INIT_FILE" | head -1)
+    fi
+    [ -n "$ROOT_TOKEN" ]
+    export VAULT_TOKEN="$ROOT_TOKEN"
+    vault kv get "$1" >/dev/null 2>&1
+  ' sh "$secret_path" >/dev/null 2>&1
+}
+
+store_secret() {
+  local secret_path="$1"
+  local username="$2"
+  local password="$3"
+  if [ -n "$username" ]; then
+    printf '%s' "$password" |
+      MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault sh -c '
+        set -eu
+        INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
+        ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
+        if [ -z "$ROOT_TOKEN" ]; then
+          ROOT_TOKEN=$(sed -n 's/.*"root_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$INIT_FILE" | head -1)
+        fi
+        [ -n "$ROOT_TOKEN" ]
+        export VAULT_TOKEN="$ROOT_TOKEN"
+        SECRET_PATH="$1"
+        SECRET_USERNAME="$2"
+        if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
+          printf "El secreto ya existe; se conserva: %s\\n" "$SECRET_PATH"
+          exit 0
+        fi
+        exec vault kv put "$SECRET_PATH" username="$SECRET_USERNAME" password=@/dev/stdin
+      ' sh "$secret_path" "$username" >/dev/null
+  else
+    printf '%s' "$password" |
+      MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault sh -c '
+        set -eu
+        INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
+        ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
+        if [ -z "$ROOT_TOKEN" ]; then
+          ROOT_TOKEN=$(sed -n 's/.*"root_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$INIT_FILE" | head -1)
+        fi
+        [ -n "$ROOT_TOKEN" ]
+        export VAULT_TOKEN="$ROOT_TOKEN"
+        SECRET_PATH="$1"
+        if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
+          printf "El secreto ya existe; se conserva: %s\\n" "$SECRET_PATH"
+          exit 0
+        fi
+        exec vault kv put "$SECRET_PATH" password=@/dev/stdin
+      ' sh "$secret_path" >/dev/null
+  fi
+}
+
+verify_required_secrets() {
+  local key secret_path username description missing=0
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
-    if ! MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault vault kv get "$secret_path" >/dev/null 2>&1; then
-      count=$((count + 1))
+    if ! vault_secret_exists "$secret_path"; then
+      printf 'ERROR: falta el secreto requerido en Vault: %s\\n' "$secret_path" >&2
+      missing=1
     fi
   done < "$RUNTIME_CATALOG_FILE"
-  printf '%s' "$count"
+  [ "$missing" -eq 0 ]
 }
 
 collect_missing_passwords() {
@@ -231,93 +290,68 @@ collect_missing_passwords() {
   PASSWORDS=()
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
-    if MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault vault kv get "$secret_path" >/dev/null 2>&1; then
+    if vault_secret_exists "$secret_path"; then
       log "El secreto ya existe y se conservará: $secret_path"
       continue
     fi
-
     while true; do
-      printf '\n%s\n' "$description"
+      printf '\\n%s\\n' "$description"
       IFS= read -r -s -p "Contrasena: " password </dev/tty
-      printf '\n'
-      [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\n'; continue; }
+      printf '\\n'
+      [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\\n'; continue; }
       IFS= read -r -s -p "Confirma la contrasena: " confirm_password </dev/tty
-      printf '\n'
-      if [ "$password" = "$confirm_password" ]; then
-        break
-      fi
-      printf 'Las contrasenas no coinciden. Intentalo de nuevo.\n'
+      printf '\\n'
+      if [ "$password" = "$confirm_password" ]; then break; fi
+      printf 'Las contrasenas no coinciden. Intentalo de nuevo.\\n'
       unset password confirm_password
     done
     PASSWORDS+=("$password")
     unset password confirm_password
   done < "$RUNTIME_CATALOG_FILE"
 }
-# Si existe almacenamiento pero no el archivo de inicializacion, no asumir
-# que es una instalacion nueva: podria ser una instalacion incompleta.
+
+store_missing_passwords() {
+  local key secret_path username description index=0
+  while IFS='|' read -r key secret_path username description; do
+    case "$key" in ""|\#*) continue ;; esac
+    if vault_secret_exists "$secret_path"; then continue; fi
+    [ "$index" -lt "${#PASSWORDS[@]}" ] || fail "No se recibio una contrasena para $secret_path."
+    if ! store_secret "$secret_path" "$username" "${PASSWORDS[$index]}"; then
+      unset PASSWORDS
+      fail "No se pudo guardar el secreto $secret_path en Vault."
+    fi
+    index=$((index + 1))
+  done < "$RUNTIME_CATALOG_FILE"
+  unset PASSWORDS
+}
+
 if [ -f "$INIT_FILE" ]; then
-  log "Se detecto una instalacion existente de Vault. Se conservaran los secretos que ya existan."
-  "${COMPOSE[@]}" up -d vault
-  wait_for_vault || fail "Vault no quedo listo. Revisa los logs antes de reintentar."
-
-  MISSING_COUNT="$(missing_secret_count)"
-  if [ "$MISSING_COUNT" -gt 0 ]; then
-    log "Faltan $MISSING_COUNT secretos. Se solicitaran unicamente las credenciales pendientes."
-    collect_missing_passwords
-    printf '%s\n' "${PASSWORDS[@]}" | MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh
-    unset PASSWORDS
-  else
-    log "Todos los secretos requeridos ya existen; no se modificaran."
-  fi
-
-  "${COMPOSE[@]}" up -d
-  log "Infraestructura FactuCore iniciada reutilizando los secretos existentes."
-  exit 0
+  log "Se detecto una instalacion existente de Vault; se conservaran los secretos existentes."
+else
+  log "Preparando una instalacion nueva de Vault."
 fi
 
-# La existencia de la carpeta no implica por sí sola que Vault esté inicializado.
-# Si no existe el archivo de inicialización, el flujo de bootstrap verificará el estado real.
+log "Iniciando unicamente Vault para inicializarlo y dejarlo operativo."
+"${COMPOSE[@]}" up -d vault
+wait_for_vault || fail "Vault no quedo inicializado y desbloqueado. No se levantara el resto de la aplicacion."
 
-log "Instalacion nueva: se solicitaran las contrasenas definidas en el catalogo."
-log "Los usuarios tecnicos y las rutas se toman de infraestructura/vault/config/secretos.yml."
-log "Las contrasenas no se mostraran en pantalla ni se guardaran en archivos."
-
-PASSWORDS=()
+MISSING_COUNT=0
 while IFS='|' read -r key secret_path username description; do
-  case "$key" in
-    ""|\#*) continue ;;
-  esac
-
-  while true; do
-    printf '\n%s\n' "$description"
-    IFS= read -r -s -p "Contrasena: " password </dev/tty
-    printf '\n'
-    [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\n'; continue; }
-    IFS= read -r -s -p "Confirma la contrasena: " confirm_password </dev/tty
-    printf '\n'
-    if [ "$password" = "$confirm_password" ]; then
-      break
-    fi
-    printf 'Las contrasenas no coinciden. Intentalo de nuevo.\n'
-    unset password confirm_password
-  done
-
-  PASSWORDS+=("$password")
-  unset password confirm_password
+  case "$key" in ""|\#*) continue ;; esac
+  if ! vault_secret_exists "$secret_path"; then
+    MISSING_COUNT=$((MISSING_COUNT + 1))
+  fi
 done < "$RUNTIME_CATALOG_FILE"
 
-log "Iniciando unicamente Vault para inicializar y preparar el almacenamiento."
-"${COMPOSE[@]}" up -d vault
-wait_for_vault || fail "Vault no quedo listo. Revisa los logs; no se desplegaron los demas servicios."
-
-log "Almacenando las credenciales en las rutas declaradas en el catalogo."
-# Evitar que Git Bash/MSYS convierta rutas Linux del contenedor en rutas Windows.
-if ! printf '%s\n' "${PASSWORDS[@]}" | MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh; then
-  fail "No se pudieron almacenar todos los secretos. No se desplegaran los demas servicios; revisa el estado de Vault antes de reintentar."
+if [ "$MISSING_COUNT" -gt 0 ]; then
+  log "Faltan $MISSING_COUNT credenciales. Se solicitaran solo las que no existen en Vault."
+  collect_missing_passwords
+  store_missing_passwords
+else
+  log "Todas las credenciales requeridas ya existen en Vault; no se modificaran."
 fi
-unset PASSWORDS
 
-log "Iniciando los servicios de FactuCore."
-"${COMPOSE[@]}" up -d
+verify_required_secrets || fail "No se confirmo la existencia de todos los secretos requeridos. La aplicacion no se levantara."
 
-log "Instalacion inicial completada. Las credenciales quedaron almacenadas en Vault."
+log "Vault esta operativo y todos los secretos requeridos fueron verificados."
+exec "$ROOT_DIR/levanta-aplicacion.sh"
