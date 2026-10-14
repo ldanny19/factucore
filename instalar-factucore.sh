@@ -221,7 +221,7 @@ vault_secret_exists() {
     INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
     ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
     if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | cut -d '"' -f 4 | head -1)
+      ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \$4; exit }" "$INIT_FILE")
     fi
     [ -n "$ROOT_TOKEN" ]
     export VAULT_TOKEN="$ROOT_TOKEN"
@@ -240,7 +240,7 @@ store_secret() {
         INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
         ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
         if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | cut -d '"' -f 4 | head -1)
+      ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \$4; exit }" "$INIT_FILE")
         fi
         [ -n "$ROOT_TOKEN" ]
         export VAULT_TOKEN="$ROOT_TOKEN"
@@ -259,7 +259,7 @@ store_secret() {
         INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
         ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
         if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | cut -d '"' -f 4 | head -1)
+      ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \$4; exit }" "$INIT_FILE")
         fi
         [ -n "$ROOT_TOKEN" ]
         export VAULT_TOKEN="$ROOT_TOKEN"
