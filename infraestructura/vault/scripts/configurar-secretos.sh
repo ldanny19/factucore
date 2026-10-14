@@ -28,6 +28,8 @@ export VAULT_TOKEN="$ROOT_TOKEN"
 
 # Cada contrasena llega por stdin. No se guarda en archivos ni se incluye
 # como argumento del comando Vault. Las rutas y usuarios provienen del catalogo.
+exec 3<&0
+
 while IFS='|' read -r KEY SECRET_PATH USERNAME DESCRIPTION; do
   case "$KEY" in
     ""|\#*) continue ;;
@@ -38,7 +40,7 @@ while IFS='|' read -r KEY SECRET_PATH USERNAME DESCRIPTION; do
   fi
 
   PASSWORD=""
-  IFS= read -r PASSWORD || [ -n "$PASSWORD" ]
+  IFS= read -r PASSWORD <&3 || [ -n "$PASSWORD" ]
   [ -n "$PASSWORD" ] || fail "Se recibio una contrasena vacia para $SECRET_PATH."
 
   printf 'Guardando secreto: %s\n' "$SECRET_PATH"
@@ -52,5 +54,7 @@ while IFS='|' read -r KEY SECRET_PATH USERNAME DESCRIPTION; do
 
   unset PASSWORD
 done < "$CONFIG_FILE"
+
+exec 3<&-
 
 printf 'Secretos iniciales almacenados correctamente en Vault.\n'

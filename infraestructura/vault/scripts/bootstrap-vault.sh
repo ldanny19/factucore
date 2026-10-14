@@ -298,15 +298,15 @@ migrate_secret "secret/factucore/notificacion/smtp" "secret/factucore/mail"
 # La instalacion inicial los carga mediante instalar-factucore.sh.
 # ---------------------------------------------------------------------------
 
-REQUIRED_SECRET_PATHS="
-secret/factucore/basedatos/admin
-secret/factucore/basedatos/facturador
-secret/factucore/basedatos/auth
-secret/factucore/basedatos/notificaciones
-secret/factucore/keycloak
-secret/factucore/mail
-secret/factucore/firma
-"
+REQUIRED_SECRET_PATHS=$(
+  awk -F '|' '
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    NF >= 4 { print $2 }
+  ' /vault/config/secretos.conf
+)
+
+[ -n "$REQUIRED_SECRET_PATHS" ] ||
+  fail "No se pudo leer el catalogo central de secretos /vault/config/secretos.conf."
 
 MISSING_SECRETS=""
 

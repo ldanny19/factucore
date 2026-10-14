@@ -4,7 +4,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$ROOT_DIR/compose/docker-compose.yml"
 ENV_FILE="$ROOT_DIR/compose/.env"
-CATALOG_FILE="$ROOT_DIR/compose/vault/config/secretos.conf"
+CATALOG_FILE="$ROOT_DIR/configuracion/secretos.conf"
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -61,18 +61,18 @@ install_if_missing() {
 # Los servicios montan configuracion externa desde FACTUCORE_HOME.
 # Se actualizan los scripts de bootstrap y se instalan los archivos base faltantes.
 mkdir -p "$HOST_VAULT_CONFIG" "$HOST_VAULT_SCRIPTS" "$HOST_VAULT_POLICY" "$HOST_VAULT_AGENT" "$HOST_POSTGRES_INIT"
-cp "$ROOT_DIR/compose/vault/config/secretos.conf" "$HOST_VAULT_CONFIG/secretos.conf"
-cp "$ROOT_DIR/compose/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
-cp "$ROOT_DIR/compose/vault/scripts/configurar-secretos.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
+cp "$ROOT_DIR/configuracion/secretos.conf" "$HOST_VAULT_CONFIG/secretos.conf"
+cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
+cp "$ROOT_DIR/infraestructura/vault/scripts/configurar-secretos.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
 chmod 644 "$HOST_VAULT_CONFIG/secretos.conf"
 chmod 755 "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
 
-install_if_missing "$ROOT_DIR/compose/vault/config/vault.hcl" "$HOST_VAULT_CONFIG/vault.hcl"
-install_if_missing "$ROOT_DIR/compose/vault/scripts/entrypoint.sh" "$HOST_VAULT_SCRIPTS/entrypoint.sh"
-install_if_missing "$ROOT_DIR/compose/vault/policy/factucore-agent.hcl" "$HOST_VAULT_POLICY/factucore-agent.hcl"
-install_if_missing "$ROOT_DIR/compose/vault/agent/config.hcl" "$HOST_VAULT_AGENT/config.hcl"
-install_if_missing "$ROOT_DIR/compose/vault/agent/entrypoint.sh" "$HOST_VAULT_AGENT/entrypoint.sh"
-install_if_missing "$ROOT_DIR/compose/postgres/init/01-crear-bases-servicios.sql" "$HOST_POSTGRES_INIT/01-crear-bases-servicios.sql"
+install_if_missing "$ROOT_DIR/infraestructura/vault/config/vault.hcl" "$HOST_VAULT_CONFIG/vault.hcl"
+install_if_missing "$ROOT_DIR/infraestructura/vault/scripts/entrypoint.sh" "$HOST_VAULT_SCRIPTS/entrypoint.sh"
+install_if_missing "$ROOT_DIR/infraestructura/vault/policy/factucore-agent.hcl" "$HOST_VAULT_POLICY/factucore-agent.hcl"
+install_if_missing "$ROOT_DIR/infraestructura/vault/agent/config.hcl" "$HOST_VAULT_AGENT/config.hcl"
+install_if_missing "$ROOT_DIR/infraestructura/vault/agent/entrypoint.sh" "$HOST_VAULT_AGENT/entrypoint.sh"
+install_if_missing "$ROOT_DIR/infraestructura/postgres/init/01-crear-bases-servicios.sql" "$HOST_POSTGRES_INIT/01-crear-bases-servicios.sql"
 chmod 644 "$HOST_VAULT_CONFIG/vault.hcl" "$HOST_VAULT_POLICY/factucore-agent.hcl" "$HOST_VAULT_AGENT/config.hcl" "$HOST_POSTGRES_INIT/01-crear-bases-servicios.sql"
 chmod 755 "$HOST_VAULT_SCRIPTS/entrypoint.sh" "$HOST_VAULT_AGENT/entrypoint.sh"
 
@@ -117,7 +117,7 @@ if [ -d "$VAULT_DATA_DIR" ] && find "$VAULT_DATA_DIR" -mindepth 1 -print -quit 2
 fi
 
 log "Instalacion nueva: se solicitaran las contrasenas definidas en el catalogo."
-log "Los usuarios tecnicos y las rutas se toman de compose/vault/config/secretos.conf."
+log "Los usuarios tecnicos y las rutas se toman de configuracion/secretos.conf."
 log "Las contrasenas no se mostraran en pantalla ni se guardaran en archivos."
 
 PASSWORDS=()
