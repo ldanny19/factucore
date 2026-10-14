@@ -199,7 +199,11 @@ install_if_missing "$ROOT_DIR/infraestructura/vault/policy/factucore-agent.hcl" 
 cp "$ROOT_DIR/infraestructura/vault/agent/config.hcl" "$HOST_VAULT_AGENT/config.hcl"
 install_if_missing "$ROOT_DIR/infraestructura/vault/agent/entrypoint.sh" "$HOST_VAULT_AGENT/entrypoint.sh"
 copy_tree_if_missing "$ROOT_DIR/infraestructura/postgres/init" "$HOST_POSTGRES_INIT"
+# Estos scripts son parte de la instalacion y deben mantenerse alineados con la version del repositorio.
+cp "$ROOT_DIR/infraestructura/postgres/init/01-crear-bases-servicios.sql" "$HOST_POSTGRES_INIT/01-crear-bases-servicios.sql"
+cp "$ROOT_DIR/infraestructura/postgres/init/sincronizar-credenciales.sh" "$HOST_POSTGRES_INIT/sincronizar-credenciales.sh"
 chmod 644 "$HOST_VAULT_CONFIG/vault.hcl" "$HOST_VAULT_POLICY/factucore-agent.hcl" "$HOST_VAULT_AGENT/config.hcl" "$HOST_POSTGRES_INIT/01-crear-bases-servicios.sql"
+chmod 755 "$HOST_POSTGRES_INIT/sincronizar-credenciales.sh"
 chmod 755 "$HOST_VAULT_SCRIPTS/entrypoint.sh" "$HOST_VAULT_AGENT/entrypoint.sh"
 
 wait_for_vault() {
