@@ -202,6 +202,7 @@ services:
     volumes:
       - ${FACTUCORE_HOME}/vault/runtime-secrets:/run/secrets:ro
       - ${FACTUCORE_HOME}/facturador/config:/app/config:ro
+      - ${FACTUCORE_HOME}/facturador/xsd:/app/xsd:ro
       - ${FACTUCORE_HOME}/mensajeria/config:/app/messaging-config:ro
       - ${FACTUCORE_HOME}/facturador/jasper:/app/jasper:ro
       - ${FACTUCORE_HOME}/facturador/documentos:/app/documentos
