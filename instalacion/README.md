@@ -5,10 +5,11 @@
 - `configuracion/secretos.conf`: catalogo canonico de rutas de Vault y usuarios tecnicos. No contiene contrasenas.
 - `infraestructura/vault/`: configuracion del servidor Vault, Vault Agent, politicas y scripts propios de Vault.
 - `infraestructura/postgres/`: inicializacion de roles y bases de datos PostgreSQL.
+- `infraestructura/keycloak/README.md`: responsabilidades y notas de provisionamiento de Keycloak, independientes del mecanismo de despliegue.
 - `instalar-factucore.sh`: orquestador actual de la instalacion inicial con Docker Compose.
 - `compose/`: definicion del despliegue Docker Compose y variables especificas de ese mecanismo.
 
-El catalogo de secretos y los archivos de infraestructura ya no viven dentro de `compose/`. El instalador de Compose los instala en las rutas persistentes configuradas por `FACTUCORE_HOME`. Una futura implementacion de Kubernetes/Helm puede reutilizar el catalogo, aunque necesitara su propio adaptador de despliegue y mecanismo de provisionamiento.
+El catalogo de secretos y la documentacion/configuracion reutilizable de infraestructura ya no viven dentro de `compose/`. El instalador de Compose instala los archivos de Vault y PostgreSQL en las rutas persistentes configuradas por `FACTUCORE_HOME`. Una futura implementacion de Kubernetes/Helm puede reutilizar el catalogo, aunque necesitara su propio adaptador de despliegue y mecanismo de provisionamiento.
 
 ## Instalacion inicial con Docker Compose
 
