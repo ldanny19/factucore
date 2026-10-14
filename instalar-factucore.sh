@@ -116,7 +116,6 @@ HOST_VAULT_POLICY="$HOST_HOME/vault/policy"
 HOST_VAULT_AGENT="$HOST_HOME/vault/agent"
 HOST_POSTGRES_INIT="$HOST_HOME/base_datos/postgres/init"
 HOST_FACTURADOR_CONFIG="$HOST_HOME/facturador/config"
-HOST_FACTURADOR_XSD="$HOST_HOME/facturador/xsd"
 HOST_FACTURADOR_JASPER="$HOST_HOME/facturador/jasper"
 HOST_FACTURADOR_DOCUMENTOS="$HOST_HOME/facturador/documentos"
 HOST_FACTURADOR_CERTIFICADOS="$HOST_HOME/facturador/certificados"
@@ -176,14 +175,13 @@ mkdir -p \
   "$HOST_HOME/vault/runtime-secrets" "$HOST_HOME/vault/agent-token" \
   "$HOST_VAULT_CONFIG" "$HOST_VAULT_SCRIPTS" "$HOST_VAULT_POLICY" "$HOST_VAULT_AGENT" \
   "$HOST_HOME/base_datos/postgres/data" "$HOST_POSTGRES_INIT" "$HOST_HOME/mensajeria/kafka/data" \
-  "$HOST_FACTURADOR_CONFIG" "$HOST_FACTURADOR_XSD" "$HOST_FACTURADOR_JASPER" "$HOST_FACTURADOR_DOCUMENTOS" \
+  "$HOST_FACTURADOR_CONFIG" "$HOST_FACTURADOR_JASPER" "$HOST_FACTURADOR_DOCUMENTOS" \
   "$HOST_FACTURADOR_CERTIFICADOS" "$HOST_FACTURADOR_IMAGENES" "$HOST_FACTURADOR_LOGS" \
   "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_MESSAGING_CONFIG"
 
 chmod 700 "$HOST_HOME/vault/secrets" "$HOST_HOME/vault/agent-token"
 
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTURADOR_CONFIG"
-copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/xsd" "$HOST_FACTURADOR_XSD"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
