@@ -68,6 +68,8 @@ INITIALIZED=$(
     /tmp/vault-status.json || true
 )
 
+INITIALIZED_BEFORE_BOOTSTRAP="$INITIALIZED"
+
 if [ "$INITIALIZED" -eq 0 ]; then
 
   [ ! -f "$INIT_FILE" ] ||
@@ -292,142 +294,34 @@ migrate_secret "secret/factucore/postgresql/notificaciones" "secret/factucore/ba
 migrate_secret "secret/factucore/notificacion/smtp" "secret/factucore/mail"
 
 # ---------------------------------------------------------------------------
-# Generador de secretos
+# Verificar secretos requeridos sin generar ni sobrescribir credenciales.
+# La instalacion inicial los carga mediante instalar-factucore.sh.
 # ---------------------------------------------------------------------------
 
-generate_secret() {
-  cat /proc/sys/kernel/random/uuid | tr -d '-'
-}
+REQUIRED_SECRET_PATHS="
+secret/factucore/basedatos/admin
+secret/factucore/basedatos/facturador
+secret/factucore/basedatos/auth
+secret/factucore/basedatos/notificaciones
+secret/factucore/keycloak
+secret/factucore/mail
+secret/factucore/firma
+"
 
-# ---------------------------------------------------------------------------
-# Credenciales PostgreSQL
-# ---------------------------------------------------------------------------
+MISSING_SECRETS=""
 
-ADMIN_PASSWORD=$(generate_secret)
-FACTURADOR_PASSWORD=$(generate_secret)
-AUTH_PASSWORD=$(generate_secret)
-NOTIFICACIONES_PASSWORD=$(generate_secret)
+for SECRET_PATH in $REQUIRED_SECRET_PATHS; do
+  if ! vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
+    MISSING_SECRETS="$MISSING_SECRETS $SECRET_PATH"
+  fi
+done
 
-# ---------------------------------------------------------------------------
-# Credencial PostgreSQL - Administrador
-# ---------------------------------------------------------------------------
+if [ -n "$MISSING_SECRETS" ]; then
+  if [ "$INITIALIZED_BEFORE_BOOTSTRAP" -eq 1 ]; then
+    fail "Vault ya estaba inicializado, pero faltan secretos requeridos:$MISSING_SECRETS. No se generaran ni sobrescribiran credenciales; se requiere una recuperacion controlada."
+  fi
 
-if vault kv get secret/factucore/basedatos/admin >/dev/null 2>&1; then
-
-  log "Credencial PostgreSQL de administrador ya existe; no se sobrescribe."
-
-else
-
-  log "Creando credencial PostgreSQL de administrador"
-
-  vault kv put \
-    secret/factucore/basedatos/admin \
-    username="postgres" \
-    password="$ADMIN_PASSWORD" \
-    >/dev/null
-
-fi
-
-# ---------------------------------------------------------------------------
-# Credencial PostgreSQL - Facturador
-# ---------------------------------------------------------------------------
-
-if vault kv get secret/factucore/basedatos/facturador >/dev/null 2>&1; then
-
-  log "Credencial PostgreSQL de Facturador ya existe; no se sobrescribe."
-
-else
-
-  log "Creando credencial PostgreSQL de Facturador"
-
-  vault kv put \
-    secret/factucore/basedatos/facturador \
-    username="usr_factucore" \
-    password="$FACTURADOR_PASSWORD" \
-    >/dev/null
-
-fi
-
-# ---------------------------------------------------------------------------
-# Credencial PostgreSQL - Auth Server
-# ---------------------------------------------------------------------------
-
-if vault kv get secret/factucore/basedatos/auth >/dev/null 2>&1; then
-
-  log "Credencial PostgreSQL de Auth Server ya existe; no se sobrescribe."
-
-else
-
-  log "Creando credencial PostgreSQL de Auth Server"
-
-  vault kv put \
-    secret/factucore/basedatos/auth \
-    username="usr_auth" \
-    password="$AUTH_PASSWORD" \
-    >/dev/null
-
-fi
-
-# ---------------------------------------------------------------------------
-# Credencial PostgreSQL - Notificaciones
-# ---------------------------------------------------------------------------
-
-if vault kv get secret/factucore/basedatos/notificaciones >/dev/null 2>&1; then
-
-  log "Credencial PostgreSQL de Notificaciones ya existe; no se sobrescribe."
-
-else
-
-  log "Creando credencial PostgreSQL de Notificaciones"
-
-  vault kv put \
-    secret/factucore/basedatos/notificaciones \
-    username="usr_notificaciones" \
-    password="$NOTIFICACIONES_PASSWORD" \
-    >/dev/null
-
-fi
-
-# ---------------------------------------------------------------------------
-# Credencial SMTP - Notificaciones
-# ---------------------------------------------------------------------------
-
-if vault kv get secret/factucore/mail >/dev/null 2>&1; then
-
-  log "Credencial SMTP de Notificaciones ya existe; no se sobrescribe."
-
-else
-
-  SMTP_PASSWORD=$(generate_secret)
-
-  log "Creando credencial SMTP de Notificaciones"
-
-  vault kv put \
-    secret/factucore/mail \
-    password="$SMTP_PASSWORD" \
-    >/dev/null
-
-fi
-
-# ---------------------------------------------------------------------------
-# Credencial administrador Keycloak
-# ---------------------------------------------------------------------------
-
-KEYCLOAK_PASSWORD=$(generate_secret)
-
-if vault kv get secret/factucore/keycloak >/dev/null 2>&1; then
-
-  log "Credencial de Keycloak ya existe; no se sobrescribe."
-
-else
-
-  log "Creando credencial de Keycloak"
-
-  vault kv put \
-    secret/factucore/keycloak \
-    password="$KEYCLOAK_PASSWORD" \
-    >/dev/null
-
+  log "Instalacion nueva: se difiere la carga de secretos al instalador."
 fi
 
 # ---------------------------------------------------------------------------
@@ -520,31 +414,19 @@ chmod 600 "$AGENT_TOKEN_RUNTIME_FILE"
   fail "No se pudo copiar el token al volumen runtime."
 
 # ---------------------------------------------------------------------------
-# Validar acceso del Vault Agent
+# Validar acceso del Vault Agent cuando ya existen todos los secretos.
+# En una instalacion nueva, el instalador los cargara inmediatamente despues.
 # ---------------------------------------------------------------------------
 
-log "Validando acceso del Vault Agent"
+if [ -z "$MISSING_SECRETS" ]; then
+  log "Validando acceso del Vault Agent"
 
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/basedatos/admin >/dev/null
-
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/basedatos/facturador >/dev/null
-
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/basedatos/auth >/dev/null
-
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/basedatos/notificaciones >/dev/null
-
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/keycloak >/dev/null
-
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/mail >/dev/null
-
-VAULT_TOKEN="$AGENT_TOKEN" \
-  vault kv get secret/factucore/firma >/dev/null
+  for SECRET_PATH in $REQUIRED_SECRET_PATHS; do
+    VAULT_TOKEN="$AGENT_TOKEN" vault kv get "$SECRET_PATH" >/dev/null
+  done
+else
+  log "Validacion de secretos diferida hasta completar la instalacion inicial."
+fi
 
 # ---------------------------------------------------------------------------
 # Limpieza

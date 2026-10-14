@@ -1,69 +1,38 @@
-# Vault FactuCore
+# Vault de FactuCore
 
-Vault se ejecuta en modo servidor normal, con almacenamiento persistente en el directorio configurado por `FACTUCORE_HOME`.
+Vault se ejecuta como servidor persistente (no usar modo `-dev`). En Docker Compose, el almacenamiento interno se encuentra en `/vault/data` y se persiste en `${FACTUCORE_HOME}/vault/data`. El archivo de inicializacion se guarda en `${FACTUCORE_HOME}/secrets/vault-init.json`.
 
-No usar `server -dev`.
+## Instalacion inicial
 
-## Inicialización
+1. Copiar `compose/.env.example` a `compose/.env` y configurar al menos `FACTUCORE_HOME` y `FACTUCORE_VERSION`.
+2. Ejecutar desde la raiz del repositorio con Bash (Linux o Git Bash):
 
-La primera ejecución requiere:
+   ```bash
+   ./instalar-factucore.sh
+   ```
 
-1. Iniciar Vault.
-2. Ejecutar `vault operator init`.
-3. Guardar las claves de unseal y el token inicial fuera del repositorio.
-4. Hacer unseal.
-5. Crear el motor KV v2 `secret`.
-6. Cargar los secretos de PostgreSQL y Keycloak.
+3. El instalador solicita las contrasenas de los secretos declarados en `compose/vault/config/secretos.conf`, inicia Vault, almacena los secretos y luego despliega el resto de servicios.
 
-Las claves de inicialización, tokens y secretos nunca se versionan.
+El catalogo central define las rutas Vault, los usuarios tecnicos y las descripciones de las credenciales. No contiene contrasenas. Las contrasenas se solicitan ocultas, se mantienen en memoria en el instalador y se transmiten por stdin al contenedor; no se escriben en archivos temporales.
 
-## Estructura de secretos
+## Instalaciones existentes
 
-- `secret/factucore/postgresql`
-- `secret/factucore/keycloak`
+Si existe `vault-init.json`, el instalador no solicita contrasenas ni regenera secretos. Arranca Vault y el stack reutilizando las credenciales existentes. Si el almacenamiento existe pero falta el archivo de inicializacion, se detiene para evitar una reinicializacion accidental.
 
-Los valores concretos dependen del ambiente.
+Si Vault ya estaba inicializado y faltan secretos requeridos, el bootstrap falla sin generarlos ni sobrescribirlos. Se necesita una recuperacion controlada.
 
+## Rutas de secretos
 
-## Bootstrap automatizado
+El catalogo versionado esta en `compose/vault/config/secretos.conf`. Los secretos se guardan en KV v2 bajo `secret/factucore` y el Vault Agent los renderiza en el volumen de secretos de runtime para PostgreSQL y las aplicaciones.
 
-El `docker-compose.yml` solamente levanta la infraestructura. La inicialización y configuración de Vault se realiza mediante:
+Las claves de unseal y el root token se almacenan en el directorio persistente de secretos con permisos restrictivos. Ese directorio debe protegerse y respaldarse de acuerdo con la politica operativa del ambiente.
 
-`compose/vault/scripts/bootstrap-vault.ps1`
+## Operacion normal
 
-El script:
-
-1. Verifica que Vault esté inicializado y desellado.
-2. Habilita/verifica el engine KV v2 en `secret/`.
-3. Carga las credenciales de PostgreSQL y Keycloak desde variables de entorno o las solicita de forma interactiva.
-4. Aplica la policy `factucore-agent`.
-5. Crea o reutiliza el token del Vault Agent.
-6. Guarda el token del Agent únicamente en `FACTUCORE_HOME/secrets/vault_agent_token.txt`.
-7. Valida que el token pueda leer los secretos requeridos.
-
-Variables opcionales:
-
-- `FACTUCORE_VAULT_CONTAINER`
-- `FACTUCORE_VAULT_ROOT_TOKEN`
-- `FACTUCORE_POSTGRES_PASSWORD`
-- `FACTUCORE_KEYCLOAK_ADMIN_PASSWORD`
-
-No se deben versionar el root token, las claves de unseal, el token del Agent ni las contraseñas.
-
-Ejecución:
-
-Git Bash / Linux:
+Despues de una instalacion exitosa, se puede seguir utilizando:
 
 ```bash
-./compose/vault/scripts/bootstrap-vault.sh
+docker compose --env-file compose/.env -f compose/docker-compose.yml up -d
 ```
 
-PowerShell:
-
-```powershell
-.\compose\vault\scripts\bootstrap-vault.ps1
-```
-
-Ambos scripts realizan el mismo bootstrap y mantienen la configuración de Vault fuera del Docker Compose.
-
-Después del bootstrap se puede levantar el resto del stack mediante Docker Compose.
+No se deben versionar el root token, las claves de unseal, tokens del Agent ni contrasenas.
