@@ -128,36 +128,41 @@ RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
-# Evitar que un cambio de rutas cree una base de datos o un Vault vacíos
-# mientras los datos existentes permanecen en las ubicaciones anteriores.
+# Detectar únicamente instalaciones anteriores realmente inicializadas.
+# Las carpetas antiguas vacías o con archivos auxiliares no deben bloquear una instalación.
 OLD_POSTGRES_DATA="$HOST_HOME/data/postgres"
 PREVIOUS_POSTGRES_DATA="$HOST_HOME/postgres/data"
 OLD_KAFKA_DATA="$HOST_HOME/kafka/data"
 OLD_MESSAGING_CONFIG="$HOST_HOME/messaging/config"
 OLD_SECRETS_DIR="$HOST_HOME/secrets"
-# Solo considerar una ruta antigua como clúster PostgreSQL si contiene PG_VERSION.
-# Archivos auxiliares o carpetas vacías no deben bloquear una instalación nueva.
 TARGET_POSTGRES_DATA="$HOST_HOME/base_datos/postgres/data"
-if [ -f "$OLD_POSTGRES_DATA/PG_VERSION" ] && [ ! -f "$TARGET_POSTGRES_DATA/PG_VERSION" ]; then
-  fail "Se detectó un clúster PostgreSQL anterior en $OLD_POSTGRES_DATA. Detén Compose y migra ese clúster a $TARGET_POSTGRES_DATA antes de continuar."
+TARGET_KAFKA_DATA="$HOST_HOME/mensajeria/kafka/data"
+
+# PostgreSQL: PG_VERSION identifica un clúster inicializado.
+if { [ -f "$OLD_POSTGRES_DATA/PG_VERSION" ] || [ -f "$PREVIOUS_POSTGRES_DATA/PG_VERSION" ]; } \
+  && [ ! -f "$TARGET_POSTGRES_DATA/PG_VERSION" ]; then
+  fail "Se detectó un clúster PostgreSQL inicializado en una ruta anterior. Para conservar sus datos, detén Compose y migra el clúster a $TARGET_POSTGRES_DATA antes de continuar."
 fi
-if [ -f "$PREVIOUS_POSTGRES_DATA/PG_VERSION" ] && [ ! -f "$TARGET_POSTGRES_DATA/PG_VERSION" ]; then
-  fail "Se detectó un clúster PostgreSQL anterior en $PREVIOUS_POSTGRES_DATA. Detén Compose y migra ese clúster a $TARGET_POSTGRES_DATA antes de continuar."
+
+# Kafka (KRaft): meta.properties identifica almacenamiento inicializado.
+if [ -d "$OLD_KAFKA_DATA" ] \
+  && find "$OLD_KAFKA_DATA" -name meta.properties -type f -print -quit 2>/dev/null | grep -q . \
+  && ! find "$TARGET_KAFKA_DATA" -name meta.properties -type f -print -quit 2>/dev/null | grep -q .; then
+  fail "Se detectó almacenamiento Kafka inicializado en $OLD_KAFKA_DATA. Para conservar sus datos, migra ese almacenamiento a $TARGET_KAFKA_DATA antes de continuar."
 fi
-if [ -d "$OLD_KAFKA_DATA" ] && find "$OLD_KAFKA_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  if [ ! -d "$HOST_HOME/mensajeria/kafka/data" ] || ! find "$HOST_HOME/mensajeria/kafka/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-    fail "Se detectaron datos Kafka en la ruta anterior $OLD_KAFKA_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/mensajeria/kafka/data antes de continuar."
-  fi
+
+# Configuración local antigua: solo bloquear si existen archivos de configuración
+# y la ubicación nueva todavía no contiene ninguno. No bloquear por carpetas vacías.
+if [ -d "$OLD_MESSAGING_CONFIG" ] \
+  && find "$OLD_MESSAGING_CONFIG" -type f -print -quit 2>/dev/null | grep -q . \
+  && ! find "$HOST_HOME/mensajeria/config" -type f -print -quit 2>/dev/null | grep -q .; then
+  fail "Se detectaron archivos de configuración de mensajería en $OLD_MESSAGING_CONFIG. Cópialos a $HOST_HOME/mensajeria/config antes de continuar para conservar la configuración local."
 fi
-if [ -d "$OLD_MESSAGING_CONFIG" ] && find "$OLD_MESSAGING_CONFIG" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  if [ ! -d "$HOST_HOME/mensajeria/config" ] || ! find "$HOST_HOME/mensajeria/config" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-    fail "Se detectó configuración de mensajería en la ruta anterior $OLD_MESSAGING_CONFIG. Copia su contenido a $HOST_HOME/mensajeria/config antes de continuar."
-  fi
-fi
-if [ -d "$OLD_SECRETS_DIR" ] && find "$OLD_SECRETS_DIR" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  if [ ! -d "$HOST_HOME/vault/secrets" ] || ! find "$HOST_HOME/vault/secrets" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-    fail "Se detectaron archivos de inicialización/secretos en la ruta anterior $OLD_SECRETS_DIR. Detén Compose y migra esa carpeta a $HOST_HOME/vault/secrets antes de continuar."
-  fi
+
+# Secretos de inicialización de Vault: solo proteger el archivo conocido.
+if [ -f "$OLD_SECRETS_DIR/vault-init.json" ] \
+  && [ ! -f "$HOST_HOME/vault/secrets/vault-init.json" ]; then
+  fail "Se detectó el archivo de inicialización de Vault en $OLD_SECRETS_DIR. Para conservar el acceso a los secretos existentes, cópialo a $HOST_HOME/vault/secrets antes de continuar."
 fi
 
 install_if_missing() {
