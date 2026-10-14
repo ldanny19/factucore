@@ -36,7 +36,8 @@ while IFS='|' read -r KEY SECRET_PATH USERNAME DESCRIPTION; do
   esac
 
   if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
-    fail "El secreto ya existe y no sera sobrescrito: $SECRET_PATH"
+    printf 'El secreto ya existe; se conserva: %s\n' "$SECRET_PATH"
+    continue
   fi
 
   PASSWORD=""
