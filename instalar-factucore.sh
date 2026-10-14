@@ -135,15 +135,14 @@ PREVIOUS_POSTGRES_DATA="$HOST_HOME/postgres/data"
 OLD_KAFKA_DATA="$HOST_HOME/kafka/data"
 OLD_MESSAGING_CONFIG="$HOST_HOME/messaging/config"
 OLD_SECRETS_DIR="$HOST_HOME/secrets"
-if [ -d "$OLD_POSTGRES_DATA" ] && find "$OLD_POSTGRES_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  if [ ! -d "$HOST_HOME/base_datos/postgres/data" ] || ! find "$HOST_HOME/base_datos/postgres/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-    fail "Se detectaron datos PostgreSQL en la ruta anterior $OLD_POSTGRES_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/base_datos/postgres/data antes de continuar."
-  fi
+# Solo considerar una ruta antigua como clúster PostgreSQL si contiene PG_VERSION.
+# Archivos auxiliares o carpetas vacías no deben bloquear una instalación nueva.
+TARGET_POSTGRES_DATA="$HOST_HOME/base_datos/postgres/data"
+if [ -f "$OLD_POSTGRES_DATA/PG_VERSION" ] && [ ! -f "$TARGET_POSTGRES_DATA/PG_VERSION" ]; then
+  fail "Se detectó un clúster PostgreSQL anterior en $OLD_POSTGRES_DATA. Detén Compose y migra ese clúster a $TARGET_POSTGRES_DATA antes de continuar."
 fi
-if [ -d "$PREVIOUS_POSTGRES_DATA" ] && find "$PREVIOUS_POSTGRES_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  if [ ! -d "$HOST_HOME/base_datos/postgres/data" ] || ! find "$HOST_HOME/base_datos/postgres/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-    fail "Se detectaron datos PostgreSQL en la ruta anterior $PREVIOUS_POSTGRES_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/base_datos/postgres/data antes de continuar."
-  fi
+if [ -f "$PREVIOUS_POSTGRES_DATA/PG_VERSION" ] && [ ! -f "$TARGET_POSTGRES_DATA/PG_VERSION" ]; then
+  fail "Se detectó un clúster PostgreSQL anterior en $PREVIOUS_POSTGRES_DATA. Detén Compose y migra ese clúster a $TARGET_POSTGRES_DATA antes de continuar."
 fi
 if [ -d "$OLD_KAFKA_DATA" ] && find "$OLD_KAFKA_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
   if [ ! -d "$HOST_HOME/mensajeria/kafka/data" ] || ! find "$HOST_HOME/mensajeria/kafka/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
