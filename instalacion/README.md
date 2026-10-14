@@ -26,10 +26,10 @@ FACTUCORE_HOME/
 │   ├── secrets/            # Inicialización de Vault y token persistente del Agent
 │   ├── agent-token/        # Token compartido con Vault Agent dentro de Docker
 │   └── runtime-secrets/    # Secretos renderizados para consumo de servicios
-├── postgres/
-│   ├── data/               # Datos persistentes de PostgreSQL
-│   └── init/               # SQL de inicialización
-├── kafka/data/             # Datos persistentes de Kafka
+├── base_datos/
+│   └── postgres/\n│       ├── data/           # Datos persistentes de PostgreSQL
+│           └── init/       # SQL de inicialización
+├── mensajeria/\n│   ├── kafka/data/         # Datos persistentes de Kafka\n│   └── config/             # Configuración compartida de mensajería
 ├── facturador/
 │   ├── config/             # application.yml, mensajes y workflow
 │   ├── jasper/             # Plantillas RIDE
@@ -68,7 +68,7 @@ Antes de levantar la nueva definición Compose, detén los contenedores para evi
 - `%FACTUCORE_HOME%\\data\\postgres` → `%FACTUCORE_HOME%\\postgres\\data`
 - `%FACTUCORE_HOME%\\secrets` → `%FACTUCORE_HOME%\\vault\\secrets`
 
-En Windows, con Docker Compose ejecutado desde la raíz del repositorio:
+También migra `%FACTUCORE_HOME%\\\\kafka\\\\data` a `%FACTUCORE_HOME%\\\\mensajeria\\\\kafka\\\\data` y `%FACTUCORE_HOME%\\\\messaging\\\\config` a `%FACTUCORE_HOME%\\\\mensajeria\\\\config`.\n\nEn Windows, con Docker Compose ejecutado desde la raíz del repositorio:
 
 ```powershell
 $env:FACTUCORE_HOME = "C:\\factucore"  # Usa aquí la ruta configurada en compose/.env

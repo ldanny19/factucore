@@ -77,9 +77,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_admin_password
     volumes:
-      - ${FACTUCORE_HOME}/postgres/data:/var/lib/postgresql/data
+      - ${FACTUCORE_HOME}/base_datos/postgres/data:/var/lib/postgresql/data
       - ${FACTUCORE_HOME}/vault/runtime-secrets:/vault/secrets:ro
-      - ${FACTUCORE_HOME}/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ${FACTUCORE_HOME}/base_datos/postgres/init:/docker-entrypoint-initdb.d:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
@@ -156,7 +156,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
-      - ${FACTUCORE_HOME}/kafka/data:/var/lib/kafka/data
+      - ${FACTUCORE_HOME}/mensajeria/kafka/data:/var/lib/kafka/data
     healthcheck:
       test:
         [
