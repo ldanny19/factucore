@@ -266,7 +266,8 @@ log "Iniciando unicamente Vault para inicializar y preparar el almacenamiento."
 wait_for_vault || fail "Vault no quedo listo. Revisa los logs; no se desplegaron los demas servicios."
 
 log "Almacenando las credenciales en las rutas declaradas en el catalogo."
-if ! printf '%s\n' "${PASSWORDS[@]}" | "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh; then
+# Evitar que Git Bash/MSYS convierta rutas Linux del contenedor en rutas Windows.
+if ! printf '%s\n' "${PASSWORDS[@]}" | MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh; then
   fail "No se pudieron almacenar todos los secretos. No se desplegaran los demas servicios; revisa el estado de Vault antes de reintentar."
 fi
 unset PASSWORDS
