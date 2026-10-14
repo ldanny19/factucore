@@ -222,7 +222,7 @@ vault_secret_exists() {
     INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
     ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
     if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(awk -F "\\\"" "/root_token/ { print \\$4; exit }" "$INIT_FILE")
+      ROOT_TOKEN=$(grep root_token "$INIT_FILE" | head -n 1 | cut -d "\\\"" -f 4)
     fi
     [ -n "$ROOT_TOKEN" ] || exit 1
     export VAULT_TOKEN="$ROOT_TOKEN"
@@ -349,10 +349,15 @@ log "Iniciando unicamente Vault para inicializarlo y dejarlo operativo."
 "${COMPOSE[@]}" up -d vault
 wait_for_vault || fail "Vault no quedo inicializado y desbloqueado. No se levantara el resto de la aplicacion."
 
+log "Validando las siete credenciales configuradas en Vault."
+printf "Almacenamiento persistente configurado: %s\n" "$VAULT_DATA_DIR"
 MISSING_COUNT=0
 while IFS='|' read -r key secret_path username description; do
   case "$key" in ""|\#*) continue ;; esac
-  if ! vault_secret_exists "$secret_path" "$username"; then
+  if vault_secret_exists "$secret_path" "$username"; then
+    printf "  [OK]     %s\n" "$secret_path"
+  else
+    printf "  [FALTA]  %s\n" "$secret_path"
     MISSING_COUNT=$((MISSING_COUNT + 1))
   fi
 done < "$RUNTIME_CATALOG_FILE"
