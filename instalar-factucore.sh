@@ -128,42 +128,8 @@ RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
-# Detectar únicamente instalaciones anteriores realmente inicializadas.
-# Las carpetas antiguas vacías o con archivos auxiliares no deben bloquear una instalación.
-OLD_POSTGRES_DATA="$HOST_HOME/data/postgres"
-PREVIOUS_POSTGRES_DATA="$HOST_HOME/postgres/data"
-OLD_KAFKA_DATA="$HOST_HOME/kafka/data"
-OLD_MESSAGING_CONFIG="$HOST_HOME/messaging/config"
-OLD_SECRETS_DIR="$HOST_HOME/secrets"
-TARGET_POSTGRES_DATA="$HOST_HOME/base_datos/postgres/data"
-TARGET_KAFKA_DATA="$HOST_HOME/mensajeria/kafka/data"
-
-# PostgreSQL: PG_VERSION identifica un clúster inicializado.
-if { [ -f "$OLD_POSTGRES_DATA/PG_VERSION" ] || [ -f "$PREVIOUS_POSTGRES_DATA/PG_VERSION" ]; } \
-  && [ ! -f "$TARGET_POSTGRES_DATA/PG_VERSION" ]; then
-  fail "Se detectó un clúster PostgreSQL inicializado en una ruta anterior. Para conservar sus datos, detén Compose y migra el clúster a $TARGET_POSTGRES_DATA antes de continuar."
-fi
-
-# Kafka (KRaft): meta.properties identifica almacenamiento inicializado.
-if [ -d "$OLD_KAFKA_DATA" ] \
-  && find "$OLD_KAFKA_DATA" -name meta.properties -type f -print -quit 2>/dev/null | grep -q . \
-  && ! find "$TARGET_KAFKA_DATA" -name meta.properties -type f -print -quit 2>/dev/null | grep -q .; then
-  fail "Se detectó almacenamiento Kafka inicializado en $OLD_KAFKA_DATA. Para conservar sus datos, migra ese almacenamiento a $TARGET_KAFKA_DATA antes de continuar."
-fi
-
-# Configuración local antigua: solo bloquear si existen archivos de configuración
-# y la ubicación nueva todavía no contiene ninguno. No bloquear por carpetas vacías.
-if [ -d "$OLD_MESSAGING_CONFIG" ] \
-  && find "$OLD_MESSAGING_CONFIG" -type f -print -quit 2>/dev/null | grep -q . \
-  && ! find "$HOST_HOME/mensajeria/config" -type f -print -quit 2>/dev/null | grep -q .; then
-  fail "Se detectaron archivos de configuración de mensajería en $OLD_MESSAGING_CONFIG. Cópialos a $HOST_HOME/mensajeria/config antes de continuar para conservar la configuración local."
-fi
-
-# Secretos de inicialización de Vault: solo proteger el archivo conocido.
-if [ -f "$OLD_SECRETS_DIR/vault-init.json" ] \
-  && [ ! -f "$HOST_HOME/vault/secrets/vault-init.json" ]; then
-  fail "Se detectó el archivo de inicialización de Vault en $OLD_SECRETS_DIR. Para conservar el acceso a los secretos existentes, cópialo a $HOST_HOME/vault/secrets antes de continuar."
-fi
+# Se utiliza exclusivamente la estructura actual bajo FACTUCORE_HOME.
+# Las rutas antiguas no forman parte del proceso de instalación ni de validación.
 
 install_if_missing() {
   local source_file="$1"
