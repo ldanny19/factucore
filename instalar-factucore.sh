@@ -41,16 +41,40 @@ if command -v cygpath >/dev/null 2>&1; then
   HOST_HOME="$(cygpath -u "$HOST_HOME")"
 fi
 
-INIT_FILE="$HOST_HOME/secrets/vault-init.json"
+INIT_FILE="$HOST_HOME/vault/secrets/vault-init.json"
 VAULT_DATA_DIR="$HOST_HOME/vault/data"
 HOST_VAULT_CONFIG="$HOST_HOME/vault/config"
 HOST_VAULT_SCRIPTS="$HOST_HOME/vault/scripts"
 HOST_VAULT_POLICY="$HOST_HOME/vault/policy"
 HOST_VAULT_AGENT="$HOST_HOME/vault/agent"
 HOST_POSTGRES_INIT="$HOST_HOME/postgres/init"
+HOST_FACTURADOR_CONFIG="$HOST_HOME/facturador/config"
+HOST_FACTURADOR_JASPER="$HOST_HOME/facturador/jasper"
+HOST_FACTURADOR_DOCUMENTOS="$HOST_HOME/facturador/documentos"
+HOST_FACTURADOR_CERTIFICADOS="$HOST_HOME/facturador/certificados"
+HOST_FACTURADOR_IMAGENES="$HOST_HOME/facturador/imagenes"
+HOST_FACTURADOR_LOGS="$HOST_HOME/facturador/logs"
+HOST_NOTIFICACION_CONFIG="$HOST_HOME/notificacion/config"
+HOST_NOTIFICACION_LOGS="$HOST_HOME/notificacion/logs"
+HOST_MESSAGING_CONFIG="$HOST_HOME/messaging/config"
 RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
+
+# Evitar que un cambio de rutas cree una base de datos o un Vault vacíos
+# mientras los datos existentes permanecen en las ubicaciones anteriores.
+OLD_POSTGRES_DATA="$HOST_HOME/data/postgres"
+OLD_SECRETS_DIR="$HOST_HOME/secrets"
+if [ -d "$OLD_POSTGRES_DATA" ] && find "$OLD_POSTGRES_DATA" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+  if [ ! -d "$HOST_HOME/postgres/data" ] || ! find "$HOST_HOME/postgres/data" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    fail "Se detectaron datos PostgreSQL en la ruta anterior $OLD_POSTGRES_DATA. Detén Compose y migra esa carpeta a $HOST_HOME/postgres/data antes de continuar."
+  fi
+fi
+if [ -d "$OLD_SECRETS_DIR" ] && find "$OLD_SECRETS_DIR" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+  if [ ! -d "$HOST_HOME/vault/secrets" ] || ! find "$HOST_HOME/vault/secrets" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    fail "Se detectaron archivos de inicialización/secretos en la ruta anterior $OLD_SECRETS_DIR. Detén Compose y migra esa carpeta a $HOST_HOME/vault/secrets antes de continuar."
+  fi
+fi
 
 install_if_missing() {
   local source_file="$1"
@@ -61,9 +85,42 @@ install_if_missing() {
   fi
 }
 
-# Los servicios montan configuracion externa desde FACTUCORE_HOME.
-# Se actualizan los scripts de bootstrap y se instalan los archivos base faltantes.
-mkdir -p "$HOST_VAULT_CONFIG" "$HOST_VAULT_SCRIPTS" "$HOST_VAULT_POLICY" "$HOST_VAULT_AGENT" "$HOST_POSTGRES_INIT"
+copy_tree_if_missing() {
+  local source_dir="$1"
+  local destination_dir="$2"
+  local source_file relative_path destination_file
+
+  [ -d "$source_dir" ] || return 0
+  mkdir -p "$destination_dir"
+
+  while IFS= read -r -d "" source_file; do
+    relative_path="${source_file#"$source_dir"/}"
+    destination_file="$destination_dir/$relative_path"
+    if [ ! -e "$destination_file" ]; then
+      mkdir -p "$(dirname "$destination_file")"
+      cp "$source_file" "$destination_file"
+    fi
+  done < <(find "$source_dir" -type f -print0)
+}
+
+# Cada capacidad mantiene su configuracion y persistencia bajo FACTUCORE_HOME.
+# Los archivos de configuracion se copian solo si faltan; nunca se sobrescriben
+# configuraciones locales ni datos existentes.
+mkdir -p \
+  "$HOST_HOME/vault/data" "$HOST_HOME/vault/secrets" \
+  "$HOST_HOME/vault/runtime-secrets" "$HOST_HOME/vault/agent-token" \
+  "$HOST_VAULT_CONFIG" "$HOST_VAULT_SCRIPTS" "$HOST_VAULT_POLICY" "$HOST_VAULT_AGENT" \
+  "$HOST_HOME/postgres/data" "$HOST_POSTGRES_INIT" "$HOST_HOME/kafka/data" \
+  "$HOST_FACTURADOR_CONFIG" "$HOST_FACTURADOR_JASPER" "$HOST_FACTURADOR_DOCUMENTOS" \
+  "$HOST_FACTURADOR_CERTIFICADOS" "$HOST_FACTURADOR_IMAGENES" "$HOST_FACTURADOR_LOGS" \
+  "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_MESSAGING_CONFIG"
+
+chmod 700 "$HOST_HOME/vault/secrets" "$HOST_HOME/vault/agent-token"
+
+copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTURADOR_CONFIG"
+copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
+copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
+copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
 yq -r '.secretos | to_entries[] | [.key, .value.ruta, (.value.usuario // ""), .value.descripcion] | join("|")' "$CATALOG_FILE" > "$RUNTIME_CATALOG_FILE.tmp"
 [ -s "$RUNTIME_CATALOG_FILE.tmp" ] || fail "El catalogo YAML no contiene secretos."
 mv "$RUNTIME_CATALOG_FILE.tmp" "$RUNTIME_CATALOG_FILE"
@@ -123,7 +180,7 @@ if [ -d "$VAULT_DATA_DIR" ] && find "$VAULT_DATA_DIR" -mindepth 1 -print -quit 2
 fi
 
 log "Instalacion nueva: se solicitaran las contrasenas definidas en el catalogo."
-log "Los usuarios tecnicos y las rutas se toman de infraestructura/vault/config/secretos.conf."
+log "Los usuarios tecnicos y las rutas se toman de infraestructura/vault/config/secretos.yml."
 log "Las contrasenas no se mostraran en pantalla ni se guardaran en archivos."
 
 PASSWORDS=()

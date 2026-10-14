@@ -6,6 +6,13 @@
 # Secretos generados localmente por el bootstrap de Vault
 /secrets/
 
+# Persistencia local externa (si FACTUCORE_HOME apunta dentro del repositorio)
+/vault/
+/postgres/data/
+/kafka/data/
+/facturador/logs/
+/notificacion/logs/
+
 # Artefactos generados
 **/target/
 
