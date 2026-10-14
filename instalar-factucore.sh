@@ -4,7 +4,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$ROOT_DIR/compose/docker-compose.yml"
 ENV_FILE="$ROOT_DIR/compose/.env"
-CATALOG_FILE="$ROOT_DIR/infraestructura/vault/config/secretos.conf"
+CATALOG_FILE="$ROOT_DIR/infraestructura/vault/config/secretos.yml"
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -15,14 +15,16 @@ fail() {
   exit 1
 }
 
-for command in docker sed grep; do
+for command in docker sed grep yq; do
   command -v "$command" >/dev/null 2>&1 || fail "Se requiere el comando '$command'."
 done
+yq --version 2>&1 | grep -q 'version v4\.' || fail "Se requiere yq v4 (mikefarah/yq)."
 docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 no esta disponible."
 
 [ -f "$ENV_FILE" ] || fail "No existe $ENV_FILE. Copia compose/.env.example a compose/.env y configura FACTUCORE_HOME y FACTUCORE_VERSION."
 [ -f "$COMPOSE_FILE" ] || fail "No existe $COMPOSE_FILE."
 [ -f "$CATALOG_FILE" ] || fail "No existe el catalogo de secretos $CATALOG_FILE."
+yq -e '.secretos | type == "!!map"' "$CATALOG_FILE" >/dev/null || fail "El catalogo YAML no contiene un mapa valido en la propiedad secretos."
 
 FACTUCORE_HOME_VALUE="${FACTUCORE_HOME:-}"
 if [ -z "$FACTUCORE_HOME_VALUE" ]; then
@@ -46,6 +48,7 @@ HOST_VAULT_SCRIPTS="$HOST_HOME/vault/scripts"
 HOST_VAULT_POLICY="$HOST_HOME/vault/policy"
 HOST_VAULT_AGENT="$HOST_HOME/vault/agent"
 HOST_POSTGRES_INIT="$HOST_HOME/postgres/init"
+RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
@@ -61,10 +64,13 @@ install_if_missing() {
 # Los servicios montan configuracion externa desde FACTUCORE_HOME.
 # Se actualizan los scripts de bootstrap y se instalan los archivos base faltantes.
 mkdir -p "$HOST_VAULT_CONFIG" "$HOST_VAULT_SCRIPTS" "$HOST_VAULT_POLICY" "$HOST_VAULT_AGENT" "$HOST_POSTGRES_INIT"
-cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.conf"
+yq -r '.secretos | to_entries[] | [.key, .value.ruta, (.value.usuario // ""), .value.descripcion] | join("|")' "$CATALOG_FILE" > "$RUNTIME_CATALOG_FILE.tmp"
+[ -s "$RUNTIME_CATALOG_FILE.tmp" ] || fail "El catalogo YAML no contiene secretos."
+mv "$RUNTIME_CATALOG_FILE.tmp" "$RUNTIME_CATALOG_FILE"
+cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
 cp "$ROOT_DIR/infraestructura/vault/scripts/configurar-secretos.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
-chmod 644 "$HOST_VAULT_CONFIG/secretos.conf"
+chmod 644 "$RUNTIME_CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 chmod 755 "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/configurar-secretos.sh"
 
 install_if_missing "$ROOT_DIR/infraestructura/vault/config/vault.hcl" "$HOST_VAULT_CONFIG/vault.hcl"
@@ -97,7 +103,7 @@ verify_existing_secrets() {
     if ! "${COMPOSE[@]}" exec -T vault vault kv get "$secret_path" >/dev/null 2>&1; then
       fail "Falta el secreto $secret_path. No se modificaron credenciales; se requiere una recuperacion controlada."
     fi
-  done < "$CATALOG_FILE"
+  done < "$RUNTIME_CATALOG_FILE"
 }
 
 # Si existe almacenamiento pero no el archivo de inicializacion, no asumir
@@ -142,7 +148,7 @@ while IFS='|' read -r key secret_path username description; do
 
   PASSWORDS+=("$password")
   unset password confirm_password
-done < "$CATALOG_FILE"
+done < "$RUNTIME_CATALOG_FILE"
 
 log "Iniciando unicamente Vault para inicializar y preparar el almacenamiento."
 "${COMPOSE[@]}" up -d vault
