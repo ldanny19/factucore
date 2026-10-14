@@ -2,6 +2,8 @@ package ec.dalara.factucore.notificacion.adapter.in.messaging;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +23,7 @@ public class ComprobanteAutorizadoConsumidor implements ConsumidorMensajes {
     public static final String TIPO_EVENTO = "COMPROBANTE_AUTORIZADO";
     private static final String DESTINO = "notificacion";
     private static final String GRUPO = "factucore-notificacion";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComprobanteAutorizadoConsumidor.class);
 
     private final ObjectMapper objectMapper;
     private final NotificacionService service;
@@ -43,11 +46,15 @@ public class ComprobanteAutorizadoConsumidor implements ConsumidorMensajes {
 
     @Override
     public void consumir(EventoMensaje evento) {
+        LOGGER.info("Inicia procesamiento de comprobante autorizado. ID_EVENTO={}, ID_TRANSACCION={}.",
+                evento.id(), evento.correlationId());
         try {
             ComprobanteAutorizado comprobante = objectMapper.treeToValue(evento.payload(),
                     ComprobanteAutorizado.class);
             service.notificar(evento, comprobante);
         } catch (Exception exception) {
+            LOGGER.error("Error procesando comprobante autorizado. ID_EVENTO={}, ID_TRANSACCION={}.",
+                    evento.id(), evento.correlationId(), exception);
             throw new IllegalStateException(
                     messageResolver.resolver(MessageCodes.EVENTO_PROCESAMIENTO_ERROR, evento.id()), exception);
         }

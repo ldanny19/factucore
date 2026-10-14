@@ -49,7 +49,7 @@ public class NotificacionService {
 
         if (envio.getEstadoEnvio() == EstadoEnvio.ENVIADA || envio.getEstadoEnvio() == EstadoEnvio.FALLIDA
                 || envio.getEstadoEnvio() == EstadoEnvio.EN_PROCESO) {
-            LOGGER.debug("El evento de notificación {} ya se encuentra en estado {}.", evento.id(),
+            LOGGER.info("No se reprocesa la notificación. ID_EVENTO={}, ESTADO={}.", evento.id(),
                     envio.getEstadoEnvio());
             return;
         }
@@ -72,8 +72,13 @@ public class NotificacionService {
         Path ride = Path.of(comprobante.rutaRide());
         int maxIntentos = Math.max(properties.getReintentos().getMaxIntentos(), 1);
 
+        LOGGER.info("Inicia envío de notificación. ID_EVENTO={}, ID_TRANSACCION={}, INTENTOS_MAXIMOS={}.",
+                evento.id(), comprobante.idTransaccion(), maxIntentos);
+
         for (int intento = 1; intento <= maxIntentos; intento++) {
             try {
+                LOGGER.info("Ejecutando intento de envío de correo. ID_EVENTO={}, ID_TRANSACCION={}, INTENTO={} de {}.",
+                        evento.id(), comprobante.idTransaccion(), intento, maxIntentos);
                 correoPort.enviar(comprobante.correo(), properties.getCorreo().getAsunto(), contenido,
                         new CorreoPort.AdjuntoCorreo(nombreZip(xml), "application/zip", comprimirXml(xml)),
                         new CorreoPort.AdjuntoCorreo(ride.getFileName().toString(), "application/pdf", leer(ride)));

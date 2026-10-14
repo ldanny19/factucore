@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificacionPersistenciaService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionPersistenciaService.class);
+
     private final NotificacionEnvioRepository repository;
 
     @Transactional
@@ -25,7 +29,10 @@ public class NotificacionPersistenciaService {
             String asunto) {
         Optional<NotificacionEnvio> existente = repository.findByIdEvento(evento.id());
         if (existente.isPresent()) {
-            return existente.get();
+            NotificacionEnvio envioExistente = existente.get();
+            LOGGER.info("Notificación ya registrada. ID_REGISTRO={}, ID_EVENTO={}, ESTADO={}.",
+                    envioExistente.getId(), evento.id(), envioExistente.getEstadoEnvio());
+            return envioExistente;
         }
 
         Instant ahora = Instant.now();
@@ -43,7 +50,10 @@ public class NotificacionPersistenciaService {
         envio.setFechaCreacion(ahora);
         envio.setFechaModificacion(ahora);
 
-        return repository.saveAndFlush(envio);
+        NotificacionEnvio guardado = repository.saveAndFlush(envio);
+        LOGGER.info("Notificación persistida en base de datos. ID_REGISTRO={}, ID_EVENTO={}, ID_TRANSACCION={}, ESTADO={}.",
+                guardado.getId(), guardado.getIdEvento(), guardado.getIdTransaccion(), guardado.getEstadoEnvio());
+        return guardado;
     }
 
     @Transactional
@@ -57,8 +67,14 @@ public class NotificacionPersistenciaService {
 
     @Transactional
     public boolean marcarEnProceso(Long id) {
-        return repository.actualizarEstadoSiCoincide(id, EstadoEnvio.PENDIENTE, EstadoEnvio.EN_PROCESO,
+        boolean actualizado = repository.actualizarEstadoSiCoincide(id, EstadoEnvio.PENDIENTE, EstadoEnvio.EN_PROCESO,
                 Instant.now()) == 1;
+        if (actualizado) {
+            LOGGER.info("Notificación marcada EN_PROCESO. ID_REGISTRO={}.", id);
+        } else {
+            LOGGER.warn("No se pudo marcar notificación EN_PROCESO porque cambió su estado. ID_REGISTRO={}.", id);
+        }
+        return actualizado;
     }
 
     @Transactional
@@ -76,6 +92,9 @@ public class NotificacionPersistenciaService {
         } else {
             envio.setEstadoEnvio(EstadoEnvio.PENDIENTE);
         }
+
+        LOGGER.info("Resultado de intento de notificación persistido. ID_REGISTRO={}, ID_EVENTO={}, INTENTO={}, ESTADO={}.",
+                envio.getId(), envio.getIdEvento(), envio.getNumeroIntentos(), envio.getEstadoEnvio());
     }
 
     @Transactional(readOnly = true)
