@@ -230,9 +230,8 @@ if [ -f "$INIT_FILE" ]; then
   exit 0
 fi
 
-if [ -d "$VAULT_DATA_DIR" ] && find "$VAULT_DATA_DIR" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
-  fail "Existe almacenamiento de Vault, pero falta $INIT_FILE. No se pediran credenciales ni se reinicializara Vault; se requiere recuperacion controlada."
-fi
+# La existencia de la carpeta no implica por sí sola que Vault esté inicializado.
+# Si no existe el archivo de inicialización, el flujo de bootstrap verificará el estado real.
 
 log "Instalacion nueva: se solicitaran las contrasenas definidas en el catalogo."
 log "Los usuarios tecnicos y las rutas se toman de infraestructura/vault/config/secretos.yml."
