@@ -216,17 +216,25 @@ wait_for_vault() {
 
 vault_secret_exists() {
   local secret_path="$1"
+  local username="$2"
   MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault sh -c '
     set -eu
     INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
     ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
     if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(awk -F "\"" "/root_token/ { print \$4; exit }" "$INIT_FILE")
+      ROOT_TOKEN=$(grep -o "\"root_token\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$INIT_FILE" | head -n 1 | cut -d "\" " -f 4)
     fi
-    [ -n "$ROOT_TOKEN" ]
+    [ -n "$ROOT_TOKEN" ] || exit 1
     export VAULT_TOKEN="$ROOT_TOKEN"
-    vault kv get "$1" >/dev/null 2>&1
-  ' sh "$secret_path" >/dev/null 2>&1
+    SECRET_PATH="$1"
+    SECRET_USERNAME="$2"
+    PASSWORD=$(vault kv get -field=password "$SECRET_PATH" 2>/dev/null) || exit 1
+    [ -n "$PASSWORD" ] || exit 1
+    if [ -n "$SECRET_USERNAME" ]; then
+      STORED_USERNAME=$(vault kv get -field=username "$SECRET_PATH" 2>/dev/null) || exit 1
+      [ "$STORED_USERNAME" = "$SECRET_USERNAME" ] || exit 1
+    fi
+  ' sh "$secret_path" "$username" >/dev/null 2>&1
 }
 
 store_secret() {
@@ -249,9 +257,11 @@ store_secret() {
         export VAULT_TOKEN="$ROOT_TOKEN"
         SECRET_PATH="$1"
         SECRET_USERNAME="$2"
-        if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
-          printf "El secreto ya existe; se conserva: %s\n" "$SECRET_PATH"
-          exit 0
+        if PASSWORD_EXISTING=$(vault kv get -field=password "$SECRET_PATH" 2>/dev/null) && [ -n "$PASSWORD_EXISTING" ]; then
+          if [ -z "$SECRET_USERNAME" ] || [ "$(vault kv get -field=username "$SECRET_PATH" 2>/dev/null)" = "$SECRET_USERNAME" ]; then
+            printf "El secreto ya existe y es valido; se conserva: %s\n" "$SECRET_PATH"
+            exit 0
+          fi
         fi
         vault kv put "$SECRET_PATH" username="$SECRET_USERNAME" password=@/dev/stdin >/dev/null
         vault kv get -field=password "$SECRET_PATH" >/dev/null
@@ -268,8 +278,8 @@ store_secret() {
         [ -n "$ROOT_TOKEN" ] || { echo "No se pudo obtener el token administrativo de Vault." >&2; exit 1; }
         export VAULT_TOKEN="$ROOT_TOKEN"
         SECRET_PATH="$1"
-        if vault kv get "$SECRET_PATH" >/dev/null 2>&1; then
-          printf "El secreto ya existe; se conserva: %s\n" "$SECRET_PATH"
+        if PASSWORD_EXISTING=$(vault kv get -field=password "$SECRET_PATH" 2>/dev/null) && [ -n "$PASSWORD_EXISTING" ]; then
+          printf "El secreto ya existe y es valido; se conserva: %s\n" "$SECRET_PATH"
           exit 0
         fi
         vault kv put "$SECRET_PATH" password=@/dev/stdin >/dev/null
@@ -281,7 +291,7 @@ verify_required_secrets() {
   local key secret_path username description missing=0
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
-    if ! vault_secret_exists "$secret_path"; then
+    if ! vault_secret_exists "$secret_path" "$username"; then
       printf 'ERROR: falta el secreto requerido en Vault: %s\n' "$secret_path" >&2
       missing=1
     fi
@@ -294,7 +304,7 @@ collect_missing_passwords() {
   PASSWORDS=()
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
-    if vault_secret_exists "$secret_path"; then
+    if vault_secret_exists "$secret_path" "$username"; then
       log "El secreto ya existe y se conservará: $secret_path"
       continue
     fi
@@ -318,7 +328,7 @@ store_missing_passwords() {
   local key secret_path username description index=0
   while IFS='|' read -r key secret_path username description; do
     case "$key" in ""|\#*) continue ;; esac
-    if vault_secret_exists "$secret_path"; then continue; fi
+    if vault_secret_exists "$secret_path" "$username"; then continue; fi
     [ "$index" -lt "${#PASSWORDS[@]}" ] || fail "No se recibio una contrasena para $secret_path."
     if ! store_secret "$secret_path" "$username" "${PASSWORDS[$index]}"; then
       unset PASSWORDS
@@ -342,7 +352,7 @@ wait_for_vault || fail "Vault no quedo inicializado y desbloqueado. No se levant
 MISSING_COUNT=0
 while IFS='|' read -r key secret_path username description; do
   case "$key" in ""|\#*) continue ;; esac
-  if ! vault_secret_exists "$secret_path"; then
+  if ! vault_secret_exists "$secret_path" "$username"; then
     MISSING_COUNT=$((MISSING_COUNT + 1))
   fi
 done < "$RUNTIME_CATALOG_FILE"
