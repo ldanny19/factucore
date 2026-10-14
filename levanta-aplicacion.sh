@@ -80,9 +80,9 @@ done
 
 log "Sincronizando las contrasenas de los usuarios de servicio con Vault."
 if ! MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T db_factucore psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
-\set facturador_password \`cat /vault/secrets/postgres_facturador_password\`
-\set auth_password \`cat /vault/secrets/postgres_auth_password\`
-\set notificaciones_password \`cat /vault/secrets/postgres_notificaciones_password\`
+\set facturador_password `cat /vault/secrets/postgres_facturador_password`
+\set auth_password `cat /vault/secrets/postgres_auth_password`
+\set notificaciones_password `cat /vault/secrets/postgres_notificaciones_password`
 SELECT format('ALTER ROLE usr_factucore LOGIN PASSWORD %L', :'facturador_password') \gexec
 SELECT format('ALTER ROLE usr_auth LOGIN PASSWORD %L', :'auth_password') \gexec
 SELECT format('ALTER ROLE usr_notificaciones LOGIN PASSWORD %L', :'notificaciones_password') \gexec
