@@ -318,10 +318,10 @@ done
 
 if [ -n "$MISSING_SECRETS" ]; then
   if [ "$INITIALIZED_BEFORE_BOOTSTRAP" -eq 1 ]; then
-    fail "Vault ya estaba inicializado, pero faltan secretos requeridos:$MISSING_SECRETS. No se generaran ni sobrescribiran credenciales; se requiere una recuperacion controlada."
+    log "Vault ya estaba inicializado. Se conservaran los secretos existentes y se difiere al instalador la solicitud de los secretos faltantes:$MISSING_SECRETS"
+  else
+    log "Instalacion nueva: se difiere la carga de secretos al instalador."
   fi
-
-  log "Instalacion nueva: se difiere la carga de secretos al instalador."
 fi
 
 # ---------------------------------------------------------------------------
