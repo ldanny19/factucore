@@ -49,7 +49,6 @@ Keycloak utiliza PostgreSQL para su base de datos, por lo que su persistencia qu
 
 - Git Bash.
 - Docker Engine o Docker Desktop con Docker Compose v2.
-- `yq` v4 de Mike Farah, requerido por el instalador para procesar el catálogo YAML de secretos.
 - Acceso al repositorio y sus imágenes/servicios requeridos.
 
 Comprueba que `FACTUCORE_HOME` esté definido en `compose/.env` y que la ruta elegida sea accesible para Docker. El archivo `compose/.env.example` sirve como plantilla; crea `compose/.env` a partir de él si todavía no existe y configura las variables necesarias para tu entorno.
@@ -66,7 +65,9 @@ pwd
 bash ./instalar-factucore.sh
 ```
 
-El instalador prepara las carpetas externas y copia configuraciones de referencia solo cuando el archivo de destino no existe. No sobrescribe configuraciones operativas locales. También genera el catálogo plano que necesitan los scripts de Vault a partir de `infraestructura/vault/config/secretos.yml`.
+El instalador utiliza herramientas estándar de Git Bash y Docker Compose; no requiere instalar `yq` ni otro parser YAML adicional. Lee el formato controlado de `infraestructura/vault/config/secretos.yml` y genera el catálogo plano que necesitan los scripts de Vault. El YAML sigue siendo la fuente única de metadatos y su estructura se valida antes de continuar.
+
+El instalador prepara las carpetas externas y copia configuraciones de referencia solo cuando el archivo de destino no existe. No sobrescribe configuraciones operativas locales.
 
 Cuando se soliciten secretos, introdúcelos de forma interactiva. El instalador no debe incorporarlos a archivos versionados ni imprimir sus valores. No compartas contraseñas, tokens, claves de unseal ni archivos de inicialización de Vault en logs o conversaciones.
 

@@ -15,16 +15,83 @@ fail() {
   exit 1
 }
 
-for command in docker sed grep yq; do
+for command in docker sed grep awk; do
   command -v "$command" >/dev/null 2>&1 || fail "Se requiere el comando '$command'."
 done
-yq --version 2>&1 | grep -q 'version v4\.' || fail "Se requiere yq v4 (mikefarah/yq)."
 docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 no esta disponible."
 
 [ -f "$ENV_FILE" ] || fail "No existe $ENV_FILE. Copia compose/.env.example a compose/.env y configura FACTUCORE_HOME y FACTUCORE_VERSION."
 [ -f "$COMPOSE_FILE" ] || fail "No existe $COMPOSE_FILE."
 [ -f "$CATALOG_FILE" ] || fail "No existe el catalogo de secretos $CATALOG_FILE."
-yq -e '.secretos | type == "!!map"' "$CATALOG_FILE" >/dev/null || fail "El catalogo YAML no contiene un mapa valido en la propiedad secretos."
+
+# Parser estricto para el subconjunto YAML utilizado por el catálogo.
+# El YAML permanece como fuente única; no se requiere instalar un parser adicional.
+parse_secret_catalog() {
+  awk '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    function unquote(value, first, last) {
+      value = trim(value)
+      first = substr(value, 1, 1)
+      last = substr(value, length(value), 1)
+      if ((first == "\"" && last == "\"") || (first == "\047" && last == "\047"))
+        value = substr(value, 2, length(value) - 2)
+      return value
+    }
+    function emit_entry() {
+      if (key == "") return
+      if (ruta == "" || descripcion == "" || ruta ~ /[|]/ || usuario ~ /[|]/ || descripcion ~ /[|]/) {
+        printf "Catálogo inválido en la entrada %s: ruta y descripcion son obligatorias y los campos no pueden contener |.\n", key > "/dev/stderr"
+        invalid = 1
+        return
+      }
+      printf "%s|%s|%s|%s\n", key, ruta, usuario, descripcion
+      entries++
+    }
+    BEGIN { in_root = 0; key = ""; ruta = ""; usuario = ""; descripcion = ""; entries = 0; invalid = 0 }
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    /^secretos:[[:space:]]*$/ { if (in_root) invalid = 1; in_root = 1; next }
+    !in_root {
+      printf "Catálogo inválido: se esperaba la propiedad raíz secretos.\n" > "/dev/stderr"
+      invalid = 1
+      next
+    }
+    /^  [A-Za-z0-9_-]+:[[:space:]]*$/ {
+      emit_entry()
+      key = $0
+      sub(/^  /, "", key)
+      sub(/:[[:space:]]*$/, "", key)
+      ruta = ""; usuario = ""; descripcion = ""
+      next
+    }
+    /^    (ruta|usuario|descripcion):/ {
+      if (key == "") { invalid = 1; next }
+      line = $0
+      sub(/^    /, "", line)
+      separator = index(line, ":")
+      field = substr(line, 1, separator - 1)
+      value = unquote(substr(line, separator + 1))
+      if (field == "ruta") ruta = value
+      else if (field == "usuario") usuario = value
+      else if (field == "descripcion") descripcion = value
+      next
+    }
+    {
+      printf "Catálogo inválido: formato YAML no admitido en línea %d.\n", NR > "/dev/stderr"
+      invalid = 1
+    }
+    END {
+      emit_entry()
+      if (entries == 0) invalid = 1
+      if (invalid) exit 1
+    }
+  ' "$CATALOG_FILE"
+}
+
+parse_secret_catalog >/dev/null || fail "El catálogo YAML de secretos no tiene el formato admitido."
 
 FACTUCORE_HOME_VALUE="${FACTUCORE_HOME:-}"
 if [ -z "$FACTUCORE_HOME_VALUE" ]; then
@@ -139,7 +206,7 @@ copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTUR
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
-yq -r '.secretos | to_entries[] | [.key, .value.ruta, (.value.usuario // ""), .value.descripcion] | join("|")' "$CATALOG_FILE" > "$RUNTIME_CATALOG_FILE.tmp"
+parse_secret_catalog > "$RUNTIME_CATALOG_FILE.tmp"
 [ -s "$RUNTIME_CATALOG_FILE.tmp" ] || fail "El catalogo YAML no contiene secretos."
 mv "$RUNTIME_CATALOG_FILE.tmp" "$RUNTIME_CATALOG_FILE"
 cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"

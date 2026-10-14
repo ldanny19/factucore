@@ -356,7 +356,7 @@ Los mensajes de la librería compartida tienen como referencia versionada `confi
 
 ## Instalación
 
-La instalación, los requisitos, la configuración de `FACTUCORE_HOME`, los comandos de Git Bash y la operación de Docker Compose se documentan en la [Guía de instalación](instalacion/README.md). Ejecuta el instalador y los comandos de Compose desde la raíz del workspace del repositorio; los datos persistentes y la configuración operativa permanecen en la ubicación externa configurada.
+La instalación, los requisitos, la configuración de `FACTUCORE_HOME`, los comandos de Git Bash y la operación de Docker Compose se documentan en la [Guía de instalación](instalacion/README.md). Ejecuta el instalador y los comandos de Compose desde la raíz del workspace del repositorio; los datos persistentes y la configuración operativa permanecen en la ubicación externa configurada. El instalador no requiere `yq`: procesa el formato controlado del catálogo YAML con herramientas estándar de Git Bash.
 
 ## Estructura relevante del repositorio
 
