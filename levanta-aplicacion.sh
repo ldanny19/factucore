@@ -50,7 +50,7 @@ while IFS='|' read -r key secret_path username description; do
     INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
     ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
     if [ -z "$ROOT_TOKEN" ]; then
-      ROOT_TOKEN=$(sed -n 's/.*"root_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$INIT_FILE" | head -1)
+      ROOT_TOKEN=$(grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$INIT_FILE" | cut -d '"' -f 4 | head -1)
     fi
     [ -n "$ROOT_TOKEN" ]
     export VAULT_TOKEN="$ROOT_TOKEN"
