@@ -240,7 +240,7 @@ collect_missing_passwords() {
       printf 'Las contrasenas no coinciden. Intentalo de nuevo.\n'
       unset password confirm_password
     done
-    PASSWORDS+=("$secret_path|$password")
+    PASSWORDS+=("$password")
     unset password confirm_password
   done < "$RUNTIME_CATALOG_FILE"
 }
@@ -255,7 +255,7 @@ if [ -f "$INIT_FILE" ]; then
   if [ "$MISSING_COUNT" -gt 0 ]; then
     log "Faltan $MISSING_COUNT secretos. Se solicitaran unicamente las credenciales pendientes."
     collect_missing_passwords
-    printf '%s\n' "${PASSWORDS[@]}" | awk -F '|' 'NF >= 2 { print $2 }' | MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh
+    printf '%s\n' "${PASSWORDS[@]}" | MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T vault /vault/scripts/configurar-secretos.sh
     unset PASSWORDS
   else
     log "Todos los secretos requeridos ya existen; no se modificaran."
