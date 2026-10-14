@@ -343,7 +343,7 @@ else
 fi
 
 log "Iniciando unicamente Vault para inicializarlo y dejarlo operativo."
-"\${COMPOSE[@]}" up -d vault
+"${COMPOSE[@]}" up -d vault
 wait_for_vault || fail "Vault no quedo inicializado y desbloqueado. No se levantara el resto de la aplicacion."
 
 log "Validando las credenciales definidas en secretos.yml."
