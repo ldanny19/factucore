@@ -243,7 +243,7 @@ store_secret() {
         INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
         ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
         if [ -z "$ROOT_TOKEN" ]; then
-          ROOT_TOKEN=$(grep '"root_token"' "$INIT_FILE" | head -n 1 | cut -d '"' -f 4)
+          ROOT_TOKEN=$(grep root_token "$INIT_FILE" | head -n 1 | cut -d "\"" -f 4)
         fi
         [ -n "$ROOT_TOKEN" ] || { echo "No se pudo obtener el token administrativo de Vault." >&2; exit 1; }
         export VAULT_TOKEN="$ROOT_TOKEN"
@@ -263,7 +263,7 @@ store_secret() {
         INIT_FILE="${FACTUCORE_VAULT_SECRETS_DIR:-/vault/secrets-persist}/vault-init.json"
         ROOT_TOKEN="${FACTUCORE_VAULT_ROOT_TOKEN:-}"
         if [ -z "$ROOT_TOKEN" ]; then
-          ROOT_TOKEN=$(grep '"root_token"' "$INIT_FILE" | head -n 1 | cut -d '"' -f 4)
+          ROOT_TOKEN=$(grep root_token "$INIT_FILE" | head -n 1 | cut -d "\"" -f 4)
         fi
         [ -n "$ROOT_TOKEN" ] || { echo "No se pudo obtener el token administrativo de Vault." >&2; exit 1; }
         export VAULT_TOKEN="$ROOT_TOKEN"
