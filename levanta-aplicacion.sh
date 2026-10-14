@@ -62,6 +62,35 @@ done < "$CATALOG_FILE"
 log "Recreando Vault Agent para cargar la configuracion actualizada."
 "${COMPOSE[@]}" up -d --force-recreate vault-agent
 
+log "Iniciando PostgreSQL para sincronizar las contrasenas de los usuarios con Vault."
+"${COMPOSE[@]}" up -d db_factucore
+
+POSTGRES_READY=false
+for attempt in $(seq 1 60); do
+  if MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T db_factucore pg_isready -U postgres -d postgres >/dev/null 2>&1; then
+    POSTGRES_READY=true
+    break
+  fi
+  sleep 2
+done
+[ "$POSTGRES_READY" = true ] || {
+  "${COMPOSE[@]}" logs --tail=80 db_factucore >&2 || true
+  fail "PostgreSQL no quedo disponible; no se iniciaran los servicios de aplicacion."
+}
+
+log "Sincronizando las contrasenas de los usuarios de servicio con Vault."
+if ! MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" exec -T db_factucore psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+\set facturador_password \`cat /vault/secrets/postgres_facturador_password\`
+\set auth_password \`cat /vault/secrets/postgres_auth_password\`
+\set notificaciones_password \`cat /vault/secrets/postgres_notificaciones_password\`
+SELECT format('ALTER ROLE usr_factucore LOGIN PASSWORD %L', :'facturador_password') \gexec
+SELECT format('ALTER ROLE usr_auth LOGIN PASSWORD %L', :'auth_password') \gexec
+SELECT format('ALTER ROLE usr_notificaciones LOGIN PASSWORD %L', :'notificaciones_password') \gexec
+SQL
+then
+  fail "No se pudieron sincronizar las credenciales de PostgreSQL con Vault; no se iniciaran los servicios de aplicacion."
+fi
+
 log "Credenciales verificadas. Docker Compose respetara depends_on y los healthchecks."
 "${COMPOSE[@]}" up -d
 log "Servicios de FactuCore iniciados."
