@@ -245,10 +245,10 @@ while IFS='|' read -r key secret_path username description; do
 
   while true; do
     printf '\n%s\n' "$description"
-    IFS= read -r -s -p "Contrasena: " password
+    IFS= read -r -s -p "Contrasena: " password </dev/tty
     printf '\n'
     [ -n "$password" ] || { printf 'La contrasena no puede estar vacia.\n'; continue; }
-    IFS= read -r -s -p "Confirma la contrasena: " confirm_password
+    IFS= read -r -s -p "Confirma la contrasena: " confirm_password </dev/tty
     printf '\n'
     if [ "$password" = "$confirm_password" ]; then
       break
