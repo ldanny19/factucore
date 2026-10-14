@@ -59,6 +59,9 @@ while IFS='|' read -r key secret_path username description; do
   fi
 done < "$CATALOG_FILE"
 
+log "Recreando Vault Agent para cargar la configuracion actualizada."
+"${COMPOSE[@]}" up -d --force-recreate vault-agent
+
 log "Credenciales verificadas. Docker Compose respetara depends_on y los healthchecks."
 "${COMPOSE[@]}" up -d
 log "Servicios de FactuCore iniciados."

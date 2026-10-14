@@ -15,7 +15,7 @@ auto_auth {
 template {
   destination = "/vault/secrets/postgres_admin_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/basedatos/admin" -}}
+{{- with secret "secret/factucore/basedatos/admin" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -25,7 +25,7 @@ EOT
 template {
   destination = "/vault/secrets/postgres_facturador_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/basedatos/facturador" -}}
+{{- with secret "secret/factucore/basedatos/facturador" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -35,7 +35,7 @@ EOT
 template {
   destination = "/vault/secrets/postgres_auth_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/basedatos/auth" -}}
+{{- with secret "secret/factucore/basedatos/auth" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -45,7 +45,7 @@ EOT
 template {
   destination = "/vault/secrets/postgres_notificaciones_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/basedatos/notificaciones" -}}
+{{- with secret "secret/factucore/basedatos/notificaciones" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -55,7 +55,7 @@ EOT
 template {
   destination = "/vault/secrets/keycloak_admin_password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/keycloak" -}}
+{{- with secret "secret/factucore/keycloak" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -65,7 +65,7 @@ EOT
 template {
   destination = "/vault/secrets/spring.datasource.password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/basedatos/facturador" -}}
+{{- with secret "secret/factucore/basedatos/facturador" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -75,7 +75,7 @@ EOT
 template {
   destination = "/vault/secrets/spring.mail.password"
   contents = <<EOT
-{{- with secret "secret/data/factucore/mail" -}}
+{{- with secret "secret/factucore/mail" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
@@ -85,7 +85,7 @@ EOT
 template {
   destination = "/vault/secrets/FACTUCORE_FIRMA_PASSWORD"
   contents = <<EOT
-{{- with secret "secret/data/factucore/firma" -}}
+{{- with secret "secret/factucore/firma" -}}
 {{ .Data.data.password }}
 {{- end }}
 EOT
