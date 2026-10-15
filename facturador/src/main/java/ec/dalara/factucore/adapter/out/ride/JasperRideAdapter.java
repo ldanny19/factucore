@@ -253,7 +253,7 @@ public class JasperRideAdapter implements RidePort {
 							.obtenerPorCatalogoYCodigo(catalogo.getId(), pago.getCodigoFormaPago()))
 					.map(item -> item.getNombre()).orElse(pago.getCodigoFormaPago());
 			fila.put("formaPago", descripcionFormaPago);
-			fila.put("valor", valor(pago.getTotal()));
+			fila.put("valor", pago.getTotal());
 			resultado.add(fila);
 		}
 
