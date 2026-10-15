@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Bean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ec.dalara.factucore.messaging.api.BrokerMensajeria;
-import ec.dalara.factucore.messaging.config.MessagingProperties;
 import ec.dalara.factucore.messaging.config.MessageResolver;
+import ec.dalara.factucore.messaging.config.MessagingProperties;
 
 @AutoConfiguration
 @EnableConfigurationProperties(MessagingProperties.class)

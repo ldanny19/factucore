@@ -1,11 +1,10 @@
 package ec.dalara.factucore.messaging.infrastructure.rabbitmq;
 
 import java.util.Map;
-
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Exchange;
@@ -18,8 +17,8 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.retry.RepublishMessageRecoverer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.PropertyAccessorFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,9 +26,9 @@ import ec.dalara.factucore.messaging.api.BrokerMensajeria;
 import ec.dalara.factucore.messaging.api.ConsumidorMensajes;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.api.TipoBroker;
-import ec.dalara.factucore.messaging.config.MessagingProperties;
 import ec.dalara.factucore.messaging.config.MessageCodes;
 import ec.dalara.factucore.messaging.config.MessageResolver;
+import ec.dalara.factucore.messaging.config.MessagingProperties;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -71,7 +70,8 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 					objectMapper.writeValueAsBytes(evento));
 		} catch (Exception e) {
 			LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_PUBLICACION_ERROR, destino), e);
 		}
 	}
 
@@ -116,8 +116,10 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 					consumidor.consumir(evento);
 				}
 			} catch (Exception e) {
-				LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
-				throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
+				LOGGER.error(
+						messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
+				throw new IllegalStateException(
+						messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
 			}
 		});
 
@@ -127,10 +129,12 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 	private MessagingProperties.DestinoProperties destino(String nombre) {
 		var destino = properties.getDestinos().get(nombre);
 		if (destino == null || destino.getNombre() == null || destino.getNombre().isBlank()) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_NO_CONFIGURADO, nombre));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_NO_CONFIGURADO, nombre));
 		}
 		if (!soporta(nombre)) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_BROKER_INVALIDO, nombre, tipo()));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_DESTINO_BROKER_INVALIDO, nombre, tipo()));
 		}
 		return destino;
 	}
@@ -138,7 +142,8 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 	private MessagingProperties.ConexionProperties conexion(String nombre) {
 		var conexion = properties.getConexiones().get(nombre);
 		if (conexion == null) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_CONEXION_NO_CONFIGURADA, nombre));
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.MENSAJERIA_CONEXION_NO_CONFIGURADA, nombre));
 		}
 		return conexion;
 	}
@@ -181,8 +186,8 @@ public class RabbitBrokerMensajeria implements BrokerMensajeria {
 				return;
 			}
 			if (!wrapper.isWritableProperty(nombre)) {
-				throw new IllegalArgumentException("Propiedad RabbitMQ no compatible con "
-						+ bean.getClass().getSimpleName() + ": " + nombre);
+				throw new IllegalArgumentException(
+						"Propiedad RabbitMQ no compatible con " + bean.getClass().getSimpleName() + ": " + nombre);
 			}
 			wrapper.setPropertyValue(nombre, valor);
 		});

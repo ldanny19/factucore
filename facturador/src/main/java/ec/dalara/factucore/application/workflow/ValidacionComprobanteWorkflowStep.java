@@ -95,8 +95,8 @@ public class ValidacionComprobanteWorkflowStep {
 			var existente = porHashes.get();
 			asignarComprobanteExistente(contexto, existente);
 			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "COMPROBANTE_EXISTENTE",
-					java.util.Map.of("estadoProceso", existente.getEstadoProceso(),
-							"estadoSri", existente.getEstadoSri() == null ? "" : existente.getEstadoSri()));
+					java.util.Map.of("estadoProceso", existente.getEstadoProceso(), "estadoSri",
+							existente.getEstadoSri() == null ? "" : existente.getEstadoSri()));
 		}
 
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "VALIDADA");
@@ -129,7 +129,7 @@ public class ValidacionComprobanteWorkflowStep {
 		if (estadoSri == null) {
 			return "";
 		}
-		return Normalizer.normalize(estadoSri, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
-				.replaceAll("[^A-Za-z]", "").toUpperCase(Locale.ROOT);
+		return Normalizer.normalize(estadoSri, Normalizer.Form.NFD).replaceAll("\\p{M}", "").replaceAll("[^A-Za-z]", "")
+				.toUpperCase(Locale.ROOT);
 	}
 }

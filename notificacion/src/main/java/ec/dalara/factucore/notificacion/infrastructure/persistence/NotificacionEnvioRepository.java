@@ -13,18 +13,18 @@ import ec.dalara.factucore.notificacion.infrastructure.persistence.NotificacionE
 
 public interface NotificacionEnvioRepository extends JpaRepository<NotificacionEnvio, Long> {
 
-    Optional<NotificacionEnvio> findByIdEvento(String idEvento);
+	Optional<NotificacionEnvio> findByIdEvento(String idEvento);
 
-    List<NotificacionEnvio> findTop50ByEstadoEnvioOrderByFechaRecepcionAsc(EstadoEnvio estadoEnvio);
+	List<NotificacionEnvio> findTop50ByEstadoEnvioOrderByFechaRecepcionAsc(EstadoEnvio estadoEnvio);
 
-    @Modifying
-    @Query("""
-            update NotificacionEnvio envio
-               set envio.estadoEnvio = :estadoNuevo,
-                   envio.fechaModificacion = :fechaModificacion
-             where envio.id = :id
-               and envio.estadoEnvio = :estadoActual
-            """)
-    int actualizarEstadoSiCoincide(@Param("id") Long id, @Param("estadoActual") EstadoEnvio estadoActual,
-            @Param("estadoNuevo") EstadoEnvio estadoNuevo, @Param("fechaModificacion") Instant fechaModificacion);
+	@Modifying
+	@Query("""
+			update NotificacionEnvio envio
+			   set envio.estadoEnvio = :estadoNuevo,
+			       envio.fechaModificacion = :fechaModificacion
+			 where envio.id = :id
+			   and envio.estadoEnvio = :estadoActual
+			""")
+	int actualizarEstadoSiCoincide(@Param("id") Long id, @Param("estadoActual") EstadoEnvio estadoActual,
+			@Param("estadoNuevo") EstadoEnvio estadoNuevo, @Param("fechaModificacion") Instant fechaModificacion);
 }

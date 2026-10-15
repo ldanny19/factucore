@@ -10,28 +10,28 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "notificacion")
 public class NotificacionProperties {
 
-    private Correo correo = new Correo();
-    private Plantilla plantilla = new Plantilla();
-    private Reintentos reintentos = new Reintentos();
-    private String topico = "notificacion";
+	private Correo correo = new Correo();
+	private Plantilla plantilla = new Plantilla();
+	private Reintentos reintentos = new Reintentos();
+	private String topico = "notificacion";
 
-    @Getter
-    @Setter
-    public static class Correo {
-        private String remitente;
-        private String asunto;
-    }
+	@Getter
+	@Setter
+	public static class Correo {
+		private String remitente;
+		private String asunto;
+	}
 
-    @Getter
-    @Setter
-    public static class Plantilla {
-        private String ruta;
-    }
+	@Getter
+	@Setter
+	public static class Plantilla {
+		private String ruta;
+	}
 
-    @Getter
-    @Setter
-    public static class Reintentos {
-        private int maxIntentos = 5;
-        private long esperaReintentoMs = 60000;
-    }
+	@Getter
+	@Setter
+	public static class Reintentos {
+		private int maxIntentos = 5;
+		private long esperaReintentoMs = 60000;
+	}
 }
