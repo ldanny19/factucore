@@ -178,7 +178,8 @@ public class ComprobanteEvidenciaPersistenceAdapter implements ComprobanteEviden
 			}
 			return resultado.toString();
 		} catch (NoSuchAlgorithmException exception) {
-			throw new IllegalStateException(messageResolver.resolver(MessageCodes.EVIDENCIA_HASH_ALGORITMO_NO_DISPONIBLE), exception);
+			throw new IllegalStateException(
+					messageResolver.resolver(MessageCodes.EVIDENCIA_HASH_ALGORITMO_NO_DISPONIBLE), exception);
 		}
 	}
 }

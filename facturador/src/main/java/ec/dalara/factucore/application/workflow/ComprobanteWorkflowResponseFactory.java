@@ -23,9 +23,11 @@ import lombok.RequiredArgsConstructor;
 /**
  * Construye la respuesta pública del proceso a partir del contexto final.
  *
- * <p>La fábrica no decide transiciones ni estados del workflow. Solo transforma
- * el resultado que ya fue preparado por los nodos {@code GENERAR_RESPUESTA} o
- * {@code RESPUESTA_ERROR_NOTIFICACION} en el contrato REST.</p>
+ * <p>
+ * La fábrica no decide transiciones ni estados del workflow. Solo transforma el
+ * resultado que ya fue preparado por los nodos {@code GENERAR_RESPUESTA} o
+ * {@code RESPUESTA_ERROR_NOTIFICACION} en el contrato REST.
+ * </p>
  */
 @Component
 @RequiredArgsConstructor
@@ -36,7 +38,8 @@ public class ComprobanteWorkflowResponseFactory {
 	private final EstablecimientoRepository establecimientoRepository;
 	private final PuntoEmisionRepository puntoEmisionRepository;
 
-	private String obtenerNumeroComprobante(ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+	private String obtenerNumeroComprobante(
+			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
 		if (comprobante == null || comprobante.getEstablecimiento() == null || comprobante.getPuntoEmision() == null) {
 			return null;
 		}
@@ -53,8 +56,8 @@ public class ComprobanteWorkflowResponseFactory {
 			return null;
 		}
 
-		return comprobante.getCodigoDocumento() + "-" + establecimiento.getCodigo() + "-"
-				+ puntoEmision.getCodigo() + "-" + comprobante.getSecuencial();
+		return comprobante.getCodigoDocumento() + "-" + establecimiento.getCodigo() + "-" + puntoEmision.getCodigo()
+				+ "-" + comprobante.getSecuencial();
 	}
 
 	public ComprobanteGeneracionResponse crear(ContextoWorkflow contexto) {
@@ -68,8 +71,7 @@ public class ComprobanteWorkflowResponseFactory {
 		String codigo = ultimo == null || ultimo.isExitosa() ? null : ultimo.getCodigoError();
 		String mensaje = ultimo == null || ultimo.isExitosa() ? null : ultimo.getMensaje();
 
-		if (contexto != null && contexto.isIdempotente()
-				&& "AUTORIZADO".equalsIgnoreCase(contexto.getEstadoSri())) {
+		if (contexto != null && contexto.isIdempotente() && "AUTORIZADO".equalsIgnoreCase(contexto.getEstadoSri())) {
 			codigo = MessageCodes.COMPROBANTE_YA_AUTORIZADO;
 			mensaje = messageResolver.resolver(codigo, contexto.getNumeroAutorizacion());
 		}
@@ -83,12 +85,10 @@ public class ComprobanteWorkflowResponseFactory {
 
 		if (contexto != null && !contexto.getMensajesSri().isEmpty()) {
 			for (SriMensaje mensajeSri : contexto.getMensajesSri()) {
-				MensajeResponse mensajeResponse = MensajeResponse.builder()
-						.codigo(mensajeSri.identificador())
-						.mensaje(sriCodigoCatalogoService.resolverDescripcion(mensajeSri.identificador(), mensajeSri.mensaje()))
-						.campo(null)
-						.informacionAdicional(mensajeSri.informacionAdicional())
-						.build();
+				MensajeResponse mensajeResponse = MensajeResponse.builder().codigo(mensajeSri.identificador())
+						.mensaje(sriCodigoCatalogoService.resolverDescripcion(mensajeSri.identificador(),
+								mensajeSri.mensaje()))
+						.campo(null).informacionAdicional(mensajeSri.informacionAdicional()).build();
 
 				String tipo = mensajeSri.tipo() == null ? "" : mensajeSri.tipo().trim().toUpperCase(Locale.ROOT);
 				switch (tipo) {
@@ -109,9 +109,10 @@ public class ComprobanteWorkflowResponseFactory {
 			validacionMensajes = contexto.getValidacionXsd().getMensajes();
 		}
 
-		if ((contexto == null || contexto.getMensajesSri().isEmpty())
-				&& errores.isEmpty() && ultimo != null && !ultimo.isExitosa()) {
-			errores = List.of(MensajeResponse.builder().codigo(ultimo.getCodigoError()).mensaje(ultimo.getMensaje()).build());
+		if ((contexto == null || contexto.getMensajesSri().isEmpty()) && errores.isEmpty() && ultimo != null
+				&& !ultimo.isExitosa()) {
+			errores = List
+					.of(MensajeResponse.builder().codigo(ultimo.getCodigoError()).mensaje(ultimo.getMensaje()).build());
 		}
 		if (!exitoso && (codigo == null || mensaje == null) && !errores.isEmpty()) {
 			codigo = errores.get(0).getCodigo();
@@ -119,15 +120,11 @@ public class ComprobanteWorkflowResponseFactory {
 		}
 
 		List<MensajeResponse> mensajesNotificacion = contexto != null && contexto.isErrorNotificacion()
-				? List.of(MensajeResponse.builder()
-						.codigo(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)
-						.mensaje(messageResolver.resolver(MessageCodes.NOTIFICACION_PUBLICACION_ERROR))
-						.build())
+				? List.of(MensajeResponse.builder().codigo(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)
+						.mensaje(messageResolver.resolver(MessageCodes.NOTIFICACION_PUBLICACION_ERROR)).build())
 				: List.of();
 
-		ResultadoResponse resultado = ResultadoResponse.builder()
-				.errores(errores)
-				.advertencias(advertencias)
+		ResultadoResponse resultado = ResultadoResponse.builder().errores(errores).advertencias(advertencias)
 				.mensajes(!validacionMensajes.isEmpty() ? validacionMensajes
 						: (!mensajesInformativos.isEmpty() ? mensajesInformativos : mensajesNotificacion))
 				.build();
@@ -138,16 +135,11 @@ public class ComprobanteWorkflowResponseFactory {
 				.numeroAutorizacion(contexto == null ? null : contexto.getNumeroAutorizacion())
 				.fechaInicio(contexto == null || contexto.getFechaInicio() == null ? null
 						: contexto.getFechaInicio().atOffset(ZoneOffset.UTC))
-				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC))
-				.exitoso(exitoso)
-				.codigo(codigo)
-				.mensaje(mensaje)
-				.resultado(resultado)
-				.claveAcceso(contexto == null ? null : contexto.getClaveAcceso())
+				.fechaFin(OffsetDateTime.now(ZoneOffset.UTC)).exitoso(exitoso).codigo(codigo).mensaje(mensaje)
+				.resultado(resultado).claveAcceso(contexto == null ? null : contexto.getClaveAcceso())
 				.numeroComprobante(numeroComprobante)
 				.tipoDocumento(comprobante == null ? null : comprobante.getCodigoDocumento())
 				.estadoSri(contexto == null ? null : contexto.getEstadoSri())
-				.archivoPdf(contexto == null ? null : contexto.getRide())
-				.build();
+				.archivoPdf(contexto == null ? null : contexto.getRide()).build();
 	}
 }

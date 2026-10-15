@@ -5,17 +5,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
-import ec.dalara.factucore.application.service.ComprobanteService;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import ec.dalara.factucore.application.contract.request.ComprobanteGeneracionRequest;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.service.ClaveAccesoService;
+import ec.dalara.factucore.application.service.ComprobanteAuditoriaService;
+import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.application.service.EmisionService;
 import ec.dalara.factucore.application.service.EmpresaService;
@@ -36,7 +36,9 @@ class GeneracionClaveAccesoWorkflowStepTest {
 	void generaClaveDespuesDeAsignarSecuencial() {
 		var comprobanteAuditoriaService = mock(ComprobanteAuditoriaService.class);
 		var comprobanteService = mock(ComprobanteService.class);
-		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService);
+		var eventPublisher = mock(ApplicationEventPublisher.class);
+		var workflowResultadoService = new WorkflowResultadoService(comprobanteAuditoriaService, comprobanteService,
+				eventPublisher);
 		var messageResolver = mock(ec.dalara.factucore.application.MessageResolver.class);
 		var workflowEtapaExecutor = new WorkflowEtapaExecutor(workflowResultadoService, messageResolver);
 		var claveAccesoService = mock(ClaveAccesoService.class);
@@ -64,7 +66,8 @@ class GeneracionClaveAccesoWorkflowStepTest {
 
 		var definition = mock(DocumentDefinitionModel.class);
 		when(definition.getDocumento()).thenReturn(documentoModelo);
-		when(definitionProvider.obtenerDefinicion(any(Long.class), any(String.class))).thenReturn(Optional.of(definition));
+		when(definitionProvider.obtenerDefinicion(any(Long.class), any(String.class)))
+				.thenReturn(Optional.of(definition));
 
 		var clave = mock(ClaveAccesoModel.class);
 		when(clave.getClave()).thenReturn("1234567890123456789012345678901234567890123456789");
@@ -77,8 +80,8 @@ class GeneracionClaveAccesoWorkflowStepTest {
 		var contexto = ContextoWorkflow.nuevo(request);
 		contexto.setSecuencial("000000001");
 
-		var step = new GeneracionClaveAccesoWorkflowStep(workflowEtapaExecutor,
-				claveAccesoService, empresaService, emisionService, definitionProvider, documentoXsdService, sriProperties);
+		var step = new GeneracionClaveAccesoWorkflowStep(workflowEtapaExecutor, claveAccesoService, empresaService,
+				emisionService, definitionProvider, documentoXsdService, sriProperties);
 
 		var resultado = step.ejecutar(contexto);
 

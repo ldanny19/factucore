@@ -53,15 +53,15 @@ public class ValidacionComprobanteWorkflowStep {
 		contexto.setHashIdentidad(hashes.identidad());
 		contexto.setHashContenido(hashes.contenido());
 
-		var porOrigen = comprobanteService.obtenerPorEmpresaEIdDocumentoOrigen(
-				solicitud.getIdEmpresa(), solicitud.getIdDocumentoOrigen());
+		var porOrigen = comprobanteService.obtenerPorEmpresaEIdDocumentoOrigen(solicitud.getIdEmpresa(),
+				solicitud.getIdDocumentoOrigen());
 		if (porOrigen.isPresent()) {
 			var anterior = porOrigen.get();
 			if (anterior.getHashIdentidad() == null || anterior.getHashContenido() == null
 					|| !anterior.getHashIdentidad().equals(hashes.identidad())) {
 				return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
-						MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO,
-						messageResolver.resolver(MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
+						MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, messageResolver.resolver(
+								MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
 			}
 
 			if (anterior.getHashContenido().equals(hashes.contenido())) {
@@ -76,8 +76,8 @@ public class ValidacionComprobanteWorkflowStep {
 
 			if (!esNoAutorizado(anterior.getEstadoSri())) {
 				return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CORRECCION_NO_PERMITIDA",
-						MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA,
-						messageResolver.resolver(MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, solicitud.getIdDocumentoOrigen()));
+						MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, messageResolver.resolver(
+								MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, solicitud.getIdDocumentoOrigen()));
 			}
 
 			contexto.setComprobanteReemplazado(anterior);
@@ -86,8 +86,8 @@ public class ValidacionComprobanteWorkflowStep {
 			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "CORRECCION");
 		}
 
-		var porTransaccion = comprobanteService.obtenerPorEmpresaEIdTransaccion(
-				solicitud.getIdEmpresa(), solicitud.getIdTransaccion());
+		var porTransaccion = comprobanteService.obtenerPorEmpresaEIdTransaccion(solicitud.getIdEmpresa(),
+				solicitud.getIdTransaccion());
 		if (porTransaccion.isPresent()) {
 			var existente = porTransaccion.get();
 			if (java.util.Objects.equals(solicitud.getIdDocumentoOrigen(), existente.getIdDocumentoOrigen())
@@ -102,8 +102,8 @@ public class ValidacionComprobanteWorkflowStep {
 				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
 			}
 			return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
-					MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO,
-					messageResolver.resolver(MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
+					MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, messageResolver.resolver(
+							MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
 		}
 
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "VALIDADA");
@@ -113,10 +113,8 @@ public class ValidacionComprobanteWorkflowStep {
 		if (estadoSri == null) {
 			return false;
 		}
-		String normalizado = Normalizer.normalize(estadoSri, Normalizer.Form.NFD)
-				.replaceAll("\\p{M}", "")
-				.replaceAll("[^A-Za-z]", "")
-				.toUpperCase(Locale.ROOT);
+		String normalizado = Normalizer.normalize(estadoSri, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+				.replaceAll("[^A-Za-z]", "").toUpperCase(Locale.ROOT);
 		return "NOAUTORIZADO".equals(normalizado);
 	}
 }

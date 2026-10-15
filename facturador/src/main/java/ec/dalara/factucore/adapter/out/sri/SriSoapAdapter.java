@@ -7,11 +7,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -150,22 +150,26 @@ public class SriSoapAdapter implements SriPort {
 			String contentType = response.headers().firstValue("Content-Type").orElse("no informado");
 
 			if (statusCode >= 500) {
-				registrarRespuestaInvalida(etapa, statusCode, contentType, messageResolver.resolver(MessageCodes.SRI_LOG_HTTP_SERVICIO_REMOTO), cuerpo, null);
+				registrarRespuestaInvalida(etapa, statusCode, contentType,
+						messageResolver.resolver(MessageCodes.SRI_LOG_HTTP_SERVICIO_REMOTO), cuerpo, null);
 				throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_HTTP_ERROR, statusCode));
 			}
 
 			if (statusCode < 200 || statusCode >= 300) {
-				registrarRespuestaInvalida(etapa, statusCode, contentType, messageResolver.resolver(MessageCodes.SRI_LOG_HTTP_NO_EXITOSO), cuerpo, null);
+				registrarRespuestaInvalida(etapa, statusCode, contentType,
+						messageResolver.resolver(MessageCodes.SRI_LOG_HTTP_NO_EXITOSO), cuerpo, null);
 				throw new ApplicationException(MessageCodes.SRI_ERROR_COMUNICACION);
 			}
 
 			if (cuerpo == null || cuerpo.isBlank()) {
-				registrarRespuestaInvalida(etapa, statusCode, contentType, messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_VACIA), cuerpo, null);
+				registrarRespuestaInvalida(etapa, statusCode, contentType,
+						messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_VACIA), cuerpo, null);
 				throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 			}
 
 			if (esRespuestaHtml(cuerpo, contentType) || !pareceXml(cuerpo)) {
-				registrarRespuestaInvalida(etapa, statusCode, contentType, messageResolver.resolver(MessageCodes.SRI_LOG_CONTENIDO_NO_SOAP), cuerpo, null);
+				registrarRespuestaInvalida(etapa, statusCode, contentType,
+						messageResolver.resolver(MessageCodes.SRI_LOG_CONTENIDO_NO_SOAP), cuerpo, null);
 				throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 			}
 
@@ -176,10 +180,12 @@ public class SriSoapAdapter implements SriPort {
 		} catch (ApplicationException exception) {
 			throw exception;
 		} catch (IOException exception) {
-			throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_ERROR_COMUNICACION), exception);
+			throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_ERROR_COMUNICACION),
+					exception);
 		} catch (InterruptedException exception) {
 			Thread.currentThread().interrupt();
-			throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_ERROR_COMUNICACION), exception);
+			throw new SriCommunicationException(messageResolver.resolver(MessageCodes.SRI_ERROR_COMUNICACION),
+					exception);
 		}
 	}
 
@@ -188,11 +194,13 @@ public class SriSoapAdapter implements SriPort {
 		validarEnvelopeSoap(document, "recepcion", xml);
 		Element respuesta = obtenerPrimerElemento(document, "RespuestaRecepcionComprobante");
 		if (respuesta == null) {
-			registrarRespuestaInvalida("recepcion", null, null, messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_RECEPCION_AUSENTE), xml, null);
+			registrarRespuestaInvalida("recepcion", null, null,
+					messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_RECEPCION_AUSENTE), xml, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 		if (obtenerTexto(respuesta, "estado") == null) {
-			registrarRespuestaInvalida("recepcion", null, null, messageResolver.resolver(MessageCodes.SRI_LOG_ESTADO_RECEPCION_AUSENTE), xml, null);
+			registrarRespuestaInvalida("recepcion", null, null,
+					messageResolver.resolver(MessageCodes.SRI_LOG_ESTADO_RECEPCION_AUSENTE), xml, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 		String estado = obtenerTexto(respuesta, "estado");
@@ -206,7 +214,8 @@ public class SriSoapAdapter implements SriPort {
 		validarEnvelopeSoap(document, "autorizacion", xml);
 		Element respuesta = obtenerPrimerElemento(document, "RespuestaAutorizacionComprobante");
 		if (respuesta == null) {
-			registrarRespuestaInvalida("autorizacion", null, null, messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_AUTORIZACION_AUSENTE), xml, null);
+			registrarRespuestaInvalida("autorizacion", null, null,
+					messageResolver.resolver(MessageCodes.SRI_LOG_RESPUESTA_AUTORIZACION_AUSENTE), xml, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 		Element autorizacion = obtenerPrimerElemento(respuesta, "autorizacion");
@@ -301,7 +310,8 @@ public class SriSoapAdapter implements SriPort {
 			var builder = documentBuilderFactory.newDocumentBuilder();
 			return builder.parse(new InputSource(new StringReader(xml)));
 		} catch (Exception exception) {
-			registrarRespuestaInvalida(etapa, null, null, messageResolver.resolver(MessageCodes.SRI_LOG_XML_MALFORMADO), xml, exception);
+			registrarRespuestaInvalida(etapa, null, null, messageResolver.resolver(MessageCodes.SRI_LOG_XML_MALFORMADO),
+					xml, exception);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA, exception);
 		}
 	}
@@ -310,13 +320,15 @@ public class SriSoapAdapter implements SriPort {
 		Element envelope = document.getDocumentElement();
 		if (envelope == null || !"Envelope".equals(envelope.getLocalName())
 				|| !SOAP_ENV_NAMESPACE.equals(envelope.getNamespaceURI())) {
-			registrarRespuestaInvalida(etapa, null, null, messageResolver.resolver(MessageCodes.SRI_LOG_ENVELOPE_INVALIDO), respuesta, null);
+			registrarRespuestaInvalida(etapa, null, null,
+					messageResolver.resolver(MessageCodes.SRI_LOG_ENVELOPE_INVALIDO), respuesta, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 
 		Element body = obtenerPrimerElemento(envelope, "Body");
 		if (body == null) {
-			registrarRespuestaInvalida(etapa, null, null, messageResolver.resolver(MessageCodes.SRI_LOG_BODY_AUSENTE), respuesta, null);
+			registrarRespuestaInvalida(etapa, null, null, messageResolver.resolver(MessageCodes.SRI_LOG_BODY_AUSENTE),
+					respuesta, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 
@@ -325,8 +337,7 @@ public class SriSoapAdapter implements SriPort {
 			String codigo = obtenerTexto(fault, "faultcode");
 			String mensaje = obtenerTexto(fault, "faultstring");
 			registrarRespuestaInvalida(etapa, null, null,
-					messageResolver.resolver(MessageCodes.SRI_LOG_SOAP_FAULT, codigo, mensaje),
-					respuesta, null);
+					messageResolver.resolver(MessageCodes.SRI_LOG_SOAP_FAULT, codigo, mensaje), respuesta, null);
 			throw new ApplicationException(MessageCodes.SRI_RESPUESTA_INVALIDA);
 		}
 	}

@@ -19,9 +19,9 @@ public final class VersionDocumentoXsdModel {
 	private final LocalDateTime fechaInicio;
 	private final LocalDateTime fechaFin;
 
-	public VersionDocumentoXsdModel(Long id, Long documentoXsdId, String version, String nombreArchivo,
-			String rutaXsd, String hashXsd, String namespaceXml, String elementoRaiz, String plantillaJson,
-			String esquemaJson, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+	public VersionDocumentoXsdModel(Long id, Long documentoXsdId, String version, String nombreArchivo, String rutaXsd,
+			String hashXsd, String namespaceXml, String elementoRaiz, String plantillaJson, String esquemaJson,
+			LocalDateTime fechaInicio, LocalDateTime fechaFin) {
 
 		if (documentoXsdId == null) {
 			throw new DomainException("FACTUCORE.VERSION_DOCUMENTO_XSD.DOCUMENTO.REQUERIDO");

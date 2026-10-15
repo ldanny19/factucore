@@ -83,8 +83,6 @@ CREATE TABLE certificado_firma (
     id BIGINT PRIMARY KEY,
     empresa_id BIGINT NOT NULL,
     nombre_archivo VARCHAR(300),
-    ruta_xsd VARCHAR(2000) NOT NULL,
-    hash_xsd VARCHAR(64) NOT NULL,
     ruta_certificado VARCHAR(1000) NOT NULL,
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,
@@ -178,6 +176,8 @@ CREATE TABLE version_documento_xsd (
     version VARCHAR(20) NOT NULL,
     nombre_archivo VARCHAR(300),
     namespace_xml VARCHAR(1000),
+    ruta_xsd VARCHAR(2000) NOT NULL,
+    hash_xsd VARCHAR(64) NOT NULL,
     elemento_raiz VARCHAR(300),
     plantilla_json TEXT,
     esquema_json TEXT,
@@ -592,3 +592,74 @@ CREATE TABLE comprobante_evidencia (
 CREATE INDEX idx_comprobante_evidencia_comprobante ON comprobante_evidencia (comprobante_id);
 CREATE INDEX idx_comprobante_evidencia_tipo ON comprobante_evidencia (tipo_evidencia);
 CREATE UNIQUE INDEX uk_comprobante_evidencia_actual ON comprobante_evidencia (comprobante_id, tipo_evidencia) WHERE es_actual = TRUE;
+
+
+-- Ajustes incorporados de las migraciones V4 a V8 para instalaciones nuevas.
+ALTER TABLE comprobante
+    ADD COLUMN estado_sri VARCHAR(50);
+
+ALTER TABLE comprobante
+    DROP CONSTRAINT uk_comprobante_clave_acceso;
+
+ALTER TABLE comprobante
+    ADD COLUMN id_documento_origen BIGINT,
+    ADD COLUMN hash_identidad VARCHAR(64),
+    ADD COLUMN hash_contenido VARCHAR(64),
+    ADD COLUMN comprobante_reemplazado_id BIGINT;
+
+ALTER TABLE comprobante
+    ADD CONSTRAINT fk_comprobante_reemplazado
+        FOREIGN KEY (comprobante_reemplazado_id) REFERENCES comprobante(id);
+
+CREATE INDEX idx_comprobante_empresa_documento_origen
+    ON comprobante (empresa_id, id_documento_origen, estado_registro);
+
+CREATE TABLE comprobante_solicitud_proceso (
+    empresa_id BIGINT NOT NULL,
+    id_documento_origen BIGINT NOT NULL,
+    id_transaccion VARCHAR(100) NOT NULL,
+    en_proceso BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_comprobante_solicitud_proceso
+        PRIMARY KEY (empresa_id, id_documento_origen),
+    CONSTRAINT fk_comprobante_solicitud_empresa
+        FOREIGN KEY (empresa_id) REFERENCES empresa(id)
+);
+
+ALTER TABLE comprobante
+    ADD COLUMN correo_comprador VARCHAR(320),
+    ADD COLUMN subtotal NUMERIC(18, 2),
+    ADD COLUMN total_descuento NUMERIC(18, 2),
+    ADD COLUMN total_sin_impuestos NUMERIC(18, 2),
+    ADD COLUMN total_impuestos NUMERIC(18, 2),
+    ADD COLUMN total_propina NUMERIC(18, 2),
+    ADD COLUMN total_a_pagar NUMERIC(18, 2);
+
+CREATE TABLE tarifa_tributaria_vigencia (
+    id BIGINT PRIMARY KEY,
+    catalogo_item_id BIGINT NOT NULL,
+    codigo_impuesto VARCHAR(2) NOT NULL,
+    codigo_porcentaje VARCHAR(4) NOT NULL,
+    tarifa NUMERIC(8, 4) NOT NULL,
+    fecha_vigencia_desde DATE NOT NULL,
+    fecha_vigencia_hasta DATE,
+    estado_registro VARCHAR(20) NOT NULL,
+    usuario_creacion VARCHAR(100) NOT NULL,
+    usuario_modificacion VARCHAR(100),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TIMESTAMP,
+    observacion VARCHAR(500),
+    CONSTRAINT fk_tarifa_tributaria_vigencia_catalogo_item
+        FOREIGN KEY (catalogo_item_id) REFERENCES catalogo_item(id),
+    CONSTRAINT ck_tarifa_tributaria_vigencia_tarifa CHECK (tarifa >= 0),
+    CONSTRAINT ck_tarifa_tributaria_vigencia_fechas
+        CHECK (fecha_vigencia_hasta IS NULL OR fecha_vigencia_hasta >= fecha_vigencia_desde),
+    CONSTRAINT uk_tarifa_tributaria_vigencia_inicio
+        UNIQUE (codigo_impuesto, codigo_porcentaje, fecha_vigencia_desde)
+);
+
+CREATE INDEX ix_tarifa_tributaria_vigencia_busqueda
+    ON tarifa_tributaria_vigencia (codigo_impuesto, codigo_porcentaje, fecha_vigencia_desde, fecha_vigencia_hasta);
+
+ALTER TABLE comprobante
+    ADD COLUMN num_comprobante VARCHAR(17);

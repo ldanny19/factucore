@@ -49,7 +49,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 	@Override
 	@Transactional
-	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition, String rutaXsd, String hashXsd) {
+	public XsdImportResult persist(XsdImportRequest request, XsdDefinitionSource definition, String rutaXsd,
+			String hashXsd) {
 		LocalDateTime ahora = LocalDateTime.now();
 
 		DocumentoXsd documento = documentoRepository.findByCodigoForUpdate(request.codigo())
@@ -65,11 +66,10 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 
 		VersionDocumentoXsd version = VersionDocumentoXsd.builder().documentoXsd(documento).version(request.version())
 				.nombreArchivo(request.nombreArchivo()).rutaXsd(rutaXsd).hashXsd(hashXsd)
-				.namespaceXml(definition.namespaceXml())
-				.elementoRaiz(definition.elementoRaiz()).plantillaJson(generarPlantillaJson(definition))
-				.esquemaJson(generarEsquemaJson(definition)).fechaInicio(request.fechaInicio())
-				.fechaFin(request.fechaFin()).estadoRegistro(EstadoRegistro.ACTIVO).usuarioCreacion(request.usuario())
-				.fechaCreacion(ahora).observacion(request.observacion()).build();
+				.namespaceXml(definition.namespaceXml()).elementoRaiz(definition.elementoRaiz())
+				.plantillaJson(generarPlantillaJson(definition)).esquemaJson(generarEsquemaJson(definition))
+				.fechaInicio(request.fechaInicio()).fechaFin(request.fechaFin()).estadoRegistro(EstadoRegistro.ACTIVO)
+				.usuarioCreacion(request.usuario()).fechaCreacion(ahora).observacion(request.observacion()).build();
 
 		version = versionRepository.save(version);
 
@@ -80,9 +80,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			ElementoXsd padre = padreDe(source.ruta(), elementosPorRuta);
 
 			ElementoXsd elemento = elementoRepository.save(ElementoXsd.builder().versionDocumentoXsd(version)
-					.elementoPadre(padre).nombre(source.nombre())
-					.tipoDato(tipoDatoRuntime(source, definition)).orden(source.orden())
-					.obligatorio(source.esObligatorio()).repetible(source.esRepetible())
+					.elementoPadre(padre).nombre(source.nombre()).tipoDato(tipoDatoRuntime(source, definition))
+					.orden(source.orden()).obligatorio(source.esObligatorio()).repetible(source.esRepetible())
 					.minOcurrencias(source.minOcurrencias()).maxOcurrencias(source.maxOcurrencias())
 					.longitudMinima(source.longitudMinima()).longitudMaxima(source.longitudMaxima())
 					.digitosTotales(source.digitosTotales()).decimales(source.decimales())
@@ -123,7 +122,6 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		return new XsdImportResult(documento.getId(), version.getId(), elementos, atributos, enumeraciones);
 	}
 
-
 	private String tipoDatoRuntime(XsdElementSource source, XsdDefinitionSource definition) {
 		if (source.esRepetible()) {
 			return "LIST";
@@ -150,8 +148,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		case "double" -> "DOUBLE";
 		case "float" -> "FLOAT";
 		case "integer" -> "INTEGER";
-		case "int", "unsignedint", "nonnegativeinteger", "positiveinteger", "negativeinteger",
-				"nonpositiveinteger" -> "INTEGER";
+		case "int", "unsignedint", "nonnegativeinteger", "positiveinteger", "negativeinteger", "nonpositiveinteger" ->
+			"INTEGER";
 		case "long", "unsignedlong" -> "LONG";
 		case "short", "unsignedshort" -> "SHORT";
 		case "byte", "unsignedbyte" -> "BYTE";
@@ -363,6 +361,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 			}
 		}
 	}
+
 	private void construirTipo(ObjectNode target, XsdElementSource source, boolean tieneEstructuraObjeto,
 			XsdDefinitionSource definition) {
 		if (!tieneEstructuraObjeto) {
@@ -401,8 +400,7 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		}
 
 		for (XsdAttributeSource attribute : definition.atributos()) {
-			if (esAtributoExcluidoEsquema(attribute, definition)
-					|| !source.ruta().equals(attribute.rutaElemento())) {
+			if (esAtributoExcluidoEsquema(attribute, definition) || !source.ruta().equals(attribute.rutaElemento())) {
 				continue;
 			}
 			ObjectNode attributeSchema = objectMapper.createObjectNode();
@@ -428,8 +426,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private boolean tieneEstructuraObjetoEsquema(XsdElementSource source, XsdDefinitionSource definition) {
-		return tieneHijosEsquema(source.ruta(), definition)
-				|| definition.atributos().stream().anyMatch(attribute -> !esAtributoExcluidoEsquema(attribute, definition)
+		return tieneHijosEsquema(source.ruta(), definition) || definition.atributos().stream()
+				.anyMatch(attribute -> !esAtributoExcluidoEsquema(attribute, definition)
 						&& source.ruta().equals(attribute.rutaElemento()));
 	}
 
@@ -461,12 +459,13 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 		return switch (tipo) {
 		case "boolean" -> "boolean";
 		case "decimal", "double", "float" -> "number";
-		case "integer", "int", "long", "short", "byte", "unsignedint", "unsignedlong", "unsignedshort",
-				"unsignedbyte", "nonnegativeinteger", "positiveinteger", "negativeinteger", "nonpositiveinteger" ->
-				"integer";
+		case "integer", "int", "long", "short", "byte", "unsignedint", "unsignedlong", "unsignedshort", "unsignedbyte",
+				"nonnegativeinteger", "positiveinteger", "negativeinteger", "nonpositiveinteger" ->
+			"integer";
 		default -> "string";
 		};
 	}
+
 	private boolean tieneEstructuraObjeto(XsdElementSource source, XsdDefinitionSource definition) {
 		return tieneHijos(source.ruta(), definition)
 				|| definition.atributos().stream().anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)

@@ -92,10 +92,10 @@ class XsdParserAdapterTest {
 		var definition = parser.parse(new ByteArrayInputStream(xsd.getBytes(StandardCharsets.UTF_8)), "test.xsd");
 
 		assertEquals(2, definition.atributos().size());
-		assertTrue(definition.atributos().stream().anyMatch(a -> "id".equals(a.nombre())
-				&& "factura".equals(a.rutaElemento())));
-		assertTrue(definition.atributos().stream().anyMatch(a -> "version".equals(a.nombre())
-				&& "factura".equals(a.rutaElemento())));
+		assertTrue(definition.atributos().stream()
+				.anyMatch(a -> "id".equals(a.nombre()) && "factura".equals(a.rutaElemento())));
+		assertTrue(definition.atributos().stream()
+				.anyMatch(a -> "version".equals(a.nombre()) && "factura".equals(a.rutaElemento())));
 	}
 
 	@Test
@@ -115,8 +115,7 @@ class XsdParserAdapterTest {
 				""";
 
 		var definition = parser.parse(new ByteArrayInputStream(xsd.getBytes(StandardCharsets.UTF_8)), "test.xsd");
-		var opcional = definition.elementos().stream()
-				.filter(elemento -> "raiz.opcional".equals(elemento.ruta()))
+		var opcional = definition.elementos().stream().filter(elemento -> "raiz.opcional".equals(elemento.ruta()))
 				.findFirst().orElseThrow();
 
 		assertEquals(0, opcional.minOcurrencias());

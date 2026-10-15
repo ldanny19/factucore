@@ -80,8 +80,7 @@ public class EmpresaService extends BaseService<Empresa> {
 		if (empresa.getObligadoContabilidad() == null || empresa.getObligadoContabilidad().isBlank()) {
 			throw new ApplicationException(MessageCodes.EMPRESA_OBLIGADO_CONTABILIDAD_REQUERIDO);
 		}
-		if (!"SI".equals(empresa.getObligadoContabilidad())
-				&& !"NO".equals(empresa.getObligadoContabilidad())) {
+		if (!"SI".equals(empresa.getObligadoContabilidad()) && !"NO".equals(empresa.getObligadoContabilidad())) {
 			throw new ApplicationException(MessageCodes.EMPRESA_OBLIGADO_CONTABILIDAD_INVALIDO);
 		}
 

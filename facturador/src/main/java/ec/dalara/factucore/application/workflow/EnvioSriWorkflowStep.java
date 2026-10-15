@@ -42,15 +42,17 @@ public class EnvioSriWorkflowStep {
 		}
 
 		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
-		LOGGER.debug(messageResolver.resolver(MessageCodes.LOG_SRI_RESPUESTA_COMPLETA, idTransaccion,
-				etapa().name(), respuesta.respuestaXml()));
+		LOGGER.debug(messageResolver.resolver(MessageCodes.LOG_SRI_RESPUESTA_COMPLETA, idTransaccion, etapa().name(),
+				respuesta.respuestaXml()));
 	}
 
 	private void validarCodigosSri(ContextoWorkflow contexto, SriResponse respuesta) {
 		String idTransaccion = contexto.getSolicitud() == null ? null : contexto.getSolicitud().getIdTransaccion();
-		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador()).filter(codigo -> codigo != null && !codigo.isBlank())
+		respuesta.mensajes().stream().map(mensaje -> mensaje.identificador())
+				.filter(codigo -> codigo != null && !codigo.isBlank())
 				.filter(codigo -> !sriCodigoCatalogoService.esCodigoConocido(codigo))
-				.forEach(codigo -> LOGGER.warn(messageResolver.resolver(MessageCodes.LOG_SRI_CODIGO_NO_PARAMETRIZADO, idTransaccion, etapa().name(), codigo)));
+				.forEach(codigo -> LOGGER.warn(messageResolver.resolver(MessageCodes.LOG_SRI_CODIGO_NO_PARAMETRIZADO,
+						idTransaccion, etapa().name(), codigo)));
 	}
 
 	private ResultadoEtapa ejecutarResultado(ContextoWorkflow contexto) {
@@ -64,9 +66,10 @@ public class EnvioSriWorkflowStep {
 		registrarRespuestaSri(contexto, respuesta);
 		validarCodigosSri(contexto, respuesta);
 
-		contexto.getComprobante().setEstadoSri(respuesta.estado() == null || respuesta.estado().isBlank()
-				? (respuesta.exitoso() ? "RECIBIDO" : "RECHAZADO")
-				: respuesta.estado());
+		contexto.getComprobante()
+				.setEstadoSri(respuesta.estado() == null || respuesta.estado().isBlank()
+						? (respuesta.exitoso() ? "RECIBIDO" : "RECHAZADO")
+						: respuesta.estado());
 
 		if (respuesta.exitoso()) {
 			contexto.getComprobante().setEstadoProceso(EstadoProceso.ENVIADO_SRI.name());
@@ -76,6 +79,8 @@ public class EnvioSriWorkflowStep {
 		return ResultadoEtapa.fallida(etapa(), "RECHAZADO",
 				respuesta.mensajes().isEmpty() ? MessageCodes.SRI_RESPUESTA_INVALIDA
 						: respuesta.mensajes().get(0).identificador(),
-				respuesta.mensajes().isEmpty() ? null : sriCodigoCatalogoService.resolverDescripcion(respuesta.mensajes().get(0).identificador(), respuesta.mensajes().get(0).mensaje()));
+				respuesta.mensajes().isEmpty() ? null
+						: sriCodigoCatalogoService.resolverDescripcion(respuesta.mensajes().get(0).identificador(),
+								respuesta.mensajes().get(0).mensaje()));
 	}
 }

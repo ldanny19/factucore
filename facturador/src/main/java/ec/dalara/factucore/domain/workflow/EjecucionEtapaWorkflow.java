@@ -22,10 +22,27 @@ public final class EjecucionEtapaWorkflow {
 		this.fechaFin = fechaFin;
 	}
 
-	public EtapaWorkflow getEtapa() { return etapa; }
-	public Object getEntrada() { return entrada; }
-	public Object getSalida() { return salida; }
-	public ResultadoEtapa getResultado() { return resultado; }
-	public LocalDateTime getFechaInicio() { return fechaInicio; }
-	public LocalDateTime getFechaFin() { return fechaFin; }
+	public EtapaWorkflow getEtapa() {
+		return etapa;
+	}
+
+	public Object getEntrada() {
+		return entrada;
+	}
+
+	public Object getSalida() {
+		return salida;
+	}
+
+	public ResultadoEtapa getResultado() {
+		return resultado;
+	}
+
+	public LocalDateTime getFechaInicio() {
+		return fechaInicio;
+	}
+
+	public LocalDateTime getFechaFin() {
+		return fechaFin;
+	}
 }

@@ -39,8 +39,8 @@ class DocumentDefinitionDataValidatorTest {
 
 		DocumentDefinitionModel definition = new DocumentDefinitionModel(
 				new DocumentoXsdModel("FACTURA", "Factura", null, "01", "factura"),
-				new VersionDocumentoXsdModel(1L, 1L, "1.0.0", "factura_V1.0.0.xsd", null, null, null,
-						"factura", null, null, LocalDateTime.now(), null),
+				new VersionDocumentoXsdModel(1L, 1L, "1.0.0", "factura_V1.0.0.xsd", null, null, null, "factura", null,
+						null, LocalDateTime.now(), null),
 				elementos, List.of(), List.of(), mapeos);
 
 		MessageResolver messageResolver = mock(MessageResolver.class);
@@ -67,7 +67,7 @@ class DocumentDefinitionDataValidatorTest {
 
 			resultado.add(new MapeoXsdModel(nodo.has("id") ? nodo.path("id").asLong() : null, 1L,
 					nodo.path("tipoOrigen").asText(), nodo.path("origen").asText(), elementoId, atributoId,
-				nodo.path("tipoMapeo").asText()));
+					nodo.path("tipoMapeo").asText()));
 		}
 
 		return resultado;
@@ -111,7 +111,8 @@ class DocumentDefinitionDataValidatorTest {
 			Long id = entry.getKey();
 			String nombre = entry.getValue();
 			String ruta = rutaElemento(id, mapeos);
-			Long padreId = ruta == null || !ruta.contains(".") ? null : idsPorRuta.get(ruta.substring(0, ruta.lastIndexOf('.')));
+			Long padreId = ruta == null || !ruta.contains(".") ? null
+					: idsPorRuta.get(ruta.substring(0, ruta.lastIndexOf('.')));
 
 			if (id == 1L) {
 				padreId = null;
@@ -119,7 +120,7 @@ class DocumentDefinitionDataValidatorTest {
 
 			boolean repetible = switch (id.intValue()) {
 			case 43, 52, 65, 73, 84, 86, 93, 105, 112, 123 -> true;
-		default -> false;
+			default -> false;
 			};
 
 			Integer min = repetible ? 1 : 0;
@@ -129,9 +130,8 @@ class DocumentDefinitionDataValidatorTest {
 			default -> repetible ? null : 1;
 			};
 
-			resultado.add(new ElementoXsdModel(id, 1L, padreId, nombre,
-					repetible ? "LIST" : "STRING", 1, false, repetible, min, max,
-				null, null, null, null, null, null, null, null, null));
+			resultado.add(new ElementoXsdModel(id, 1L, padreId, nombre, repetible ? "LIST" : "STRING", 1, false,
+					repetible, min, max, null, null, null, null, null, null, null, null, null));
 		}
 
 		resultado.sort((a, b) -> Long.compare(a.getId(), b.getId()));

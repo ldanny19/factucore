@@ -7,9 +7,11 @@ import java.util.Map;
 /**
  * Resultado interno producido por una etapa del workflow.
  *
- * <p>Se conserva como objeto de dominio para auditoría, persistencia y
+ * <p>
+ * Se conserva como objeto de dominio para auditoría, persistencia y
  * diagnóstico. La interfaz que Camel consume es {@link #salida()}, que evita
- * acoplar el Bean con el nombre del siguiente nodo.</p>
+ * acoplar el Bean con el nombre del siguiente nodo.
+ * </p>
  */
 public final class ResultadoEtapa {
 
@@ -51,9 +53,11 @@ public final class ResultadoEtapa {
 	 * Convierte el resultado interno de una etapa en el valor que consume el
 	 * workflow definido en Camel.
 	 *
-	 * <p>El Bean nunca conoce el siguiente nodo. Solo informa el resultado de su
+	 * <p>
+	 * El Bean nunca conoce el siguiente nodo. Solo informa el resultado de su
 	 * propia ejecución. Camel utiliza este valor para resolver la transición
-	 * declarada en el XML.</p>
+	 * declarada en el XML.
+	 * </p>
 	 */
 	public String salida() {
 		if (etapa == EtapaWorkflow.NOTIFICACION && "NOTIFICACION_ERROR".equals(estado)) {

@@ -18,17 +18,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdministracionGlobalRequest<T> {
 
-    @NotBlank
-    private String idTransaccion;
+	@NotBlank
+	private String idTransaccion;
 
-    @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
-    private LocalDateTime fechaInicio;
+	@NotNull
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+	private LocalDateTime fechaInicio;
 
-    @NotBlank
-    private String canal;
+	@NotBlank
+	private String canal;
 
-    @Valid
-    @NotNull
-    private T datos;
+	@Valid
+	@NotNull
+	private T datos;
 }

@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JsonSchemaComprobanteValidator {
 
-	private static final Pattern REQUIRED_PROPERTY = Pattern.compile(
-			"required property ['\"]([^'\"]+)['\"]", Pattern.CASE_INSENSITIVE);
+	private static final Pattern REQUIRED_PROPERTY = Pattern.compile("required property ['\"]([^'\"]+)['\"]",
+			Pattern.CASE_INSENSITIVE);
 
 	private final ObjectMapper objectMapper;
 	private final MessageResolver messageResolver;
@@ -39,11 +39,11 @@ public class JsonSchemaComprobanteValidator {
 				String ruta = normalizarRuta(error.getInstanceLocation().toString());
 				String propiedadRequerida = obtenerPropiedadRequerida(error.getMessage());
 				if (propiedadRequerida != null) {
-					resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_REQUERIDO,
-							propiedadRequerida, propiedadRequerida);
+					resultado.agregarError(MessageCodes.COMPROBANTE_CAMPO_REQUERIDO, propiedadRequerida,
+							propiedadRequerida);
 				} else {
-					resultado.agregarError(MessageCodes.COMPROBANTE_JSON_SCHEMA_INVALIDO, ruta,
-							ruta, error.getMessage());
+					resultado.agregarError(MessageCodes.COMPROBANTE_JSON_SCHEMA_INVALIDO, ruta, ruta,
+							error.getMessage());
 				}
 			}
 		} catch (Exception exception) {
