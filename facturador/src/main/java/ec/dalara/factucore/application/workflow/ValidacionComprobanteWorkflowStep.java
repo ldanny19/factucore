@@ -86,23 +86,17 @@ public class ValidacionComprobanteWorkflowStep {
 			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "CORRECCION");
 		}
 
-		// La idempotencia se determina por idDocumentoOrigen y los dos hashes.
-		// Si el origen cambia, solo la coincidencia de identidad y contenido
-		// permite reconocer un comprobante ya procesado.
+		// Con otro idDocumentoOrigen, la coincidencia de ambos hashes indica
+		// que ya existe el mismo comprobante. Se informa su estado actual y
+		// se evita iniciar una nueva emisión.
 		var porHashes = comprobanteService.obtenerPorEmpresaEHashes(solicitud.getIdEmpresa(), hashes.identidad(),
 				hashes.contenido());
 		if (porHashes.isPresent()) {
-			asignarComprobanteExistente(contexto, porHashes.get());
-			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
-		}
-
-		// Si cambia el identificador de origen o de transacción, la combinación de
-		// hashes sigue permitiendo reconocer el mismo comprobante ya procesado.
-		var porHashes = comprobanteService.obtenerPorEmpresaEHashes(solicitud.getIdEmpresa(), hashes.identidad(),
-				hashes.contenido());
-		if (porHashes.isPresent()) {
-			asignarComprobanteExistente(contexto, porHashes.get());
-			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
+			var existente = porHashes.get();
+			asignarComprobanteExistente(contexto, existente);
+			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "COMPROBANTE_EXISTENTE",
+					java.util.Map.of("estadoProceso", existente.getEstadoProceso(),
+							"estadoSri", existente.getEstadoSri() == null ? "" : existente.getEstadoSri()));
 		}
 
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "VALIDADA");
