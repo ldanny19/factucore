@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EnvironmentCertificadoFirmaPasswordAdapter implements CertificadoFirmaPasswordPort {
 
-	private static final String PROPIEDAD_PASSWORD = "FACTUCORE_FIRMA_PASSWORD";
+	private static final String PROPIEDAD_PASSWORD = "factucore.firma.password";
 
 	private final Environment environment;
 
