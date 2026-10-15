@@ -19,15 +19,16 @@ printf '%s\n%s\n' "$REALM_NAME" "$APP_PASSWORD" | MSYS_NO_PATHCONV=1 "${COMPOSE[
   "$KCADM" config credentials --server http://127.0.0.1:8080 --realm master --user admin --password "$ADMIN_PASSWORD" >/dev/null
   if ! "$KCADM" get "realms/$REALM_NAME" >/dev/null 2>&1; then echo "Creando realm."; "$KCADM" create realms -s "realm=$REALM_NAME" -s enabled=true >/dev/null; else echo "Realm existente; se conserva."; fi
   if ! "$KCADM" get "roles/SUPERADMIN" -r "$REALM_NAME" >/dev/null 2>&1; then "$KCADM" create roles -r "$REALM_NAME" -s name=SUPERADMIN >/dev/null; fi
-  USER_EXISTS=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null || true)
-  if ! printf "%s" "$USER_EXISTS" | grep -q '"username"[[:space:]]*:[[:space:]]*"superApp"'; then
+  USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1 || true)
+  if [ -z "$USER_ID" ]; then
+    echo "Creando usuario superApp."
     "$KCADM" create users -r "$REALM_NAME" -s username=superApp -s enabled=true >/dev/null
     "$KCADM" set-password -r "$REALM_NAME" --username superApp --new-password "$APP_PASSWORD" >/dev/null
+    USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1 || true)
   else
     echo "superApp existente; se conserva su contraseña."
   fi
-  USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n 1 | sed 's/.*"\([^"]*\)"[[:space:]]*$/\1/')
-  [ -n "$USER_ID" ] || { echo "No fue posible obtener el ID del usuario superApp." >&2; exit 1; }
+  [ -n "$USER_ID" ] || { echo "No fue posible obtener el ID del usuario superApp desde Keycloak." >&2; exit 1; }
   if ! "$KCADM" get-roles -r "$REALM_NAME" --uid "$USER_ID" 2>/dev/null | grep -Fq "SUPERADMIN"; then
     "$KCADM" add-roles -r "$REALM_NAME" --uid "$USER_ID" --rolename SUPERADMIN >/dev/null
   fi
