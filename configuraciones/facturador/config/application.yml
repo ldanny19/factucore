@@ -122,7 +122,7 @@ factucore:
     logs: ${FACTUCORE_PATH_LOGS:${factucore.path.base}/logs}
 
   firma:
-    password: ${fima_password}
+    password: ${firma_password}
 
   sri:
     ambiente: ${FACTUCORE_SRI_AMBIENTE:PRUEBAS}
