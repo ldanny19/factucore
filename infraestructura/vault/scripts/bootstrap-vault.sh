@@ -299,14 +299,67 @@ migrate_secret "secret/factucore/notificacion/smtp" "secret/factucore/mail"
 # ---------------------------------------------------------------------------
 
 REQUIRED_SECRET_PATHS=$(
-  awk -F '|' '
+  awk '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    function unquote(value, first, last) {
+      value = trim(value)
+      first = substr(value, 1, 1)
+      last = substr(value, length(value), 1)
+      if ((first == "\\\"" && last == "\\\"") || (first == "\\047" && last == "\\047"))
+        value = substr(value, 2, length(value) - 2)
+      return value
+    }
+    function emit_entry() {
+      if (key == "") return
+      if (ruta == "") {
+        printf "Catalogo YAML invalido: falta ruta para %s.\\n", key > "/dev/stderr"
+        invalid = 1
+        return
+      }
+      print ruta
+      entries++
+    }
+    BEGIN { in_root = 0; key = ""; ruta = ""; entries = 0; invalid = 0 }
     /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
-    NF >= 4 { print $2 }
-  ' /vault/config/secretos.conf
+    /^secretos:[[:space:]]*$/ { if (in_root) invalid = 1; in_root = 1; next }
+    !in_root {
+      printf "Catalogo YAML invalido: se esperaba la propiedad raiz secretos.\\n" > "/dev/stderr"
+      invalid = 1
+      next
+    }
+    /^  [A-Za-z0-9_-]+:[[:space:]]*$/ {
+      emit_entry()
+      key = $0
+      sub(/^  /, "", key)
+      sub(/:[[:space:]]*$/, "", key)
+      ruta = ""
+      next
+    }
+    /^    ruta:/ {
+      line = $0
+      sub(/^    ruta:[[:space:]]*/, "", line)
+      ruta = unquote(line)
+      next
+    }
+    /^    (usuario|descripcion):/ { next }
+    {
+      printf "Catalogo YAML invalido: formato no admitido en linea %d.\\n", NR > "/dev/stderr"
+      invalid = 1
+    }
+    END {
+      emit_entry()
+      if (entries == 0) invalid = 1
+      if (invalid) exit 1
+    }
+  ' /vault/config/secretos.yml
 )
 
 [ -n "$REQUIRED_SECRET_PATHS" ] ||
-  fail "No se pudo leer el catalogo central de secretos /vault/config/secretos.conf."
+  fail "No se pudo leer el catalogo central de secretos /vault/config/secretos.yml."
 
 MISSING_SECRETS=""
 
