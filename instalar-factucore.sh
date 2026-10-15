@@ -124,7 +124,6 @@ HOST_FACTURADOR_LOGS="$HOST_HOME/facturador/logs"
 HOST_NOTIFICACION_CONFIG="$HOST_HOME/notificacion/config"
 HOST_NOTIFICACION_LOGS="$HOST_HOME/notificacion/logs"
 HOST_MESSAGING_CONFIG="$HOST_HOME/mensajeria/config"
-RUNTIME_CATALOG_FILE="$HOST_VAULT_CONFIG/secretos.conf"
 
 # Docker Compose debe recibir rutas Windows para los archivos del host cuando se ejecuta
 # desde Git Bash. Así MSYS_NO_PATHCONV=1 puede proteger las rutas Linux de los
@@ -185,12 +184,9 @@ copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTUR
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
-parse_secret_catalog > "$RUNTIME_CATALOG_FILE.tmp"
-[ -s "$RUNTIME_CATALOG_FILE.tmp" ] || fail "El catalogo YAML no contiene secretos."
-mv "$RUNTIME_CATALOG_FILE.tmp" "$RUNTIME_CATALOG_FILE"
 cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
-chmod 644 "$RUNTIME_CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
+chmod 644 "$HOST_VAULT_CONFIG/secretos.yml"
 chmod 755 "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
 
 install_if_missing "$ROOT_DIR/infraestructura/vault/config/vault.hcl" "$HOST_VAULT_CONFIG/vault.hcl"
@@ -328,7 +324,7 @@ ensure_required_secrets() {
       fail "El secreto guardado no pudo verificarse en Vault: $secret_path"
     fi
     printf "  [OK]     %s (guardado y verificado)\n" "$secret_path"
-  done < "$RUNTIME_CATALOG_FILE"
+  done < <(parse_secret_catalog)
 }
 
 CREAR_VAULT=false
