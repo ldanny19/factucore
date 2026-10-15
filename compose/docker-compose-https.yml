@@ -103,7 +103,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     volumes:
-      - ${FACTUCORE_HOME:-D:/factucore}/mensajeria/kafka/data:/var/lib/kafka/data
+      - kafka_datos:/var/lib/kafka/data
     healthcheck:
       test:
         [
@@ -191,4 +191,9 @@ services:
 secrets:
   vault_agent_token:
     file: ${FACTUCORE_HOME:-D:/factucore}/vault/secrets/vault_agent_token.txt
+
+volumes:
+  kafka_datos:
+    name: factucore_kafka_datos
+
 

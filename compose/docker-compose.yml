@@ -159,7 +159,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
-      - ${FACTUCORE_HOME}/mensajeria/kafka/data:/var/lib/kafka/data
+      - kafka_datos:/var/lib/kafka/data
     healthcheck:
       test:
         [
@@ -246,4 +246,9 @@ services:
       - ${FACTUCORE_HOME}/notificacion/logs:/app/logs
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
+
+volumes:
+  kafka_datos:
+    name: factucore_kafka_datos
+
 
