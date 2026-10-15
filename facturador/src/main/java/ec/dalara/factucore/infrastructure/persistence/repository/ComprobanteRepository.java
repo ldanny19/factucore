@@ -18,7 +18,8 @@ public interface ComprobanteRepository extends BaseRepository<Comprobante, Long>
 
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
 
-	List<Comprobante> findByEstadoProcesoAndEstadoRegistro(String estadoProceso, String estadoRegistro);
+	List<Comprobante> findTop100ByEstadoProcesoAndCodigoErrorAndFechaProximoReprocesoLessThanEqualAndEstadoRegistroOrderByFechaProximoReprocesoAsc(
+			String estadoProceso, String codigoError, LocalDateTime fecha, String estadoRegistro);
 
 	List<Comprobante> findTop100ByEstadoProcesoAndCodigoErrorAndFechaProximoReprocesoLessThanEqualAndEstadoRegistroOrderByFechaProximoReprocesoAsc(
 			String estadoProceso, String codigoError, LocalDateTime fechaProximoReproceso, String estadoRegistro);

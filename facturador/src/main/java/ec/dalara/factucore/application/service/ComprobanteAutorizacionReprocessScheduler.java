@@ -34,8 +34,8 @@ public class ComprobanteAutorizacionReprocessScheduler {
 				LOGGER.debug("Reconsultando autorización SRI para comprobante {} con código 70.", comprobante.getId());
 				comprobanteReprocessService.reprocesarAutorizacion(comprobante.getId());
 			} catch (RuntimeException exception) {
-				LOGGER.warn("No fue posible reconsultar la autorización SRI del comprobante {}.",
-						comprobante.getId(), exception);
+				LOGGER.warn("No fue posible reconsultar la autorización SRI del comprobante {}.", comprobante.getId(),
+						exception);
 			}
 		}
 	}
