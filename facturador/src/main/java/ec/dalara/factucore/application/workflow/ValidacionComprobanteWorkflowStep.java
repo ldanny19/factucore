@@ -68,12 +68,7 @@ public class ValidacionComprobanteWorkflowStep {
 			}
 
 			if (anterior.getHashContenido().equals(hashes.contenido())) {
-				contexto.asignarComprobante(anterior);
-				contexto.setSecuencial(anterior.getSecuencial());
-				contexto.setClaveAcceso(anterior.getClaveAcceso());
-				contexto.setEstadoSri(anterior.getEstadoSri());
-				contexto.setNumeroAutorizacion(anterior.getNumeroAutorizacion());
-				contexto.marcarIdempotente();
+				asignarComprobanteExistente(contexto, anterior);
 				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
 			}
 
@@ -98,12 +93,7 @@ public class ValidacionComprobanteWorkflowStep {
 			if (java.util.Objects.equals(solicitud.getIdDocumentoOrigen(), existente.getIdDocumentoOrigen())
 					&& hashes.identidad().equals(existente.getHashIdentidad())
 					&& hashes.contenido().equals(existente.getHashContenido())) {
-				contexto.asignarComprobante(existente);
-				contexto.setSecuencial(existente.getSecuencial());
-				contexto.setClaveAcceso(existente.getClaveAcceso());
-				contexto.setEstadoSri(existente.getEstadoSri());
-				contexto.setNumeroAutorizacion(existente.getNumeroAutorizacion());
-				contexto.marcarIdempotente();
+				asignarComprobanteExistente(contexto, existente);
 				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
 			}
 			return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
@@ -111,7 +101,26 @@ public class ValidacionComprobanteWorkflowStep {
 							MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
 		}
 
+		// Si cambia el identificador de origen o de transacción, la combinación de
+		// hashes sigue permitiendo reconocer el mismo comprobante ya procesado.
+		var porHashes = comprobanteService.obtenerPorEmpresaEHashes(solicitud.getIdEmpresa(), hashes.identidad(),
+				hashes.contenido());
+		if (porHashes.isPresent()) {
+			asignarComprobanteExistente(contexto, porHashes.get());
+			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
+		}
+
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "VALIDADA");
+	}
+
+	private void asignarComprobanteExistente(ContextoWorkflow contexto,
+			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+		contexto.asignarComprobante(comprobante);
+		contexto.setSecuencial(comprobante.getSecuencial());
+		contexto.setClaveAcceso(comprobante.getClaveAcceso());
+		contexto.setEstadoSri(comprobante.getEstadoSri());
+		contexto.setNumeroAutorizacion(comprobante.getNumeroAutorizacion());
+		contexto.marcarIdempotente();
 	}
 
 	private boolean esElegibleParaCorreccion(

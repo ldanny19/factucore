@@ -75,6 +75,12 @@ public class ComprobanteService extends BaseService<Comprobante> {
 				empresaId, idDocumentoOrigen, EstadoRegistro.ACTIVO);
 	}
 
+	public Optional<Comprobante> obtenerPorEmpresaEHashes(Long empresaId, String hashIdentidad, String hashContenido) {
+		return comprobanteRepository
+				.findFirstByEmpresaIdAndHashIdentidadAndHashContenidoAndEstadoRegistroOrderByFechaCreacionDesc(
+						empresaId, hashIdentidad, hashContenido, EstadoRegistro.ACTIVO);
+	}
+
 	public Optional<Comprobante> obtenerPorClaveAcceso(String claveAcceso) {
 		return comprobanteRepository.findByClaveAcceso(claveAcceso)
 				.filter(comprobante -> EstadoRegistro.ACTIVO.equals(comprobante.getEstadoRegistro()));
