@@ -57,6 +57,9 @@ public class ValidacionComprobanteWorkflowStep {
 				solicitud.getIdDocumentoOrigen());
 		if (porOrigen.isPresent()) {
 			var anterior = porOrigen.get();
+
+			// El identificador de origen es único por transacción y no puede reutilizarse
+			// para una identidad documental distinta.
 			if (anterior.getHashIdentidad() == null || anterior.getHashContenido() == null
 					|| !anterior.getHashIdentidad().equals(hashes.identidad())) {
 				return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
@@ -74,7 +77,9 @@ public class ValidacionComprobanteWorkflowStep {
 				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
 			}
 
-			if (!esNoAutorizado(anterior.getEstadoSri())) {
+			// No se reemplaza un comprobante autorizado ni se reenvía uno cuya
+			// recepción/autorización continúe pendiente en el SRI.
+			if (!esElegibleParaCorreccion(anterior)) {
 				return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CORRECCION_NO_PERMITIDA",
 						MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, messageResolver.resolver(
 								MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, solicitud.getIdDocumentoOrigen()));
@@ -109,12 +114,24 @@ public class ValidacionComprobanteWorkflowStep {
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "VALIDADA");
 	}
 
-	private boolean esNoAutorizado(String estadoSri) {
-		if (estadoSri == null) {
+	private boolean esElegibleParaCorreccion(
+			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+		if (comprobante == null || comprobante.getNumeroAutorizacion() != null
+				|| comprobante.getFechaAutorizacion() != null) {
 			return false;
 		}
-		String normalizado = Normalizer.normalize(estadoSri, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+
+		// Solo los estados explícitos de rechazo permiten corregir y reenviar.
+		// Los estados pendientes/desconocidos no pasan esta lista de autorización.
+		String estadoNormalizado = normalizarEstado(comprobante.getEstadoSri());
+		return "NOAUTORIZADO".equals(estadoNormalizado) || "RECHAZADO".equals(estadoNormalizado);
+	}
+
+	private String normalizarEstado(String estadoSri) {
+		if (estadoSri == null) {
+			return "";
+		}
+		return Normalizer.normalize(estadoSri, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
 				.replaceAll("[^A-Za-z]", "").toUpperCase(Locale.ROOT);
-		return "NOAUTORIZADO".equals(normalizado);
 	}
 }
