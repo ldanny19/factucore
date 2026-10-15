@@ -21,7 +21,7 @@ printf '%s\n%s\n' "$REALM_NAME" "$APP_PASSWORD" | MSYS_NO_PATHCONV=1 "${COMPOSE[
   if ! "$KCADM" get "roles/SUPERADMIN" -r "$REALM_NAME" >/dev/null 2>&1; then "$KCADM" create roles -r "$REALM_NAME" -s name=SUPERADMIN >/dev/null; fi
   USER_EXISTS=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null || true)
   if ! printf "%s" "$USER_EXISTS" | grep -q "superApp"; then "$KCADM" create users -r "$REALM_NAME" -s username=superApp -s enabled=true >/dev/null; "$KCADM" set-password -r "$REALM_NAME" --username superApp --new-password "$APP_PASSWORD" >/dev/null; else echo "superApp existente; se conserva su contraseña."; fi
-  if ! "$KCADM" get-roles -r "$REALM_NAME" --uusername superApp 2>/dev/null | grep -q "\\"name\\"[[:space:]]*:[[:space:]]*\\"SUPERADMIN\\""; then "$KCADM" add-roles -r "$REALM_NAME" --uusername superApp --rolename SUPERADMIN >/dev/null; fi
+  if ! "$KCADM" get-roles -r "$REALM_NAME" --uusername superApp 2>/dev/null | grep -Fq "SUPERADMIN"; then "$KCADM" add-roles -r "$REALM_NAME" --uusername superApp --rolename SUPERADMIN >/dev/null; fi
   echo "Aprovisionamiento de Keycloak finalizado."
 '
 unset APP_PASSWORD
