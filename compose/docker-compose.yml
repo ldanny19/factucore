@@ -58,7 +58,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/fima_password"
+          "test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/firma_password"
         ]
       interval: 5s
       timeout: 3s
