@@ -5,7 +5,7 @@
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<field name="formaPago" class="java.lang.String"/>
-	<field name="valor" class="java.lang.String"/>
+	<field name="valor" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -51,7 +51,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{formaPago}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+			<textField pattern="#,##0.00" textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement stretchType="RelativeToTallestObject" x="205" y="3" width="46" height="9" uuid="bd8fc27c-0a40-4169-b79e-2bbb7a44462e"/>
 				<textElement textAlignment="Right">
 					<font fontName="SansSerif" size="8"/>
