@@ -1,10 +1,9 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.service.ComprobanteService;
 import ec.dalara.factucore.application.service.DocumentoXsdService;
 import ec.dalara.factucore.application.service.EmisionService;
@@ -12,15 +11,12 @@ import ec.dalara.factucore.application.service.SecuencialService;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
-
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
-import ec.dalara.factucore.application.ApplicationException;
-
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class AsignacionSecuencialWorkflowStep  {
+public class AsignacionSecuencialWorkflowStep {
 
 	private final WorkflowEtapaExecutor workflowEtapaExecutor;
 	private final EmisionService emisionService;
@@ -33,8 +29,8 @@ public class AsignacionSecuencialWorkflowStep  {
 	}
 
 	/**
-	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
-	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel. El Bean
+	 * no conoce ni decide el siguiente nodo del workflow.
 	 */
 	@Transactional
 	public String ejecutar(ContextoWorkflow contexto) {
@@ -55,7 +51,6 @@ public class AsignacionSecuencialWorkflowStep  {
 
 		var documento = documentoXsdService.obtenerPorId(solicitud.getIdTipoDocumento())
 				.orElseThrow(() -> new ApplicationException(MessageCodes.SECUENCIAL_NO_ENCONTRADO));
-
 
 		var secuencial = secuencialService.bloquearSecuencial(emision.puntoEmision().getId(), documento.getCodigo());
 

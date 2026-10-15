@@ -31,8 +31,7 @@ public class KafkaTopicInitializer implements ApplicationRunner {
 	private final String bootstrapServers;
 	private final List<String> topicos;
 
-	public KafkaTopicInitializer(
-			@Value("${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}") String bootstrapServers,
+	public KafkaTopicInitializer(@Value("${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}") String bootstrapServers,
 			@Value("${factucore.messaging.destinos.auditoria.nombre:auditoria}") String topicoAuditoria,
 			@Value("${factucore.messaging.destinos.notificacion.nombre:notificacion}") String topicoNotificacion) {
 		this.bootstrapServers = bootstrapServers;
@@ -41,10 +40,9 @@ public class KafkaTopicInitializer implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
-		Map<String, Object> configuracion = Map.of(
-				AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
-				AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 5_000,
-				AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, 5_000);
+		Map<String, Object> configuracion = Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
+				AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 5_000, AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG,
+				5_000);
 
 		try (AdminClient adminClient = AdminClient.create(configuracion)) {
 			inicializarTopicos(adminClient);
@@ -68,23 +66,22 @@ public class KafkaTopicInitializer implements ApplicationRunner {
 					break;
 				}
 
-				LOGGER.warn("Kafka todavía no está disponible para inicializar los topics. Intento {}/{}.",
-						intento, MAX_INTENTOS);
+				LOGGER.warn("Kafka todavía no está disponible para inicializar los topics. Intento {}/{}.", intento,
+						MAX_INTENTOS);
 				Thread.sleep(ESPERA_MS);
 			}
 		}
 
 		throw new IllegalStateException(
-				"No fue posible inicializar los topics Kafka después de " + MAX_INTENTOS + " intentos.",
-				ultimoError);
+				"No fue posible inicializar los topics Kafka después de " + MAX_INTENTOS + " intentos.", ultimoError);
 	}
 
 	private void crearTopicoSiNoExiste(AdminClient adminClient, String nombreTopico) throws Exception {
 		NewTopic topico = new NewTopic(nombreTopico, PARTICIONES, FACTOR_REPLICACION);
 
 		try {
-			adminClient.createTopics(List.of(topico)).values().get(nombreTopico)
-					.get(Duration.ofSeconds(5).toMillis(), TimeUnit.MILLISECONDS);
+			adminClient.createTopics(List.of(topico)).values().get(nombreTopico).get(Duration.ofSeconds(5).toMillis(),
+					TimeUnit.MILLISECONDS);
 			LOGGER.info("Topic Kafka creado: {}", nombreTopico);
 		} catch (ExecutionException exception) {
 			if (exception.getCause() instanceof TopicExistsException) {

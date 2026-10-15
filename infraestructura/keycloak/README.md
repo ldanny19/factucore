@@ -4,14 +4,16 @@
 
 Keycloak proporciona identidad, autenticación y autorización mediante OAuth2/OIDC. No es un microservicio de negocio de FactuCore.
 
-## Realm de aplicación
+## Aprovisionamiento del realm de aplicación
 
-El realm utilizado por defecto por las aplicaciones es `facturador`. Su nombre puede configurarse mediante `KEYCLOAK_REALM` en el entorno de despliegue Docker Compose.
+El instalador `instalar-factucore.sh` solicita el nombre del realm y la contraseña permanente de `superApp`, inicia Keycloak y sus dependencias y llama a `infraestructura/keycloak/provisionar-realm.sh`.
 
-El archivo `compose/docker-compose.yml` **no crea ni importa automáticamente** el realm de aplicación ni sus clientes, roles o usuarios de negocio. Estos elementos deben provisionarse mediante el procedimiento de configuración de Keycloak que se defina para el entorno.
+El script crea solo los recursos faltantes: realm, rol `SUPERADMIN` y usuario `superApp`; también verifica la asignación del rol. Si el usuario ya existe, conserva su contraseña. La contraseña no se almacena en archivos ni se imprime en logs. La contraseña administrativa técnica del usuario `admin` se obtiene del secreto `keycloak_admin_password` montado desde Vault.
 
-## Administrador de Keycloak
+La contraseña de `superApp` es permanente. `SUPERADMIN` representa los privilegios funcionales de FactuCore y no concede automáticamente administración del servidor Keycloak.
 
-La contraseña del administrador inicial se solicita durante la instalación nueva y se almacena en Vault. El administrador de bootstrap sirve para administrar Keycloak; no debe confundirse con un usuario de negocio del realm de aplicación.
+## Despliegues
+
+Docker Compose usa este script común. Kubernetes debe invocar el mismo proceso lógico desde un `Job`, proporcionando las credenciales técnicas mediante un Secret de Kubernetes.
 
 No almacenar contraseñas, tokens ni exportaciones con credenciales en el repositorio.

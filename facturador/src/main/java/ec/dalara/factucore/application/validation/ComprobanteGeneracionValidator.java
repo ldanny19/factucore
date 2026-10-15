@@ -42,8 +42,7 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 		return resultado;
 	}
 
-	private void validarDocumentoOrigen(ComprobanteGeneracionRequest request,
-			ComprobanteValidationResult resultado) {
+	private void validarDocumentoOrigen(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		if (request.getIdDocumentoOrigen() == null || request.getIdDocumentoOrigen() <= 0) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_REQUERIDO, "idDocumentoOrigen");
 		}
@@ -69,15 +68,14 @@ public class ComprobanteGeneracionValidator implements ComprobanteValidator {
 		}
 	}
 
-	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request,
-			ComprobanteValidationResult resultado) {
+	private void validarDefinicionYDatos(ComprobanteGeneracionRequest request, ComprobanteValidationResult resultado) {
 		if (request.getIdTipoDocumento() == null || request.getVersionXsd() == null
 				|| request.getVersionXsd().isBlank()) {
 			return;
 		}
 
-		var definicionOptional = documentoDefinitionProvider.obtenerDefinicion(
-				request.getIdTipoDocumento(), request.getVersionXsd());
+		var definicionOptional = documentoDefinitionProvider.obtenerDefinicion(request.getIdTipoDocumento(),
+				request.getVersionXsd());
 
 		if (definicionOptional.isEmpty()) {
 			resultado.agregarError(MessageCodes.COMPROBANTE_DEFINICION_NO_ENCONTRADA, "idTipoDocumento",

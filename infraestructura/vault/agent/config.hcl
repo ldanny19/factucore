@@ -73,7 +73,7 @@ EOT
 }
 
 template {
-  destination = "/vault/secrets/fima_password"
+  destination = "/vault/secrets/firma_password"
   contents = <<EOT
 {{- with secret "secret/factucore/firma" -}}
 {{ .Data.data.password }}

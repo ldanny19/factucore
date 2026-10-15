@@ -10,7 +10,6 @@ import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-import ec.dalara.factucore.domain.workflow.EstadoProceso;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
@@ -51,8 +50,8 @@ public class WorkflowEtapaExecutor {
 			if (contexto != null) {
 				workflowResultadoService.registrar(contexto, resultadoError);
 			}
-			log.error(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_ERROR, idTransaccion, etapa, codigo, mensaje),
-					exception);
+			log.error(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_ERROR, idTransaccion, etapa, codigo,
+					mensaje), exception);
 			String salida = resultadoError.salida();
 			log.debug(messageResolver.resolver(MessageCodes.LOG_WORKFLOW_ETAPA_FIN, idTransaccion, etapa, salida));
 			return salida;

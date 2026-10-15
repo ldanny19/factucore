@@ -4,13 +4,10 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
-
-
 import ec.dalara.factucore.application.port.out.ComprobanteEvidenciaPort;
 import ec.dalara.factucore.application.port.out.RidePort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -30,6 +27,7 @@ public class GeneracionRideWorkflowStep {
 	private final MessageResolver messageResolver;
 	private final RidePort ridePort;
 	private final ComprobanteEvidenciaPort evidenciaPort;
+
 	private String obtenerUsuario(ContextoWorkflow contexto) {
 		if (contexto.getSolicitud() != null && contexto.getSolicitud().getUsuario() != null
 				&& !contexto.getSolicitud().getUsuario().isBlank()) {
@@ -60,7 +58,7 @@ public class GeneracionRideWorkflowStep {
 					|| definicion.getDocumento().getNombre() == null) {
 				throw new ApplicationException(MessageCodes.RIDE_DATOS_INVALIDOS);
 			}
-byte[] pdf = ridePort.generar(comprobante, definicion.getDocumento().getNombre());
+			byte[] pdf = ridePort.generar(comprobante, definicion.getDocumento().getNombre());
 			contexto.setRide(pdf);
 
 			String ruta = evidenciaPort.guardarRide(comprobante.getId(), pdf, obtenerUsuario(contexto));

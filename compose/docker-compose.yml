@@ -58,7 +58,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/fima_password"
+          "test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/firma_password"
         ]
       interval: 5s
       timeout: 3s
@@ -159,7 +159,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
-      - ${FACTUCORE_HOME}/mensajeria/kafka/data:/var/lib/kafka/data
+      - kafka_datos:/var/lib/kafka/data
     healthcheck:
       test:
         [
@@ -246,4 +246,9 @@ services:
       - ${FACTUCORE_HOME}/notificacion/logs:/app/logs
     ports:
       - "${NOTIFICACION_PORT:-8082}:8080"
+
+volumes:
+  kafka_datos:
+    name: factucore_kafka_datos
+
 

@@ -1,7 +1,5 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -12,21 +10,19 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.MessageResolver;
 import ec.dalara.factucore.application.port.out.DocumentoDefinitionProvider;
 import ec.dalara.factucore.application.port.out.XmlGeneratorPort;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
-
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
-import ec.dalara.factucore.application.ApplicationException;
-
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class GeneracionXmlWorkflowStep  {
+public class GeneracionXmlWorkflowStep {
 
 	private static final Logger log = LoggerFactory.getLogger(GeneracionXmlWorkflowStep.class);
 
@@ -41,8 +37,8 @@ public class GeneracionXmlWorkflowStep  {
 	}
 
 	/**
-	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel.
-	 * El Bean no conoce ni decide el siguiente nodo del workflow.
+	 * Ejecuta la etapa y devuelve exclusivamente su resultado para Camel. El Bean
+	 * no conoce ni decide el siguiente nodo del workflow.
 	 */
 	public String ejecutar(ContextoWorkflow contexto) {
 		return workflowEtapaExecutor.ejecutar(contexto, etapa(), () -> ejecutarResultado(contexto));
@@ -53,19 +49,17 @@ public class GeneracionXmlWorkflowStep  {
 		var definition = contexto.getDefinicionDocumento();
 
 		if (definition == null) {
-			definition = definitionProvider
-					.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
+			definition = definitionProvider.obtenerDefinicion(solicitud.getIdTipoDocumento(), solicitud.getVersionXsd())
 					.orElseThrow(() -> new ApplicationException(MessageCodes.XSD_VERSION_NO_ENCONTRADA));
 			contexto.setDefinicionDocumento(definition);
 		}
 
 		var comprobanteJson = solicitud.getDatos() == null ? null : solicitud.getDatos().path("comprobante");
 		var datos = comprobanteJson == null || comprobanteJson.isMissingNode() || comprobanteJson.isNull()
-				|| !comprobanteJson.isObject()
-				? new LinkedHashMap<String, Object>()
-				: objectMapper.convertValue(comprobanteJson,
-						new TypeReference<LinkedHashMap<String, Object>>() {
-						});
+				|| !comprobanteJson.isObject() ? new LinkedHashMap<String, Object>()
+						: objectMapper.convertValue(comprobanteJson,
+								new TypeReference<LinkedHashMap<String, Object>>() {
+								});
 
 		if (contexto.getClaveAcceso() == null || contexto.getClaveAcceso().isBlank()) {
 			throw new ApplicationException(MessageCodes.CLAVE_ACCESO_REQUERIDA);
@@ -89,14 +83,11 @@ public class GeneracionXmlWorkflowStep  {
 			contextoGenerado.put("secuencial", contexto.getSecuencial());
 		}
 
-		String xml = xmlGenerator.generar(
-				definition,
-				datos,
-				contextoFactuCore,
-				contextoGenerado);
+		String xml = xmlGenerator.generar(definition, datos, contextoFactuCore, contextoGenerado);
 		contexto.setXml(xml);
 		if (contexto.getComprobante() != null) {
-			contexto.getComprobante().setEstadoProceso(ec.dalara.factucore.domain.workflow.EstadoProceso.XML_GENERADO.name());
+			contexto.getComprobante()
+					.setEstadoProceso(ec.dalara.factucore.domain.workflow.EstadoProceso.XML_GENERADO.name());
 		}
 
 		log.debug(messageResolver.resolver(MessageCodes.LOG_XML_GENERADO, xml));

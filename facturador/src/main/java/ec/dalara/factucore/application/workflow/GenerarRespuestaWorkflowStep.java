@@ -1,23 +1,20 @@
 package ec.dalara.factucore.application.workflow;
 
-import ec.dalara.factucore.application.workflow.WorkflowEtapaExecutor;
-
-
 import org.springframework.stereotype.Component;
 
 import ec.dalara.factucore.domain.workflow.ContextoWorkflow;
-
 import ec.dalara.factucore.domain.workflow.EtapaWorkflow;
-
 import ec.dalara.factucore.domain.workflow.ResultadoEtapa;
 import lombok.RequiredArgsConstructor;
 
 /**
  * Prepara la respuesta pública para un cierre normal del workflow.
  *
- * <p>Se ejecuta tanto después de un proceso exitoso como después de un error
+ * <p>
+ * Se ejecuta tanto después de un proceso exitoso como después de un error
  * crítico. El nodo no termina el workflow ni decide la transición; devuelve
- * {@code OK} y el XML de Camel conduce posteriormente al nodo {@code FIN}.</p>
+ * {@code OK} y el XML de Camel conduce posteriormente al nodo {@code FIN}.
+ * </p>
  */
 @Component
 @RequiredArgsConstructor
@@ -28,9 +25,12 @@ public class GenerarRespuestaWorkflowStep {
 
 	private boolean resultadoFinalExitoso(ContextoWorkflow contexto) {
 		for (EtapaWorkflow etapa : EtapaWorkflow.values()) {
-			if (etapa == EtapaWorkflow.INICIO || etapa == EtapaWorkflow.GENERAR_RESPUESTA || etapa == EtapaWorkflow.RESPUESTA_ERROR_NOTIFICACION || etapa == EtapaWorkflow.FIN) continue;
+			if (etapa == EtapaWorkflow.INICIO || etapa == EtapaWorkflow.GENERAR_RESPUESTA
+					|| etapa == EtapaWorkflow.RESPUESTA_ERROR_NOTIFICACION || etapa == EtapaWorkflow.FIN)
+				continue;
 			ResultadoEtapa resultado = contexto.getResultado(etapa);
-			if (resultado != null && !resultado.isExitosa()) return false;
+			if (resultado != null && !resultado.isExitosa())
+				return false;
 		}
 		return true;
 	}
@@ -50,4 +50,5 @@ public class GenerarRespuestaWorkflowStep {
 			contexto.setRespuesta(responseFactory.crear(contexto));
 		}
 		return ResultadoEtapa.exitosa(etapa(), "COMPLETADA");
-	}}
+	}
+}

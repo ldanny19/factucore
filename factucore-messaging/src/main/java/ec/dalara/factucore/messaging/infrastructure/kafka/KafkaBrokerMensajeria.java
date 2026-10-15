@@ -101,17 +101,34 @@ public class KafkaBrokerMensajeria implements BrokerMensajeria {
 
 		container.setCommonErrorHandler(errorHandler);
 		container.setupMessageListener((MessageListener<String, String>) record -> {
+			EventoMensaje evento;
 			try {
-				var evento = objectMapper.readValue(record.value(), EventoMensaje.class);
-				if (aceptaEvento(consumidor, evento)) {
-					consumidor.consumir(evento);
-				}
-			} catch (Exception e) {
-				LOGGER.error(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
-				throw new IllegalStateException(messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()), e);
+				evento = objectMapper.readValue(record.value(), EventoMensaje.class);
+			} catch (Exception exception) {
+				LOGGER.error("No fue posible deserializar un mensaje Kafka. TOPICO={}, PARTICION={}, OFFSET={}, GRUPO={}.",
+						record.topic(), record.partition(), record.offset(), consumidor.grupo(), exception);
+				throw new IllegalStateException(
+						messageResolver.resolver(MessageCodes.MENSAJERIA_PROCESAMIENTO_ERROR, consumidor.destino()),
+						exception);
+			}
+
+			LOGGER.info("Mensaje Kafka recibido. TOPICO={}, PARTICION={}, OFFSET={}, GRUPO={}, DESTINO={}, ID_EVENTO={}, TIPO_EVENTO={}.",
+					record.topic(), record.partition(), record.offset(), consumidor.grupo(), consumidor.destino(),
+					evento.id(), evento.tipo());
+
+			if (aceptaEvento(consumidor, evento)) {
+				consumidor.consumir(evento);
+				LOGGER.info("Mensaje Kafka procesado. TOPICO={}, OFFSET={}, ID_EVENTO={}, TIPO_EVENTO={}.",
+						record.topic(), record.offset(), evento.id(), evento.tipo());
+			} else {
+				LOGGER.warn("Mensaje Kafka ignorado por tipo de evento no soportado. TOPICO={}, OFFSET={}, ID_EVENTO={}, TIPO_EVENTO={}, TIPOS_ACEPTADOS={}.",
+						record.topic(), record.offset(), evento.id(), evento.tipo(), consumidor.tiposEvento());
 			}
 		});
 		container.start();
+		LOGGER.info("Consumidor Kafka iniciado. TOPICO={}, GRUPO={}, DESTINO={}, CONCURRENCIA={}.",
+				configuracion.getNombre(), consumidor.grupo(), consumidor.destino(),
+				conexion(configuracion.getConexion()).getKafka().getConsumer().getConcurrency());
 	}
 
 	private MessagingProperties.DestinoProperties destino(String nombre) {

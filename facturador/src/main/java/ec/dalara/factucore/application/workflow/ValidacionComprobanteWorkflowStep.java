@@ -53,31 +53,31 @@ public class ValidacionComprobanteWorkflowStep {
 		contexto.setHashIdentidad(hashes.identidad());
 		contexto.setHashContenido(hashes.contenido());
 
-		var porOrigen = comprobanteService.obtenerPorEmpresaEIdDocumentoOrigen(
-				solicitud.getIdEmpresa(), solicitud.getIdDocumentoOrigen());
+		var porOrigen = comprobanteService.obtenerPorEmpresaEIdDocumentoOrigen(solicitud.getIdEmpresa(),
+				solicitud.getIdDocumentoOrigen());
 		if (porOrigen.isPresent()) {
 			var anterior = porOrigen.get();
+
+			// El identificador de origen es único por transacción y no puede reutilizarse
+			// para una identidad documental distinta.
 			if (anterior.getHashIdentidad() == null || anterior.getHashContenido() == null
 					|| !anterior.getHashIdentidad().equals(hashes.identidad())) {
 				return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
-						MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO,
-						messageResolver.resolver(MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
+						MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, messageResolver.resolver(
+								MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
 			}
 
 			if (anterior.getHashContenido().equals(hashes.contenido())) {
-				contexto.asignarComprobante(anterior);
-				contexto.setSecuencial(anterior.getSecuencial());
-				contexto.setClaveAcceso(anterior.getClaveAcceso());
-				contexto.setEstadoSri(anterior.getEstadoSri());
-				contexto.setNumeroAutorizacion(anterior.getNumeroAutorizacion());
-				contexto.marcarIdempotente();
+				asignarComprobanteExistente(contexto, anterior);
 				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
 			}
 
-			if (!esNoAutorizado(anterior.getEstadoSri())) {
+			// No se reemplaza un comprobante autorizado ni se reenvía uno cuya
+			// recepción/autorización continúe pendiente en el SRI.
+			if (!esElegibleParaCorreccion(anterior)) {
 				return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CORRECCION_NO_PERMITIDA",
-						MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA,
-						messageResolver.resolver(MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, solicitud.getIdDocumentoOrigen()));
+						MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, messageResolver.resolver(
+								MessageCodes.COMPROBANTE_CORRECCION_NO_PERMITIDA, solicitud.getIdDocumentoOrigen()));
 			}
 
 			contexto.setComprobanteReemplazado(anterior);
@@ -86,37 +86,50 @@ public class ValidacionComprobanteWorkflowStep {
 			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "CORRECCION");
 		}
 
-		var porTransaccion = comprobanteService.obtenerPorEmpresaEIdTransaccion(
-				solicitud.getIdEmpresa(), solicitud.getIdTransaccion());
-		if (porTransaccion.isPresent()) {
-			var existente = porTransaccion.get();
-			if (java.util.Objects.equals(solicitud.getIdDocumentoOrigen(), existente.getIdDocumentoOrigen())
-					&& hashes.identidad().equals(existente.getHashIdentidad())
-					&& hashes.contenido().equals(existente.getHashContenido())) {
-				contexto.asignarComprobante(existente);
-				contexto.setSecuencial(existente.getSecuencial());
-				contexto.setClaveAcceso(existente.getClaveAcceso());
-				contexto.setEstadoSri(existente.getEstadoSri());
-				contexto.setNumeroAutorizacion(existente.getNumeroAutorizacion());
-				contexto.marcarIdempotente();
-				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
-			}
-			return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
-					MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO,
-					messageResolver.resolver(MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
+		// Con otro idDocumentoOrigen, la coincidencia de ambos hashes indica
+		// que ya existe el mismo comprobante. Se informa su estado actual y
+		// se evita iniciar una nueva emisión.
+		var porHashes = comprobanteService.obtenerPorEmpresaEHashes(solicitud.getIdEmpresa(), hashes.identidad(),
+				hashes.contenido());
+		if (porHashes.isPresent()) {
+			var existente = porHashes.get();
+			asignarComprobanteExistente(contexto, existente);
+			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "COMPROBANTE_EXISTENTE",
+					java.util.Map.of("estadoProceso", existente.getEstadoProceso(),
+							"estadoSri", existente.getEstadoSri() == null ? "" : existente.getEstadoSri()));
 		}
 
 		return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "VALIDADA");
 	}
 
-	private boolean esNoAutorizado(String estadoSri) {
-		if (estadoSri == null) {
+	private void asignarComprobanteExistente(ContextoWorkflow contexto,
+			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+		contexto.asignarComprobante(comprobante);
+		contexto.setSecuencial(comprobante.getSecuencial());
+		contexto.setClaveAcceso(comprobante.getClaveAcceso());
+		contexto.setEstadoSri(comprobante.getEstadoSri());
+		contexto.setNumeroAutorizacion(comprobante.getNumeroAutorizacion());
+		contexto.marcarIdempotente();
+	}
+
+	private boolean esElegibleParaCorreccion(
+			ec.dalara.factucore.infrastructure.persistence.entity.Comprobante comprobante) {
+		if (comprobante == null || comprobante.getNumeroAutorizacion() != null
+				|| comprobante.getFechaAutorizacion() != null) {
 			return false;
 		}
-		String normalizado = Normalizer.normalize(estadoSri, Normalizer.Form.NFD)
-				.replaceAll("\\p{M}", "")
-				.replaceAll("[^A-Za-z]", "")
-				.toUpperCase(Locale.ROOT);
-		return "NOAUTORIZADO".equals(normalizado);
+
+		// Solo los estados explícitos de rechazo permiten corregir y reenviar.
+		// Los estados pendientes/desconocidos no pasan esta lista de autorización.
+		String estadoNormalizado = normalizarEstado(comprobante.getEstadoSri());
+		return "NOAUTORIZADO".equals(estadoNormalizado) || "RECHAZADO".equals(estadoNormalizado);
+	}
+
+	private String normalizarEstado(String estadoSri) {
+		if (estadoSri == null) {
+			return "";
+		}
+		return Normalizer.normalize(estadoSri, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+				.replaceAll("[^A-Za-z]", "").toUpperCase(Locale.ROOT);
 	}
 }

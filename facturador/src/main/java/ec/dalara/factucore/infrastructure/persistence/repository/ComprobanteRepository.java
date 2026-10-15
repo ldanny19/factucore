@@ -18,13 +18,18 @@ public interface ComprobanteRepository extends BaseRepository<Comprobante, Long>
 
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
 
+	List<Comprobante> findByEstadoProcesoAndEstadoRegistro(String estadoProceso, String estadoRegistro);
+
 	List<Comprobante> findTop100ByEstadoProcesoAndCodigoErrorAndFechaProximoReprocesoLessThanEqualAndEstadoRegistroOrderByFechaProximoReprocesoAsc(
-			String estadoProceso, String codigoError, LocalDateTime fecha, String estadoRegistro);
+			String estadoProceso, String codigoError, LocalDateTime fechaProximoReproceso, String estadoRegistro);
 
 	Optional<Comprobante> findByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 
 	Optional<Comprobante> findFirstByEmpresaIdAndIdDocumentoOrigenAndEstadoRegistroOrderByFechaCreacionDesc(
 			Long empresaId, Long idDocumentoOrigen, String estadoRegistro);
+
+	Optional<Comprobante> findFirstByEmpresaIdAndHashIdentidadAndHashContenidoAndEstadoRegistroOrderByFechaCreacionDesc(
+			Long empresaId, String hashIdentidad, String hashContenido, String estadoRegistro);
 
 	boolean existsByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 

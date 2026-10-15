@@ -3,7 +3,8 @@
 .env.*
 !.env.example
 
-# Secretos generados localmente por el bootstrap de Vault
+# Directorios de secretos generados localmente por Vault u otros procesos
+/secret/
 /secrets/
 
 # Persistencia local externa (si FACTUCORE_HOME apunta dentro del repositorio)
