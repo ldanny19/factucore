@@ -309,14 +309,14 @@ REQUIRED_SECRET_PATHS=$(
       value = trim(value)
       first = substr(value, 1, 1)
       last = substr(value, length(value), 1)
-      if ((first == "\\\"" && last == "\\\"") || (first == "\\047" && last == "\\047"))
+      if ((first == "\"" && last == "\"") || (first == "\047" && last == "\047"))
         value = substr(value, 2, length(value) - 2)
       return value
     }
     function emit_entry() {
       if (key == "") return
       if (ruta == "") {
-        printf "Catalogo YAML invalido: falta ruta para %s.\\n", key > "/dev/stderr"
+        printf "Catalogo YAML invalido: falta ruta para %s.\n", key > "/dev/stderr"
         invalid = 1
         return
       }
@@ -327,7 +327,7 @@ REQUIRED_SECRET_PATHS=$(
     /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
     /^secretos:[[:space:]]*$/ { if (in_root) invalid = 1; in_root = 1; next }
     !in_root {
-      printf "Catalogo YAML invalido: se esperaba la propiedad raiz secretos.\\n" > "/dev/stderr"
+      printf "Catalogo YAML invalido: se esperaba la propiedad raiz secretos.\n" > "/dev/stderr"
       invalid = 1
       next
     }
@@ -347,7 +347,7 @@ REQUIRED_SECRET_PATHS=$(
     }
     /^    (usuario|descripcion):/ { next }
     {
-      printf "Catalogo YAML invalido: formato no admitido en linea %d.\\n", NR > "/dev/stderr"
+      printf "Catalogo YAML invalido: formato no admitido en linea %d.\n", NR > "/dev/stderr"
       invalid = 1
     }
     END {
