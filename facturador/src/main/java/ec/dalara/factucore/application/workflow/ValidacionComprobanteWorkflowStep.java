@@ -86,19 +86,14 @@ public class ValidacionComprobanteWorkflowStep {
 			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "CORRECCION");
 		}
 
-		var porTransaccion = comprobanteService.obtenerPorEmpresaEIdTransaccion(solicitud.getIdEmpresa(),
-				solicitud.getIdTransaccion());
-		if (porTransaccion.isPresent()) {
-			var existente = porTransaccion.get();
-			if (java.util.Objects.equals(solicitud.getIdDocumentoOrigen(), existente.getIdDocumentoOrigen())
-					&& hashes.identidad().equals(existente.getHashIdentidad())
-					&& hashes.contenido().equals(existente.getHashContenido())) {
-				asignarComprobanteExistente(contexto, existente);
-				return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
-			}
-			return ResultadoEtapa.fallida(EtapaWorkflow.VALIDACION, "CONFLICTO",
-					MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, messageResolver.resolver(
-							MessageCodes.COMPROBANTE_DOCUMENTO_ORIGEN_CONFLICTO, solicitud.getIdDocumentoOrigen()));
+		// La idempotencia se determina por idDocumentoOrigen y los dos hashes.
+		// Si el origen cambia, solo la coincidencia de identidad y contenido
+		// permite reconocer un comprobante ya procesado.
+		var porHashes = comprobanteService.obtenerPorEmpresaEHashes(solicitud.getIdEmpresa(), hashes.identidad(),
+				hashes.contenido());
+		if (porHashes.isPresent()) {
+			asignarComprobanteExistente(contexto, porHashes.get());
+			return ResultadoEtapa.exitosa(EtapaWorkflow.VALIDACION, "IDEMPOTENTE");
 		}
 
 		// Si cambia el identificador de origen o de transacción, la combinación de
