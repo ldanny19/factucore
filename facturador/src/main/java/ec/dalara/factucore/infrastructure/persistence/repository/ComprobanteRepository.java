@@ -1,5 +1,6 @@
 package ec.dalara.factucore.infrastructure.persistence.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +19,9 @@ public interface ComprobanteRepository extends BaseRepository<Comprobante, Long>
 	Optional<Comprobante> findByClaveAcceso(String claveAcceso);
 
 	List<Comprobante> findByEstadoProcesoAndEstadoRegistro(String estadoProceso, String estadoRegistro);
+
+	List<Comprobante> findTop100ByEstadoProcesoAndCodigoErrorAndFechaProximoReprocesoLessThanEqualAndEstadoRegistroOrderByFechaProximoReprocesoAsc(
+			String estadoProceso, String codigoError, LocalDateTime fechaProximoReproceso, String estadoRegistro);
 
 	Optional<Comprobante> findByEmpresaIdAndIdTransaccion(Long empresaId, String idTransaccion);
 
