@@ -351,4 +351,23 @@ printf "Almacenamiento persistente configurado: %s\n" "$VAULT_DATA_DIR"
 ensure_required_secrets
 
 log "Vault esta operativo y todos los secretos requeridos fueron verificados."
+CURRENT_REALM="$(sed -n 's/^KEYCLOAK_REALM=//p' "$ENV_FILE" | tail -n 1 | tr -d '\r')"
+CURRENT_REALM="${CURRENT_REALM:-facturador}"
+printf "\nRealm de Keycloak para esta instalación [%s]: " "$CURRENT_REALM"
+IFS= read -r REALM_NAME </dev/tty
+REALM_NAME="${REALM_NAME:-$CURRENT_REALM}"
+case "$REALM_NAME" in *[!a-zA-Z0-9._-]*|'') fail "Nombre de realm inválido." ;; esac
+if grep -q '^KEYCLOAK_REALM=' "$ENV_FILE"; then sed -i "s|^KEYCLOAK_REALM=.*|KEYCLOAK_REALM=$REALM_NAME|" "$ENV_FILE"; else printf "\nKEYCLOAK_REALM=%s\n" "$REALM_NAME" >> "$ENV_FILE"; fi
+while true; do
+  IFS= read -r -s -p "Contraseña permanente para superApp: " SUPERAPP_PASSWORD </dev/tty; printf "\n"
+  [ -n "$SUPERAPP_PASSWORD" ] || { printf "La contraseña no puede estar vacía.\n"; continue; }
+  IFS= read -r -s -p "Confirma la contraseña de superApp: " SUPERAPP_PASSWORD_CONFIRM </dev/tty; printf "\n"
+  if [ "$SUPERAPP_PASSWORD" = "$SUPERAPP_PASSWORD_CONFIRM" ]; then break; fi
+  printf "Las contraseñas no coinciden. Inténtalo de nuevo.\n"; unset SUPERAPP_PASSWORD SUPERAPP_PASSWORD_CONFIRM
+done
+unset SUPERAPP_PASSWORD_CONFIRM
+log "Iniciando Keycloak y sus dependencias para aprovisionar el realm."
+"${COMPOSE[@]}" up -d auth-server
+if ! printf '%s\n' "$SUPERAPP_PASSWORD" | bash "$ROOT_DIR/infraestructura/keycloak/provisionar-realm.sh" "$REALM_NAME"; then unset SUPERAPP_PASSWORD; fail "No fue posible aprovisionar Keycloak."; fi
+unset SUPERAPP_PASSWORD
 exec "$ROOT_DIR/levanta-aplicacion.sh"
