@@ -47,7 +47,7 @@
 					<rightPen lineWidth="1.0"/>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="SansSerif" size="6" isBold="true"/>
+					<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{valor} == null) ? java.math.BigDecimal.ZERO : ($F{valor} instanceof java.math.BigDecimal ? (java.math.BigDecimal) $F{valor} : new java.math.BigDecimal($F{valor}.toString()))]]></textFieldExpression>
 			</textField>
@@ -63,7 +63,7 @@
 					<rightPen lineWidth="1.0"/>
 				</box>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
-					<font fontName="SansSerif" size="6" isBold="true"/>
+					<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
 			</textField>
