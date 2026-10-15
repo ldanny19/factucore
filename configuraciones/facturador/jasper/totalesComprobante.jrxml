@@ -6,7 +6,7 @@
 	<style name="estilo">
 		<conditionalStyle>
 			<conditionExpression><![CDATA[$F{esNegativo}]]></conditionExpression>
-			<style forecolor="#FF0000" fill="Solid">
+			<style forecolor="#000000" fill="Solid">
 				<pen lineColor="#000000"/>
 				<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
 					<pen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -47,7 +47,7 @@
 					<rightPen lineWidth="1.0"/>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6"/>
+					<font fontName="SansSerif" size="6" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{valor} == null) ? java.math.BigDecimal.ZERO : ($F{valor} instanceof java.math.BigDecimal ? (java.math.BigDecimal) $F{valor} : new java.math.BigDecimal($F{valor}.toString()))]]></textFieldExpression>
 			</textField>
@@ -63,7 +63,7 @@
 					<rightPen lineWidth="1.0"/>
 				</box>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
-					<font size="6" isBold="true"/>
+					<font fontName="SansSerif" size="6" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
 			</textField>
