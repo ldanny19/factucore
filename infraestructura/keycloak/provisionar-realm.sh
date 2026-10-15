@@ -19,12 +19,12 @@ printf '%s\n%s\n' "$REALM_NAME" "$APP_PASSWORD" | MSYS_NO_PATHCONV=1 "${COMPOSE[
   "$KCADM" config credentials --server http://127.0.0.1:8080 --realm master --user admin --password "$ADMIN_PASSWORD" >/dev/null
   if ! "$KCADM" get "realms/$REALM_NAME" >/dev/null 2>&1; then echo "Creando realm."; "$KCADM" create realms -s "realm=$REALM_NAME" -s enabled=true >/dev/null; else echo "Realm existente; se conserva."; fi
   if ! "$KCADM" get "roles/SUPERADMIN" -r "$REALM_NAME" >/dev/null 2>&1; then "$KCADM" create roles -r "$REALM_NAME" -s name=SUPERADMIN >/dev/null; fi
-  USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n 1 | cut -d '"' -f 4 || true)
+  USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | grep -oE "\"id\"[[:space:]]*:[[:space:]]*\"[^\"]+\"" | head -n 1 | cut -d ":" -f 2 | tr -d " \"" || true)
   if [ -z "$USER_ID" ]; then
     echo "Creando usuario superApp."
     "$KCADM" create users -r "$REALM_NAME" -s username=superApp -s enabled=true >/dev/null
     "$KCADM" set-password -r "$REALM_NAME" --username superApp --new-password "$APP_PASSWORD" >/dev/null
-    USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n 1 | cut -d '"' -f 4 || true)
+    USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | grep -oE "\"id\"[[:space:]]*:[[:space:]]*\"[^\"]+\"" | head -n 1 | cut -d ":" -f 2 | tr -d " \"" || true)
   else
     echo "superApp existente; se conserva su contraseña."
   fi
