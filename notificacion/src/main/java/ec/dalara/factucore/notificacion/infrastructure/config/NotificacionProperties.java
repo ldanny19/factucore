@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "notificacion")
+@ConfigurationProperties(prefix = "factucore.notificacion")
 public class NotificacionProperties {
 
     private Correo correo = new Correo();
