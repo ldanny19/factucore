@@ -3,8 +3,7 @@
 	<Properties>
 		<Property name="LOG_PATH">${env:FACTUCORE_PATH_LOGS:-/app/logs}</Property>
 		<Property name="LOG_FILE">facturador.log</Property>
-		<Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t]
-			%c{1.} - %msg%n</Property>
+		<Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] %notEmpty{ID_TRANSACCION=%X{idTransaccion} - }%c{1.} - %msg%n</Property>
 	</Properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">

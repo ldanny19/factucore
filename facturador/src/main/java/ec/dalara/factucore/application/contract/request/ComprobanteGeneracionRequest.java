@@ -3,6 +3,7 @@ package ec.dalara.factucore.application.contract.request;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import jakarta.validation.constraints.NotBlank;
@@ -19,8 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ComprobanteGeneracionRequest {
 
-	@NotBlank
-	@Size(max = 100)
+	@JsonIgnore
 	private String idTransaccion;
 
 	private Long idDocumentoOrigen;

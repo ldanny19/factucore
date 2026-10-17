@@ -3,6 +3,7 @@ package ec.dalara.factucore.application.contract.request;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdministracionRequest<T> {
 
-	@NotBlank
+	@JsonIgnore
 	private String idTransaccion;
 
 	@NotNull
