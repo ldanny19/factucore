@@ -124,6 +124,7 @@ HOST_FACTURADOR_LOGS="$HOST_HOME/facturador/logs"
 HOST_NOTIFICACION_CONFIG="$HOST_HOME/notificacion/config"
 HOST_NOTIFICACION_LOGS="$HOST_HOME/notificacion/logs"
 HOST_MESSAGING_CONFIG="$HOST_HOME/mensajeria/config"
+HOST_NGINX_CONFIG="$HOST_HOME/nginx/config"
 
 # Docker Compose debe recibir rutas Windows para los archivos del host cuando se ejecuta
 # desde Git Bash. Así MSYS_NO_PATHCONV=1 puede proteger las rutas Linux de los
@@ -176,7 +177,7 @@ mkdir -p \
   "$HOST_HOME/base_datos/postgres/data" "$HOST_POSTGRES_INIT" "$HOST_HOME/mensajeria/kafka/data" \
   "$HOST_FACTURADOR_CONFIG" "$HOST_FACTURADOR_JASPER" "$HOST_FACTURADOR_DOCUMENTOS" \
   "$HOST_FACTURADOR_CERTIFICADOS" "$HOST_FACTURADOR_IMAGENES" "$HOST_FACTURADOR_LOGS" \
-  "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_MESSAGING_CONFIG"
+  "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_MESSAGING_CONFIG" "$HOST_NGINX_CONFIG"
 
 chmod 700 "$HOST_HOME/vault/secrets" "$HOST_HOME/vault/agent-token"
 
@@ -184,7 +185,7 @@ copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTUR
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
-copy_tree_if_missing "$ROOT_DIR/configuraciones/gateway/config" "$HOST_HOME/gateway/config"
+copy_tree_if_missing "$ROOT_DIR/configuraciones/nginx/config" "$HOST_NGINX_CONFIG"
 cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
 chmod 644 "$HOST_VAULT_CONFIG/secretos.yml"

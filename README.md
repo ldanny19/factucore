@@ -39,7 +39,8 @@ La arquitectura inicial evita una distribución innecesaria:
                                     │
                                     ▼
 ┌───────────────┐        ┌─────────────────────┐
-│ ERP / POS     │───────▶│     Facturador      │
+│ ERP / POS     │───────▶│      Nginx         │───────▶ Facturador
+│ del cliente   │         │  Proxy inverso     │
 │ del cliente   │ JSON   │ Modular / Hexagonal │
 └───────────────┘        └──────┬──────┬───────┘
                                 │      │
@@ -338,6 +339,7 @@ Esto permite evolucionar el flujo sin convertir toda la orquestación en código
 
 La composición actual incluye:
 
+- Nginx como proxy inverso HTTP de entrada;
 - Vault;
 - Vault Agent;
 - PostgreSQL;
@@ -370,6 +372,7 @@ factucore/
 ├── notificacion/
 ├── factucore-messaging/
 ├── configuraciones/
+│   ├── nginx/
 │   ├── facturador/
 │   ├── notificacion/
 │   └── messaging/

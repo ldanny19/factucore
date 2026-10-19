@@ -248,29 +248,24 @@ services:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
 
-  gateway:
-    image: factucore-gateway:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
-    container_name: gateway
+  nginx:
+    image: nginx:1.28-alpine
+    container_name: factucore-nginx
     restart: unless-stopped
     depends_on:
       facturador:
         condition: service_healthy
-    environment:
-      FACTUCORE_GATEWAY_FACTURADOR_URI: http://facturador:8080
     volumes:
-      - ${FACTUCORE_HOME}/gateway/config:/app/config:ro
+      - ${FACTUCORE_HOME}/nginx/config/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "8080:8080"
+      - "8080:80"
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q --spider http://127.0.0.1:8080/actuator/health || exit 1"
-        ]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/nginx-health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 10s
+
 
 volumes:
   kafka_datos:
