@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
-import ec.dalara.factucore.application.contract.request.AdministracionGlobalRequest;
+import ec.dalara.factucore.application.contract.request.AdministracionRequest;
 import ec.dalara.factucore.application.contract.request.TarifaTributariaVigenciaRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
 import ec.dalara.factucore.application.contract.response.TarifaTributariaVigenciaResponse;
@@ -59,7 +59,7 @@ public class TarifaTributariaVigenciaController {
 
 	@PostMapping
 	public ResponseEntity<AdministracionResponse<TarifaTributariaVigenciaResponse>> crear(
-			@Valid @RequestBody AdministracionGlobalRequest<TarifaTributariaVigenciaRequest> request) {
+			@Valid @RequestBody AdministracionRequest<TarifaTributariaVigenciaRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		TarifaTributariaVigencia tarifa = toEntity(null, request.getDatos());
 		tarifa.setEstadoRegistro("A");
@@ -92,7 +92,7 @@ public class TarifaTributariaVigenciaController {
 
 	@PutMapping("/{id}")
 	public ResponseEntity<AdministracionResponse<TarifaTributariaVigenciaResponse>> actualizar(@PathVariable Long id,
-			@Valid @RequestBody AdministracionGlobalRequest<TarifaTributariaVigenciaRequest> request) {
+			@Valid @RequestBody AdministracionRequest<TarifaTributariaVigenciaRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());
 		TarifaTributariaVigencia actual = tarifaService.obtenerPorId(id)
 				.orElseThrow(() -> new ec.dalara.factucore.application.ApplicationException(
