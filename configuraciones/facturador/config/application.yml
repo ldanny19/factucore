@@ -73,7 +73,7 @@ factucore:
         sufijo-dlq: .DLQ
       timeout:
         conexion-ms: 5000
-        envio-ms: 10000
+        envio-ms: 30000
 
     # Cada conexion selecciona un broker y sus opciones especificas.
     conexiones:
