@@ -117,14 +117,14 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
       KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
-      KC_HOSTNAME: ${KC_HOSTNAME:-auth.factucore.local}
+      KC_HOSTNAME: ${KC_HOSTNAME:-http://api.facturador.com:8080/auth}
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded
       KC_DB: ${KC_DB:-postgres}
       KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
       KC_HEALTH_ENABLED: "true"
     volumes:
       - ${FACTUCORE_HOME}/vault/runtime-secrets:/vault/secrets:ro
-    ports:
-      - "${KEYCLOAK_PORT:-8180}:8080"
     healthcheck:
       test:
         [
@@ -192,8 +192,8 @@ services:
       FACTUCORE_PATH_LOGS: /app/logs
       DB_URL: ${DB_FACTURADOR_URL:-jdbc:postgresql://db_factucore:5432/db_factucore}
       DB_USERNAME: ${DB_FACTURADOR_USERNAME:-usr_factucore}
-      FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://${KC_HOSTNAME:-auth.factucore.local}:${KEYCLOAK_PORT:-8180}/realms/${KEYCLOAK_REALM:-facturador}}
-      FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI:-http://auth-server:8080/realms/${KEYCLOAK_REALM:-facturador}/protocol/openid-connect/certs}
+      FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI:-http://api.facturador.com:8080/auth/realms/${KEYCLOAK_REALM:-facturador}}
+      FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI: ${FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI:-http://auth-server:8080/auth/realms/${KEYCLOAK_REALM:-facturador}/protocol/openid-connect/certs}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       FACTUCORE_AUDITORIA_PETICION_HABILITADA: ${FACTUCORE_AUDITORIA_PETICION_HABILITADA:-true}
       FACTUCORE_AUDITORIA_PETICION_TOPICO: auditoria
@@ -214,7 +214,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -q --spider http://127.0.0.1:8080/factucore-api/actuator/health || exit 1"
+          "wget -q --spider http://127.0.0.1:8080/facturador-api/actuator/health || exit 1"
         ]
       interval: 10s
       timeout: 5s

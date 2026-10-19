@@ -194,17 +194,17 @@ Facturador es el núcleo de emisión electrónica y concentra las capacidades re
 
 Facturador incorpora **SpringDoc OpenAPI 2.9.1**, compatible con la línea Spring Boot 3.5.x utilizada actualmente. La dependencia genera la especificación OpenAPI y Swagger UI automáticamente para los endpoints REST existentes y futuros. urlSpringDoc OpenAPIhttps://springdoc.org/
 
-Con el contexto actual de la aplicación:
+Con el contexto de la aplicación `/facturador-api`:
 
-- Swagger UI: `/factucore-api/swagger-ui.html`
-- OpenAPI JSON: `/factucore-api/v3/api-docs`
-- OpenAPI YAML: `/factucore-api/v3/api-docs.yaml`
+- Swagger UI: `/facturador-api/swagger-ui.html`
+- OpenAPI JSON: `/facturador-api/v3/api-docs`
+- OpenAPI YAML: `/facturador-api/v3/api-docs.yaml`
 
 La documentación se irá completando mediante anotaciones OpenAPI en los controllers y contratos conforme se implementen los casos de uso.
 
 ## Proxy inverso HTTP
 
-El servicio **API Gateway**, implementado con Nginx, centraliza la entrada HTTP y enruta `/api/facturador/**` hacia Facturador bajo `/factucore-api/**`. El nombre lógico del servicio y del contenedor es `api-gateway`; la tecnología de implementación no determina el nombre del componente arquitectónico. El puerto `8080` se declara directamente en `compose/docker-compose.yml`. El gateway registra el identificador de petición, el código HTTP y los tiempos de respuesta; Facturador mantiene la trazabilidad de sus etapas y la validación JWT. Keycloak continúa como proveedor OIDC. La configuración de referencia está en `configuraciones/nginx/config/default.conf` y el instalador la copia a `FACTUCORE_HOME/nginx/config` sin sobrescribir archivos existentes.
+El servicio **API Gateway**, implementado con Nginx, centraliza la entrada HTTP en `http://api.facturador.com:8080`. Enruta `/facturador-api/**` hacia Facturador y `/auth/**` hacia Keycloak, que se configura con el context path `/auth` y el realm `facturador`. El issuer OIDC público se alinea con `http://api.facturador.com:8080/auth/realms/facturador`; el endpoint JWK interno usa el nombre de servicio Docker `auth-server`. El nombre lógico del servicio y del contenedor es `api-gateway`; la tecnología de implementación no determina el nombre del componente arquitectónico. El puerto `8080` se declara directamente en `compose/docker-compose.yml`. El gateway registra el identificador de petición, el código HTTP y los tiempos de respuesta; Facturador mantiene la validación JWT. La configuración de referencia está en `configuraciones/nginx/config/default.conf` y el instalador la copia a `FACTUCORE_HOME/nginx/config` sin sobrescribir archivos existentes.
 
 ## Notification
 
