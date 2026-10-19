@@ -184,6 +184,7 @@ copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTUR
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
+copy_tree_if_missing "$ROOT_DIR/configuraciones/gateway/config" "$HOST_HOME/gateway/config"
 cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"
 chmod 644 "$HOST_VAULT_CONFIG/secretos.yml"

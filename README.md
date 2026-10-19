@@ -202,6 +202,10 @@ Con el contexto actual de la aplicación:
 
 La documentación se irá completando mediante anotaciones OpenAPI en los controllers y contratos conforme se implementen los casos de uso.
 
+## API Gateway
+
+Spring Cloud Gateway centraliza la entrada HTTP. El puerto `8080` se declara directamente en `compose/docker-compose.yml`, sin una variable adicional en `.env`. La ruta `/api/facturador/**` se reenvía a Facturador bajo `/factucore-api/**`. El Gateway reenvía el token Bearer; Facturador conserva la validación JWT y Keycloak continúa como proveedor OIDC. La configuración externa de referencia está en `configuraciones/gateway/config/application.yml` y se copia a `FACTUCORE_HOME/gateway/config` sin sobrescribir archivos existentes.
+
 ## Notification
 
 **Versión actual: 1.0.0**
