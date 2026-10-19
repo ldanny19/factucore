@@ -4,7 +4,7 @@ services:
 
   vault:
     image: hashicorp/vault:1.20
-    container_name: factucore-vault
+    container_name: vault
     user: factucore
     restart: unless-stopped
     cap_add:
@@ -21,7 +21,7 @@ services:
 
   vault-agent:
     image: hashicorp/vault:1.20
-    container_name: factucore-vault-agent
+    container_name: vault-agent
     user: factucore
     restart: unless-stopped
     depends_on:
@@ -86,7 +86,7 @@ services:
 
   kafka:
     image: apache/kafka:4.0.1
-    container_name: factucore-kafka
+    container_name: kafka
     restart: unless-stopped
     ports:
       - "${KAFKA_PORT:-9092}:9092"
@@ -120,7 +120,7 @@ services:
     build:
       context: ../facturador
       dockerfile: Dockerfile
-    container_name: factucore-facturador
+    container_name: facturador
     user: factucore
     restart: unless-stopped
     depends_on:
@@ -172,7 +172,7 @@ services:
     build:
       context: ../notificacion
       dockerfile: Dockerfile
-    container_name: factucore-notificacion
+    container_name: notificacion
     user: factucore
     restart: unless-stopped
     depends_on:
