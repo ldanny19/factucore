@@ -39,8 +39,8 @@ La arquitectura inicial evita una distribución innecesaria:
                                     │
                                     ▼
 ┌───────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
-│ ERP / POS     │── JSON ▶│       Nginx        │───────▶│     Facturador      │
-│ del cliente   │        │   Proxy inverso    │        │ Modular / Hexagonal │
+│ ERP / POS     │── JSON ▶│    API Gateway     │───────▶│     Facturador      │
+│ del cliente   │        │  Implementado con  │        │ Modular / Hexagonal │
 └───────────────┘        └─────────────────────┘        └──────┬──────┬───────┘
                                 │      │
                          ┌──────▼──┐ ┌─▼────────────┐
@@ -204,7 +204,7 @@ La documentación se irá completando mediante anotaciones OpenAPI en los contro
 
 ## Proxy inverso HTTP
 
-Nginx centraliza la entrada HTTP y enruta `/api/facturador/**` hacia Facturador bajo `/factucore-api/**`. El puerto `8080` se declara directamente en `compose/docker-compose.yml`. Nginx registra el identificador de petición, el código HTTP y los tiempos de respuesta; Facturador mantiene la trazabilidad de sus etapas y la validación JWT. Keycloak continúa como proveedor OIDC. La configuración de referencia está en `configuraciones/nginx/config/default.conf` y el instalador la copia a `FACTUCORE_HOME/nginx/config` sin sobrescribir archivos existentes.
+El servicio **API Gateway**, implementado con Nginx, centraliza la entrada HTTP y enruta `/api/facturador/**` hacia Facturador bajo `/factucore-api/**`. El nombre lógico del servicio y del contenedor es `api-gateway`; la tecnología de implementación no determina el nombre del componente arquitectónico. El puerto `8080` se declara directamente en `compose/docker-compose.yml`. El gateway registra el identificador de petición, el código HTTP y los tiempos de respuesta; Facturador mantiene la trazabilidad de sus etapas y la validación JWT. Keycloak continúa como proveedor OIDC. La configuración de referencia está en `configuraciones/nginx/config/default.conf` y el instalador la copia a `FACTUCORE_HOME/nginx/config` sin sobrescribir archivos existentes.
 
 ## Notification
 
@@ -338,7 +338,7 @@ Esto permite evolucionar el flujo sin convertir toda la orquestación en código
 
 La composición actual incluye:
 
-- Nginx como proxy inverso HTTP de entrada;
+- API Gateway para enrutar la entrada HTTP (implementado con Nginx);
 - Vault;
 - Vault Agent;
 - PostgreSQL;
