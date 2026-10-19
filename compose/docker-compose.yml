@@ -248,9 +248,9 @@ services:
       - "${NOTIFICACION_PORT:-8082}:8080"
 
 
-  nginx:
+  api-gateway:
     image: nginx:1.28-alpine
-    container_name: factucore-nginx
+    container_name: api-gateway
     restart: unless-stopped
     depends_on:
       facturador:
