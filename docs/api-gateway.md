@@ -16,7 +16,7 @@ Notification no se publica por este proxy en esta etapa: su flujo actual consume
 
 ## Trazabilidad HTTP
 
-Nginx registra en el access log el identificador de petición `$request_id`, la ruta, el código HTTP, el tiempo total y el tiempo de respuesta del upstream. Propaga el identificador técnico mediante `X-Request-ID`.
+Nginx registra en el access log el identificador de petición generado por Nginx (`$request_id`), la ruta, el código HTTP, el tiempo total y el tiempo de respuesta del upstream. Propaga el identificador técnico mediante `X-Request-ID`.
 
 Este identificador representa la petición HTTP en el proxy; no reemplaza la clave de idempotencia ni el identificador de negocio/transacción que gestiona Facturador. Facturador debe conservar su propia trazabilidad durante el workflow.
 

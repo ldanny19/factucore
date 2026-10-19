@@ -38,11 +38,10 @@ La arquitectura inicial evita una distribución innecesaria:
                          └──────────┬──────────┘
                                     │
                                     ▼
-┌───────────────┐        ┌─────────────────────┐
-│ ERP / POS     │───────▶│      Nginx         │───────▶ Facturador
-│ del cliente   │         │  Proxy inverso     │
-│ del cliente   │ JSON   │ Modular / Hexagonal │
-└───────────────┘        └──────┬──────┬───────┘
+┌───────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
+│ ERP / POS     │── JSON ▶│       Nginx        │───────▶│     Facturador      │
+│ del cliente   │        │   Proxy inverso    │        │ Modular / Hexagonal │
+└───────────────┘        └─────────────────────┘        └──────┬──────┬───────┘
                                 │      │
                          ┌──────▼──┐ ┌─▼────────────┐
                          │PostgreSQL│ │    Vault     │
