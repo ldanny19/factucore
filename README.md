@@ -13,6 +13,7 @@ Actualmente ya están definidos y/o implementados componentes de:
 - arquitectura modular y hexagonal;
 - Facturador;
 - Notification;
+- API Gateway con Spring Cloud Gateway;
 - librería técnica de mensajería;
 - PostgreSQL y Flyway;
 - Keycloak/OAuth2/OIDC/JWT;
@@ -36,27 +37,20 @@ La arquitectura inicial evita una distribución innecesaria:
                          │      Keycloak       │
                          │ OAuth2 / OIDC / JWT │
                          └──────────┬──────────┘
-                                    │
+                                    │ inicio de sesión
                                     ▼
-┌───────────────┐        ┌─────────────────────┐
-│ ERP / POS     │───────▶│     Facturador      │
-│ del cliente   │ JSON   │ Modular / Hexagonal │
-└───────────────┘        └──────┬──────┬───────┘
-                                │      │
-                         ┌──────▼──┐ ┌─▼────────────┐
-                         │PostgreSQL│ │    Vault     │
-                         └─────────┘ └──────────────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │    Kafka     │
-                         └──────┬───────┘
-                                │
-                                ▼
-                         ┌─────────────────────┐
-                         │    Notification     │
-                         │ correo / plantillas │
+┌───────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
+│ React /       │───────▶│     API Gateway     │───────▶│     Facturador      │
+│ clientes REST │        │ Spring Cloud Gateway│        │ Modular / Hexagonal │
+└───────────────┘        └─────────────────────┘        └──────────┬──────────┘
+                                                                  │
+                         ┌─────────────────────┐                  │
+                         │    Notification     │◀─────────────────┘
+                         │ eventos por Kafka  │
                          └─────────────────────┘
+
+                  PostgreSQL, Vault y Kafka
+                     infraestructura compartida
 ```
 
 **Facturador** y **Notification** son los microservicios iniciales. PostgreSQL, Keycloak, Vault y Kafka son infraestructura.
@@ -201,6 +195,29 @@ Con el contexto actual de la aplicación:
 - OpenAPI YAML: `/factucore-api/v3/api-docs.yaml`
 
 La documentación se irá completando mediante anotaciones OpenAPI en los controllers y contratos conforme se implementen los casos de uso.
+
+## API Gateway
+
+Spring Cloud Gateway centraliza la entrada HTTP para las API REST de FactuCore. En esta primera integración:
+
+- URL base local: `http://localhost:8080` (configurable mediante `GATEWAY_PORT`).
+- API de Facturador: `/api/facturador/**`, reenviada al contexto `/factucore-api/**`.
+- El encabezado `Authorization: Bearer` se reenvía al servicio; Facturador conserva la validación JWT existente.
+- Keycloak continúa siendo el proveedor OIDC y no se sustituye por el Gateway.
+- Notification no se publica mediante REST en esta etapa porque su contrato actual se basa en eventos de mensajería y no se ha identificado una API REST de negocio que enrutar.
+
+La configuración se mantiene en `configuraciones/gateway/config/application.yml` y el instalador la copia a `FACTUCORE_HOME/gateway/config` sin sobrescribir configuraciones locales. No se habilita CORS global por defecto; se configurará cuando el origen real del frontend lo requiera.
+
+### Pruebas manuales
+
+- Health del Gateway: `http://localhost:8080/actuator/health`.
+- API base para React: `http://localhost:8080/api/facturador`.
+- OpenAPI de Facturador a través del Gateway: `http://localhost:8080/api/facturador/v3/api-docs`.
+- Swagger UI de Facturador: `http://localhost:8081/factucore-api/swagger-ui.html` (acceso directo al servicio mientras se conserva su configuración actual).
+
+Para una operación protegida, envía `Authorization: Bearer <token>` a la ruta correspondiente bajo `/api/facturador`. Sin token debe recibirse `401` cuando el endpoint está protegido; con un token válido, la respuesta depende de los permisos y validaciones del endpoint. El Gateway reenvía el token y Facturador mantiene la validación JWT.
+
+El emisor JWT no cambia por introducir el Gateway. Las variables `FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI` y `FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI` existentes se mantienen; si la validación falla, se compara el claim `iss` del token con el issuer configurado antes de cambiar las URI.
 
 ## Notification
 

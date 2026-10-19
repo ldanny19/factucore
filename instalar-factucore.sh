@@ -122,6 +122,7 @@ HOST_FACTURADOR_CERTIFICADOS="$HOST_HOME/facturador/certificados"
 HOST_FACTURADOR_IMAGENES="$HOST_HOME/facturador/imagenes"
 HOST_FACTURADOR_LOGS="$HOST_HOME/facturador/logs"
 HOST_NOTIFICACION_CONFIG="$HOST_HOME/notificacion/config"
+HOST_GATEWAY_CONFIG="$HOST_HOME/gateway/config"
 HOST_NOTIFICACION_LOGS="$HOST_HOME/notificacion/logs"
 HOST_MESSAGING_CONFIG="$HOST_HOME/mensajeria/config"
 
@@ -176,13 +177,14 @@ mkdir -p \
   "$HOST_HOME/base_datos/postgres/data" "$HOST_POSTGRES_INIT" "$HOST_HOME/mensajeria/kafka/data" \
   "$HOST_FACTURADOR_CONFIG" "$HOST_FACTURADOR_JASPER" "$HOST_FACTURADOR_DOCUMENTOS" \
   "$HOST_FACTURADOR_CERTIFICADOS" "$HOST_FACTURADOR_IMAGENES" "$HOST_FACTURADOR_LOGS" \
-  "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_MESSAGING_CONFIG"
+  "$HOST_NOTIFICACION_CONFIG" "$HOST_NOTIFICACION_LOGS" "$HOST_GATEWAY_CONFIG" "$HOST_MESSAGING_CONFIG"
 
 chmod 700 "$HOST_HOME/vault/secrets" "$HOST_HOME/vault/agent-token"
 
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/config" "$HOST_FACTURADOR_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/facturador/jasper" "$HOST_FACTURADOR_JASPER"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/notificacion/config" "$HOST_NOTIFICACION_CONFIG"
+copy_tree_if_missing "$ROOT_DIR/configuraciones/gateway/config" "$HOST_GATEWAY_CONFIG"
 copy_tree_if_missing "$ROOT_DIR/configuraciones/messaging/config" "$HOST_MESSAGING_CONFIG"
 cp "$CATALOG_FILE" "$HOST_VAULT_CONFIG/secretos.yml"
 cp "$ROOT_DIR/infraestructura/vault/scripts/bootstrap-vault.sh" "$HOST_VAULT_SCRIPTS/bootstrap-vault.sh"

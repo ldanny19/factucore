@@ -73,6 +73,8 @@ Cuando se soliciten secretos, introdúcelos de forma interactiva. El instalador 
 
 Si el instalador informa de rutas antiguas, almacenamiento de Vault existente sin inicialización o secretos ausentes, **detente y revisa el estado antes de continuar**. No borres carpetas ni inicialices de nuevo una instancia existente para intentar resolverlo.
 
+El instalador copia la configuración de referencia del API Gateway a `FACTUCORE_HOME/gateway/config` únicamente cuando los archivos no existen. El Gateway publica la entrada HTTP mediante `GATEWAY_PORT` (por defecto `8080`) y enruta `/api/facturador/**` hacia Facturador. Keycloak mantiene su función OIDC y Facturador continúa validando los JWT.
+
 ## 4. Validar y ejecutar Docker Compose
 
 Docker Compose se ejecuta desde la raíz del workspace del repositorio. Las rutas de los volúmenes se resuelven desde `FACTUCORE_HOME`, de modo que los datos permanezcan fuera del workspace.
