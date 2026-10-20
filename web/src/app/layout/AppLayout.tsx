@@ -179,11 +179,10 @@ export default function AppLayout() {
         <Box className="app-brand-mark"><ReceiptLongRoundedIcon /></Box>
         <Box>
           <Typography className="app-brand-name">FactuCore</Typography>
-          <Typography className="app-brand-caption">FACTURACIÓN ELECTRÓNICA</Typography>
+          <Typography className="app-brand-caption">MENÚ PRINCIPAL</Typography>
         </Box>
       </Box>
       <Divider className="app-sidebar-divider" />
-      <Typography className="app-menu-caption">MENÚ PRINCIPAL</Typography>
       <List className="app-navigation" disablePadding>
         {menuItems.map((item) => {
           const hasChildren = Boolean(item.children?.length);
@@ -310,14 +309,14 @@ export default function AppLayout() {
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
           ModalProps={{ keepMounted: true }}
-          sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { width: { xs: "min(258px, 86vw)", sm: DRAWER_WIDTH }, height: "100dvh", maxHeight: "100vh", overflowY: "auto", overscrollBehavior: "contain" } }}
+          sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { width: { xs: "min(258px, 86vw)", sm: DRAWER_WIDTH }, height: "100dvh", maxHeight: "100vh", overflowY: "hidden", overscrollBehavior: "contain" } }}
         >
           {sidebar}
         </Drawer>
         <Drawer
           variant="permanent"
           open
-          sx={{ display: { xs: "none", md: "block" }, "& .MuiDrawer-paper": { width: DRAWER_WIDTH, height: "100dvh", maxHeight: "100vh", overflowY: "auto", overscrollBehavior: "contain" } }}
+          sx={{ display: { xs: "none", md: "block" }, "& .MuiDrawer-paper": { width: DRAWER_WIDTH, height: "100dvh", maxHeight: "100vh", overflowY: "hidden", overscrollBehavior: "contain" } }}
         >
           {sidebar}
         </Drawer>

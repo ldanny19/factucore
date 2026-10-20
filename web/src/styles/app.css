@@ -240,18 +240,26 @@
 .app-subnavigation-item.MuiListItemButton-root.Mui-selected:hover { background: rgba(64,132,255,.34); }
 
 
-/* Menú adaptable: el panel lateral tiene scroll independiente y muestra todas las opciones. */
+/* El encabezado lateral permanece fijo; únicamente la lista de módulos tiene scroll. */
 .app-sidebar-content {
   box-sizing: border-box;
-  min-height: 100%;
-  min-height: 100dvh;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.app-brand,
+.app-sidebar-divider,
+.app-brand-caption { flex-shrink: 0; }
+.app-navigation {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,.3) transparent;
 }
-.app-sidebar-content::-webkit-scrollbar { width: 6px; }
-.app-sidebar-content::-webkit-scrollbar-thumb {
+.app-navigation::-webkit-scrollbar { width: 6px; }
+.app-navigation::-webkit-scrollbar-thumb {
   border-radius: 8px;
   background: rgba(255,255,255,.3);
 }
