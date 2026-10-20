@@ -74,3 +74,118 @@
   box-shadow: 0 8px 28px rgba(18, 48, 74, 0.05);
 }
 .forms-page .form-panel h1, .forms-page .form-panel h2 { letter-spacing: -0.025em; }
+
+ 
+/* Encabezado: marca a la izquierda, identidad del sistema al centro y sesión a la derecha. */
+.app-header-toolbar.MuiToolbar-root {
+  justify-content: space-between;
+}
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.app-header-logo {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(145deg, #0a1f33 0%, #12304a 58%, #1b5278 100%);
+}
+.app-header-logo .MuiSvgIcon-root { font-size: 27px; }
+.app-header-system {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  min-width: 220px;
+}
+.app-header-system-name {
+  color: #173765;
+  font-size: 1.12rem;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -.025em;
+}
+.app-header-system-slogan {
+  margin-top: 3px;
+  color: #70809a;
+  font-size: .7rem;
+  font-weight: 650;
+  letter-spacing: .035em;
+}
+.app-header-session {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+.app-header-clock { text-align: right; white-space: nowrap; }
+.app-header-clock .app-header-date { margin: 0; color: #74839a; font-size: .73rem; }
+.app-header-time { margin-top: 2px; color: #173765; font-size: .9rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.app-header-session-divider.MuiDivider-root { border-color: #e4eaf3; }
+.app-header-user { display: flex; align-items: center; gap: 9px; }
+.app-logout-button.MuiButton-root {
+  min-height: 38px;
+  padding-inline: 13px;
+  border-color: #d6e0ee;
+  border-radius: 10px;
+  color: #24436e;
+  text-transform: none;
+  font-weight: 750;
+}
+.app-logout-button.MuiButton-root:hover {
+  border-color: #2563eb;
+  background: #edf3ff;
+}
+.app-sidebar-content {
+  color: #fff;
+  background: linear-gradient(160deg, #0a1f33 0%, #12304a 58%, #1b5278 100%);
+}
+.app-brand-name { color: #fff; }
+.app-brand-caption { color: rgba(255,255,255,.65); }
+.app-brand-mark {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.17);
+  box-shadow: none;
+}
+.app-sidebar-divider.MuiDivider-root { border-color: rgba(255,255,255,.14); }
+.app-menu-caption { color: rgba(255,255,255,.58); }
+.app-navigation-item.MuiListItemButton-root { color: rgba(255,255,255,.78); }
+.app-navigation-item.MuiListItemButton-root:hover { background: rgba(255,255,255,.08); }
+.app-navigation-item.MuiListItemButton-root.Mui-selected {
+  color: #fff;
+  background: rgba(64,132,255,.28);
+  box-shadow: inset 3px 0 0 #8fc8ff;
+}
+.app-navigation-item.MuiListItemButton-root.Mui-selected:hover { background: rgba(64,132,255,.36); }
+.app-navigation-icon.MuiListItemIcon-root { color: inherit; }
+.app-sidebar-content .MuiListItemText-secondary { color: rgba(255,255,255,.58); }
+.app-sidebar-footer { color: rgba(255,255,255,.52); }
+@media (max-width: 1100px) {
+  .app-header-toolbar.MuiToolbar-root { gap: 10px; }
+  .app-header-session { gap: 10px; }
+  .app-header-system-slogan { font-size: .64rem; }
+}
+@media (max-width: 899px) {
+  .app-header-system {
+    position: static;
+    transform: none;
+    text-align: left;
+    min-width: 0;
+    margin-left: 2px;
+  }
+  .app-header-session { margin-left: auto; }
+  .app-header-clock { display: none; }
+  .app-header-session-divider.MuiDivider-root { display: none; }
+}
+@media (max-width: 600px) {
+  .app-header-brand { display: none; }
+  .app-header-system-name { font-size: .98rem; }
+  .app-header-system-slogan { display: none; }
+  .app-user-details { display: none; }
+  .app-logout-button.MuiButton-root { min-width: 0; padding-inline: 8px; }
+  .app-logout-button .MuiButton-startIcon { margin-right: 4px; margin-left: 0; }
+}

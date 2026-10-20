@@ -3,6 +3,7 @@ import {
   AppBar,
   Avatar,
   Box,
+  Button,
   Divider,
   Drawer,
   IconButton,
@@ -10,8 +11,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Menu,
-  MenuItem,
   Toolbar,
   Tooltip,
   Typography,
@@ -22,7 +21,6 @@ import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import { Link as RouterLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import "../../styles/app.css";
@@ -46,7 +44,6 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -69,7 +66,6 @@ export default function AppLayout() {
   }).format(now);
 
   const handleLogout = async () => {
-    setMenuAnchor(null);
     sessionStorage.removeItem("factucore.access_token");
     if (auth.isAuthenticated) {
       await auth.signoutRedirect();
@@ -84,7 +80,7 @@ export default function AppLayout() {
         <Box className="app-brand-mark"><ReceiptLongRoundedIcon /></Box>
         <Box>
           <Typography className="app-brand-name">FactuCore</Typography>
-          <Typography className="app-brand-caption">PORTAL EMPRESARIAL</Typography>
+          <Typography className="app-brand-caption">FACTURACIÓN ELECTRÓNICA</Typography>
         </Box>
       </Box>
       <Divider className="app-sidebar-divider" />
@@ -125,6 +121,9 @@ export default function AppLayout() {
     <Box className="app-shell">
       <AppBar position="fixed" elevation={0} className="app-header">
         <Toolbar className="app-header-toolbar">
+          <Box className="app-header-brand">
+            <Box className="app-header-logo"><ReceiptLongRoundedIcon /></Box>
+          </Box>
           <IconButton
             aria-label="Abrir menú"
             onClick={() => setMobileOpen(true)}
@@ -132,35 +131,35 @@ export default function AppLayout() {
           >
             <MenuRoundedIcon />
           </IconButton>
-          <Box className="app-header-context">
-            <Typography className="app-header-section">
-              {menuItems.find((item) => item.path === location.pathname)?.label ?? "FactuCore"}
-            </Typography>
-            <Typography className="app-header-date">{dateLabel} · {timeLabel}</Typography>
+          <Box className="app-header-system">
+            <Typography className="app-header-system-name">FactuCore</Typography>
+            <Typography className="app-header-system-slogan">Facturación electrónica empresarial</Typography>
           </Box>
           <Box className="app-header-spacer" />
-          <Tooltip title="Cuenta de usuario">
-            <IconButton onClick={(event) => setMenuAnchor(event.currentTarget)} className="app-user-button">
+          <Box className="app-header-session">
+            <Box className="app-header-clock">
+              <Typography className="app-header-date">{dateLabel}</Typography>
+              <Typography className="app-header-time">{timeLabel}</Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem className="app-header-session-divider" />
+            <Box className="app-header-user">
               <Avatar className="app-user-avatar">{userName.charAt(0).toUpperCase()}</Avatar>
               <Box className="app-user-details">
                 <Typography className="app-user-name">{userName}</Typography>
                 <Typography className="app-user-role">Sesión activa</Typography>
               </Box>
-            </IconButton>
-          </Tooltip>
-          <Menu
-            anchorEl={menuAnchor}
-            open={Boolean(menuAnchor)}
-            onClose={() => setMenuAnchor(null)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-          >
-            <MenuItem onClick={() => setMenuAnchor(null)}><AccountCircleRoundedIcon fontSize="small" sx={{ mr: 1 }} />Mi cuenta</MenuItem>
-            <MenuItem onClick={handleLogout}><LogoutRoundedIcon fontSize="small" sx={{ mr: 1 }} />Cerrar sesión</MenuItem>
-          </Menu>
+            </Box>
+            <Button
+              variant="outlined"
+              startIcon={<LogoutRoundedIcon />}
+              onClick={handleLogout}
+              className="app-logout-button"
+            >
+              Salir
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
-
       <Box component="nav" aria-label="Navegación principal">
         <Drawer
           variant="temporary"
