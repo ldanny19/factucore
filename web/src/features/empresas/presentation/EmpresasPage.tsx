@@ -39,7 +39,6 @@ import {
   type EmpresaDatos,
 } from "../infrastructure/empresas-api";
 import "../../../styles/app.css";
-import "../../../styles/empresas.css";
 
 const FORMULARIO_VACIO: EmpresaDatos = {
   ruc: "",
