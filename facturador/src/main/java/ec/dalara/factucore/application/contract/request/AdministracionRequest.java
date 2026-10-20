@@ -29,11 +29,7 @@ public class AdministracionRequest<T> {
 	@NotBlank
 	private String canal;
 
-	/*
-	 * El contexto de empresa puede ser nulo al administrar la propia entidad
-	 * Empresa, que es la raíz del agregado. Los recursos hijos validan su
-	 * idEmpresa dentro de sus respectivos contratos de datos.
-	 */
+	@NotNull
 	private Long idEmpresa;
 
 	@Valid
