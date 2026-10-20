@@ -1,0 +1,1 @@
+window.FACTUCORE_CONFIG = { API_BASE_URL: "http://localhost:8080/facturador-api", OIDC_AUTHORITY: "http://localhost:8080/auth/realms/facturador", OIDC_CLIENT_ID: "factucore-frontend", OIDC_REDIRECT_URI: "http://localhost:3000/auth/callback" };
