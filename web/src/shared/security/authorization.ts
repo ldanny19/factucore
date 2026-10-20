@@ -44,6 +44,7 @@ interface JwtPayload {
 export interface AccessContext {
   token: string | null;
   roles: AppRole[];
+  permissions: string[];
   isTokenValid: boolean;
 }
 
@@ -68,7 +69,7 @@ export function getAccessContext(oidcToken?: string): AccessContext {
     ? window.sessionStorage.getItem("factucore.access_token")
     : null;
   const token = oidcToken || storedToken;
-  if (!token) return { token: null, roles: [], isTokenValid: false };
+  if (!token) return { token: null, roles: [], permissions: [], isTokenValid: false };
 
   const payload = decodePayload(token);
   const isTokenValid = Boolean(
@@ -76,17 +77,26 @@ export function getAccessContext(oidcToken?: string): AccessContext {
   );
   if (!payload || !isTokenValid) {
     if (storedToken === token) window.sessionStorage.removeItem("factucore.access_token");
-    return { token: null, roles: [], isTokenValid: false };
+    return { token: null, roles: [], permissions: [], isTokenValid: false };
   }
 
+  const realmRoles = payload.realm_access?.roles ?? [];
   const candidates = [
-    ...(payload.realm_access?.roles ?? []),
+    ...realmRoles,
     ...(payload.roles ?? []),
     ...Object.values(payload.resource_access ?? {}).flatMap((resource) => resource?.roles ?? []),
   ];
   const assigned = new Set(candidates);
   const roles = ROLE_PRIORITY.filter((role) => assigned.has(role));
-  return { token, roles, isTokenValid: true };
+  const realmAssigned = new Set(realmRoles);
+  const permissions = ["GENERATE_COMPROBANTE", "REPROCESS_COMPROBANTE"]
+    .filter((permission) => realmAssigned.has(permission));
+  return { token, roles, permissions, isTokenValid: true };
+}
+
+export function canReprocessComprobante(context: AccessContext): boolean {
+  return context.isTokenValid && context.roles.length > 0
+    && context.permissions.includes("REPROCESS_COMPROBANTE");
 }
 
 export function getAllowedRolesForPath(pathname: string): readonly AppRole[] {

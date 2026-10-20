@@ -58,6 +58,10 @@ camel:
     routes-include-pattern: ${factucore.workflow.rutas.facturacion}
 
 factucore:
+  seguridad:
+    cors:
+      allowed-origins: ${FACTUCORE_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://api.facturador.com:3000}
+
   configuracion:
     zona-horaria: ${FACTUCORE_CONFIGURACION_ZONA_HORARIA:America/Guayaquil}
 
