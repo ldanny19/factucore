@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AppBar,
   Avatar,
   Box,
   Button,
+  Collapse,
   Divider,
   Drawer,
   IconButton,
@@ -12,7 +13,6 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
@@ -20,7 +20,12 @@ import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
+import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { Link as RouterLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
@@ -28,12 +33,78 @@ import "../../styles/app.css";
 
 const DRAWER_WIDTH = 258;
 
-const menuItems = [
+type MenuItem = {\n  label: string;\n  description: string;\n  path: string;\n  icon: ReactNode;\n  children?: { label: string; path: string }[];\n};\n\nconst menuItems: MenuItem[] = [
   { label: "Inicio", description: "Resumen general", path: "/app", icon: <DashboardRoundedIcon /> },
-  { label: "Empresas", description: "Datos empresariales", path: "/app/empresas", icon: <BusinessRoundedIcon /> },
-  { label: "Comprobantes", description: "Documentos electrónicos", path: "/app/comprobantes", icon: <ReceiptLongRoundedIcon /> },
-  { label: "Configuración", description: "Preferencias del sistema", path: "/app/configuracion", icon: <SettingsRoundedIcon /> },
-  { label: "Administración de accesos", description: "Usuarios, roles y permisos", path: "/app/accesos", icon: <AdminPanelSettingsRoundedIcon /> },
+  {
+    label: "Administración",
+    description: "Estructura empresarial",
+    path: "/app/empresas",
+    icon: <BusinessRoundedIcon />,
+    children: [
+      { label: "Empresas", path: "/app/empresas" },
+      { label: "Establecimientos", path: "/app/establecimientos" },
+      { label: "Puntos de emisión", path: "/app/puntos-emision" },
+      { label: "Secuenciales", path: "/app/secuenciales" },
+      { label: "Certificados de firma electrónica", path: "/app/certificados-firma" },
+    ],
+  },
+  {
+    label: "Configuración",
+    description: "Parámetros tributarios y empresariales",
+    path: "/app/configuracion/empresa",
+    icon: <SettingsRoundedIcon />,
+    children: [
+      { label: "Configuración de empresa", path: "/app/configuracion/empresa" },
+      { label: "Tarifas tributarias", path: "/app/tarifas-tributarias" },
+      { label: "Catálogos tributarios", path: "/app/catalogos-tributarios" },
+    ],
+  },
+  {
+    label: "Motor",
+    description: "Definiciones y transformación documental",
+    path: "/app/definiciones-documentales",
+    icon: <AccountTreeRoundedIcon />,
+    children: [
+      { label: "Definiciones documentales y XSD", path: "/app/definiciones-documentales" },
+      { label: "Mapeos XSD", path: "/app/mapeos-xsd" },
+    ],
+  },
+  {
+    label: "Auditoría",
+    description: "Trazabilidad y evidencias",
+    path: "/app/auditoria/historial",
+    icon: <HistoryRoundedIcon />,
+    children: [
+      { label: "Historial de acciones", path: "/app/auditoria/historial" },
+      { label: "Trazabilidad de comprobantes y procesos", path: "/app/auditoria/trazabilidad" },
+      { label: "Evidencias de procesamiento", path: "/app/auditoria/evidencias" },
+    ],
+  },
+  {
+    label: "Reportes de comprobantes",
+    description: "Consulta y seguimiento",
+    path: "/app/reportes-comprobantes/resumen",
+    icon: <AssessmentRoundedIcon />,
+    children: [
+      { label: "Resumen del día", path: "/app/reportes-comprobantes/resumen" },
+      { label: "Consulta de comprobantes", path: "/app/reportes-comprobantes/consulta" },
+      { label: "Seguimiento de estados", path: "/app/reportes-comprobantes/seguimiento" },
+      { label: "Pendientes o fallidos", path: "/app/reportes-comprobantes/pendientes-fallidos" },
+      { label: "Filtros y búsqueda", path: "/app/reportes-comprobantes/busqueda" },
+    ],
+  },
+  {
+    label: "Administración de accesos",
+    description: "Usuarios, roles y permisos",
+    path: "/app/accesos/usuarios",
+    icon: <AdminPanelSettingsRoundedIcon />,
+    children: [
+      { label: "Usuarios", path: "/app/accesos/usuarios" },
+      { label: "Roles", path: "/app/accesos/roles" },
+      { label: "Permisos", path: "/app/accesos/permisos" },
+      { label: "Asignación de roles a usuarios", path: "/app/accesos/asignacion-roles" },
+    ],
+  },
 ];
 
 function getUserName(profile: Record<string, unknown> | undefined) {
@@ -46,12 +117,22 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const activeGroup = menuItems.find(
+      (item) => item.children?.some((child) => child.path === location.pathname),
+    );
+    if (activeGroup && !openGroups.includes(activeGroup.label)) {
+      setOpenGroups((current) => [...current, activeGroup.label]);
+    }
+  }, [location.pathname, openGroups]);
 
   const userName = getUserName(auth.user?.profile as Record<string, unknown> | undefined);
   const dateLabel = new Intl.DateTimeFormat("es-EC", {
@@ -76,6 +157,12 @@ export default function AppLayout() {
     navigate("/login", { replace: true });
   };
 
+  const toggleGroup = (label: string) => {
+    setOpenGroups((current) =>
+      current.includes(label) ? current.filter((item) => item !== label) : [...current, label],
+    );
+  };
+
   const sidebar = (
     <Box className="app-sidebar-content">
       <Box className="app-brand">
@@ -89,9 +176,58 @@ export default function AppLayout() {
       <Typography className="app-menu-caption">MENÚ PRINCIPAL</Typography>
       <List className="app-navigation" disablePadding>
         {menuItems.map((item) => {
+          const hasChildren = Boolean(item.children?.length);
           const selected = item.path === "/app"
             ? location.pathname === item.path
-            : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+            : hasChildren
+              ? item.children?.some((child) => child.path === location.pathname)
+              : location.pathname === item.path;
+          const expanded = openGroups.includes(item.label);
+
+          if (hasChildren) {
+            return (
+              <Box key={item.label}>
+                <ListItemButton
+                  selected={selected}
+                  onClick={() => toggleGroup(item.label)}
+                  aria-expanded={expanded}
+                  className="app-navigation-item app-navigation-group"
+                >
+                  <ListItemIcon className="app-navigation-icon">{item.icon}</ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    secondary={item.description}
+                    primaryTypographyProps={{ fontWeight: selected ? 750 : 600 }}
+                    secondaryTypographyProps={{ fontSize: "0.72rem" }}
+                  />
+                  {expanded ? <ExpandLessRoundedIcon /> : <ExpandMoreRoundedIcon />}
+                </ListItemButton>
+                <Collapse in={expanded} timeout="auto" unmountOnExit>
+                  <List disablePadding className="app-subnavigation">
+                    {item.children?.map((child) => {
+                      const childSelected = location.pathname === child.path;
+                      return (
+                        <ListItemButton
+                          key={child.path}
+                          component={RouterLink}
+                          to={child.path}
+                          selected={childSelected}
+                          onClick={() => setMobileOpen(false)}
+                          className="app-navigation-item app-subnavigation-item"
+                        >
+                          <ListItemText
+                            primary={child.label}
+                            primaryTypographyProps={{ fontWeight: childSelected ? 750 : 550 }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </Box>
+            );
+          }
+
           return (
             <ListItemButton
               key={item.path}

@@ -218,3 +218,23 @@
     margin-left: 0;
   }
 }
+
+/* Navegación jerárquica del menú lateral. */
+.app-navigation-group.MuiListItemButton-root { min-height: 58px; }
+.app-navigation-group .MuiListItemText-root { min-width: 0; }
+.app-navigation-group > .MuiSvgIcon-root { flex: 0 0 auto; color: rgba(255,255,255,.65); }
+.app-subnavigation { margin: 2px 0 6px; }
+.app-subnavigation-item.MuiListItemButton-root {
+  min-height: 39px;
+  margin: 2px 0 2px 14px;
+  padding: 7px 10px 7px 22px;
+  border-radius: 9px;
+  color: rgba(255,255,255,.72);
+}
+.app-subnavigation-item .MuiListItemText-primary { font-size: .82rem; line-height: 1.35; }
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected {
+  color: #fff;
+  background: rgba(64,132,255,.25);
+  box-shadow: inset 2px 0 0 #8fc8ff;
+}
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected:hover { background: rgba(64,132,255,.34); }
