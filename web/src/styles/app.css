@@ -189,3 +189,32 @@
   .app-logout-button.MuiButton-root { min-width: 0; padding-inline: 8px; }
   .app-logout-button .MuiButton-startIcon { margin-right: 4px; margin-left: 0; }
 }
+
+
+/* El encabezado ocupa únicamente el área de trabajo, sin cubrir el menú lateral. */
+@media (min-width: 900px) {
+  .app-header.MuiAppBar-root {
+    width: calc(100% - 258px);
+    margin-left: 258px;
+  }
+}
+
+/* Simplificar el eslogan mientras se define la identidad visual definitiva. */
+.app-header-system-slogan {
+  font-size: 0;
+}
+.app-header-system-slogan::after {
+  content: "Facturación electrónica";
+  font-size: .7rem;
+}
+@media (max-width: 1100px) {
+  .app-header-system-slogan::after {
+    font-size: .64rem;
+  }
+}
+@media (max-width: 899px) {
+  .app-header.MuiAppBar-root {
+    width: 100%;
+    margin-left: 0;
+  }
+}
