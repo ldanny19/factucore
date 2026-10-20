@@ -19,6 +19,27 @@ printf '%s\n%s\n' "$REALM_NAME" "$APP_PASSWORD" | MSYS_NO_PATHCONV=1 "${COMPOSE[
   "$KCADM" config credentials --server http://127.0.0.1:8080 --realm master --user admin --password "$ADMIN_PASSWORD" >/dev/null
   if ! "$KCADM" get "realms/$REALM_NAME" >/dev/null 2>&1; then echo "Creando realm."; "$KCADM" create realms -s "realm=$REALM_NAME" -s enabled=true >/dev/null; else echo "Realm existente; se conserva."; fi
   if ! "$KCADM" get "roles/SUPERADMIN" -r "$REALM_NAME" >/dev/null 2>&1; then "$KCADM" create roles -r "$REALM_NAME" -s name=SUPERADMIN >/dev/null; fi
+  CLIENT_ID=$("$KCADM" get clients -r "$REALM_NAME" -q "clientId=facturador-app" 2>/dev/null | grep -oE '"id"[[:space:]]*:[[:space:]]*"[^"]+"' | head -n 1 | cut -d ":" -f 2 | tr -d ' "' || true)
+  if [ -z "$CLIENT_ID" ]; then
+    echo "Creando cliente facturador-app para el portal FactuCore."
+    "$KCADM" create clients -r "$REALM_NAME" \
+      -s clientId=facturador-app \
+      -s enabled=true \
+      -s publicClient=true \
+      -s directAccessGrantsEnabled=true \
+      -s standardFlowEnabled=true \
+      -s "redirectUris=[\"http://localhost:3000/*\",\"http://api.facturador.com:8080/*\",\"http://app.factucore.local/*\"]" \
+      -s "webOrigins=[\"http://localhost:3000\",\"http://api.facturador.com:8080\",\"http://app.factucore.local\"]" >/dev/null
+  else
+    echo "Actualizando cliente facturador-app para habilitar el login del portal."
+    "$KCADM" update "clients/$CLIENT_ID" -r "$REALM_NAME" \
+      -s enabled=true \
+      -s publicClient=true \
+      -s directAccessGrantsEnabled=true \
+      -s standardFlowEnabled=true \
+      -s "redirectUris=[\"http://localhost:3000/*\",\"http://api.facturador.com:8080/*\",\"http://app.factucore.local/*\"]" \
+      -s "webOrigins=[\"http://localhost:3000\",\"http://api.facturador.com:8080\",\"http://app.factucore.local\"]" >/dev/null
+  fi
   USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | grep -oE "\"id\"[[:space:]]*:[[:space:]]*\"[^\"]+\"" | head -n 1 | cut -d ":" -f 2 | tr -d " \"" || true)
   if [ -z "$USER_ID" ]; then
     echo "Creando usuario superApp."

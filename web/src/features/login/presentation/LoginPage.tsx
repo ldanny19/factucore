@@ -46,7 +46,10 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const tokenEndpoint = `${oidcConfig.authority.replace(/\/$/, "")}/protocol/openid-connect/token`;
+      const authority = new URL(oidcConfig.authority);
+      const tokenPath = `${authority.pathname.replace(/\/$/, "")}/protocol/openid-connect/token`;
+      // En desarrollo, Vite proxifica /auth para evitar que el navegador bloquee el token por CORS.
+      const tokenEndpoint = import.meta.env.DEV ? tokenPath : `${authority.origin}${tokenPath}`;
       const credentials = new URLSearchParams({
         grant_type: "password",
         client_id: oidcConfig.client_id,
@@ -61,10 +64,13 @@ export default function LoginPage() {
         body: credentials,
       });
 
-      const tokenResponse = (await response.json()) as {
-        access_token?: string;
-        error?: string;
-      };
+      const responseBody = await response.text();
+      let tokenResponse: { access_token?: string; error?: string; error_description?: string };
+      try {
+        tokenResponse = JSON.parse(responseBody) as typeof tokenResponse;
+      } catch {
+        tokenResponse = { error: "invalid_response" };
+      }
 
       if (!response.ok || !tokenResponse.access_token) {
         setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_FAILED));
