@@ -25,7 +25,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import { Link as RouterLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
-import "../../styles/app-layout.css";
+import "../../styles/app.css";
 
 const DRAWER_WIDTH = 258;
 

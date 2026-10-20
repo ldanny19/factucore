@@ -1,4 +1,4 @@
-import "../../../styles/forms.css";
+import "../../../styles/app.css";
 import { Alert, Button, Container, Paper, Stack, Typography } from "@mui/material";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import { Link as RouterLink } from "react-router-dom";

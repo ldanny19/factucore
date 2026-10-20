@@ -60,3 +60,17 @@
   .app-content { padding: 20px 14px; }
   .app-header-date { max-width: 170px; }
 }
+
+/* Estilos compartidos por las páginas internas que contienen formularios. */
+.forms-page {
+  min-height: 100vh;
+  padding-block: clamp(32px, 7vh, 72px);
+  background: #f6f8fc;
+}
+.forms-page .form-panel {
+  padding: clamp(24px, 4vw, 40px);
+  border-color: #e1e7ee;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(18, 48, 74, 0.05);
+}
+.forms-page .form-panel h1, .forms-page .form-panel h2 { letter-spacing: -0.025em; }
