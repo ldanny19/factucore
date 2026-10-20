@@ -26,6 +26,7 @@ export default function AppRoutes() {
         <Route path="empresas" element={<EmpresasPage />} />
         <Route path="comprobantes" element={<ModulePlaceholder title="Comprobantes" />} />
         <Route path="configuracion" element={<ModulePlaceholder title="Configuración" />} />
+        <Route path="accesos" element={<ModulePlaceholder title="Administración de accesos" />} />
       </Route>
       <Route path="/empresas" element={<Navigate to="/app/empresas" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />

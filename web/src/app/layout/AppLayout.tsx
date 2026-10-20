@@ -20,6 +20,7 @@ import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { Link as RouterLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
@@ -32,6 +33,7 @@ const menuItems = [
   { label: "Empresas", description: "Datos empresariales", path: "/app/empresas", icon: <BusinessRoundedIcon /> },
   { label: "Comprobantes", description: "Documentos electrónicos", path: "/app/comprobantes", icon: <ReceiptLongRoundedIcon /> },
   { label: "Configuración", description: "Preferencias del sistema", path: "/app/configuracion", icon: <SettingsRoundedIcon /> },
+  { label: "Administración de accesos", description: "Usuarios, roles y permisos", path: "/app/accesos", icon: <AdminPanelSettingsRoundedIcon /> },
 ];
 
 function getUserName(profile: Record<string, unknown> | undefined) {
