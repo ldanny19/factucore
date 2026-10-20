@@ -1,10 +1,11 @@
+import "../../../styles/forms.css";
 import { Alert, Button, Container, Paper, Stack, Typography } from "@mui/material";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import { Link as RouterLink } from "react-router-dom";
 export default function EmpresasPage() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 5, md: 9 } }}>
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 5 } }}>
+    <Container className="forms-page" maxWidth="md">
+      <Paper className="form-panel" variant="outlined">
         <Stack spacing={2.5}>
           <BusinessOutlinedIcon color="primary" sx={{ fontSize: 42 }} />
           <Typography variant="h4" component="h1" fontWeight={800} color="primary.main">

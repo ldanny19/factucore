@@ -1,0 +1,7 @@
+.home-page {
+  min-height: 100vh;
+  color: #172b4d;
+  background: #fbfcff;
+}
+.home-page a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.home-page :focus-visible { outline: 3px solid rgba(37, 99, 235, 0.55); outline-offset: 3px; }

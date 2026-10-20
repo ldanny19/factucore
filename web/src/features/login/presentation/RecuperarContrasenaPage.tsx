@@ -1,20 +1,11 @@
 import { useState, type FormEvent } from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  Container,
-  Link,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, Container, Paper, Stack, TextField, Typography } from "@mui/material";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import { Link as RouterLink } from "react-router-dom";
-import { oidcConfig } from "../../login/infrastructure/oidc-config";
+import { oidcConfig } from "../infrastructure/oidc-config";
+import "../../../styles/auth.css";
 
 export default function RecuperarContrasenaPage() {
   const [email, setEmail] = useState("");
@@ -30,8 +21,6 @@ export default function RecuperarContrasenaPage() {
       return;
     }
 
-    // La recuperación y el envío del correo los administra Keycloak.
-    // login_hint permite precargar el correo en su pantalla de autenticación.
     const authority = new URL(oidcConfig.authority);
     const authorizationUrl = new URL(
       `${authority.pathname.replace(/\/$/, "")}/protocol/openid-connect/auth`,
@@ -46,56 +35,25 @@ export default function RecuperarContrasenaPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        py: 3,
-        px: 2,
-        background:
-          "radial-gradient(circle at 12% 12%, rgba(25, 118, 210, 0.08), transparent 28%), #f3f6fa",
-      }}
-    >
+    <Box className="auth-page">
       <Container maxWidth="sm">
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 3, sm: 5 },
-            border: "1px solid #e1e7ee",
-            borderRadius: 4,
-            boxShadow: "0 24px 70px rgba(18, 48, 74, 0.10)",
-          }}
-        >
+        <Paper className="auth-recovery-card" elevation={0}>
           <Stack spacing={2.5} alignItems="flex-start">
-            <Box
-              sx={{
-                width: 54,
-                height: 54,
-                display: "grid",
-                placeItems: "center",
-                borderRadius: 3,
-                color: "primary.main",
-                bgcolor: "action.hover",
-              }}
-            >
-              <LockResetRoundedIcon sx={{ fontSize: 30 }} />
+            <Box sx={{ width: 48, height: 48, display: "grid", placeItems: "center", borderRadius: 2.5, color: "primary.main", bgcolor: "action.hover" }}>
+              <LockResetRoundedIcon sx={{ fontSize: 27 }} />
             </Box>
             <Box>
               <Typography variant="overline" color="primary.main" fontWeight={800}>
                 PORTAL EMPRESARIAL
               </Typography>
-              <Typography component="h1" variant="h4" fontWeight={800} sx={{ mt: 0.5 }}>
+              <Typography className="auth-recovery-title" component="h1" variant="h4" fontWeight={800} sx={{ mt: 0.5 }}>
                 Recuperar contraseña
               </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.8 }}>
-                Ingresa el correo electrónico asociado a tu cuenta. Continuarás con el servicio seguro
-                de Keycloak para solicitar el enlace de restablecimiento.
+              <Typography color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.7 }}>
+                Ingresa el correo electrónico asociado a tu cuenta para continuar con la recuperación.
               </Typography>
             </Box>
-
             {error && <Alert severity="error" sx={{ width: "100%" }}>{error}</Alert>}
-
             <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
               <Stack spacing={2.5}>
                 <TextField
@@ -117,30 +75,14 @@ export default function RecuperarContrasenaPage() {
                     },
                   }}
                 />
-                <Alert severity="info">
-                  En la pantalla de Keycloak, selecciona «¿Olvidaste tu contraseña?» si no aparece
-                  automáticamente. Keycloak verificará la cuenta y gestionará el envío del correo.
-                </Alert>
                 <Button type="submit" variant="contained" size="large" fullWidth>
                   Continuar
                 </Button>
-                <Button
-                  component={RouterLink}
-                  to="/login"
-                  variant="text"
-                  fullWidth
-                  startIcon={<ArrowBackRoundedIcon />}
-                >
+                <Button component={RouterLink} to="/login" variant="text" fullWidth startIcon={<ArrowBackRoundedIcon />}>
                   Volver al inicio de sesión
                 </Button>
               </Stack>
             </Box>
-            <Typography variant="caption" color="text.secondary">
-              Por seguridad, FactuCore no solicita ni almacena tu contraseña actual.
-            </Typography>
-            <Link component={RouterLink} to="/login" underline="hover" sx={{ fontSize: ".9rem" }}>
-              Volver a iniciar sesión
-            </Link>
           </Stack>
         </Paper>
       </Container>

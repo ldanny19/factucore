@@ -1,3 +1,4 @@
+import "../../../styles/auth.css";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   Alert,
@@ -103,6 +104,7 @@ export default function LoginPage() {
     >
       <Container maxWidth="lg">
         <Paper
+          className="auth-login-card"
           elevation={0}
           sx={{
             width: "100%",

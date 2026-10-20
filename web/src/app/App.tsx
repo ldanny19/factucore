@@ -1,3 +1,4 @@
+import "../styles/home.css";
 import { useEffect, useState } from "react";
 import {
   AppBar,
@@ -187,7 +188,7 @@ export default function App() {
   }).format(currentTime);
 
   return (
-    <Box sx={{ minHeight: "100vh", color: "#172b4d", background: "#fbfcff" }}>
+    <Box className="home-page">
       <AppBar
         position="sticky"
         color="transparent"
