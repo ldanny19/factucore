@@ -33,7 +33,15 @@ import "../../styles/app.css";
 
 const DRAWER_WIDTH = 258;
 
-type MenuItem = {\n  label: string;\n  description: string;\n  path: string;\n  icon: ReactNode;\n  children?: { label: string; path: string }[];\n};\n\nconst menuItems: MenuItem[] = [
+type MenuItem = {
+  label: string;
+  description: string;
+  path: string;
+  icon: ReactNode;
+  children?: { label: string; path: string }[];
+};
+
+const menuItems: MenuItem[] = [
   { label: "Inicio", description: "Resumen general", path: "/app", icon: <DashboardRoundedIcon /> },
   {
     label: "Administración",
