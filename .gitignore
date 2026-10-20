@@ -16,6 +16,8 @@
 
 # Artefactos generados
 **/target/
+**/node_modules/
+**/dist/
 
 # Configuración local de Eclipse
 **/.classpath
