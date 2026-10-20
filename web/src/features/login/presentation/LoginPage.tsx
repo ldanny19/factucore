@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   Alert,
   Box,
@@ -16,26 +16,35 @@ import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { Link as RouterLink } from "react-router-dom";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
+import { useAuth } from "react-oidc-context";
 
 type LoginAlertSeverity = "error" | "warning";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [alertSeverity, setAlertSeverity] = useState<LoginAlertSeverity>("error");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const auth = useAuth();
 
-    if (!username.trim() || !password) {
+  useEffect(() => {
+    if (auth.error) {
       setAlertSeverity("error");
-      setError(resolveMessage(MessageCodes.LOGIN_REQUIRED_FIELDS));
-      return;
+      setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_NOT_CONFIGURED));
     }
+  }, [auth.error]);
 
-    setAlertSeverity("warning");
-    setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_NOT_CONFIGURED));
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+
+    try {
+      await auth.signinRedirect();
+    } catch {
+      setAlertSeverity("error");
+      setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_NOT_CONFIGURED));
+    }
   };
 
   const clearError = () => setError(null);
@@ -78,8 +87,7 @@ export default function LoginPage() {
               p: { xs: 3.5, sm: 5, md: 6 },
               minHeight: { xs: 220, md: 590 },
               color: "#ffffff",
-              background:
-                "linear-gradient(145deg, #0a1f33 0%, #12304a 58%, #1b5278 100%)",
+              background: "linear-gradient(145deg, #0a1f33 0%, #12304a 58%, #1b5278 100%)",
               "&::before": {
                 content: '""',
                 position: "absolute",
@@ -90,8 +98,7 @@ export default function LoginPage() {
                 top: -100,
                 border: "1px solid rgba(255,255,255,0.14)",
                 borderRadius: "50%",
-                boxShadow:
-                  "0 0 0 35px rgba(255,255,255,0.035), 0 0 0 75px rgba(255,255,255,0.025)",
+                boxShadow: "0 0 0 35px rgba(255,255,255,0.035), 0 0 0 75px rgba(255,255,255,0.025)",
               },
               "&::after": {
                 content: '""',
@@ -122,12 +129,7 @@ export default function LoginPage() {
                 <DescriptionOutlinedIcon sx={{ fontSize: 30 }} />
               </Box>
               <Box>
-                <Typography
-                  variant="h5"
-                  component="p"
-                  fontWeight={800}
-                  letterSpacing="-0.04em"
-                >
+                <Typography variant="h5" component="p" fontWeight={800} letterSpacing="-0.04em">
                   FactuCore
                 </Typography>
                 <Typography
@@ -191,7 +193,11 @@ export default function LoginPage() {
               </Typography>
 
               {error && (
-                <Alert severity={alertSeverity} onClose={clearError} sx={{ mb: 2.5, borderRadius: 2 }}>
+                <Alert
+                  severity={alertSeverity}
+                  onClose={clearError}
+                  sx={{ mb: 2.5, borderRadius: 2 }}
+                >
                   {error}
                 </Alert>
               )}
@@ -225,7 +231,11 @@ export default function LoginPage() {
                     required
                     slotProps={{
                       input: {
-                        startAdornment: <LockOutlinedIcon sx={{ mr: 1.25, color: "text.secondary", fontSize: 20 }} />,
+                        startAdornment: (
+                          <LockOutlinedIcon
+                            sx={{ mr: 1.25, color: "text.secondary", fontSize: 20 }}
+                          />
+                        ),
                       },
                     }}
                   />
@@ -241,7 +251,13 @@ export default function LoginPage() {
                     </Link>
                   </Box>
 
-                  <Button type="submit" variant="contained" fullWidth size="large" sx={{ mt: 0.5, py: 1.4 }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    sx={{ mt: 0.5, py: 1.4 }}
+                  >
                     Iniciar sesión
                   </Button>
 

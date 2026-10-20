@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "react-oidc-context";
+import { oidcConfig } from "../features/login/infrastructure/oidc-config";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -77,13 +79,19 @@ const theme = createTheme({
   },
 });
 
-export default function AppProviders({ children }: { children: ReactNode }) {
+export default function AppProviders({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>{children}</BrowserRouter>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <AuthProvider {...oidcConfig}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>{children}</BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
