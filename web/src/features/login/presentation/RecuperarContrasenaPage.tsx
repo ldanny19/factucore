@@ -39,22 +39,22 @@ export default function RecuperarContrasenaPage() {
       <Container maxWidth="sm">
         <Paper className="auth-recovery-card" elevation={0}>
           <Stack spacing={2.5} alignItems="flex-start">
-            <Box sx={{ width: 48, height: 48, display: "grid", placeItems: "center", borderRadius: 2.5, color: "primary.main", bgcolor: "action.hover" }}>
-              <LockResetRoundedIcon sx={{ fontSize: 27 }} />
+            <Box className="auth-recovery-icon">
+              <LockResetRoundedIcon />
             </Box>
             <Box>
               <Typography variant="overline" color="primary.main" fontWeight={800}>
                 PORTAL EMPRESARIAL
               </Typography>
-              <Typography className="auth-recovery-title" component="h1" variant="h4" fontWeight={800} sx={{ mt: 0.5 }}>
+              <Typography className="auth-recovery-title" component="h1" variant="h4" fontWeight={800}>
                 Recuperar contraseña
               </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.7 }}>
+              <Typography color="text.secondary" className="auth-recovery-description">
                 Ingresa el correo electrónico asociado a tu cuenta para continuar con la recuperación.
               </Typography>
             </Box>
-            {error && <Alert severity="error" sx={{ width: "100%" }}>{error}</Alert>}
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
+            {error && <Alert severity="error" className="auth-error">{error}</Alert>}
+            <Box component="form" onSubmit={handleSubmit} className="auth-recovery-form">
               <Stack spacing={2.5}>
                 <TextField
                   label="Correo electrónico"
@@ -71,7 +71,7 @@ export default function RecuperarContrasenaPage() {
                   autoFocus
                   slotProps={{
                     input: {
-                      startAdornment: <EmailOutlinedIcon sx={{ mr: 1.25, color: "text.secondary" }} />,
+                      startAdornment: <EmailOutlinedIcon className="auth-password-icon" />,
                     },
                   }}
                 />

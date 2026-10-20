@@ -114,9 +114,36 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-function getUserName(profile: Record<string, unknown> | undefined) {
-  const value = profile?.name ?? profile?.preferred_username ?? profile?.email;
-  return typeof value === "string" && value.trim() ? value : "Usuario";
+interface UserClaims {
+  name?: string;
+  preferred_username?: string;
+  given_name?: string;
+  family_name?: string;
+  email?: string;
+}
+
+function getUserName(profile: Record<string, unknown> | undefined, token: string | null) {
+  let claims: UserClaims = {};
+  try {
+    if (token) {
+      const payload = token.split(".")[1]?.replace(/-/g, "+").replace(/_/g, "/");
+      if (payload) claims = JSON.parse(window.atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, "="))) as UserClaims;
+    }
+  } catch {
+    claims = {};
+  }
+
+  const candidates = [
+    profile?.preferred_username,
+    claims.preferred_username,
+    profile?.name,
+    claims.name,
+    [claims.given_name, claims.family_name].filter(Boolean).join(" "),
+    profile?.email,
+    claims.email,
+  ];
+  const value = candidates.find((candidate) => typeof candidate === "string" && candidate.trim());
+  return typeof value === "string" ? value : "Usuario";
 }
 
 export default function AppLayout() {
@@ -152,7 +179,7 @@ export default function AppLayout() {
     }
   }, [location.pathname, accessContext.roles.join(",")]);
 
-  const userName = getUserName(auth.user?.profile as Record<string, unknown> | undefined);
+  const userName = getUserName(auth.user?.profile as Record<string, unknown> | undefined, accessContext.token);
   const dateLabel = new Intl.DateTimeFormat("es-EC", {
     weekday: "short",
     day: "2-digit",
@@ -317,14 +344,14 @@ export default function AppLayout() {
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
           ModalProps={{ keepMounted: true }}
-          sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { width: { xs: "min(258px, 86vw)", sm: DRAWER_WIDTH }, height: "100dvh", maxHeight: "100vh", overflowY: "hidden", overscrollBehavior: "contain" } }}
+          className="app-drawer app-drawer-mobile"
         >
           {sidebar}
         </Drawer>
         <Drawer
           variant="permanent"
           open
-          sx={{ display: { xs: "none", md: "block" }, "& .MuiDrawer-paper": { width: DRAWER_WIDTH, height: "100dvh", maxHeight: "100vh", overflowY: "hidden", overscrollBehavior: "contain" } }}
+          className="app-drawer app-drawer-desktop"
         >
           {sidebar}
         </Drawer>

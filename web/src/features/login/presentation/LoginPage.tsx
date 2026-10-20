@@ -1,4 +1,3 @@
-import "../../../styles/auth.css";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   Alert,
@@ -15,17 +14,17 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useAuth } from "react-oidc-context";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
-import { useAuth } from "react-oidc-context";
 import { oidcConfig } from "../infrastructure/oidc-config";
+import "../../../styles/auth.css";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -34,6 +33,8 @@ export default function LoginPage() {
       navigate("/app", { replace: true });
     }
   }, [auth.isAuthenticated, auth.isLoading, navigate]);
+
+  const clearError = () => setError(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,11 +46,9 @@ export default function LoginPage() {
     }
 
     setIsSubmitting(true);
-
     try {
       const authority = new URL(oidcConfig.authority);
       const tokenPath = `${authority.pathname.replace(/\/$/, "")}/protocol/openid-connect/token`;
-      // En desarrollo, Vite proxifica /auth para evitar que el navegador bloquee el token por CORS.
       const tokenEndpoint = import.meta.env.DEV ? tokenPath : `${authority.origin}${tokenPath}`;
       const credentials = new URLSearchParams({
         grant_type: "password",
@@ -58,19 +57,17 @@ export default function LoginPage() {
         password,
         scope: "openid profile email",
       });
-
       const response = await fetch(tokenEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: credentials,
       });
-
       const responseBody = await response.text();
-      let tokenResponse: { access_token?: string; error?: string; error_description?: string };
+      let tokenResponse: { access_token?: string };
       try {
         tokenResponse = JSON.parse(responseBody) as typeof tokenResponse;
       } catch {
-        tokenResponse = { error: "invalid_response" };
+        tokenResponse = {};
       }
 
       if (!response.ok || !tokenResponse.access_token) {
@@ -78,7 +75,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Sesión temporal para la prueba del portal; no se almacena la contraseña.
       sessionStorage.setItem("factucore.access_token", tokenResponse.access_token);
       setPassword("");
       navigate("/app", { replace: true });
@@ -89,157 +85,38 @@ export default function LoginPage() {
     }
   };
 
-  const clearError = () => setError(null);
-
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        py: { xs: 3, md: 6 },
-        background:
-          "radial-gradient(circle at 12% 12%, rgba(25, 118, 210, 0.08), transparent 28%), #f3f6fa",
-      }}
-    >
-      <Container maxWidth="lg">
-        <Paper
-          className="auth-login-card"
-          elevation={0}
-          sx={{
-            width: "100%",
-            maxWidth: 1040,
-            mx: "auto",
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "0.9fr 1.1fr" },
-            overflow: "hidden",
-            border: "1px solid #e1e7ee",
-            borderRadius: { xs: 3, md: 5 },
-            boxShadow: "0 24px 70px rgba(18, 48, 74, 0.12)",
-          }}
-        >
-          <Box
-            sx={{
-              position: "relative",
-              isolation: "isolate",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              gap: 5,
-              p: { xs: 3.5, sm: 5, md: 6 },
-              minHeight: { xs: 220, md: 590 },
-              color: "#ffffff",
-              background: "linear-gradient(145deg, #0a1f33 0%, #12304a 58%, #1b5278 100%)",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                zIndex: -1,
-                width: 290,
-                height: 290,
-                right: -110,
-                top: -100,
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: "50%",
-                boxShadow: "0 0 0 35px rgba(255,255,255,0.035), 0 0 0 75px rgba(255,255,255,0.025)",
-              },
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                zIndex: -1,
-                width: 190,
-                height: 190,
-                left: -95,
-                bottom: -115,
-                borderRadius: "50%",
-                backgroundColor: "rgba(25, 118, 210, 0.18)",
-              },
-            }}
-          >
-            <Stack spacing={2.5}>
-              <Box
-                sx={{
-                  width: 54,
-                  height: 54,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 3,
-                  color: "#ffffff",
-                  backgroundColor: "rgba(255,255,255,0.12)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                }}
-              >
-                <DescriptionOutlinedIcon sx={{ fontSize: 30 }} />
-              </Box>
+    <Box className="auth-page auth-login-page">
+      <Container maxWidth="lg" className="auth-container">
+        <Paper className="auth-login-card" elevation={0}>
+          <Box className="auth-login-brand-panel">
+            <Stack className="auth-brand-content" spacing={3}>
+              <Box className="auth-brand-icon"><DescriptionOutlinedIcon /></Box>
               <Box>
-                <Typography variant="h5" component="p" fontWeight={800} letterSpacing="-0.04em">
-                  FactuCore
-                </Typography>
-                <Typography
-                  sx={{
-                    mt: 2.5,
-                    maxWidth: 340,
-                    fontSize: { xs: "1.65rem", md: "2.15rem" },
-                    lineHeight: 1.2,
-                    fontWeight: 750,
-                    letterSpacing: "-0.04em",
-                  }}
-                >
+                <Typography className="auth-brand-name" component="p">FactuCore</Typography>
+                <Typography className="auth-brand-heading" component="h2">
                   Tu operación tributaria, en un solo lugar.
                 </Typography>
-                <Typography
-                  sx={{
-                    mt: 2,
-                    maxWidth: 340,
-                    color: "rgba(255,255,255,0.72)",
-                    lineHeight: 1.8,
-                  }}
-                >
+                <Typography className="auth-brand-description">
                   Gestiona tu facturación electrónica con una experiencia clara y organizada.
                 </Typography>
               </Box>
             </Stack>
-
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <VerifiedUserOutlinedIcon sx={{ color: "#8fc8ff", fontSize: 22 }} />
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.78)" }}>
-                Portal empresarial FactuCore
-              </Typography>
-            </Stack>
+            <Box className="auth-brand-footer">
+              <VerifiedUserOutlinedIcon />
+              <Typography variant="body2">Portal empresarial FactuCore</Typography>
+            </Box>
           </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              p: { xs: 3, sm: 5, md: 7 },
-              backgroundColor: "#ffffff",
-            }}
-          >
-            <Box sx={{ width: "100%", maxWidth: 390 }}>
-              <Typography
-                variant="overline"
-                sx={{ color: "secondary.main", fontWeight: 800, letterSpacing: "0.12em" }}
-              >
-                PORTAL EMPRESARIAL
-              </Typography>
-              <Typography
-                variant="h4"
-                component="h1"
-                sx={{ mt: 1, fontSize: { xs: "1.8rem", sm: "2.1rem" }, fontWeight: 800 }}
-              >
-                Bienvenido
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1, mb: 3.5, lineHeight: 1.7 }}>
+          <Box className="auth-login-form-panel">
+            <Box className="auth-login-form">
+              <Typography className="auth-eyebrow">PORTAL EMPRESARIAL</Typography>
+              <Typography className="auth-login-title" component="h1">Bienvenido</Typography>
+              <Typography className="auth-login-description">
                 Ingresa tus credenciales para continuar a FactuCore.
               </Typography>
 
-              {error && (
-                <Alert severity="error" onClose={clearError} sx={{ mb: 2.5, borderRadius: 2 }}>
-                  {error}
-                </Alert>
-              )}
+              {error && <Alert severity="error" onClose={clearError} className="auth-error">{error}</Alert>}
 
               <Box component="form" onSubmit={handleSubmit} noValidate>
                 <Stack spacing={2.5}>
@@ -247,63 +124,33 @@ export default function LoginPage() {
                     label="Usuario"
                     name="username"
                     value={username}
-                    onChange={(event) => {
-                      setUsername(event.target.value);
-                      clearError();
-                    }}
+                    onChange={(event) => { setUsername(event.target.value); clearError(); }}
                     fullWidth
                     autoComplete="username"
                     required
                     disabled={isSubmitting}
                   />
-
                   <TextField
                     label="Contraseña"
                     name="password"
                     type="password"
                     value={password}
-                    onChange={(event) => {
-                      setPassword(event.target.value);
-                      clearError();
-                    }}
+                    onChange={(event) => { setPassword(event.target.value); clearError(); }}
                     fullWidth
                     autoComplete="current-password"
                     required
                     disabled={isSubmitting}
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <LockOutlinedIcon
-                            sx={{ mr: 1.25, color: "text.secondary", fontSize: 20 }}
-                          />
-                        ),
-                      },
-                    }}
+                    slotProps={{ input: { startAdornment: <LockOutlinedIcon className="auth-password-icon" /> } }}
                   />
-
-                  <Box sx={{ display: "flex", justifyContent: "flex-end", mt: -0.5 }}>
-                    <Link
-                      component={RouterLink}
-                      to="/recuperar-contrasena"
-                      underline="hover"
-                      sx={{ fontSize: "0.9rem", fontWeight: 600 }}
-                    >
+                  <Box className="auth-forgot-link">
+                    <Link component={RouterLink} to="/recuperar-contrasena" underline="hover">
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </Box>
-
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    disabled={isSubmitting}
-                    sx={{ mt: 0.5, py: 1.4 }}
-                  >
+                  <Button type="submit" variant="contained" fullWidth size="large" disabled={isSubmitting} className="auth-submit-button">
                     {isSubmitting ? "Validando..." : "Iniciar sesión"}
                   </Button>
-
-                  <Button component={RouterLink} to="/" variant="text" color="primary" fullWidth>
+                  <Button component={RouterLink} to="/" variant="text" fullWidth>
                     Volver al inicio
                   </Button>
                 </Stack>

@@ -289,3 +289,32 @@
 @media (max-width: 899px) {
   .app-sidebar-content { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 }
+
+/* Distribución de los Drawer definida en CSS, no en los componentes React. */
+.app-drawer .MuiDrawer-paper {
+  height: 100dvh;
+  max-height: 100vh;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+}
+.app-drawer-mobile .MuiDrawer-paper { width: min(258px, 86vw); }
+.app-drawer-desktop .MuiDrawer-paper { width: 258px; }
+@media (min-width: 600px) {
+  .app-drawer-mobile .MuiDrawer-paper { width: 258px; }
+}
+@media (max-width: 899px) {
+  .app-drawer-mobile { display: block; }
+  .app-drawer-desktop { display: none; }
+}
+@media (min-width: 900px) {
+  .app-drawer-mobile { display: none; }
+  .app-drawer-desktop { display: block; }
+}
+.dashboard-title-row { margin-bottom: 8px; }
+.dashboard-intro { margin-top: 16px; margin-bottom: 24px; }
+.dashboard-icon-blue { color: #2563eb; background: #eaf1ff; }
+.dashboard-icon-green { color: #0f9f8f; background: #e5f8f4; }
+.dashboard-icon-amber { color: #b7791f; background: #fff3df; }
+.dashboard-welcome-title.MuiTypography-root { font-weight: 800; }
+.dashboard-welcome-description.MuiTypography-root { margin-top: 8px; line-height: 1.8; }
+.dashboard-company-link.MuiChip-root { margin-top: 16px; }
