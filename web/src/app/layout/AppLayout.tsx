@@ -42,7 +42,6 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { label: "Inicio", description: "Resumen general", path: "/app", icon: <DashboardRoundedIcon /> },
   {
     label: "Administración",
     description: "Estructura empresarial",
