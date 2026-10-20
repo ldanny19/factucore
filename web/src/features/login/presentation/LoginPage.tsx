@@ -17,6 +17,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
 import { useAuth } from "react-oidc-context";
+import { oidcConfig } from "../infrastructure/oidc-config";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -45,18 +46,37 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await auth.userManager.signinResourceOwnerCredentials({
+      const tokenEndpoint = `${oidcConfig.authority.replace(/\/$/, "")}/protocol/openid-connect/token`;
+      const credentials = new URLSearchParams({
+        grant_type: "password",
+        client_id: oidcConfig.client_id,
         username: username.trim(),
         password,
+        scope: "openid profile email",
       });
+
+      const response = await fetch(tokenEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: credentials,
+      });
+
+      const tokenResponse = (await response.json()) as {
+        access_token?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !tokenResponse.access_token) {
+        setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_FAILED));
+        return;
+      }
+
+      // Sesión temporal para la prueba del portal; no se almacena la contraseña.
+      sessionStorage.setItem("factucore.access_token", tokenResponse.access_token);
       setPassword("");
       navigate("/empresas", { replace: true });
-    } catch (cause) {
-      setError(
-        cause instanceof TypeError
-          ? resolveMessage(MessageCodes.LOGIN_SERVICE_UNAVAILABLE)
-          : resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_FAILED),
-      );
+    } catch {
+      setError(resolveMessage(MessageCodes.LOGIN_SERVICE_UNAVAILABLE));
     } finally {
       setIsSubmitting(false);
     }
