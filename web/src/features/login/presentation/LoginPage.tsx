@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!auth.isLoading && auth.isAuthenticated) {
-      navigate("/empresas", { replace: true });
+      navigate("/app/empresas", { replace: true });
     }
   }, [auth.isAuthenticated, auth.isLoading, navigate]);
 

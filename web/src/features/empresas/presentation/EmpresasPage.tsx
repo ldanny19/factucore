@@ -2,6 +2,7 @@ import "../../../styles/forms.css";
 import { Alert, Button, Container, Paper, Stack, Typography } from "@mui/material";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import { Link as RouterLink } from "react-router-dom";
+
 export default function EmpresasPage() {
   return (
     <Container className="forms-page" maxWidth="md">
@@ -18,7 +19,7 @@ export default function EmpresasPage() {
           <Alert severity="info">
             Módulo en preparación. La integración con la API se implementará después.
           </Alert>
-          <Button component={RouterLink} to="/" variant="outlined" sx={{ alignSelf: "flex-start" }}>
+          <Button component={RouterLink} to="/app" variant="outlined" sx={{ alignSelf: "flex-start" }}>
             Volver al inicio
           </Button>
         </Stack>

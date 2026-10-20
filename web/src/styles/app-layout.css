@@ -1,0 +1,62 @@
+.app-shell {
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #172b4d;
+}
+.app-header.MuiAppBar-root {
+  z-index: 1201;
+  color: #203c64;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e4eaf3;
+  backdrop-filter: blur(14px);
+}
+.app-header-toolbar.MuiToolbar-root {
+  min-height: 76px;
+  padding-inline: clamp(16px, 2.5vw, 36px);
+  display: flex;
+  gap: 16px;
+}
+.app-header-section { font-size: 1rem; font-weight: 800; color: #173765; }
+.app-header-date { margin-top: 3px; color: #74839a; font-size: .78rem; }
+.app-header-spacer { flex: 1; }
+.app-user-button.MuiIconButton-root { display: flex; gap: 10px; padding: 6px 10px; border-radius: 12px; }
+.app-user-avatar.MuiAvatar-root { width: 38px; height: 38px; font-size: .95rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #2563eb, #0f9f8f); }
+.app-user-details { text-align: left; }
+.app-user-name { color: #263e60; font-size: .84rem; font-weight: 750; }
+.app-user-role { color: #7b899d; font-size: .72rem; }
+.app-mobile-menu.MuiIconButton-root { display: none; }
+.app-sidebar-content { display: flex; flex-direction: column; min-height: 100%; padding: 22px 16px 16px; background: #fff; }
+.app-brand { display: flex; align-items: center; gap: 12px; padding: 2px 8px 18px; }
+.app-brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; color: #fff; background: linear-gradient(135deg, #2563eb, #0f9f8f); box-shadow: 0 7px 16px rgba(37,99,235,.18); }
+.app-brand-name { color: #173765; font-size: 1.16rem; font-weight: 850; line-height: 1.2; }
+.app-brand-caption { margin-top: 4px; color: #8390a4; font-size: .62rem; font-weight: 800; letter-spacing: .09em; }
+.app-sidebar-divider.MuiDivider-root { margin: 0 4px 22px; border-color: #edf1f7; }
+.app-menu-caption { padding: 0 12px 10px; color: #8a97aa; font-size: .67rem; font-weight: 850; letter-spacing: .1em; }
+.app-navigation { display: flex; flex-direction: column; gap: 5px; }
+.app-navigation-item.MuiListItemButton-root { min-height: 58px; padding: 9px 12px; border-radius: 12px; color: #536780; }
+.app-navigation-item.MuiListItemButton-root.Mui-selected { color: #2458c7; background: #edf3ff; }
+.app-navigation-item.MuiListItemButton-root.Mui-selected:hover { background: #e5edff; }
+.app-navigation-icon.MuiListItemIcon-root { min-width: 40px; color: inherit; }
+.app-sidebar-footer { display: flex; flex-direction: column; gap: 4px; margin-top: auto; padding: 18px 12px 4px; color: #8592a5; }
+.app-main { display: flex; flex-direction: column; min-height: 100vh; margin-left: 258px; padding-top: 76px; }
+.app-content { flex: 1; width: 100%; max-width: 1600px; margin: 0 auto; padding: clamp(22px, 3vw, 42px); }
+.app-footer { padding: 14px clamp(22px, 3vw, 42px); border-top: 1px solid #e7ecf4; color: #8793a5; background: #fff; }
+.dashboard-page { max-width: 1320px; margin: 0 auto; }
+.page-title-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: #2563eb; background: #eaf1ff; }
+.page-title.MuiTypography-root { color: #173765; font-weight: 850; letter-spacing: -.035em; }
+.dashboard-metric.MuiPaper-root { height: 100%; padding: 22px; border-color: #e4eaf3; border-radius: 16px; box-shadow: 0 6px 22px rgba(25,45,85,.035); }
+.dashboard-metric-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; }
+.dashboard-metric-value { margin-top: 20px; color: #173765; font-size: 2rem; line-height: 1.1; font-weight: 850; }
+.dashboard-welcome.MuiPaper-root { margin-top: 24px; padding: clamp(22px, 3vw, 32px); border-color: #e4eaf3; border-radius: 16px; background: linear-gradient(120deg, #fff, #f8fbff); }
+@media (max-width: 899px) {
+  .app-mobile-menu.MuiIconButton-root { display: inline-flex; }
+  .app-main { margin-left: 0; }
+  .app-header-toolbar.MuiToolbar-root { min-height: 68px; gap: 10px; }
+  .app-main { padding-top: 68px; }
+  .app-header-date { font-size: .7rem; }
+}
+@media (max-width: 480px) {
+  .app-user-details { display: none; }
+  .app-content { padding: 20px 14px; }
+  .app-header-date { max-width: 170px; }
+}
