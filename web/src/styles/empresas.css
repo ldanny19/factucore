@@ -1,0 +1,88 @@
+.empresas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.empresas-page-heading,
+.empresas-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.empresas-page-heading .page-title { margin-bottom: 8px; }
+.empresas-feedback { margin-bottom: 0; overflow-wrap: anywhere; }
+.empresas-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.empresas-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.empresas-search-form .MuiTextField-root { width: min(100%, 260px); }
+.empresas-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #dce8f7;
+  border-radius: 12px;
+  background: #f7faff;
+  overflow-wrap: anywhere;
+}
+.empresas-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.empresas-list-heading { margin-top: 4px; }
+.empresas-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.empresas-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.empresas-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.empresas-table-panel .MuiTableCell-body { padding-block: 12px; }
+.empresas-dialog-description { margin-top: 4px; }
+.empresas-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.empresas-dialog-actions { padding: 16px 24px 22px; }
+.empresas-page-date { align-self: flex-end; }
+@media (max-width: 900px) {
+  .empresas-table-panel { overflow-x: auto; }
+  .empresas-table-panel .MuiTable-root { min-width: 980px; }
+}
+@media (max-width: 650px) {
+  .empresas-page-heading,
+  .empresas-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .empresas-page-heading .MuiButton-root { width: 100%; }
+  .empresas-search-panel { padding: 16px; }
+  .empresas-search-form { align-items: stretch; flex-direction: column; }
+  .empresas-search-form .MuiTextField-root { width: 100%; }
+  .empresas-search-form .MuiButton-root { width: 100%; }
+  .empresas-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .empresas-dialog-actions { flex-wrap: wrap; }
+  .empresas-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+}
