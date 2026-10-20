@@ -1,22 +1,22 @@
-export const APP_ROLES = ["SUPER_ADMIN", "ADMIN", "VENDEDOR"] as const;
+export const APP_ROLES = ["SUPERADMIN", "ADMIN", "VENDEDOR"] as const;
 
 export type AppRole = (typeof APP_ROLES)[number];
 
-const ROLE_PRIORITY: AppRole[] = ["SUPER_ADMIN", "ADMIN", "VENDEDOR"];
+const ROLE_PRIORITY: AppRole[] = ["SUPERADMIN", "ADMIN", "VENDEDOR"];
 
 const PATH_ROLES: Record<string, readonly AppRole[]> = {
   "/app": APP_ROLES,
-  "/app/empresas": ["SUPER_ADMIN", "ADMIN"],
-  "/app/establecimientos": ["SUPER_ADMIN", "ADMIN"],
-  "/app/puntos-emision": ["SUPER_ADMIN", "ADMIN"],
-  "/app/secuenciales": ["SUPER_ADMIN", "ADMIN"],
-  "/app/certificados-firma": ["SUPER_ADMIN", "ADMIN"],
-  "/app/configuracion": ["SUPER_ADMIN", "ADMIN"],
-  "/app/configuracion/empresa": ["SUPER_ADMIN", "ADMIN"],
-  "/app/tarifas-tributarias": ["SUPER_ADMIN", "ADMIN"],
-  "/app/catalogos-tributarios": ["SUPER_ADMIN", "ADMIN"],
-  "/app/definiciones-documentales": ["SUPER_ADMIN"],
-  "/app/mapeos-xsd": ["SUPER_ADMIN"],
+  "/app/empresas": ["SUPERADMIN", "ADMIN"],
+  "/app/establecimientos": ["SUPERADMIN", "ADMIN"],
+  "/app/puntos-emision": ["SUPERADMIN", "ADMIN"],
+  "/app/secuenciales": ["SUPERADMIN", "ADMIN"],
+  "/app/certificados-firma": ["SUPERADMIN", "ADMIN"],
+  "/app/configuracion": ["SUPERADMIN", "ADMIN"],
+  "/app/configuracion/empresa": ["SUPERADMIN", "ADMIN"],
+  "/app/tarifas-tributarias": ["SUPERADMIN", "ADMIN"],
+  "/app/catalogos-tributarios": ["SUPERADMIN", "ADMIN"],
+  "/app/definiciones-documentales": ["SUPERADMIN"],
+  "/app/mapeos-xsd": ["SUPERADMIN"],
   "/app/auditoria": APP_ROLES,
   "/app/auditoria/historial": APP_ROLES,
   "/app/auditoria/trazabilidad": APP_ROLES,
@@ -27,11 +27,11 @@ const PATH_ROLES: Record<string, readonly AppRole[]> = {
   "/app/reportes-comprobantes/seguimiento": APP_ROLES,
   "/app/reportes-comprobantes/pendientes-fallidos": APP_ROLES,
   "/app/reportes-comprobantes/busqueda": APP_ROLES,
-  "/app/accesos": ["SUPER_ADMIN"],
-  "/app/accesos/usuarios": ["SUPER_ADMIN"],
-  "/app/accesos/roles": ["SUPER_ADMIN"],
-  "/app/accesos/permisos": ["SUPER_ADMIN"],
-  "/app/accesos/asignacion-roles": ["SUPER_ADMIN"],
+  "/app/accesos": ["SUPERADMIN"],
+  "/app/accesos/usuarios": ["SUPERADMIN"],
+  "/app/accesos/roles": ["SUPERADMIN"],
+  "/app/accesos/permisos": ["SUPERADMIN"],
+  "/app/accesos/asignacion-roles": ["SUPERADMIN"],
 };
 
 interface JwtPayload {
