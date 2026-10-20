@@ -829,3 +829,112 @@ La extensibilidad debe estar justificada por variaciones reales del negocio o de
 Prioridades:
 
 **Correctitud > Mantenibilidad > Seguridad > Trazabilidad > Simplicidad > Extensibilidad**
+
+---
+
+# 29. Frontend — React, TypeScript y Arquitectura Hexagonal
+
+Esta sección complementa las reglas generales del proyecto y aplica específicamente a `web/`.
+
+## Tecnologías aprobadas
+
+- React y TypeScript.
+- Vite como herramienta de desarrollo y build.
+- Material UI para componentes visuales.
+- React Router para navegación.
+- TanStack Query para estado remoto y consultas a la API.
+- Axios para transporte HTTP, encapsulado detrás de adaptadores cuando aporte desacoplamiento.
+- React Hook Form y Zod para formularios y validación.
+- Keycloak mediante OAuth2/OIDC para autenticación y gestión de identidad.
+
+No añadir bibliotecas adicionales sin una necesidad concreta.
+
+## Arquitectura hexagonal adaptada al frontend
+
+Mantener responsabilidades separadas sin replicar mecánicamente la arquitectura Java ni crear capas vacías.
+
+- **Dominio:** tipos, modelos y reglas propias del frontend cuando exista lógica de negocio que lo justifique. No duplicar las reglas de negocio del backend.
+- **Aplicación:** casos de uso y coordinación de operaciones que tengan una responsabilidad clara.
+- **Infraestructura:** adaptadores HTTP, configuración de ejecución e integración con servicios externos.
+- **Presentación:** páginas, componentes, navegación y elementos de interfaz.
+
+Organizar preferentemente por funcionalidad/capacidad. Evitar grandes carpetas globales de `components/`, `services/`, `models/` o equivalentes que mezclen todos los dominios.
+
+Usar ports e interfaces cuando separen una dependencia real y ayuden a probar o sustituir un adaptador. No crear una interfaz para cada función por obligación. Los componentes de React no deben conocer detalles innecesarios de Axios, OIDC ni de la infraestructura.
+
+## Configuración externalizada del frontend
+
+La configuración de ejecución del frontend se administrará desde:
+
+```text
+configuraciones/
+└── web/
+    └── config/
+        └── config.js
+```
+
+Este archivo contendrá únicamente configuración pública necesaria para el navegador, por ejemplo URL base de API, autoridad/realm de OIDC, client ID y URI de redirección.
+
+- Cargar la configuración de ejecución antes de inicializar React.
+- Definir y validar su contrato TypeScript en el frontend.
+- Mostrar un error de configuración comprensible si faltan parámetros obligatorios; no continuar silenciosamente con valores incorrectos.
+- No duplicar valores de producción en componentes ni depender exclusivamente de variables `VITE_*` para los valores que deban cambiar después del build.
+- `VITE_*` puede seguir utilizándose para opciones de build/desarrollo cuando sea apropiado; sus valores se incorporan al bundle y no equivalen a configuración externa de ejecución.
+- Documentar claramente cómo se suministra la configuración en desarrollo y cómo se monta/publica en Docker y producción.
+- No incluir secretos, contraseñas, client secrets, tokens ni claves privadas en `config.js`, en variables públicas o en el bundle del navegador.
+
+La ubicación `configuraciones/web/config/` es la ubicación acordada por el proyecto. El mecanismo de montaje/publicación debe respetar la estructura real de Docker, Compose y del servidor web.
+
+## Desarrollo, build y puerto
+
+El servidor de desarrollo local de Vite debe utilizar el puerto `3000`. Configurar `strictPort` para que el proceso falle si el puerto está ocupado en lugar de cambiar a otro puerto silenciosamente.
+
+Distinguir entre:
+- puerto del servidor de desarrollo de Vite;
+- puerto interno del contenedor en despliegue;
+- puerto publicado en el host por Docker/Compose;
+- URL pública servida por un proxy o servidor web.
+
+No asumir que configurar el puerto de Vite configura automáticamente Docker o producción. Revisar los archivos reales antes de proponer cambios de despliegue.
+
+El entorno de trabajo puede ser Windows con Visual Studio Code. No asumir que Node.js o npm están instalados. Antes de ejecutar `npm`, verificar su disponibilidad y explicar al usuario cómo preparar el entorno si faltan.
+
+## API, formularios y autenticación
+
+- Centralizar la creación del cliente HTTP y la resolución de la URL base.
+- Definir contratos TypeScript para los límites de entrada y salida; no confiar exclusivamente en los tipos estáticos para validar datos recibidos en tiempo de ejecución.
+- Tratar errores de API de forma coherente y presentar mensajes adecuados en la UI.
+- Usar TanStack Query para el estado remoto cuando corresponda, sin convertirlo en almacén indiscriminado de todo el estado.
+- Usar React Hook Form y Zod para formularios cuando aporten valor.
+- Integrar Keycloak mediante OIDC; no implementar autenticación ni gestión de contraseñas propias.
+- No asumir que el client ID o las URL OIDC ya están provisionados. Verificar la configuración real de Keycloak antes de considerar funcional el login.
+- No exponer tokens ni datos sensibles en logs o mensajes de error.
+
+## Testing y calidad
+
+- Mantener TypeScript estricto y evitar `any` salvo justificación documentada.
+- Probar casos de uso, validaciones, adaptadores y componentes de acuerdo con su responsabilidad.
+- Ejecutar lint y build cuando Node.js/npm y las dependencias estén disponibles.
+- No afirmar que el frontend compila o que los tests pasan sin haber ejecutado los comandos.
+- No introducir frameworks de pruebas ni herramientas adicionales sin explicar su necesidad.
+
+## Modo de trabajo pedagógico obligatorio
+
+El usuario quiere aprender React, TypeScript, arquitectura hexagonal y las herramientas utilizadas. Por tanto, el agente debe actuar también como mentor técnico:
+
+1. Explicar el objetivo y el concepto antes de cambiar código.
+2. Identificar los archivos afectados y explicar por qué.
+3. Dividir el trabajo en pasos pequeños, comprobables y en orden.
+4. Mostrar ejemplos de código y explicar las partes relevantes.
+5. Cuando sea razonable, pedir al usuario que aplique el cambio y luego ayudarle a verificarlo.
+6. No hacer cambios directos en el repositorio sin explicar previamente el alcance y recibir aprobación explícita del usuario para esa tarea.
+7. Ante errores, pedir o revisar el mensaje real y diagnosticar la causa antes de proponer cambios.
+8. No asumir herramientas instaladas ni dar por ejecutadas compilaciones, lint o pruebas.
+9. Explicar las decisiones y alternativas sin abrumar con teoría innecesaria.
+10. Agrupar los cambios relacionados en un solo commit y no crear un commit por archivo.
+
+## Repositorio y ramas del frontend
+
+El frontend reside en `web/` y se trabaja en la rama `feature/frontend`, salvo instrucción explícita distinta.
+
+No modificar `develop` para tareas del frontend sin autorización expresa. Antes de escribir en el repositorio, comprobar la rama, el estado y el contenido actual. No sobrescribir cambios del usuario ni ejecutar operaciones destructivas sin autorización.
