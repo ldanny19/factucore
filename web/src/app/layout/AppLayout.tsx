@@ -16,7 +16,6 @@ import {
   Typography,
 } from "@mui/material";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
@@ -30,6 +29,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { Link as RouterLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import "../../styles/app.css";
+import { canAccessPath, getAccessContext, getPrimaryRole } from "../../shared/security/authorization";
 
 const DRAWER_WIDTH = 258;
 
@@ -126,6 +126,15 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [now, setNow] = useState(() => new Date());
+  const accessContext = getAccessContext(auth.user?.access_token);
+  const primaryRole = getPrimaryRole(accessContext.roles);
+  const visibleMenuItems = menuItems.flatMap((item) => {
+    if (item.children?.length) {
+      const children = item.children.filter((child) => canAccessPath(child.path, accessContext.roles));
+      return children.length > 0 ? [{ ...item, children, path: children[0].path }] : [];
+    }
+    return canAccessPath(item.path, accessContext.roles) ? [item] : [];
+  });
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -133,7 +142,7 @@ export default function AppLayout() {
   }, []);
 
   useEffect(() => {
-    const activeGroup = menuItems.find(
+    const activeGroup = visibleMenuItems.find(
       (item) => item.children?.some((child) => child.path === location.pathname),
     );
     if (activeGroup) {
@@ -141,7 +150,7 @@ export default function AppLayout() {
         current.includes(activeGroup.label) ? current : [...current, activeGroup.label],
       );
     }
-  }, [location.pathname]);
+  }, [location.pathname, accessContext.roles.join(",")]);
 
   const userName = getUserName(auth.user?.profile as Record<string, unknown> | undefined);
   const dateLabel = new Intl.DateTimeFormat("es-EC", {
@@ -183,7 +192,7 @@ export default function AppLayout() {
       </Box>
       <Divider className="app-sidebar-divider" />
       <List className="app-navigation" disablePadding>
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const hasChildren = Boolean(item.children?.length);
           const selected = !hasChildren && location.pathname === item.path;
           const expanded = openGroups.includes(item.label);
@@ -288,7 +297,7 @@ export default function AppLayout() {
               <Avatar className="app-user-avatar">{userName.charAt(0).toUpperCase()}</Avatar>
               <Box className="app-user-details">
                 <Typography className="app-user-name">{userName}</Typography>
-                <Typography className="app-user-role">Sesión activa</Typography>
+                <Typography className="app-user-role">{primaryRole ?? "Sesión activa"}</Typography>
               </Box>
             </Box>
             <Button

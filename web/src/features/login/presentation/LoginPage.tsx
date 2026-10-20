@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!auth.isLoading && auth.isAuthenticated) {
-      navigate("/app/empresas", { replace: true });
+      navigate("/app", { replace: true });
     }
   }, [auth.isAuthenticated, auth.isLoading, navigate]);
 
@@ -81,7 +81,7 @@ export default function LoginPage() {
       // Sesión temporal para la prueba del portal; no se almacena la contraseña.
       sessionStorage.setItem("factucore.access_token", tokenResponse.access_token);
       setPassword("");
-      navigate("/empresas", { replace: true });
+      navigate("/app", { replace: true });
     } catch {
       setError(resolveMessage(MessageCodes.LOGIN_SERVICE_UNAVAILABLE));
     } finally {

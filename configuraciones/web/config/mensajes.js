@@ -5,4 +5,7 @@ window.FACTUCORE_MESSAGES = {
   LOGIN_SERVICE_UNAVAILABLE: "El servicio de autenticación no está disponible. Inténtalo más tarde.",
   LOGIN_UNEXPECTED_ERROR: "Ocurrió un error inesperado. Inténtalo más tarde.",
   COMMON_MESSAGE_NOT_CONFIGURED: "No se pudo mostrar el mensaje solicitado. Contacta al administrador.",
+  ACCESS_DENIED_TITLE: "Acceso denegado",
+  ACCESS_DENIED_DESCRIPTION: "Tu usuario no tiene permisos para acceder a esta opción.",
+  ACCESS_DENIED_HOME: "Volver al inicio",
 };
