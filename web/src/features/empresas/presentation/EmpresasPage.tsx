@@ -1,4 +1,27 @@
 import { Alert, Button, Container, Paper, Stack, Typography } from "@mui/material";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import { Link as RouterLink } from "react-router-dom";
-export default function EmpresasPage() { return <Container maxWidth="md" sx={{ py: { xs: 5, md: 9 } }}><Paper variant="outlined" sx={{ p: { xs: 3, md: 5 } }}><Stack spacing={2.5}><BusinessOutlinedIcon color="primary" sx={{ fontSize: 42 }} /><Typography variant="h4" component="h1" fontWeight={800} color="primary.main">Empresas</Typography><Typography color="text.secondary">Área reservada para administrar empresas. Por ahora solo existe la ruta y la pantalla inicial; no consulta ni modifica datos.</Typography><Alert severity="info">Módulo en preparación. La integración con la API se implementará después.</Alert><Button component={RouterLink} to="/" variant="outlined" sx={{ alignSelf: "flex-start" }}>Volver al inicio</Button></Stack></Paper></Container>; }
+export default function EmpresasPage() {
+  return (
+    <Container maxWidth="md" sx={{ py: { xs: 5, md: 9 } }}>
+      <Paper variant="outlined" sx={{ p: { xs: 3, md: 5 } }}>
+        <Stack spacing={2.5}>
+          <BusinessOutlinedIcon color="primary" sx={{ fontSize: 42 }} />
+          <Typography variant="h4" component="h1" fontWeight={800} color="primary.main">
+            Empresas
+          </Typography>
+          <Typography color="text.secondary">
+            Área reservada para administrar empresas. Por ahora solo existe la ruta y la pantalla
+            inicial; no consulta ni modifica datos.
+          </Typography>
+          <Alert severity="info">
+            Módulo en preparación. La integración con la API se implementará después.
+          </Alert>
+          <Button component={RouterLink} to="/" variant="outlined" sx={{ alignSelf: "flex-start" }}>
+            Volver al inicio
+          </Button>
+        </Stack>
+      </Paper>
+    </Container>
+  );
+}
