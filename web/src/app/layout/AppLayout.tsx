@@ -185,18 +185,14 @@ export default function AppLayout() {
       <List className="app-navigation" disablePadding>
         {menuItems.map((item) => {
           const hasChildren = Boolean(item.children?.length);
-          const selected = item.path === "/app"
-            ? location.pathname === item.path
-            : hasChildren
-              ? item.children?.some((child) => child.path === location.pathname)
-              : location.pathname === item.path;
+          const selected = !hasChildren && location.pathname === item.path;
           const expanded = openGroups.includes(item.label);
 
           if (hasChildren) {
             return (
               <Box key={item.label}>
                 <ListItemButton
-                  selected={selected}
+                  selected={false}
                   onClick={() => toggleGroup(item.label)}
                   aria-expanded={expanded}
                   className="app-navigation-item app-navigation-group"
@@ -312,14 +308,14 @@ export default function AppLayout() {
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
           ModalProps={{ keepMounted: true }}
-          sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { width: DRAWER_WIDTH } }}
+          sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { width: { xs: "min(258px, 86vw)", sm: DRAWER_WIDTH }, height: "100dvh", maxHeight: "100vh", overflowY: "auto", overscrollBehavior: "contain" } }}
         >
           {sidebar}
         </Drawer>
         <Drawer
           variant="permanent"
           open
-          sx={{ display: { xs: "none", md: "block" }, "& .MuiDrawer-paper": { width: DRAWER_WIDTH } }}
+          sx={{ display: { xs: "none", md: "block" }, "& .MuiDrawer-paper": { width: DRAWER_WIDTH, height: "100dvh", maxHeight: "100vh", overflowY: "auto", overscrollBehavior: "contain" } }}
         >
           {sidebar}
         </Drawer>

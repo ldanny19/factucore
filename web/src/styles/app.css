@@ -238,3 +238,46 @@
   box-shadow: inset 2px 0 0 #8fc8ff;
 }
 .app-subnavigation-item.MuiListItemButton-root.Mui-selected:hover { background: rgba(64,132,255,.34); }
+
+
+/* Menú adaptable: el panel lateral tiene scroll independiente y muestra todas las opciones. */
+.app-sidebar-content {
+  box-sizing: border-box;
+  min-height: 100%;
+  min-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.3) transparent;
+}
+.app-sidebar-content::-webkit-scrollbar { width: 6px; }
+.app-sidebar-content::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(255,255,255,.3);
+}
+.app-sidebar-content > .app-sidebar-footer { flex-shrink: 0; }
+.app-navigation-group.MuiListItemButton-root.Mui-selected {
+  color: rgba(255,255,255,.78);
+  background: transparent;
+  box-shadow: none;
+}
+.app-navigation-group.MuiListItemButton-root.Mui-selected:hover {
+  background: rgba(255,255,255,.08);
+}
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected {
+  color: #fff;
+  background: rgba(143,200,255,.22);
+  box-shadow: inset 3px 0 0 #8fc8ff;
+}
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected:hover {
+  background: rgba(143,200,255,.3);
+}
+@media (max-height: 760px) {
+  .app-sidebar-content { padding-top: 14px; padding-bottom: 10px; }
+  .app-sidebar-divider.MuiDivider-root { margin-bottom: 14px; }
+  .app-navigation { gap: 2px; }
+  .app-navigation-group.MuiListItemButton-root { min-height: 50px; }
+}
+@media (max-width: 899px) {
+  .app-sidebar-content { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+}
