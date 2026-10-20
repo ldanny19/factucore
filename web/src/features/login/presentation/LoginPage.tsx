@@ -13,37 +13,52 @@ import {
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
 import { useAuth } from "react-oidc-context";
 
-type LoginAlertSeverity = "error" | "warning";
-
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
-  const [alertSeverity, setAlertSeverity] = useState<LoginAlertSeverity>("error");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const auth = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (auth.error) {
-      setAlertSeverity("error");
-      setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_NOT_CONFIGURED));
+    if (!auth.isLoading && auth.isAuthenticated) {
+      navigate("/empresas", { replace: true });
     }
-  }, [auth.error]);
+  }, [auth.isAuthenticated, auth.isLoading, navigate]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
+    if (!username.trim() || !password) {
+      setError(resolveMessage(MessageCodes.LOGIN_REQUIRED_FIELDS));
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      await auth.signinRedirect();
-    } catch {
-      setAlertSeverity("error");
-      setError(resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_NOT_CONFIGURED));
+      await auth.userManager.signinResourceOwnerCredentials({
+        username: username.trim(),
+        password,
+      });
+      setPassword("");
+      navigate("/empresas", { replace: true });
+    } catch (cause) {
+      setError(
+        cause instanceof TypeError
+          ? resolveMessage(MessageCodes.LOGIN_SERVICE_UNAVAILABLE)
+          : resolveMessage(MessageCodes.LOGIN_AUTHENTICATION_FAILED),
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -193,11 +208,7 @@ export default function LoginPage() {
               </Typography>
 
               {error && (
-                <Alert
-                  severity={alertSeverity}
-                  onClose={clearError}
-                  sx={{ mb: 2.5, borderRadius: 2 }}
-                >
+                <Alert severity="error" onClose={clearError} sx={{ mb: 2.5, borderRadius: 2 }}>
                   {error}
                 </Alert>
               )}
@@ -215,6 +226,7 @@ export default function LoginPage() {
                     fullWidth
                     autoComplete="username"
                     required
+                    disabled={isSubmitting}
                   />
 
                   <TextField
@@ -229,6 +241,7 @@ export default function LoginPage() {
                     fullWidth
                     autoComplete="current-password"
                     required
+                    disabled={isSubmitting}
                     slotProps={{
                       input: {
                         startAdornment: (
@@ -256,9 +269,10 @@ export default function LoginPage() {
                     variant="contained"
                     fullWidth
                     size="large"
+                    disabled={isSubmitting}
                     sx={{ mt: 0.5, py: 1.4 }}
                   >
-                    Iniciar sesión
+                    {isSubmitting ? "Validando..." : "Iniciar sesión"}
                   </Button>
 
                   <Button component={RouterLink} to="/" variant="text" color="primary" fullWidth>
@@ -266,14 +280,6 @@ export default function LoginPage() {
                   </Button>
                 </Stack>
               </Box>
-
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block", mt: 3, textAlign: "center", lineHeight: 1.6 }}
-              >
-                El acceso se habilitará cuando se conecte el servicio de autenticación.
-              </Typography>
             </Box>
           </Box>
         </Paper>
