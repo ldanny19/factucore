@@ -137,10 +137,12 @@ export default function AppLayout() {
     const activeGroup = menuItems.find(
       (item) => item.children?.some((child) => child.path === location.pathname),
     );
-    if (activeGroup && !openGroups.includes(activeGroup.label)) {
-      setOpenGroups((current) => [...current, activeGroup.label]);
+    if (activeGroup) {
+      setOpenGroups((current) =>
+        current.includes(activeGroup.label) ? current : [...current, activeGroup.label],
+      );
     }
-  }, [location.pathname, openGroups]);
+  }, [location.pathname]);
 
   const userName = getUserName(auth.user?.profile as Record<string, unknown> | undefined);
   const dateLabel = new Intl.DateTimeFormat("es-EC", {
