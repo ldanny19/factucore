@@ -61,7 +61,7 @@ function mensajeError(error: unknown): string {
 function fechaLocalActual(): string {
   const now = new Date();
   const pad = (value: number, length = 2) => String(value).padStart(length, "0");
-  return \`\${now.getFullYear()}-\${pad(now.getMonth() + 1)}-\${pad(now.getDate())}\`;
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
 export default function EmpresasPage() {
@@ -137,7 +137,7 @@ export default function EmpresasPage() {
       contribuyenteRimpe: formulario.contribuyenteRimpe || null,
     };
 
-    if (!/^\\d{13}$/.test(datos.ruc)) {
+    if (!/^\d{13}$/.test(datos.ruc)) {
       setError("El RUC debe contener exactamente 13 dígitos.");
       return;
     }
@@ -177,7 +177,7 @@ export default function EmpresasPage() {
     try {
       const empresa = await obtenerEmpresa(id);
       setResultadoBusqueda(empresa);
-      setAviso(\`Empresa \${empresa.id} encontrada.\`);
+      setAviso(`Empresa ${empresa.id} encontrada.`);
     } catch (exception) {
       setError(mensajeError(exception));
     }
@@ -190,7 +190,7 @@ export default function EmpresasPage() {
     setAviso(null);
     try {
       await eliminarEmpresa(confirmacionEliminacion.id);
-      setAviso(\`La empresa \${confirmacionEliminacion.razonSocial} fue eliminada lógicamente.\`);
+      setAviso(`La empresa ${confirmacionEliminacion.razonSocial} fue eliminada lógicamente.`);
       setConfirmacionEliminacion(null);
       if (resultadoBusqueda?.id === confirmacionEliminacion.id) setResultadoBusqueda(null);
       await cargarEmpresas();
