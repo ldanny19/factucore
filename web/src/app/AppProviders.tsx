@@ -14,6 +14,18 @@ const theme = createTheme({
   },
   shape: { borderRadius: 10 },
   typography: { fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: "none",
+          fontWeight: 600,
+          padding: "10px 20px",
+        },
+      },
+    },
+  },
 });
 export default function AppProviders({ children }: { children: ReactNode }) {
   return (
