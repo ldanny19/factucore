@@ -29,15 +29,8 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
-import {
-  actualizarEmpresa,
-  crearEmpresa,
-  eliminarEmpresa,
-  listarEmpresas,
-  obtenerEmpresa,
-  type Empresa,
-  type EmpresaDatos,
-} from "../infrastructure/empresas-api";
+import { useEmpresaUseCases } from "./hooks/EmpresaUseCasesContext";
+import type { Empresa, EmpresaDatos } from "../domain/Empresa";
 import "../../../styles/app.css";
 
 const FORMULARIO_VACIO: EmpresaDatos = {
@@ -64,6 +57,7 @@ function fechaLocalActual(): string {
 }
 
 export default function EmpresasPage() {
+  const empresaUseCases = useEmpresaUseCases();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -80,13 +74,13 @@ export default function EmpresasPage() {
     setCargando(true);
     setError(null);
     try {
-      setEmpresas(await listarEmpresas());
+      setEmpresas(await empresaUseCases.listar());
     } catch (exception) {
       setError(mensajeError(exception));
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [empresaUseCases]);
 
   useEffect(() => {
     void cargarEmpresas();
@@ -148,10 +142,10 @@ export default function EmpresasPage() {
     setGuardando(true);
     try {
       if (empresaEdicion) {
-        await actualizarEmpresa(empresaEdicion.id, datos);
+        await empresaUseCases.actualizar(empresaEdicion.id, datos);
         setAviso("La empresa se actualizó correctamente.");
       } else {
-        await crearEmpresa(datos);
+        await empresaUseCases.crear(datos);
         setAviso("La empresa se creó correctamente.");
       }
       setDialogoAbierto(false);
@@ -174,7 +168,7 @@ export default function EmpresasPage() {
       return;
     }
     try {
-      const empresa = await obtenerEmpresa(id);
+      const empresa = await empresaUseCases.obtener(id);
       setResultadoBusqueda(empresa);
       setAviso(`Empresa ${empresa.id} encontrada.`);
     } catch (exception) {
@@ -188,7 +182,7 @@ export default function EmpresasPage() {
     setError(null);
     setAviso(null);
     try {
-      await eliminarEmpresa(confirmacionEliminacion.id);
+      await empresaUseCases.eliminar(confirmacionEliminacion.id);
       setAviso(`La empresa ${confirmacionEliminacion.razonSocial} fue eliminada lógicamente.`);
       setConfirmacionEliminacion(null);
       if (resultadoBusqueda?.id === confirmacionEliminacion.id) setResultadoBusqueda(null);
