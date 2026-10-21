@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { AxiosInstance, AxiosRequestConfig } from "axios";
+import type { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { getRuntimeConfig } from "../../config/runtime-config";
 import { MessageCodes } from "../messages/MessageCodes";
 import { resolveMessage } from "../messages/MessageResolver";
@@ -61,13 +61,62 @@ function createClient(): AxiosInstance {
 
 const client = createClient();
 
-export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {
-  const response = await client.request<AdministracionResponse<T>>(config);
-  const envelope = response.data;
-  if (!envelope.exitoso) {
-    throw new Error(
-      envelope.mensaje || envelope.codigo || resolveMessage(MessageCodes.API_OPERATION_FAILED),
-    );
+function isApiResponse<T>(value: unknown): value is AdministracionResponse<T> {
+  if (typeof value !== "object" || value === null) return false;
+
+  const response = value as Partial<AdministracionResponse<T>>;
+  return typeof response.exitoso === "boolean";
+}
+
+function getHttpErrorMessage(error: AxiosError<unknown>): string {
+  const responseBody = error.response?.data;
+
+  if (isApiResponse<unknown>(responseBody) && responseBody.mensaje?.trim()) {
+    return responseBody.mensaje;
   }
-  return envelope.datos;
+
+  const status = error.response?.status;
+  switch (status) {
+    case 400:
+      return resolveMessage(MessageCodes.API_HTTP_BAD_REQUEST);
+    case 401:
+      return resolveMessage(MessageCodes.API_HTTP_UNAUTHORIZED);
+    case 403:
+      return resolveMessage(MessageCodes.API_HTTP_FORBIDDEN);
+    case 404:
+      return resolveMessage(MessageCodes.API_HTTP_NOT_FOUND);
+    case 500:
+      return resolveMessage(MessageCodes.API_HTTP_INTERNAL_SERVER_ERROR);
+    default:
+      return status
+        ? resolveMessage(MessageCodes.API_HTTP_UNEXPECTED_ERROR, { status })
+        : resolveMessage(MessageCodes.API_CONNECTION_ERROR);
+  }
+}
+
+export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {
+  try {
+    const response = await client.request<unknown>(config);
+    const envelope = response.data;
+
+    if (!isApiResponse<T>(envelope)) {
+      throw new Error(resolveMessage(MessageCodes.API_INVALID_RESPONSE));
+    }
+
+    if (!envelope.exitoso) {
+      throw new Error(
+        envelope.mensaje?.trim() ||
+          envelope.codigo ||
+          resolveMessage(MessageCodes.API_OPERATION_FAILED),
+      );
+    }
+
+    return envelope.datos;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(getHttpErrorMessage(error));
+    }
+
+    throw error;
+  }
 }
