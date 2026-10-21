@@ -30,6 +30,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import { useEmpresaUseCases } from "./hooks/EmpresaUseCasesContext";
+import { resolveMessage } from "../../../shared/i18n/message-resolver";
 import type { Empresa, EmpresaDatos } from "../domain/Empresa";
 import "../../../styles/app.css";
 
@@ -45,7 +46,7 @@ const FORMULARIO_VACIO: EmpresaDatos = {
 function mensajeError(error: unknown): string {
   if (typeof error === "object" && error !== null && "response" in error) {
     const response = (error as { response?: { data?: { mensaje?: string; message?: string; codigo?: string } } }).response;
-    return response?.data?.mensaje || response?.data?.message || response?.data?.codigo || "No fue posible completar la operación.";
+    return response?.data?.mensaje || response?.data?.message || response?.data?.codigo || resolveMessage("common.operationFailed");
   }
   return error instanceof Error ? error.message : "No fue posible completar la operación.";
 }
@@ -131,11 +132,11 @@ export default function EmpresasPage() {
     };
 
     if (!/^\d{13}$/.test(datos.ruc)) {
-      setError("El RUC debe contener exactamente 13 dígitos.");
+      setError(resolveMessage("empresa.ruc.invalid"));
       return;
     }
     if (!datos.razonSocial || !datos.direccionMatriz) {
-      setError("Completa la razón social y la dirección de la matriz.");
+      setError(resolveMessage("empresa.requiredFields"));
       return;
     }
 
@@ -143,10 +144,10 @@ export default function EmpresasPage() {
     try {
       if (empresaEdicion) {
         await empresaUseCases.actualizar(empresaEdicion.id, datos);
-        setAviso("La empresa se actualizó correctamente.");
+        setAviso(resolveMessage("empresa.updated"));
       } else {
         await empresaUseCases.crear(datos);
-        setAviso("La empresa se creó correctamente.");
+        setAviso(resolveMessage("empresa.created"));
       }
       setDialogoAbierto(false);
       await cargarEmpresas();
@@ -164,13 +165,13 @@ export default function EmpresasPage() {
     setResultadoBusqueda(null);
     const id = Number(idBusqueda);
     if (!Number.isSafeInteger(id) || id <= 0) {
-      setError("Ingresa un ID de empresa válido.");
+      setError(resolveMessage("empresa.id.invalid"));
       return;
     }
     try {
       const empresa = await empresaUseCases.obtener(id);
       setResultadoBusqueda(empresa);
-      setAviso(`Empresa ${empresa.id} encontrada.`);
+      setAviso(resolveMessage("empresa.found", { id: empresa.id }));
     } catch (exception) {
       setError(mensajeError(exception));
     }
@@ -183,7 +184,7 @@ export default function EmpresasPage() {
     setAviso(null);
     try {
       await empresaUseCases.eliminar(confirmacionEliminacion.id);
-      setAviso(`La empresa ${confirmacionEliminacion.razonSocial} fue eliminada lógicamente.`);
+      setAviso(resolveMessage("empresa.deleted", { name: confirmacionEliminacion.razonSocial }));
       setConfirmacionEliminacion(null);
       if (resultadoBusqueda?.id === confirmacionEliminacion.id) setResultadoBusqueda(null);
       await cargarEmpresas();
