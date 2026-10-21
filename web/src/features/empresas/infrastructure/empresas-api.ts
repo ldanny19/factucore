@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getRuntimeConfig } from "../../../config/runtime-config";
+import { userManager } from "../../login/infrastructure/user-manager";
 
 export interface Empresa {
   id: number;
@@ -35,11 +36,19 @@ interface AdministracionResponse<T> {
 
 function api() {
   const config = getRuntimeConfig();
-  const token = sessionStorage.getItem("factucore.access_token");
-  return axios.create({
+  const client = axios.create({
     baseURL: config.API_BASE_URL.replace(/\/$/, ""),
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
+
+  client.interceptors.request.use(async (request) => {
+    const user = await userManager.getUser();
+    if (user?.access_token && user.expires_at && user.expires_at * 1000 > Date.now()) {
+      request.headers.set("Authorization", `Bearer ${user.access_token}`);
+    }
+    return request;
+  });
+
+  return client;
 }
 
 function envelope<T>(response: { data: AdministracionResponse<T> }): T {

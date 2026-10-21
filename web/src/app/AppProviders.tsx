@@ -3,7 +3,8 @@ import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "react-oidc-context";
-import { oidcConfig } from "../features/login/infrastructure/oidc-config";
+import { userManager } from "../features/login/infrastructure/user-manager";
+import SessionLifecycle from "./session/SessionLifecycle";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -85,11 +86,13 @@ export default function AppProviders({
   children: ReactNode;
 }) {
   return (
-    <AuthProvider {...oidcConfig}>
+    <AuthProvider userManager={userManager}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>{children}</BrowserRouter>
+          <BrowserRouter>
+            <SessionLifecycle>{children}</SessionLifecycle>
+          </BrowserRouter>
         </QueryClientProvider>
       </ThemeProvider>
     </AuthProvider>

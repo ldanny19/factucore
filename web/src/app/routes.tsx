@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { CircularProgress } from "@mui/material";
+import { useAuth } from "react-oidc-context";
 import type { ReactNode } from "react";
 import App from "./App";
 import AppLayout from "./layout/AppLayout";
@@ -8,6 +10,12 @@ import RecuperarContrasenaPage from "../features/login/presentation/RecuperarCon
 import EmpresasPage from "../features/empresas/presentation/EmpresasPage";
 import RequireAccess from "./security/RequireAccess";
 import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
+
+function AuthCallback() {
+  const auth = useAuth();
+  if (auth.isLoading) return <CircularProgress />;
+  return <Navigate to={auth.isAuthenticated ? "/app" : "/login"} replace />;
+}
 
 function ModulePlaceholder({ title }: { title: string }) {
   return (
@@ -27,6 +35,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/recuperar-contrasena" element={<RecuperarContrasenaPage />} />
       <Route path="/app" element={<RequireAccess allowedRoles={APP_ROLES}><AppLayout /></RequireAccess>}>
         <Route index element={guarded("/app", <DashboardPage />)} />
