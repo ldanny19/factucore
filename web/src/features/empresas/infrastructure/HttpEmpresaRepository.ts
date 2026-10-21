@@ -3,7 +3,7 @@ import type { AdministracionRequest } from "../../../shared/api/administracion-c
 import type { Empresa, EmpresaDatos } from "../domain/Empresa";
 import type { EmpresaRepository } from "../domain/EmpresaRepository";
 
-function createRequest<T>(datos: T): AdministracionRequest<T> {
+function createRequest<T>(idEmpresa: number, datos: T): AdministracionRequest<T> {
   const now = new Date();
   const pad = (value: number, length = 2) => String(value).padStart(length, "0");
   const fechaInicio = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${pad(now.getMilliseconds(), 3)}`;
@@ -11,7 +11,7 @@ function createRequest<T>(datos: T): AdministracionRequest<T> {
   return {
     fechaInicio,
     canal: "WEB",
-    idEmpresa: null,
+    idEmpresa,
     datos,
   };
 }
@@ -29,7 +29,7 @@ export class HttpEmpresaRepository implements EmpresaRepository {
     return apiRequest<Empresa>({
       method: "POST",
       url: "/api/v1/empresas",
-      data: createRequest(datos),
+      data: createRequest(0, datos),
     });
   }
 
@@ -37,7 +37,7 @@ export class HttpEmpresaRepository implements EmpresaRepository {
     return apiRequest<Empresa>({
       method: "PUT",
       url: `/api/v1/empresas/${id}`,
-      data: createRequest(datos),
+      data: createRequest(id, datos),
     });
   }
 
