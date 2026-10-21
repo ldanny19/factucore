@@ -17,7 +17,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
 import { useAuth } from "react-oidc-context";
-import { oidcConfig } from "../infrastructure/oidc-config";
+import { oidcConfig } from "../../../shared/infrastructure/auth/oidc-config";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
