@@ -31,8 +31,6 @@ import { useAuth } from "react-oidc-context";
 import "../../styles/app.css";
 import { canAccessPath, getAccessContext, getPrimaryRole } from "../../shared/security/authorization";
 
-const DRAWER_WIDTH = 258;
-
 type MenuItem = {
   label: string;
   description: string;

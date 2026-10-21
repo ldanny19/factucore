@@ -4,7 +4,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import { Link as RouterLink } from "react-router-dom";
-import { oidcConfig } from "../infrastructure/oidc-config";
+import { oidcConfig } from "../../../shared/infrastructure/auth/oidc-config";
 import "../../../styles/auth.css";
 
 export default function RecuperarContrasenaPage() {
