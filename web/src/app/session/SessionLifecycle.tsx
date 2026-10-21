@@ -20,6 +20,7 @@ const runtimeConfig = getRuntimeConfig();
 const INACTIVITY_TIMEOUT_MS = runtimeConfig.SESSION_INACTIVITY_TIMEOUT_MINUTES * 60 * 1000;
 const TOKEN_WARNING_BEFORE_EXPIRY_MS = runtimeConfig.SESSION_TOKEN_WARNING_MINUTES * 60 * 1000;
 const PROMPT_TIMEOUT_SECONDS = runtimeConfig.SESSION_PROMPT_TIMEOUT_SECONDS;
+const ACCESS_TOKEN_KEY = "factucore.access_token";
 
 type SessionLifecycleProps = {
   children: ReactNode;
@@ -31,17 +32,26 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(PROMPT_TIMEOUT_SECONDS);
   const [isRenewing, setIsRenewing] = useState(false);
-  const idleTimerRef = useRef<number | undefined>(undefined);
-  const tokenWarningTimerRef = useRef<number | undefined>(undefined);
+  const lastActivityAtRef = useRef(Date.now());
+  const dialogOpenRef = useRef(false);
+  const logoutStartedRef = useRef(false);
+  const warningTimerRef = useRef<number | undefined>(undefined);
   const expiryTimerRef = useRef<number | undefined>(undefined);
   const logoutTimerRef = useRef<number | undefined>(undefined);
-  const logoutStartedRef = useRef(false);
+
+  const clearSessionTimers = useCallback(() => {
+    window.clearTimeout(warningTimerRef.current);
+    window.clearTimeout(expiryTimerRef.current);
+    window.clearInterval(logoutTimerRef.current);
+  }, []);
 
   const endSession = useCallback(async () => {
     if (logoutStartedRef.current) return;
     logoutStartedRef.current = true;
+    clearSessionTimers();
+    dialogOpenRef.current = false;
     setDialogOpen(false);
-    window.sessionStorage.removeItem("factucore.access_token");
+    window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
 
     try {
       if (auth.user || auth.isAuthenticated) {
@@ -49,55 +59,79 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
         return;
       }
     } catch {
-      // If the identity provider is unavailable, still close the local session.
+      // Continue with local logout if the identity provider is unavailable.
     }
 
     await auth.removeUser();
     navigate("/login", { replace: true });
-  }, [auth, navigate]);
+  }, [auth, clearSessionTimers, navigate]);
 
   const showWarning = useCallback(() => {
-    if (logoutStartedRef.current) return;
+    if (logoutStartedRef.current || dialogOpenRef.current) return;
+    dialogOpenRef.current = true;
     setSecondsLeft(PROMPT_TIMEOUT_SECONDS);
     setDialogOpen(true);
   }, []);
 
+  const checkSessionDeadline = useCallback(() => {
+    if (!auth.isAuthenticated || !auth.user || logoutStartedRef.current || dialogOpenRef.current) return;
+
+    const now = Date.now();
+    const inactivityDeadline = lastActivityAtRef.current + INACTIVITY_TIMEOUT_MS;
+    const tokenDeadline =
+      typeof auth.user.expires_at === "number" ? auth.user.expires_at * 1000 : now;
+    const deadline = Math.min(inactivityDeadline, tokenDeadline);
+    const remainingMs = deadline - now;
+
+    window.clearTimeout(warningTimerRef.current);
+    window.clearTimeout(expiryTimerRef.current);
+
+    if (remainingMs <= 0) {
+      void endSession();
+      return;
+    }
+
+    const warningLeadMs = Math.min(TOKEN_WARNING_BEFORE_EXPIRY_MS, remainingMs);
+    warningTimerRef.current = window.setTimeout(
+      () => {
+        const currentDeadline = Math.min(
+          lastActivityAtRef.current + INACTIVITY_TIMEOUT_MS,
+          typeof auth.user?.expires_at === "number" ? auth.user.expires_at * 1000 : 0,
+        );
+        if (currentDeadline <= Date.now()) {
+          void endSession();
+          return;
+        }
+        showWarning();
+      },
+      Math.max(0, remainingMs - warningLeadMs),
+    );
+    expiryTimerRef.current = window.setTimeout(() => {
+      if (Date.now() >= deadline) void endSession();
+      else checkSessionDeadline();
+    }, remainingMs);
+  }, [auth.isAuthenticated, auth.user, endSession, showWarning]);
+
   useEffect(() => {
     if (!auth.isAuthenticated || !auth.user) {
-      window.clearTimeout(idleTimerRef.current);
-      window.clearTimeout(tokenWarningTimerRef.current);
-      window.clearTimeout(expiryTimerRef.current);
+      clearSessionTimers();
+      dialogOpenRef.current = false;
+      setDialogOpen(false);
       return;
     }
 
     logoutStartedRef.current = false;
-    const expiresAt = auth.user.expires_at;
-    if (typeof expiresAt === "number") {
-      const warningDelay = expiresAt * 1000 - Date.now() - TOKEN_WARNING_BEFORE_EXPIRY_MS;
-      if (warningDelay <= 0) {
-        if (expiresAt * 1000 <= Date.now()) {
-          void endSession();
-        } else {
-          showWarning();
-        }
-      } else {
-        tokenWarningTimerRef.current = window.setTimeout(showWarning, warningDelay);
-      }
+    lastActivityAtRef.current = Date.now();
+    checkSessionDeadline();
 
-      expiryTimerRef.current = window.setTimeout(
-        () => {
-          if (Date.now() >= expiresAt * 1000) void endSession();
-        },
-        Math.max(0, expiresAt * 1000 - Date.now()),
-      );
-    }
-
-    const resetIdleTimer = () => {
-      if (dialogOpen || logoutStartedRef.current) return;
-      window.clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = window.setTimeout(showWarning, INACTIVITY_TIMEOUT_MS);
+    const handleActivity = () => {
+      if (dialogOpenRef.current || logoutStartedRef.current) return;
+      lastActivityAtRef.current = Date.now();
+      checkSessionDeadline();
     };
-
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") checkSessionDeadline();
+    };
     const activityEvents: (keyof WindowEventMap)[] = [
       "pointerdown",
       "keydown",
@@ -105,20 +139,22 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
       "scroll",
       "touchstart",
     ];
+
     activityEvents.forEach((eventName) =>
-      window.addEventListener(eventName, resetIdleTimer, { passive: true }),
+      window.addEventListener(eventName, handleActivity, { passive: true }),
     );
-    resetIdleTimer();
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
 
     return () => {
-      window.clearTimeout(idleTimerRef.current);
-      window.clearTimeout(tokenWarningTimerRef.current);
-      window.clearTimeout(expiryTimerRef.current);
+      clearSessionTimers();
       activityEvents.forEach((eventName) =>
-        window.removeEventListener(eventName, resetIdleTimer),
+        window.removeEventListener(eventName, handleActivity),
       );
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
-  }, [auth.isAuthenticated, auth.user, dialogOpen, endSession, showWarning]);
+  }, [auth.isAuthenticated, auth.user, checkSessionDeadline, clearSessionTimers]);
 
   useEffect(() => {
     if (!dialogOpen || isRenewing) {
@@ -141,6 +177,7 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
   }, [dialogOpen, endSession, isRenewing]);
 
   const continueSession = async () => {
+    if (isRenewing || logoutStartedRef.current) return;
     setIsRenewing(true);
     try {
       const renewedUser = await auth.signinSilent();
@@ -149,10 +186,12 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
         typeof renewedUser.expires_at !== "number" ||
         renewedUser.expires_at * 1000 <= Date.now()
       ) {
-        throw new Error("Session renewal did not return a valid token.");
+        throw new Error("No se recibió un token renovado válido.");
       }
 
-      window.sessionStorage.removeItem("factucore.access_token");
+      window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+      lastActivityAtRef.current = Date.now();
+      dialogOpenRef.current = false;
       setDialogOpen(false);
       setSecondsLeft(PROMPT_TIMEOUT_SECONDS);
     } catch {
