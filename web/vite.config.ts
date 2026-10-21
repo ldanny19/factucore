@@ -13,8 +13,8 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       strictPort: true,
       proxy: {
-        // La UI local y Keycloak comparten origen a través del proxy de desarrollo.
-        "/auth": {
+        // Proxy solo las rutas de Keycloak; /auth/callback debe resolverlo React Router.
+        "/auth/realms": {
           target: env.FACTUCORE_OIDC_PROXY_TARGET || "http://api.facturador.com:8080",
           changeOrigin: true,
           secure: false,
