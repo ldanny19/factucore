@@ -14,7 +14,6 @@ import {
   MenuItem,
   Paper,
   Select,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -69,7 +68,6 @@ export default function EmpresasPage() {
   const [empresaEdicion, setEmpresaEdicion] = useState<Empresa | null>(null);
   const [formulario, setFormulario] = useState<EmpresaDatos>(FORMULARIO_VACIO);
   const [idBusqueda, setIdBusqueda] = useState("");
-  const [resultadoBusqueda, setResultadoBusqueda] = useState<Empresa | null>(null);
   const [confirmacionEliminacion, setConfirmacionEliminacion] = useState<Empresa | null>(null);
 
   const cargarEmpresas = useCallback(async () => {
@@ -151,6 +149,7 @@ export default function EmpresasPage() {
         setAviso(resolveMessage(MessageCodes.EMPRESA_CREATED));
       }
       setDialogoAbierto(false);
+      setIdBusqueda("");
       await cargarEmpresas();
     } catch (exception) {
       setError(mensajeError(exception));
@@ -163,19 +162,29 @@ export default function EmpresasPage() {
     event.preventDefault();
     setError(null);
     setAviso(null);
-    setResultadoBusqueda(null);
+    setEmpresas([]);
     const id = Number(idBusqueda);
     if (!Number.isSafeInteger(id) || id <= 0) {
       setError(resolveMessage(MessageCodes.EMPRESA_ID_INVALID));
       return;
     }
+    setCargando(true);
     try {
       const empresa = await empresaUseCases.obtener(id);
-      setResultadoBusqueda(empresa);
+      setEmpresas([empresa]);
       setAviso(resolveMessage(MessageCodes.EMPRESA_FOUND, { id: empresa.id }));
     } catch (exception) {
+      setEmpresas([]);
       setError(mensajeError(exception));
+    } finally {
+      setCargando(false);
     }
+  };
+
+  const buscarTodas = async () => {
+    setIdBusqueda("");
+    setAviso(null);
+    await cargarEmpresas();
   };
 
   const confirmarEliminacion = async () => {
@@ -187,7 +196,6 @@ export default function EmpresasPage() {
       await empresaUseCases.eliminar(confirmacionEliminacion.id);
       setAviso(resolveMessage(MessageCodes.EMPRESA_DELETED, { name: confirmacionEliminacion.razonSocial }));
       setConfirmacionEliminacion(null);
-      if (resultadoBusqueda?.id === confirmacionEliminacion.id) setResultadoBusqueda(null);
       await cargarEmpresas();
     } catch (exception) {
       setError(mensajeError(exception));
@@ -196,7 +204,6 @@ export default function EmpresasPage() {
     }
   };
 
-  const empresaParaMostrar = resultadoBusqueda;
 
   return (
     <Box className="empresas-page">
@@ -227,27 +234,20 @@ export default function EmpresasPage() {
             inputProps={{ min: 1, step: 1 }}
           />
           <Button type="submit" variant="outlined" startIcon={<SearchOutlinedIcon />}>{resolveMessage(MessageCodes.COMMON_SEARCH)}</Button>
-          <Button type="button" variant="text" startIcon={<RefreshOutlinedIcon />} onClick={() => { setIdBusqueda(""); setResultadoBusqueda(null); setError(null); setAviso(null); }}>
+          <Button type="button" variant="outlined" startIcon={<RefreshOutlinedIcon />} onClick={() => void buscarTodas()} disabled={cargando}>
+            {resolveMessage(MessageCodes.COMMON_REFRESH)}
+          </Button>
+          <Button type="button" variant="text" onClick={() => { setIdBusqueda(""); setError(null); setAviso(null); }}>
             {resolveMessage(MessageCodes.COMMON_CLEAR_SEARCH)}
           </Button>
         </Box>
-        {empresaParaMostrar && (
-          <Box className="empresas-search-result">
-            <Typography variant="subtitle2">{resolveMessage(MessageCodes.EMPRESA_SEARCH_RESULT)}</Typography>
-            <Typography><strong>{empresaParaMostrar.razonSocial}</strong> · RUC {empresaParaMostrar.ruc} · ID {empresaParaMostrar.id}</Typography>
-            <Stack direction="row" spacing={1} className="empresas-row-actions">
-              <Button size="small" startIcon={<EditOutlinedIcon />} onClick={() => abrirEdicion(empresaParaMostrar)}>{resolveMessage(MessageCodes.EMPRESA_EDIT_TITLE)}</Button>
-              <Button size="small" color="error" startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => setConfirmacionEliminacion(empresaParaMostrar)}>{resolveMessage(MessageCodes.COMMON_DELETE)}</Button>
-            </Stack>
-          </Box>
-        )}
       </Paper>
 
       <Box className="empresas-list-heading">
         <Box>
           <Typography variant="h6" component="h2">{resolveMessage(MessageCodes.EMPRESA_LIST_TITLE)}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {empresas.length} registro(s). Se incluyen empresas activas e inactivas, no las eliminadas.
+            {empresas.length} registro(s) en la consulta actual.
           </Typography>
         </Box>
         <Button variant="text" startIcon={<RefreshOutlinedIcon />} onClick={() => void cargarEmpresas()} disabled={cargando}>
@@ -262,6 +262,7 @@ export default function EmpresasPage() {
               <TableCell>{resolveMessage(MessageCodes.EMPRESA_ID_LABEL)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.EMPRESA_RUC)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.EMPRESA_LEGAL_NAME)}</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.EMPRESA_ADDRESS_REQUIRED)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.EMPRESA_TRADE_NAME)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.EMPRESA_ACCOUNTING_REQUIRED)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.COMMON_STATUS)}</TableCell>
@@ -270,17 +271,15 @@ export default function EmpresasPage() {
           </TableHead>
           <TableBody>
             {cargando ? (
-              <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={26} /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} align="center"><CircularProgress size={26} /></TableCell></TableRow>
             ) : empresas.length === 0 ? (
-              <TableRow><TableCell colSpan={7} align="center">{resolveMessage(MessageCodes.EMPRESA_EMPTY)}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} align="center">{resolveMessage(MessageCodes.EMPRESA_EMPTY)}</TableCell></TableRow>
             ) : empresas.map((empresa) => (
               <TableRow hover key={empresa.id}>
                 <TableCell>{empresa.id}</TableCell>
                 <TableCell>{empresa.ruc}</TableCell>
-                <TableCell>
-                  <Typography variant="body2" fontWeight={700}>{empresa.razonSocial}</Typography>
-                  <Typography variant="caption" color="text.secondary">{empresa.direccionMatriz}</Typography>
-                </TableCell>
+                <TableCell>{empresa.razonSocial}</TableCell>
+                <TableCell>{empresa.direccionMatriz}</TableCell>
                 <TableCell>{empresa.nombreComercial || "—"}</TableCell>
                 <TableCell>{empresa.obligadoContabilidad}</TableCell>
                 <TableCell>
