@@ -30,7 +30,8 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import { useEmpresaUseCases } from "./hooks/EmpresaUseCasesContext";
-import { resolveMessage } from "../../../shared/i18n/message-resolver";
+import { MessageCodes } from "../../../shared/messages/MessageCodes";
+import { resolveMessage } from "../../../shared/messages/MessageResolver";
 import type { Empresa, EmpresaDatos } from "../domain/Empresa";
 import "../../../styles/app.css";
 
@@ -46,7 +47,7 @@ const FORMULARIO_VACIO: EmpresaDatos = {
 function mensajeError(error: unknown): string {
   if (typeof error === "object" && error !== null && "response" in error) {
     const response = (error as { response?: { data?: { mensaje?: string; message?: string; codigo?: string } } }).response;
-    return response?.data?.mensaje || response?.data?.message || response?.data?.codigo || resolveMessage("common.operationFailed");
+    return response?.data?.mensaje || response?.data?.message || response?.data?.codigo || resolveMessage(MessageCodes.COMMON_OPERATION_FAILED);
   }
   return error instanceof Error ? error.message : "No fue posible completar la operación.";
 }
@@ -132,11 +133,11 @@ export default function EmpresasPage() {
     };
 
     if (!/^\d{13}$/.test(datos.ruc)) {
-      setError(resolveMessage("empresa.ruc.invalid"));
+      setError(resolveMessage(MessageCodes.EMPRESA_RUC_INVALID));
       return;
     }
     if (!datos.razonSocial || !datos.direccionMatriz) {
-      setError(resolveMessage("empresa.requiredFields"));
+      setError(resolveMessage(MessageCodes.EMPRESA_REQUIRED_FIELDS));
       return;
     }
 
@@ -144,10 +145,10 @@ export default function EmpresasPage() {
     try {
       if (empresaEdicion) {
         await empresaUseCases.actualizar(empresaEdicion.id, datos);
-        setAviso(resolveMessage("empresa.updated"));
+        setAviso(resolveMessage(MessageCodes.EMPRESA_UPDATED));
       } else {
         await empresaUseCases.crear(datos);
-        setAviso(resolveMessage("empresa.created"));
+        setAviso(resolveMessage(MessageCodes.EMPRESA_CREATED));
       }
       setDialogoAbierto(false);
       await cargarEmpresas();
@@ -165,13 +166,13 @@ export default function EmpresasPage() {
     setResultadoBusqueda(null);
     const id = Number(idBusqueda);
     if (!Number.isSafeInteger(id) || id <= 0) {
-      setError(resolveMessage("empresa.id.invalid"));
+      setError(resolveMessage(MessageCodes.EMPRESA_ID_INVALID));
       return;
     }
     try {
       const empresa = await empresaUseCases.obtener(id);
       setResultadoBusqueda(empresa);
-      setAviso(resolveMessage("empresa.found", { id: empresa.id }));
+      setAviso(resolveMessage(MessageCodes.EMPRESA_FOUND, { id: empresa.id }));
     } catch (exception) {
       setError(mensajeError(exception));
     }
@@ -184,7 +185,7 @@ export default function EmpresasPage() {
     setAviso(null);
     try {
       await empresaUseCases.eliminar(confirmacionEliminacion.id);
-      setAviso(resolveMessage("empresa.deleted", { name: confirmacionEliminacion.razonSocial }));
+      setAviso(resolveMessage(MessageCodes.EMPRESA_DELETED, { name: confirmacionEliminacion.razonSocial }));
       setConfirmacionEliminacion(null);
       if (resultadoBusqueda?.id === confirmacionEliminacion.id) setResultadoBusqueda(null);
       await cargarEmpresas();
@@ -201,13 +202,13 @@ export default function EmpresasPage() {
     <Box className="empresas-page">
       <Box className="empresas-page-heading">
         <Box>
-          <Typography className="page-title" component="h1" variant="h4">Empresas</Typography>
+          <Typography className="page-title" component="h1" variant="h4">{resolveMessage(MessageCodes.EMPRESA_PAGE_TITLE)}</Typography>
           <Typography color="text.secondary">
-            Administra las empresas registradas en FactuCore.
+            {resolveMessage(MessageCodes.EMPRESA_PAGE_DESCRIPTION)}
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddBusinessOutlinedIcon />} onClick={abrirCrear}>
-          Nueva empresa
+          {resolveMessage(MessageCodes.EMPRESA_NEW)}
         </Button>
       </Box>
 
@@ -215,28 +216,28 @@ export default function EmpresasPage() {
       {aviso && <Alert severity="success" onClose={() => setAviso(null)} className="empresas-feedback">{aviso}</Alert>}
 
       <Paper component="section" variant="outlined" className="empresas-search-panel">
-        <Typography variant="h6" component="h2">Buscar empresa por ID</Typography>
+        <Typography variant="h6" component="h2">{resolveMessage(MessageCodes.EMPRESA_SEARCH_TITLE)}</Typography>
         <Box component="form" className="empresas-search-form" onSubmit={buscarPorId}>
           <TextField
-            label="ID de empresa"
+            label={resolveMessage(MessageCodes.EMPRESA_ID_LABEL)}
             type="number"
             size="small"
             value={idBusqueda}
             onChange={(event) => setIdBusqueda(event.target.value)}
             inputProps={{ min: 1, step: 1 }}
           />
-          <Button type="submit" variant="outlined" startIcon={<SearchOutlinedIcon />}>Buscar</Button>
+          <Button type="submit" variant="outlined" startIcon={<SearchOutlinedIcon />}>{resolveMessage(MessageCodes.COMMON_SEARCH)}</Button>
           <Button type="button" variant="text" startIcon={<RefreshOutlinedIcon />} onClick={() => { setIdBusqueda(""); setResultadoBusqueda(null); setError(null); setAviso(null); }}>
-            Limpiar búsqueda
+            {resolveMessage(MessageCodes.COMMON_CLEAR_SEARCH)}
           </Button>
         </Box>
         {empresaParaMostrar && (
           <Box className="empresas-search-result">
-            <Typography variant="subtitle2">Resultado de búsqueda</Typography>
+            <Typography variant="subtitle2">{resolveMessage(MessageCodes.EMPRESA_SEARCH_RESULT)}</Typography>
             <Typography><strong>{empresaParaMostrar.razonSocial}</strong> · RUC {empresaParaMostrar.ruc} · ID {empresaParaMostrar.id}</Typography>
             <Stack direction="row" spacing={1} className="empresas-row-actions">
-              <Button size="small" startIcon={<EditOutlinedIcon />} onClick={() => abrirEdicion(empresaParaMostrar)}>Modificar</Button>
-              <Button size="small" color="error" startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => setConfirmacionEliminacion(empresaParaMostrar)}>Eliminar</Button>
+              <Button size="small" startIcon={<EditOutlinedIcon />} onClick={() => abrirEdicion(empresaParaMostrar)}>{resolveMessage(MessageCodes.EMPRESA_EDIT_TITLE)}</Button>
+              <Button size="small" color="error" startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => setConfirmacionEliminacion(empresaParaMostrar)}>{resolveMessage(MessageCodes.COMMON_DELETE)}</Button>
             </Stack>
           </Box>
         )}
@@ -244,13 +245,13 @@ export default function EmpresasPage() {
 
       <Box className="empresas-list-heading">
         <Box>
-          <Typography variant="h6" component="h2">Listado de empresas</Typography>
+          <Typography variant="h6" component="h2">{resolveMessage(MessageCodes.EMPRESA_LIST_TITLE)}</Typography>
           <Typography variant="body2" color="text.secondary">
             {empresas.length} registro(s). Se incluyen empresas activas e inactivas, no las eliminadas.
           </Typography>
         </Box>
         <Button variant="text" startIcon={<RefreshOutlinedIcon />} onClick={() => void cargarEmpresas()} disabled={cargando}>
-          Actualizar
+          {resolveMessage(MessageCodes.COMMON_REFRESH)}
         </Button>
       </Box>
 
@@ -258,20 +259,20 @@ export default function EmpresasPage() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>RUC</TableCell>
-              <TableCell>Razón social</TableCell>
-              <TableCell>Nombre comercial</TableCell>
-              <TableCell>Obligado a llevar contabilidad</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell align="right">Acciones</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.EMPRESA_ID_LABEL)}</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.EMPRESA_RUC)}</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.EMPRESA_LEGAL_NAME)}</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.EMPRESA_TRADE_NAME)}</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.EMPRESA_ACCOUNTING_REQUIRED)}</TableCell>
+              <TableCell>{resolveMessage(MessageCodes.COMMON_STATUS)}</TableCell>
+              <TableCell align="right">{resolveMessage(MessageCodes.COMMON_ACTIONS)}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {cargando ? (
               <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={26} /></TableCell></TableRow>
             ) : empresas.length === 0 ? (
-              <TableRow><TableCell colSpan={7} align="center">No hay empresas registradas.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} align="center">{resolveMessage(MessageCodes.EMPRESA_EMPTY)}</TableCell></TableRow>
             ) : empresas.map((empresa) => (
               <TableRow hover key={empresa.id}>
                 <TableCell>{empresa.id}</TableCell>
@@ -287,8 +288,8 @@ export default function EmpresasPage() {
                 </TableCell>
                 <TableCell align="right">
                   <Box className="empresas-row-actions">
-                    <Button size="small" onClick={() => abrirEdicion(empresa)} startIcon={<EditOutlinedIcon />}>Editar</Button>
-                    <Button size="small" color="error" onClick={() => setConfirmacionEliminacion(empresa)} startIcon={<DeleteOutlineOutlinedIcon />}>Eliminar</Button>
+                    <Button size="small" onClick={() => abrirEdicion(empresa)} startIcon={<EditOutlinedIcon />}>{resolveMessage(MessageCodes.COMMON_EDIT)}</Button>
+                    <Button size="small" color="error" onClick={() => setConfirmacionEliminacion(empresa)} startIcon={<DeleteOutlineOutlinedIcon />}>{resolveMessage(MessageCodes.COMMON_DELETE)}</Button>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -299,14 +300,14 @@ export default function EmpresasPage() {
 
       <Dialog open={dialogoAbierto} onClose={() => !guardando && setDialogoAbierto(false)} fullWidth maxWidth="md">
         <Box component="form" onSubmit={guardar}>
-          <DialogTitle>{empresaEdicion ? "Modificar empresa" : "Crear empresa"}</DialogTitle>
+          <DialogTitle>{resolveMessage(empresaEdicion ? MessageCodes.EMPRESA_EDIT_TITLE : MessageCodes.EMPRESA_CREATE_TITLE)}</DialogTitle>
           <DialogContent>
             <Typography color="text.secondary" className="empresas-dialog-description">
-              Los campos se validan antes de enviarse a la API de FactuCore.
+              {resolveMessage(MessageCodes.EMPRESA_FORM_DESCRIPTION)}
             </Typography>
             <Box className="empresas-form-grid">
               <TextField
-                label="RUC"
+                label={resolveMessage(MessageCodes.EMPRESA_RUC)}
                 value={formulario.ruc}
                 onChange={(event) => cambiarCampo("ruc", event.target.value)}
                 inputProps={{ maxLength: 13, inputMode: "numeric" }}
@@ -322,14 +323,14 @@ export default function EmpresasPage() {
                 fullWidth
               />
               <TextField
-                label="Nombre comercial"
+                label={resolveMessage(MessageCodes.EMPRESA_TRADE_NAME)}
                 value={formulario.nombreComercial ?? ""}
                 onChange={(event) => cambiarCampo("nombreComercial", event.target.value)}
                 inputProps={{ maxLength: 300 }}
                 fullWidth
               />
               <TextField
-                label="Dirección de la matriz"
+                label={resolveMessage(MessageCodes.EMPRESA_ADDRESS_REQUIRED)}
                 value={formulario.direccionMatriz}
                 onChange={(event) => cambiarCampo("direccionMatriz", event.target.value)}
                 inputProps={{ maxLength: 500 }}
@@ -337,33 +338,33 @@ export default function EmpresasPage() {
                 fullWidth
               />
               <FormControl fullWidth>
-                <InputLabel id="obligado-contabilidad-label">Obligado a llevar contabilidad</InputLabel>
+                <InputLabel id="obligado-contabilidad-label">{resolveMessage(MessageCodes.EMPRESA_ACCOUNTING_REQUIRED)}</InputLabel>
                 <Select
                   labelId="obligado-contabilidad-label"
                   label="Obligado a llevar contabilidad"
                   value={formulario.obligadoContabilidad}
                   onChange={(event) => cambiarCampo("obligadoContabilidad", event.target.value)}
                 >
-                  <MenuItem value="SI">Sí</MenuItem>
-                  <MenuItem value="NO">No</MenuItem>
+                  <MenuItem value="SI">{resolveMessage(MessageCodes.COMMON_YES)}</MenuItem>
+                  <MenuItem value="NO">{resolveMessage(MessageCodes.COMMON_NO)}</MenuItem>
                 </Select>
               </FormControl>
               <FormControl fullWidth>
-                <InputLabel id="contribuyente-rimpe-label">Régimen tributario RIMPE</InputLabel>
+                <InputLabel id="contribuyente-rimpe-label">{resolveMessage(MessageCodes.EMPRESA_RIMPE)}</InputLabel>
                 <Select
                   labelId="contribuyente-rimpe-label"
                   label="Régimen tributario RIMPE"
                   value={formulario.contribuyenteRimpe ?? ""}
                   onChange={(event) => cambiarCampo("contribuyenteRimpe", event.target.value)}
                 >
-                  <MenuItem value="">No aplica</MenuItem>
-                  <MenuItem value="CONTRIBUYENTE RÉGIMEN RIMPE">Contribuyente régimen RIMPE</MenuItem>
+                  <MenuItem value="">{resolveMessage(MessageCodes.EMPRESA_NO_APLICA)}</MenuItem>
+                  <MenuItem value="CONTRIBUYENTE RÉGIMEN RIMPE">{resolveMessage(MessageCodes.EMPRESA_RIMPE)}</MenuItem>
                 </Select>
               </FormControl>
             </Box>
           </DialogContent>
           <DialogActions className="empresas-dialog-actions">
-            <Button onClick={() => setDialogoAbierto(false)} disabled={guardando}>Cancelar</Button>
+            <Button onClick={() => setDialogoAbierto(false)} disabled={guardando}>{resolveMessage(MessageCodes.COMMON_CANCEL)}</Button>
             <Button type="submit" variant="contained" disabled={guardando}>
               {guardando ? "Guardando..." : empresaEdicion ? "Guardar cambios" : "Crear empresa"}
             </Button>
@@ -372,23 +373,23 @@ export default function EmpresasPage() {
       </Dialog>
 
       <Dialog open={Boolean(confirmacionEliminacion)} onClose={() => !guardando && setConfirmacionEliminacion(null)}>
-        <DialogTitle>Eliminar empresa</DialogTitle>
+        <DialogTitle>{resolveMessage(MessageCodes.EMPRESA_DELETE_TITLE)}</DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Confirmas la eliminación lógica de <strong>{confirmacionEliminacion?.razonSocial}</strong>?
-            El registro se conservará en la base de datos, pero dejará de aparecer en el listado.
+            {resolveMessage(MessageCodes.EMPRESA_DELETE_CONFIRM_PREFIX)} <strong>{confirmacionEliminacion?.razonSocial}</strong>?
+            {resolveMessage(MessageCodes.EMPRESA_DELETE_CONFIRM_DESCRIPTION)}
           </Typography>
         </DialogContent>
         <DialogActions className="empresas-dialog-actions">
-          <Button onClick={() => setConfirmacionEliminacion(null)} disabled={guardando}>Cancelar</Button>
+          <Button onClick={() => setConfirmacionEliminacion(null)} disabled={guardando}>{resolveMessage(MessageCodes.COMMON_CANCEL)}</Button>
           <Button color="error" variant="contained" onClick={() => void confirmarEliminacion()} disabled={guardando}>
-            {guardando ? "Eliminando..." : "Confirmar eliminación"}
+            {resolveMessage(guardando ? MessageCodes.COMMON_DELETING : MessageCodes.EMPRESA_DELETE_CONFIRM_TITLE)}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Typography className="empresas-page-date" variant="caption" color="text.secondary">
-        Consulta realizada el {fechaLocalActual()}
+        {resolveMessage(MessageCodes.EMPRESA_QUERY_DATE, { date: fechaLocalActual() })}
       </Typography>
     </Box>
   );
