@@ -150,7 +150,7 @@ export default function LoginPage() {
             <Stack spacing={2.5}>
               <Box className="auth-brand-lockup">
                 <Box className="auth-brand-icon">
-                  <Box component="img" src="/factucore-icon-dark.png" alt="" />
+                  <Box component="img" src="/factucore-icon-sidebar.png" alt="" />
                 </Box>
                 <Typography className="auth-brand-name" variant="h5" component="p">
                   Factu<span>Core</span>

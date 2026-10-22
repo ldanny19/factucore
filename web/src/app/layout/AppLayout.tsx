@@ -208,10 +208,10 @@ export default function AppLayout() {
   const sidebar = (
     <Box className="app-sidebar-content">
       <Box className="app-brand">
-        <Box className="app-brand-mark"><img src="/factucore-icon-dark.png" alt="" /></Box>
+        <Box className="app-brand-mark"><img src="/factucore-icon-sidebar.png" alt="" /></Box>
         <Box>
           <Typography className="app-brand-name">Factu<span>Core</span></Typography>
-          <Typography className="app-brand-caption">MENÚ PRINCIPAL</Typography>
+          <Typography className="app-brand-caption">FACTURACIÓN</Typography>
         </Box>
       </Box>
       <Divider className="app-sidebar-divider" />

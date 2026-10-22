@@ -27,9 +27,9 @@
 .app-mobile-menu.MuiIconButton-root { display: none; }
 .app-sidebar-content { display: flex; flex-direction: column; min-height: 100%; padding: 22px 16px 16px; background: #fff; }
 .app-brand { display: flex; align-items: center; gap: 12px; padding: 2px 8px 18px; }
-.app-brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; color: #fff; background: linear-gradient(135deg, #2563eb, #0f9f8f); box-shadow: 0 7px 16px rgba(37,99,235,.18); }
-.app-brand-name { color: #173765; font-size: 1.16rem; font-weight: 850; line-height: 1.2; }
-.app-brand-caption { margin-top: 4px; color: #8390a4; font-size: .62rem; font-weight: 800; letter-spacing: .09em; }
+.app-brand-mark { display: grid; place-items: center; width: 82px; height: 70px; flex: 0 0 auto; border-radius: 0; color: #fff; background: transparent; box-shadow: none; }
+.app-brand-name { color: #173765; font-size: 1.16rem; font-weight: 850; line-height: 1.2; white-space: nowrap; }
+.app-brand-caption { margin-top: 4px; color: #8390a4; font-size: .58rem; font-weight: 750; letter-spacing: .06em; white-space: nowrap; }
 .app-sidebar-divider.MuiDivider-root { margin: 0 4px 22px; border-color: #edf1f7; }
 .app-menu-caption { padding: 0 12px 10px; color: #8a97aa; font-size: .67rem; font-weight: 850; letter-spacing: .1em; }
 .app-navigation { display: flex; flex-direction: column; gap: 5px; }
@@ -538,7 +538,7 @@
 }
 
 /* Logotipo oficial y marca de agua de FactuCore */
-.app-brand-mark { overflow: hidden; border: 1px solid rgba(255,255,255,.65); background: transparent; box-shadow: none; }
+.app-brand-mark { overflow: visible; border: 0; background: transparent; box-shadow: none; }
 .app-header-logo { overflow: hidden; border: 1px solid #e5ebf2; background: #fff; box-shadow: 0 4px 12px rgba(18,48,74,.08); }
 .app-brand-mark img, .app-header-logo img { width: 100%; height: 100%; object-fit: contain; }
 .app-main { position: relative; isolation: isolate; }
