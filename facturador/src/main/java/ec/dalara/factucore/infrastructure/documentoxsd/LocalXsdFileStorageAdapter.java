@@ -29,9 +29,6 @@ public class LocalXsdFileStorageAdapter implements XsdFileStoragePort {
 
 	@Override
 	public Path guardar(String carpetaTipoDocumento, String nombreArchivo, byte[] contenido) {
-		if (carpetaTipoDocumento == null || !carpetaTipoDocumento.matches("[a-z0-9-]+")) {
-			throw new InfrastructureException(ERROR_GUARDAR);
-		}
 		if (nombreArchivo == null || !nombreArchivo.toLowerCase(java.util.Locale.ROOT).endsWith(".xsd")) {
 			throw new InfrastructureException("FACTUCORE.XSD.ARCHIVO.EXTENSION.INVALIDA");
 		}
@@ -39,14 +36,13 @@ public class LocalXsdFileStorageAdapter implements XsdFileStoragePort {
 			throw new InfrastructureException("FACTUCORE.XSD.ARCHIVO.REQUERIDO");
 		}
 
-		Path directorio = directorioBase.resolve(carpetaTipoDocumento).normalize();
-		Path archivo = directorio.resolve(UUID.randomUUID() + ".xsd").normalize();
-		if (!directorio.startsWith(directorioBase) || !archivo.startsWith(directorio)) {
+		Path archivo = directorioBase.resolve(UUID.randomUUID() + ".xsd").normalize();
+		if (!archivo.startsWith(directorioBase)) {
 			throw new InfrastructureException(ERROR_GUARDAR);
 		}
 
 		try {
-			Files.createDirectories(directorio);
+			Files.createDirectories(directorioBase);
 			Files.write(archivo, contenido, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 			return archivo;
 		} catch (IOException exception) {
