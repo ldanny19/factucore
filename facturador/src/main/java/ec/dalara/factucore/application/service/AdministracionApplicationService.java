@@ -374,8 +374,7 @@ public class AdministracionApplicationService implements AdministracionPort {
 			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_REQUERIDO);
 		}
 
-		String carpeta = carpetaTipoDocumento(request.getTipoDocumento());
-		Path rutaAlmacenada = xsdFileStorage.guardar(carpeta, nombreArchivo, contenido);
+		Path rutaAlmacenada = xsdFileStorage.guardar(null, nombreArchivo, contenido);
 		request.getVersion().setRutaXsd(rutaAlmacenada.toString());
 
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -391,22 +390,6 @@ public class AdministracionApplicationService implements AdministracionPort {
 
 		request.setContenidoXsd(null);
 		return guardarDocumentoXsd(null, request);
-	}
-
-	private String carpetaTipoDocumento(String tipoDocumento) {
-		if (tipoDocumento == null) {
-			throw new ApplicationException(MessageCodes.DOCUMENTO_XSD_TIPO_DOCUMENTO_INVALIDO, tipoDocumento);
-		}
-		return switch (tipoDocumento.trim().toUpperCase(Locale.ROOT)) {
-		case "01" -> "factura";
-		case "03" -> "liquidacion-compra";
-		case "04" -> "nota-credito";
-		case "05" -> "nota-debito";
-		case "06" -> "guia-remision";
-		case "07" -> "comprobante-retencion";
-		default -> throw new ApplicationException(MessageCodes.DOCUMENTO_XSD_TIPO_DOCUMENTO_INVALIDO,
-				tipoDocumento);
-		};
 	}
 
 	private DocumentoXsdResponse guardarDocumentoXsdExistente(Long id, DocumentoXsdRequest r) {
