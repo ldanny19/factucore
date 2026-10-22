@@ -341,20 +341,75 @@
   max-width: 1500px;
   margin: 0 auto;
 }
+.secuenciales-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.configuracion-empresa-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.certificados-firma-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.tarifas-tributarias-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
 .empresas-page-heading,
 .empresas-list-heading,
 .establecimientos-page-heading,
 .establecimientos-list-heading,
 .puntos-emision-page-heading,
-.puntos-emision-list-heading {
+.puntos-emision-list-heading,
+.secuenciales-page-heading,
+.secuenciales-list-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
 }
+.configuracion-empresa-heading,
+.configuracion-empresa-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.configuracion-empresa-heading .page-title { margin-bottom: 8px; }
+.certificados-firma-heading,
+.certificados-firma-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.certificados-firma-heading .page-title { margin-bottom: 8px; }
+.tarifas-tributarias-heading,
+.tarifas-tributarias-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.tarifas-tributarias-heading .page-title { margin-bottom: 8px; }
 .empresas-page-heading .page-title { margin-bottom: 8px; }
 .establecimientos-page-heading .page-title { margin-bottom: 8px; }
 .puntos-emision-page-heading .page-title { margin-bottom: 8px; }
+.secuenciales-page-heading .page-title { margin-bottom: 8px; }
 .empresas-feedback { margin-bottom: 0; overflow-wrap: anywhere; }
 .empresas-search-panel {
   display: flex;
@@ -380,6 +435,40 @@
   border-color: #e1e7ee;
   border-radius: 14px;
 }
+.secuenciales-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.configuracion-empresa-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.certificados-firma-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.tarifas-tributarias-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
 .empresas-search-form {
   display: flex;
   flex-wrap: wrap;
@@ -393,6 +482,12 @@
   gap: 12px;
 }
 .puntos-emision-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.secuenciales-filter-form {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -429,9 +524,37 @@
   justify-content: flex-end;
   gap: 2px;
 }
+.secuenciales-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.configuracion-empresa-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.certificados-firma-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.tarifas-tributarias-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
 .empresas-list-heading,
 .establecimientos-list-heading,
 .puntos-emision-list-heading { margin-top: 4px; }
+.secuenciales-list-heading { margin-top: 4px; }
+.configuracion-empresa-list-heading { margin-top: 4px; }
+.certificados-firma-list-heading { margin-top: 4px; }
+.tarifas-tributarias-list-heading { margin-top: 4px; }
 .empresas-table-panel {
   border-color: #e1e7ee;
   border-radius: 14px;
@@ -444,9 +567,29 @@
   border-color: #e1e7ee;
   border-radius: 14px;
 }
+.secuenciales-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.configuracion-empresa-table {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.certificados-firma-table {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.tarifas-tributarias-table {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
 .empresas-table-panel .MuiTableHead-root { background: #f6f8fc; }
 .establecimientos-table-panel .MuiTableHead-root { background: #f6f8fc; }
 .puntos-emision-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.secuenciales-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.configuracion-empresa-table .MuiTableHead-root { background: #f6f8fc; }
+.certificados-firma-table .MuiTableHead-root { background: #f6f8fc; }
+.tarifas-tributarias-table .MuiTableHead-root { background: #f6f8fc; }
 .empresas-table-panel .MuiTableCell-head {
   color: #4b5f78;
   font-size: .78rem;
@@ -465,12 +608,44 @@
   font-weight: 800;
   white-space: nowrap;
 }
+.secuenciales-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.configuracion-empresa-table .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.certificados-firma-table .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.tarifas-tributarias-table .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
 .empresas-table-panel .MuiTableCell-body { padding-block: 12px; }
 .establecimientos-table-panel .MuiTableCell-body { padding-block: 12px; }
 .puntos-emision-table-panel .MuiTableCell-body { padding-block: 12px; }
+.secuenciales-table-panel .MuiTableCell-body { padding-block: 12px; }
+.configuracion-empresa-table .MuiTableCell-body { padding-block: 12px; }
+.certificados-firma-table .MuiTableCell-body { padding-block: 12px; }
+.tarifas-tributarias-table .MuiTableCell-body { padding-block: 12px; }
+.certificado-file-path { display: block; max-width: 400px; overflow-wrap: anywhere; }
+.configuracion-value-cell { max-width: 300px; overflow-wrap: anywhere; }
 .empresas-dialog-description { margin-top: 4px; }
 .establecimientos-dialog-description { margin-top: 4px; }
 .puntos-emision-dialog-description { margin-top: 4px; }
+.secuenciales-dialog-description { margin-top: 4px; }
+.configuracion-empresa-dialog-description { margin-top: 4px; }
 .empresas-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -489,9 +664,47 @@
   gap: 18px;
   padding-top: 22px;
 }
+.secuenciales-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
 .empresas-dialog-actions { padding: 16px 24px 22px; }
 .establecimientos-dialog-actions { padding: 16px 24px 22px; }
 .puntos-emision-dialog-actions { padding: 16px 24px 22px; }
+.secuenciales-dialog-actions { padding: 16px 24px 22px; }
+.configuracion-empresa-dialog-actions { padding: 16px 24px 22px; }
+.certificados-firma-dialog-actions { padding: 16px 24px 22px; }
+.tarifas-tributarias-dialog-description { margin-top: 4px; }
+.tarifas-tributarias-dialog-actions { padding: 16px 24px 22px; }
+.configuracion-empresa-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.certificados-firma-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.tarifas-tributarias-search-form,
+.tarifas-tributarias-current-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.tarifas-tributarias-search-form .MuiTextField-root { width: min(100%, 220px); }
+.tarifas-tributarias-current-form .MuiTextField-root { width: min(100%, 220px); }
+.tarifas-tributarias-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
 .empresas-page-date { align-self: flex-end; }
 @media (max-width: 900px) {
   .empresas-table-panel { overflow-x: auto; }
@@ -500,6 +713,14 @@
   .establecimientos-table-panel .MuiTable-root { min-width: 980px; }
   .puntos-emision-table-panel { overflow-x: auto; }
   .puntos-emision-table-panel .MuiTable-root { min-width: 980px; }
+  .secuenciales-table-panel { overflow-x: auto; }
+  .secuenciales-table-panel .MuiTable-root { min-width: 1240px; }
+  .configuracion-empresa-table { overflow-x: auto; }
+  .configuracion-empresa-table .MuiTable-root { min-width: 1200px; }
+  .certificados-firma-table { overflow-x: auto; }
+  .certificados-firma-table .MuiTable-root { min-width: 1100px; }
+  .tarifas-tributarias-table { overflow-x: auto; }
+  .tarifas-tributarias-table .MuiTable-root { min-width: 1200px; }
 }
 @media (max-width: 650px) {
   .empresas-page-heading,
@@ -507,22 +728,49 @@
   .establecimientos-page-heading,
   .establecimientos-list-heading,
   .puntos-emision-page-heading,
-  .puntos-emision-list-heading {
+  .puntos-emision-list-heading,
+  .secuenciales-page-heading,
+  .secuenciales-list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
+  .configuracion-empresa-heading,
+  .configuracion-empresa-list-heading { align-items: flex-start; flex-direction: column; }
+  .certificados-firma-heading,
+  .certificados-firma-list-heading { align-items: flex-start; flex-direction: column; }
+  .tarifas-tributarias-heading,
+  .tarifas-tributarias-list-heading { align-items: flex-start; flex-direction: column; }
   .empresas-page-heading .MuiButton-root { width: 100%; }
   .establecimientos-page-heading .MuiButton-root { width: 100%; }
   .puntos-emision-page-heading .MuiButton-root { width: 100%; }
+  .secuenciales-page-heading .MuiButton-root { width: 100%; }
+  .configuracion-empresa-heading .MuiButton-root { width: 100%; }
+  .certificados-firma-heading .MuiButton-root { width: 100%; }
+  .tarifas-tributarias-heading .MuiButton-root { width: 100%; }
   .empresas-search-panel { padding: 16px; }
   .establecimientos-search-panel { padding: 16px; }
   .puntos-emision-search-panel { padding: 16px; }
-  .empresas-search-form { align-items: stretch; flex-direction: column; }
+  .secuenciales-filter-panel { padding: 16px; }
+  .configuracion-empresa-filter { align-items: stretch; flex-direction: column; padding: 16px; }
+  .configuracion-empresa-filter .MuiTextField-root { width: 100%; }
+  .certificados-firma-filter { align-items: stretch; flex-direction: column; padding: 16px; }
+  .certificados-firma-filter .MuiTextField-root { width: 100%; }
+  .tarifas-tributarias-search-panel { padding: 16px; }
+  .tarifas-tributarias-search-form,
+  .tarifas-tributarias-current-form { align-items: stretch; flex-direction: column; }
+  .tarifas-tributarias-search-form .MuiTextField-root,
+  .tarifas-tributarias-current-form .MuiTextField-root { width: 100%; }
+  .empresas-search-form { align-items: stretch; flex-direction: column;     .configuracion-empresa-form-grid { grid-template-columns: 1fr; }
+    .certificados-firma-form-grid { grid-template-columns: 1fr; }
+    .tarifas-tributarias-form-grid { grid-template-columns: 1fr; }
+  }
   .establecimientos-search-form { align-items: stretch; flex-direction: column; }
   .puntos-emision-search-form { align-items: stretch; flex-direction: column; }
+  .secuenciales-filter-form { align-items: stretch; flex-direction: column; }
   .empresas-search-form .MuiTextField-root { width: 100%; }
   .establecimientos-search-form .MuiTextField-root { width: 100%; }
   .puntos-emision-search-form .MuiTextField-root { width: 100%; }
+  .secuenciales-form-grid { grid-template-columns: 1fr; }
   .empresas-search-form .MuiButton-root { width: 100%; }
   .establecimientos-search-form .MuiButton-root { width: 100%; }
   .puntos-emision-search-form .MuiButton-root { width: 100%; }

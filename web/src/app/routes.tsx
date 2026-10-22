@@ -10,6 +10,10 @@ import RecuperarContrasenaPage from "../features/login/presentation/RecuperarCon
 import EmpresasPage from "../features/empresas/presentation/EmpresasPage";
 import EstablecimientosPage from "../features/establecimientos/presentation/EstablecimientosPage";
 import PuntosEmisionPage from "../features/puntos-emision/presentation/PuntosEmisionPage";
+import SecuencialesPage from "../features/secuenciales/presentation/SecuencialesPage";
+import ConfiguracionEmpresaPage from "../features/configuracion-empresa/presentation/ConfiguracionEmpresaPage";
+import CertificadosFirmaPage from "../features/certificados-firma/presentation/CertificadosFirmaPage";
+import TarifasTributariasPage from "../features/tarifas-tributarias/presentation/TarifasTributariasPage";
 import RequireAccess from "./security/RequireAccess";
 import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
 
@@ -44,13 +48,13 @@ export default function AppRoutes() {
         <Route path="empresas" element={guarded("/app/empresas", <EmpresasPage />)} />
         <Route path="establecimientos" element={guarded("/app/establecimientos", <EstablecimientosPage />)} />
         <Route path="puntos-emision" element={guarded("/app/puntos-emision", <PuntosEmisionPage />)} />
-        <Route path="secuenciales" element={guarded("/app/secuenciales", <ModulePlaceholder title="Secuenciales" />)} />
-        <Route path="certificados-firma" element={guarded("/app/certificados-firma", <ModulePlaceholder title="Certificados de firma electrónica" />)} />
+        <Route path="secuenciales" element={guarded("/app/secuenciales", <SecuencialesPage />)} />
+        <Route path="certificados-firma" element={guarded("/app/certificados-firma", <CertificadosFirmaPage />)} />
         <Route path="configuracion">
           <Route index element={<Navigate to="empresa" replace />} />
-          <Route path="empresa" element={guarded("/app/configuracion/empresa", <ModulePlaceholder title="Configuración de empresa" />)} />
+          <Route path="empresa" element={guarded("/app/configuracion/empresa", <ConfiguracionEmpresaPage />)} />
         </Route>
-        <Route path="tarifas-tributarias" element={guarded("/app/tarifas-tributarias", <ModulePlaceholder title="Tarifas tributarias" />)} />
+        <Route path="tarifas-tributarias" element={guarded("/app/tarifas-tributarias", <TarifasTributariasPage />)} />
         <Route path="catalogos-tributarios" element={guarded("/app/catalogos-tributarios", <ModulePlaceholder title="Catálogos tributarios" />)} />
         <Route path="definiciones-documentales" element={guarded("/app/definiciones-documentales", <ModulePlaceholder title="Definiciones documentales y XSD" />)} />
         <Route path="mapeos-xsd" element={guarded("/app/mapeos-xsd", <ModulePlaceholder title="Mapeos XSD" />)} />

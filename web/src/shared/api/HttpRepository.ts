@@ -1,6 +1,25 @@
 import { apiRequest } from "./api-client";
 import type { AdministracionRequest } from "./administracion-contracts";
 
+const ESTADOS_REGISTRO_API: Record<string, string> = {
+  A: "ACTIVO",
+  I: "INACTIVO",
+  X: "ELIMINADO",
+  R: "REEMPLAZADO",
+};
+
+export function normalizarEstadoRegistro<T extends object>(registro: T): T {
+  if (!("estadoRegistro" in registro)) return registro;
+
+  const estadoRegistro = Reflect.get(registro, "estadoRegistro");
+  if (typeof estadoRegistro !== "string") return registro;
+
+  const estadoNormalizado = ESTADOS_REGISTRO_API[estadoRegistro];
+  return estadoNormalizado
+    ? Object.assign({}, registro, { estadoRegistro: estadoNormalizado })
+    : registro;
+}
+
 export interface HttpRepositoryOptions<TDatos, TListQuery> {
   mapListQuery?: (query: TListQuery) => Record<string, string | number>;
   getIdEmpresa?: (id: number | null, datos: TDatos) => number;
@@ -18,7 +37,7 @@ function createRequest<TDatos>(idEmpresa: number, datos: TDatos): Administracion
   return { fechaInicio, canal: "WEB", idEmpresa, datos };
 }
 
-export class HttpRepository<T, TDatos, TListQuery = void> {
+export class HttpRepository<T extends object, TDatos, TListQuery = void> {
   private readonly path: string;
 
   constructor(
@@ -36,11 +55,15 @@ export class HttpRepository<T, TDatos, TListQuery = void> {
     const params =
       query === undefined ? undefined : this.options.mapListQuery?.(query);
 
-    return apiRequest<T[]>({ method: "GET", url: this.path, params });
+    return apiRequest<T[]>({ method: "GET", url: this.path, params }).then((records) =>
+      records.map(normalizarEstadoRegistro),
+    );
   }
 
   obtener(id: number): Promise<T> {
-    return apiRequest<T>({ method: "GET", url: `${this.path}/${id}` });
+    return apiRequest<T>({ method: "GET", url: `${this.path}/${id}` }).then(
+      normalizarEstadoRegistro,
+    );
   }
 
   crear(datos: TDatos): Promise<T> {
@@ -48,7 +71,7 @@ export class HttpRepository<T, TDatos, TListQuery = void> {
       method: "POST",
       url: this.path,
       data: this.crearRequest(null, datos),
-    });
+    }).then(normalizarEstadoRegistro);
   }
 
   actualizar(id: number, datos: TDatos): Promise<T> {
@@ -56,7 +79,7 @@ export class HttpRepository<T, TDatos, TListQuery = void> {
       method: "PUT",
       url: `${this.path}/${id}`,
       data: this.crearRequest(id, datos),
-    });
+    }).then(normalizarEstadoRegistro);
   }
 
   eliminar(id: number): Promise<void> {
