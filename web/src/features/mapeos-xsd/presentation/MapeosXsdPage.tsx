@@ -173,13 +173,15 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
     (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === EstadoRegistro.ACTIVO,
   );
   const elementosFinales = elementosActivos.filter((elemento) => {
-    const nombre = elemento.nombre.toLowerCase();
+    const nombre = elemento.nombre.trim().toLowerCase();
+    const tipoDato = (elemento.tipoDato ?? "").trim().toLowerCase();
     const ruta = rutaElemento(elemento, elementosActivos).toLowerCase().split(".");
-    return elemento.idElementoPadre !== null
-      && !elementosActivos.some((hijo) => hijo.idElementoPadre === elemento.id)
-      && nombre !== "map"
-      && nombre !== "list"
-      && !ruta.includes("infotributaria");
+    const esContenedor = nombre === "map" || nombre === "list"
+      || tipoDato === "map" || tipoDato === "list"
+      || tipoDato.startsWith("map<") || tipoDato.startsWith("list<");
+    const esRaiz = elemento.idElementoPadre === null;
+    const tieneHijos = elementosActivos.some((hijo) => hijo.idElementoPadre === elemento.id);
+    return !esRaiz && !tieneHijos && !esContenedor && !ruta.includes("infotributaria");
   });
   const destinosElementos: DestinoXsd[] = elementosFinales
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
@@ -188,20 +190,19 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       tipoMapeo: "ELEMENTO",
       idElementoXsd: elemento.id,
       idAtributoXsd: null,
-      nombre: `${rutaElemento(elemento, elementosActivos)} (${elemento.tipoDato ?? "XML"})`,
+      nombre: `${elemento.nombre} (${elemento.tipoDato ?? "XML"})`,
     }));
   const destinosAtributos: DestinoXsd[] = atributosActivos.filter((atributo) => {
     const elementoAtributo = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
     return elementoAtributo && !rutaElemento(elementoAtributo, elementosActivos).toLowerCase().split(".").includes("infotributaria");
   }).map((atributo) => {
     const elemento = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
-    const ruta = elemento ? rutaElemento(elemento, elementosActivos) : "";
     return {
       key: `atributo:${atributo.id}`,
       tipoMapeo: "ATRIBUTO",
       idElementoXsd: null,
       idAtributoXsd: atributo.id,
-      nombre: `${ruta}.@${atributo.nombre} (${atributo.tipoDato ?? "XML"})`,
+      nombre: `${elemento?.nombre ?? ""}.@${atributo.nombre} (${atributo.tipoDato ?? "XML"})`,
     };
   });
 
