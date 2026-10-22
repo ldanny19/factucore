@@ -15,7 +15,9 @@ import ec.dalara.factucore.adapter.in.web.response.RespuestaRestFactory;
 import ec.dalara.factucore.application.contract.request.AdministracionRequest;
 import ec.dalara.factucore.application.contract.request.MapeoXsdRequest;
 import ec.dalara.factucore.application.contract.response.AdministracionResponse;
+import ec.dalara.factucore.application.contract.response.FuenteMapeoXsdResponse;
 import ec.dalara.factucore.application.contract.response.MapeoXsdResponse;
+import ec.dalara.factucore.application.service.FactuCoreMapeoFuenteCatalogo;
 import ec.dalara.factucore.application.service.MapeoXsdService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +35,13 @@ public class MapeoXsdController {
 
 	private final MapeoXsdService mapeoXsdService;
 	private final RespuestaRestFactory respuestas;
+
+	@Operation(summary = "Listar fuentes FACTUCORE permitidas",
+			description = "Devuelve únicamente metadatos de entidades y campos permitidos para configurar mapeos.")
+	@GetMapping("/fuentes/factucore")
+	public ResponseEntity<AdministracionResponse<List<FuenteMapeoXsdResponse>>> listarFuentesFactuCore() {
+		return ResponseEntity.ok(respuestas.exitoConsulta(FactuCoreMapeoFuenteCatalogo.listar()));
+	}
 
 	@Operation(summary = "Crear mapeo XSD", description = "Crear mapeo XSD. Administra los mapeos entre el modelo canónico y las versiones de documentos.")
 

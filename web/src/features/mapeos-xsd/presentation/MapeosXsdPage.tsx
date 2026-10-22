@@ -1,0 +1,658 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useSearchParams } from "react-router-dom";
+import { getRuntimeConfig } from "../../../config/runtime-config";
+import { apiRequest } from "../../../shared/api/api-client";
+import type { AdministracionRequest } from "../../../shared/api/administracion-contracts";
+import type { Empresa } from "../../empresas/domain/Empresa";
+import type { Catalogo } from "../../catalogos/domain/Catalogo";
+import { MessageCodes } from "../../../shared/messages/MessageCodes";
+import { resolveMessage } from "../../../shared/messages/MessageResolver";
+import "../../../styles/app.css";
+
+interface DocumentoXsd {
+  id: number;
+  codigo: string;
+  nombre: string;
+  estadoRegistro: string;
+}
+
+interface VersionDocumentoXsd {
+  id: number;
+  documentoXsdId: number;
+  version: string;
+  estadoRegistro?: string;
+}
+
+interface VersionSeleccionable {
+  id: number;
+  version: string;
+  documentoCodigo: string;
+  documentoNombre: string;
+}
+
+interface ElementoXsd {
+  id: number;
+  idVersionDocumentoXsd: number;
+  idElementoPadre: number | null;
+  nombre: string;
+  tipoDato: string | null;
+  orden: number | null;
+  estadoRegistro?: string;
+}
+
+interface AtributoXsd {
+  id: number;
+  idElementoXsd: number;
+  nombre: string;
+  tipoDato: string | null;
+  estadoRegistro?: string;
+}
+
+interface MapeoXsd {
+  id: number;
+  idVersionDocumentoXsd: number;
+  tipoOrigen: string;
+  origen: string;
+  idElementoXsd: number | null;
+  idAtributoXsd: number | null;
+  tipoMapeo: string;
+  estadoRegistro: string;
+}
+
+interface DefinicionDocumento {
+  documento: DocumentoXsd;
+  version: VersionDocumentoXsd;
+  elementos: ElementoXsd[];
+  atributos: AtributoXsd[];
+  mapeos: MapeoXsd[];
+}
+
+interface CampoFuente {
+  codigo: string;
+  nombre: string;
+  tipoDato: string;
+  origen: string;
+}
+
+interface FuenteFactuCore {
+  codigo: string;
+  nombre: string;
+  requiereCatalogo: boolean;
+  campos: CampoFuente[];
+}
+
+interface SolicitudMapeoXsd {
+  idVersionDocumentoXsd: number;
+  tipoOrigen: string;
+  origen: string;
+  idElementoXsd: number | null;
+  idAtributoXsd: number | null;
+  tipoMapeo: string;
+}
+
+interface DestinoXsd {
+  key: string;
+  tipoMapeo: "ELEMENTO" | "ATRIBUTO";
+  idElementoXsd: number | null;
+  idAtributoXsd: number | null;
+  nombre: string;
+}
+
+interface FormularioMapeo {
+  tipoOrigen: string;
+  codigoFuente: string;
+  codigoCampo: string;
+  codigoCatalogo: string;
+  rutaJson: string;
+  origenGenerado: string;
+  destino: string;
+}
+
+const FORMULARIO_INICIAL: FormularioMapeo = {
+  tipoOrigen: "",
+  codigoFuente: "",
+  codigoCampo: "",
+  codigoCatalogo: "",
+  rutaJson: "",
+  origenGenerado: "",
+  destino: "",
+};
+
+function fechaHoraSolicitud(): string {
+  const ahora = new Date();
+  const pad = (valor: number, longitud = 2) => String(valor).padStart(longitud, "0");
+  return `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}.${pad(ahora.getMilliseconds(), 3)}`;
+}
+
+function mensajeError(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return resolveMessage(MessageCodes.COMMON_OPERATION_FAILED);
+}
+
+function rutaElemento(elemento: ElementoXsd, elementos: ElementoXsd[]): string {
+  const partes = [elemento.nombre];
+  let padreId = elemento.idElementoPadre;
+  const visitados = new Set<number>([elemento.id]);
+
+  while (padreId !== null) {
+    if (visitados.has(padreId)) break;
+    visitados.add(padreId);
+    const padre = elementos.find((actual) => actual.id === padreId);
+    if (!padre) break;
+    partes.unshift(padre.nombre);
+    padreId = padre.idElementoPadre;
+  }
+
+  return partes.join(".");
+}
+
+function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
+  const elementosActivos = definicion.elementos.filter(
+    (elemento) => !elemento.estadoRegistro || elemento.estadoRegistro === "ACTIVO",
+  );
+  const atributosActivos = definicion.atributos.filter(
+    (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === "ACTIVO",
+  );
+  const destinosElementos: DestinoXsd[] = elementosActivos
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+    .map((elemento) => ({
+      key: `elemento:${elemento.id}`,
+      tipoMapeo: "ELEMENTO",
+      idElementoXsd: elemento.id,
+      idAtributoXsd: null,
+      nombre: `${rutaElemento(elemento, elementosActivos)} (${elemento.tipoDato ?? "XML"})`,
+    }));
+  const destinosAtributos: DestinoXsd[] = atributosActivos.map((atributo) => {
+    const elemento = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
+    const ruta = elemento ? rutaElemento(elemento, elementosActivos) : "";
+    return {
+      key: `atributo:${atributo.id}`,
+      tipoMapeo: "ATRIBUTO",
+      idElementoXsd: null,
+      idAtributoXsd: atributo.id,
+      nombre: `${ruta}.@${atributo.nombre} (${atributo.tipoDato ?? "XML"})`,
+    };
+  });
+
+  return [...destinosElementos, ...destinosAtributos];
+}
+
+export default function MapeosXsdPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [versiones, setVersiones] = useState<VersionSeleccionable[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [catalogos, setCatalogos] = useState<Catalogo[]>([]);
+  const [fuentes, setFuentes] = useState<FuenteFactuCore[]>([]);
+  const [definicion, setDefinicion] = useState<DefinicionDocumento | null>(null);
+  const [mapeos, setMapeos] = useState<MapeoXsd[]>([]);
+  const [idVersionSeleccionada, setIdVersionSeleccionada] = useState("");
+  const [idEmpresa, setIdEmpresa] = useState("");
+  const [formulario, setFormulario] = useState<FormularioMapeo>(FORMULARIO_INICIAL);
+  const [cargando, setCargando] = useState(true);
+  const [cargandoDefinicion, setCargandoDefinicion] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const versionIdInicial = useRef(searchParams.get("versionId")).current;
+  const config = getRuntimeConfig();
+  const documentosPath = config.API_DOCUMENTOS_XSD_PATH.replace(/^\/+|\/+$/g, "");
+  const mapeosPath = config.API_MAPEOS_XSD_PATH.replace(/^\/+|\/+$/g, "");
+
+  const destinos = useMemo(
+    () => (definicion ? crearDestinos(definicion) : []),
+    [definicion],
+  );
+  const fuentesDisponibles = useMemo(
+    () => fuentes.find((fuente) => fuente.codigo === formulario.codigoFuente) ?? null,
+    [fuentes, formulario.codigoFuente],
+  );
+  const camposDisponibles = fuentesDisponibles?.campos ?? [];
+  const campoSeleccionado = camposDisponibles.find(
+    (campo) => campo.codigo === formulario.codigoCampo,
+  );
+  const catalogoSeleccionado = catalogos.find(
+    (catalogo) => catalogo.codigo === formulario.codigoCatalogo,
+  );
+  const destinoSeleccionado = destinos.find((destino) => destino.key === formulario.destino);
+
+  const cargarRecursos = useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const [documentos, empresasActivas, fuentesFactuCore, catalogosActivos] = await Promise.all([
+        apiRequest<DocumentoXsd[]>({ method: "GET", url: documentosPath }),
+        apiRequest<Empresa[]>({ method: "GET", url: config.API_EMPRESAS_PATH }).then((lista) =>
+          lista.filter((empresa) => empresa.estadoRegistro === "ACTIVO"),
+        ),
+        apiRequest<FuenteFactuCore[]>({
+          method: "GET",
+          url: `${mapeosPath}/fuentes/factucore`,
+        }),
+        apiRequest<Catalogo[]>({ method: "GET", url: config.API_CATALOGOS_PATH }).then((lista) =>
+          lista.filter((catalogo) => catalogo.estadoRegistro === "ACTIVO"),
+        ),
+      ]);
+      const documentosActivos = documentos.filter(
+        (documento) => documento.estadoRegistro === "ACTIVO",
+      );
+      const versionesPorDocumento = await Promise.all(
+        documentosActivos.map(async (documento) => {
+          const versionesDocumento = await apiRequest<VersionDocumentoXsd[]>({
+            method: "GET",
+            url: `${documentosPath}/${documento.id}/versiones`,
+          });
+          return versionesDocumento.map((version) => ({
+            id: version.id,
+            version: version.version,
+            documentoCodigo: documento.codigo,
+            documentoNombre: documento.nombre,
+          }));
+        }),
+      );
+      const versionesDisponibles = versionesPorDocumento.flat();
+      setVersiones(versionesDisponibles);
+      setEmpresas(empresasActivas);
+      setFuentes(fuentesFactuCore);
+      setCatalogos(catalogosActivos);
+      setIdEmpresa((actual) =>
+        empresasActivas.some((empresa) => String(empresa.id) === actual)
+          ? actual
+          : String(empresasActivas[0]?.id ?? ""),
+      );
+
+      const versionValida = versionesDisponibles.find(
+        (version) => String(version.id) === versionIdInicial,
+      );
+      if (versionValida) {
+        setIdVersionSeleccionada(String(versionValida.id));
+      } else if (versionIdInicial) {
+        setError(resolveMessage(MessageCodes.MAPEO_XSD_VERSION_NOT_FOUND));
+        setSearchParams({}, { replace: true });
+      }
+    } catch (exception) {
+      setError(mensajeError(exception));
+      setVersiones([]);
+      setEmpresas([]);
+      setFuentes([]);
+      setCatalogos([]);
+    } finally {
+      setCargando(false);
+    }
+  }, [config.API_CATALOGOS_PATH, config.API_EMPRESAS_PATH, documentosPath, mapeosPath, setSearchParams, versionIdInicial]);
+
+  const cargarVersion = useCallback(async (id: string) => {
+    if (!id) {
+      setDefinicion(null);
+      setMapeos([]);
+      return;
+    }
+    setCargandoDefinicion(true);
+    setError(null);
+    try {
+      const versionId = Number(id);
+      const [definition, mappings] = await Promise.all([
+        apiRequest<DefinicionDocumento>({
+          method: "GET",
+          url: `${documentosPath}/versiones/${versionId}`,
+        }),
+        apiRequest<MapeoXsd[]>({
+          method: "GET",
+          url: `${mapeosPath}/version/${versionId}`,
+        }),
+      ]);
+      setDefinicion(definition);
+      setMapeos(mappings);
+      setFormulario(FORMULARIO_INICIAL);
+    } catch (exception) {
+      setDefinicion(null);
+      setMapeos([]);
+      setError(mensajeError(exception));
+    } finally {
+      setCargandoDefinicion(false);
+    }
+  }, [documentosPath, mapeosPath]);
+
+  useEffect(() => {
+    void cargarRecursos();
+  }, [cargarRecursos]);
+
+  useEffect(() => {
+    if (idVersionSeleccionada) {
+      setSearchParams({ versionId: idVersionSeleccionada }, { replace: true });
+      void cargarVersion(idVersionSeleccionada);
+    } else {
+      setSearchParams({}, { replace: true });
+      setDefinicion(null);
+      setMapeos([]);
+    }
+  }, [cargarVersion, idVersionSeleccionada, setSearchParams]);
+
+  const cambiarTipoOrigen = (tipoOrigen: string) => {
+    setFormulario({ ...FORMULARIO_INICIAL, tipoOrigen });
+  };
+
+  const obtenerOrigen = (): string => {
+    if (formulario.tipoOrigen === "JSON") return formulario.rutaJson.trim();
+    if (formulario.tipoOrigen === "GENERADO") return formulario.origenGenerado.trim();
+    if (formulario.tipoOrigen === "FACTUCORE" && campoSeleccionado) {
+      if (fuentesDisponibles?.requiereCatalogo && catalogoSeleccionado) {
+        return campoSeleccionado.origen.replace("{codigoCatalogo}", catalogoSeleccionado.codigo);
+      }
+      return campoSeleccionado.origen;
+    }
+    return "";
+  };
+
+  const guardarMapeo = async () => {
+    setError(null);
+    setAviso(null);
+    const origen = obtenerOrigen();
+    if (!definicion || !idVersionSeleccionada || !destinoSeleccionado || !origen) {
+      setError(resolveMessage(MessageCodes.MAPEO_XSD_REQUIRED_FIELDS));
+      return;
+    }
+    if (!idEmpresa) {
+      setError(resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_REQUIRED));
+      return;
+    }
+    if (mapeos.some((mapeo) => mapeo.origen === origen)) {
+      setError(resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ALREADY_MAPPED));
+      return;
+    }
+    const destinoYaMapeado = mapeos.some((mapeo) =>
+      destinoSeleccionado.tipoMapeo === "ELEMENTO"
+        ? mapeo.idElementoXsd === destinoSeleccionado.idElementoXsd
+        : mapeo.idAtributoXsd === destinoSeleccionado.idAtributoXsd,
+    );
+    if (destinoYaMapeado) {
+      setError(resolveMessage(MessageCodes.MAPEO_XSD_TARGET_ALREADY_MAPPED));
+      return;
+    }
+
+    const mapeo: SolicitudMapeoXsd = {
+      idVersionDocumentoXsd: Number(idVersionSeleccionada),
+      tipoOrigen: formulario.tipoOrigen,
+      origen,
+      idElementoXsd: destinoSeleccionado.idElementoXsd,
+      idAtributoXsd: destinoSeleccionado.idAtributoXsd,
+      tipoMapeo: destinoSeleccionado.tipoMapeo,
+    };
+    const solicitud: AdministracionRequest<SolicitudMapeoXsd[]> = {
+      fechaInicio: fechaHoraSolicitud(),
+      canal: "WEB",
+      idEmpresa: Number(idEmpresa),
+      datos: [mapeo],
+    };
+
+    setGuardando(true);
+    try {
+      await apiRequest<MapeoXsd[]>({
+        method: "POST",
+        url: mapeosPath,
+        data: solicitud,
+      });
+      setAviso(resolveMessage(MessageCodes.MAPEO_XSD_SAVED));
+      setFormulario(FORMULARIO_INICIAL);
+      await cargarVersion(idVersionSeleccionada);
+    } catch (exception) {
+      setError(mensajeError(exception));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const descripcionDestino = (mapeo: MapeoXsd): string => {
+    if (mapeo.idElementoXsd !== null) {
+      const elemento = definicion?.elementos.find((actual) => actual.id === mapeo.idElementoXsd);
+      return elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : String(mapeo.idElementoXsd);
+    }
+    const atributo = definicion?.atributos.find((actual) => actual.id === mapeo.idAtributoXsd);
+    const elemento = definicion?.elementos.find((actual) => actual.id === atributo?.idElementoXsd);
+    return atributo
+      ? `${elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : ""}.@${atributo.nombre}`
+      : String(mapeo.idAtributoXsd);
+  };
+
+  return (
+    <Box className="catalogos-page">
+      <Box className="catalogos-page-heading">
+        <Box>
+          <Typography className="page-title" component="h1" variant="h4">
+            {resolveMessage(MessageCodes.MAPEO_XSD_PAGE_TITLE)}
+          </Typography>
+          <Typography color="text.secondary">
+            {resolveMessage(MessageCodes.MAPEO_XSD_PAGE_DESCRIPTION)}
+          </Typography>
+        </Box>
+      </Box>
+
+      {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+      {aviso && <Alert severity="success" onClose={() => setAviso(null)}>{aviso}</Alert>}
+
+      <Paper variant="outlined" className="catalogos-panel">
+        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          {resolveMessage(MessageCodes.MAPEO_XSD_VERSION)}
+        </Typography>
+        <TextField
+          select
+          label={resolveMessage(MessageCodes.MAPEO_XSD_SELECT_VERSION)}
+          value={idVersionSeleccionada}
+          onChange={(event) => setIdVersionSeleccionada(event.target.value)}
+          disabled={cargando || cargandoDefinicion || guardando}
+        >
+          <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+          {versiones.map((version) => (
+            <MenuItem key={version.id} value={String(version.id)}>
+              {version.documentoCodigo} — {version.documentoNombre} · {version.version}
+            </MenuItem>
+          ))}
+        </TextField>
+        {cargando && <CircularProgress size={24} sx={{ ml: 2 }} />}
+      </Paper>
+
+      {cargandoDefinicion && <CircularProgress />}
+
+      {definicion && !cargandoDefinicion && (
+        <>
+          <Paper variant="outlined" className="catalogos-panel">
+            <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
+              {resolveMessage(MessageCodes.MAPEO_XSD_DEFINITION_TITLE, {
+                codigo: definicion.documento.codigo,
+                version: definicion.version.version,
+              })}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              {resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)}
+            </Typography>
+            <Box sx={{ display: "grid", gap: 2 }}>
+              <TextField
+                select
+                label={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT)}
+                value={idEmpresa}
+                onChange={(event) => setIdEmpresa(event.target.value)}
+                disabled={guardando || empresas.length === 0}
+                helperText={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT_HELP)}
+              >
+                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                {empresas.map((empresa) => (
+                  <MenuItem key={empresa.id} value={String(empresa.id)}>
+                    {empresa.razonSocial} · {empresa.ruc}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                select
+                label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_TYPE)}
+                value={formulario.tipoOrigen}
+                onChange={(event) => cambiarTipoOrigen(event.target.value)}
+                disabled={guardando}
+              >
+                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                <MenuItem value="JSON">JSON</MenuItem>
+                <MenuItem value="FACTUCORE">FACTUCORE</MenuItem>
+                <MenuItem value="GENERADO">GENERADO</MenuItem>
+              </TextField>
+
+              {formulario.tipoOrigen === "FACTUCORE" && (
+                <>
+                  <TextField
+                    select
+                    label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ENTITY)}
+                    value={formulario.codigoFuente}
+                    onChange={(event) =>
+                      setFormulario((actual) => ({
+                        ...actual,
+                        codigoFuente: event.target.value,
+                        codigoCampo: "",
+                        codigoCatalogo: "",
+                      }))
+                    }
+                    disabled={guardando}
+                  >
+                    <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                    {fuentes.map((fuente) => (
+                      <MenuItem key={fuente.codigo} value={fuente.codigo}>
+                        {fuente.nombre}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  {fuentesDisponibles?.requiereCatalogo && (
+                    <TextField
+                      select
+                      label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_CATALOG)}
+                      value={formulario.codigoCatalogo}
+                      onChange={(event) =>
+                        setFormulario((actual) => ({
+                          ...actual,
+                          codigoCatalogo: event.target.value,
+                          codigoCampo: "",
+                        }))
+                      }
+                      disabled={guardando}
+                    >
+                      <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                      {catalogos.map((catalogo) => (
+                        <MenuItem key={catalogo.id} value={catalogo.codigo}>
+                          {catalogo.codigo} — {catalogo.nombre}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                  <TextField
+                    select
+                    label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_FIELD)}
+                    value={formulario.codigoCampo}
+                    onChange={(event) =>
+                      setFormulario((actual) => ({ ...actual, codigoCampo: event.target.value }))
+                    }
+                    disabled={guardando || !fuentesDisponibles}
+                  >
+                    <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                    {camposDisponibles.map((campo) => (
+                      <MenuItem key={campo.codigo} value={campo.codigo}>
+                        {campo.nombre} · {campo.tipoDato}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </>
+              )}
+
+              {formulario.tipoOrigen === "JSON" && (
+                <TextField
+                  label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)}
+                  value={formulario.rutaJson}
+                  onChange={(event) =>
+                    setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))
+                  }
+                  disabled={guardando}
+                  inputProps={{ maxLength: 1000 }}
+                />
+              )}
+
+              {formulario.tipoOrigen === "GENERADO" && (
+                <TextField
+                  label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
+                  value={formulario.origenGenerado}
+                  onChange={(event) =>
+                    setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))
+                  }
+                  disabled={guardando}
+                  inputProps={{ maxLength: 1000 }}
+                  helperText={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE_HELP)}
+                />
+              )}
+
+              <TextField
+                select
+                label={resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}
+                value={formulario.destino}
+                onChange={(event) =>
+                  setFormulario((actual) => ({ ...actual, destino: event.target.value }))
+                }
+                disabled={guardando || destinos.length === 0}
+              >
+                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                {destinos.map((destino) => (
+                  <MenuItem key={destino.key} value={destino.key}>
+                    {destino.nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <Button
+                variant="contained"
+                onClick={() => void guardarMapeo()}
+                disabled={guardando || cargandoDefinicion || empresas.length === 0}
+              >
+                {guardando
+                  ? resolveMessage(MessageCodes.COMMON_SAVING)
+                  : resolveMessage(MessageCodes.MAPEO_XSD_SAVE)}
+              </Button>
+            </Box>
+          </Paper>
+
+          <Paper variant="outlined" className="catalogos-panel">
+            <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+              {resolveMessage(MessageCodes.MAPEO_XSD_EXISTING_TITLE)}
+            </Typography>
+            {mapeos.length === 0 ? (
+              <Typography color="text.secondary">
+                {resolveMessage(MessageCodes.MAPEO_XSD_EMPTY)}
+              </Typography>
+            ) : (
+              <Box sx={{ display: "grid", gap: 1 }}>
+                {mapeos.map((mapeo) => (
+                  <Box
+                    key={mapeo.id}
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", md: "1fr 2fr" },
+                      gap: 1,
+                      borderBottom: 1,
+                      borderColor: "divider",
+                      pb: 1,
+                    }}
+                  >
+                    <Typography>{mapeo.tipoOrigen}: {mapeo.origen}</Typography>
+                    <Typography color="text.secondary">{descripcionDestino(mapeo)}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Paper>
+        </>
+      )}
+    </Box>
+  );
+}

@@ -35,6 +35,8 @@ public class SeguridadConfig {
 							.hasRole("GENERATE_COMPROBANTE")
 						.requestMatchers(HttpMethod.POST, "/api/v1/comprobantes/*/reprocesar")
 							.hasRole("REPROCESS_COMPROBANTE")
+						.requestMatchers(HttpMethod.GET, "/api/v1/mapeos-xsd/fuentes/factucore")
+							.hasRole("SUPERADMIN")
 						.requestMatchers("/api/v1/**").hasAnyRole("SUPERADMIN", "ADMIN")
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt

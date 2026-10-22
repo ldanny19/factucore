@@ -2,8 +2,8 @@ package ec.dalara.factucore.adapter.in.web.controller;
 
 import java.util.List;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,7 +58,7 @@ public class DocumentoXsdController {
 
 	})
 
-	@PostMapping
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AdministracionResponse<DocumentoXsdResponse>> crear(
 			@Valid @RequestBody AdministracionRequest<DocumentoXsdRequest> request) {
 		respuestas.validarFechaInicio(request.getFechaInicio());

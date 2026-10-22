@@ -15,6 +15,8 @@ import ConfiguracionEmpresaPage from "../features/configuracion-empresa/presenta
 import CertificadosFirmaPage from "../features/certificados-firma/presentation/CertificadosFirmaPage";
 import TarifasTributariasPage from "../features/tarifas-tributarias/presentation/TarifasTributariasPage";
 import CatalogosPage from "../features/catalogos/presentation/CatalogosPage";
+import DocumentosXsdPage from "../features/documentos-xsd/presentation/DocumentosXsdPage";
+import MapeosXsdPage from "../features/mapeos-xsd/presentation/MapeosXsdPage";
 import RequireAccess from "./security/RequireAccess";
 import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
 
@@ -57,8 +59,8 @@ export default function AppRoutes() {
         </Route>
         <Route path="tarifas-tributarias" element={guarded("/app/tarifas-tributarias", <TarifasTributariasPage />)} />
         <Route path="catalogos-tributarios" element={guarded("/app/catalogos-tributarios", <CatalogosPage />)} />
-        <Route path="definiciones-documentales" element={guarded("/app/definiciones-documentales", <ModulePlaceholder title="Definiciones documentales y XSD" />)} />
-        <Route path="mapeos-xsd" element={guarded("/app/mapeos-xsd", <ModulePlaceholder title="Mapeos XSD" />)} />
+        <Route path="definiciones-documentales" element={guarded("/app/definiciones-documentales", <DocumentosXsdPage />)} />
+        <Route path="mapeos-xsd" element={guarded("/app/mapeos-xsd", <MapeosXsdPage />)} />
         <Route path="auditoria">
           <Route index element={<Navigate to="historial" replace />} />
           <Route path="historial" element={guarded("/app/auditoria/historial", <ModulePlaceholder title="Historial de acciones" />)} />

@@ -5,11 +5,14 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
@@ -32,6 +35,7 @@ import ec.dalara.factucore.application.contract.response.PuntoEmisionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.application.mapper.AdministracionMapper;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
+import ec.dalara.factucore.application.port.out.XsdFileStoragePort;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportRequest;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportResult;
 import ec.dalara.factucore.domain.shared.MessageCodes;
@@ -64,11 +68,12 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final DocumentoXsdService documentoXsdService;
 	private final XsdImportService xsdImportService;
 
-	@Value("${factucore.path.documentos}")
-	private String rutaDocumentos;
+	@Value("${factucore.path.xsd}")
+	private String rutaXsdBase;
 	private final EmpresaRepository empresaRepository;
 	private final EstablecimientoRepository establecimientoRepository;
 	private final PuntoEmisionRepository puntoEmisionRepository;
+	private final XsdFileStoragePort xsdFileStorage;
 
 	public CatalogoResponse guardarCatalogo(Long id, CatalogoRequest request, String canal) {
 		Catalogo catalogo = id == null ? null : catalogoService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
@@ -328,6 +333,10 @@ public class AdministracionApplicationService implements AdministracionPort {
 		if (id != null)
 			return guardarDocumentoXsdExistente(id, r);
 
+		if (r.getContenidoXsd() != null) {
+			return guardarDocumentoXsdConContenido(r);
+		}
+
 		Path rutaXsd = validarRutaXsd(r);
 		String usuario = SecurityContextHolder.getContext().getAuthentication().getName();
 		String nombreArchivo = r.getVersion().getNombreArchivo();
@@ -351,6 +360,55 @@ public class AdministracionApplicationService implements AdministracionPort {
 		return AdministracionMapper.toResponse(documento, resultado.versionDocumentoXsdId());
 	}
 
+	private DocumentoXsdResponse guardarDocumentoXsdConContenido(DocumentoXsdRequest request) {
+		String nombreArchivo = request.getVersion().getNombreArchivo();
+		if (nombreArchivo == null || nombreArchivo.isBlank()
+				|| !nombreArchivo.toLowerCase(Locale.ROOT).endsWith(".xsd")) {
+			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_EXTENSION_INVALIDA);
+		}
+		if (nombreArchivo.length() > 300) {
+			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_NOMBRE_INVALIDO);
+		}
+		byte[] contenido = request.getContenidoXsd();
+		if (contenido.length == 0) {
+			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_REQUERIDO);
+		}
+
+		String carpeta = carpetaTipoDocumento(request.getTipoDocumento());
+		Path rutaAlmacenada = xsdFileStorage.guardar(carpeta, nombreArchivo, contenido);
+		request.getVersion().setRutaXsd(rutaAlmacenada.toString());
+
+		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCompletion(int status) {
+					if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+						xsdFileStorage.eliminar(rutaAlmacenada);
+					}
+				}
+			});
+		}
+
+		request.setContenidoXsd(null);
+		return guardarDocumentoXsd(null, request);
+	}
+
+	private String carpetaTipoDocumento(String tipoDocumento) {
+		if (tipoDocumento == null) {
+			throw new ApplicationException(MessageCodes.DOCUMENTO_XSD_TIPO_DOCUMENTO_INVALIDO, tipoDocumento);
+		}
+		return switch (tipoDocumento.trim().toUpperCase(Locale.ROOT)) {
+		case "01" -> "factura";
+		case "03" -> "liquidacion-compra";
+		case "04" -> "nota-credito";
+		case "05" -> "nota-debito";
+		case "06" -> "guia-remision";
+		case "07" -> "comprobante-retencion";
+		default -> throw new ApplicationException(MessageCodes.DOCUMENTO_XSD_TIPO_DOCUMENTO_INVALIDO,
+				tipoDocumento);
+		};
+	}
+
 	private DocumentoXsdResponse guardarDocumentoXsdExistente(Long id, DocumentoXsdRequest r) {
 		DocumentoXsd e = documentoXsdService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
 		return AdministracionMapper.toResponse(documentoXsdService.guardar(AdministracionMapper.toEntity(r, e)));
@@ -358,7 +416,10 @@ public class AdministracionApplicationService implements AdministracionPort {
 
 	private Path validarRutaXsd(DocumentoXsdRequest r) {
 		String rutaSolicitada = r.getVersion().getRutaXsd();
-		Path base = Path.of(rutaDocumentos).toAbsolutePath().normalize();
+		if (rutaSolicitada == null || rutaSolicitada.isBlank()) {
+			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_REQUERIDA);
+		}
+		Path base = Path.of(rutaXsdBase).toAbsolutePath().normalize();
 		Path ruta = Path.of(rutaSolicitada);
 		if (!ruta.isAbsolute())
 			ruta = base.resolve(ruta).normalize();

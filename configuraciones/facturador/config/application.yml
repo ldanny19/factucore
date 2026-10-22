@@ -14,6 +14,11 @@ spring:
     encoding: UTF-8
     fallback-to-system-locale: false
 
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
+
   main:
     banner-mode: off
 
@@ -117,7 +122,7 @@ factucore:
   path:
     base: ${FACTUCORE_PATH_BASE:/app}
     config: ${FACTUCORE_PATH_CONFIG:${factucore.path.base}/config}
-    xsd: ${FACTUCORE_PATH_XSD:${factucore.path.base}/xsd}
+    xsd: ${FACTUCORE_PATH_XSD:${factucore.path.documentos}/xsd}
     certificados: ${FACTUCORE_PATH_CERTIFICADOS:${factucore.path.base}/certificados}
     jasper: ${FACTUCORE_PATH_JASPER:${factucore.path.base}/jasper}
     documentos: ${FACTUCORE_PATH_DOCUMENTOS:${factucore.path.base}/documentos}

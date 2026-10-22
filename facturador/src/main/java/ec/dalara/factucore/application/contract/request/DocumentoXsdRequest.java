@@ -34,6 +34,9 @@ public class DocumentoXsdRequest {
 	@Size(max = 20)
 	private String prefijoArchivo;
 
+	@Size(max = 20971520)
+	private byte[] contenidoXsd;
+
 	@NotNull
 	@Valid
 	private VersionDocumentoXsdRequest version;

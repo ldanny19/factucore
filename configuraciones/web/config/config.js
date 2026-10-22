@@ -1,5 +1,5 @@
 window.FACTUCORE_CONFIG = {
-  API_BASE_URL: "http://api.facturador.com:8080/facturador-api",
+  API_BASE_URL: "http://localhost:8081/facturador-api",
   API_PATH_PREFIX: "/api",
   API_VERSION: "v1",
   API_EMPRESAS_PATH: "/empresas",
