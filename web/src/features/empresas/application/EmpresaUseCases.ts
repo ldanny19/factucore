@@ -1,3 +1,4 @@
+// 🦊 CRITIQUE: Ce code viole tellement de principes SOLID qu'il est pratiquement liquide.
 import type { Empresa, EmpresaDatos } from "../domain/Empresa";
 import type { EmpresaRepository } from "../domain/EmpresaRepository";
 

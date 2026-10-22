@@ -327,16 +327,52 @@
   max-width: 1500px;
   margin: 0 auto;
 }
+.establecimientos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.puntos-emision-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
 .empresas-page-heading,
-.empresas-list-heading {
+.empresas-list-heading,
+.establecimientos-page-heading,
+.establecimientos-list-heading,
+.puntos-emision-page-heading,
+.puntos-emision-list-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
 }
 .empresas-page-heading .page-title { margin-bottom: 8px; }
+.establecimientos-page-heading .page-title { margin-bottom: 8px; }
+.puntos-emision-page-heading .page-title { margin-bottom: 8px; }
 .empresas-feedback { margin-bottom: 0; overflow-wrap: anywhere; }
 .empresas-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.establecimientos-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.puntos-emision-search-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -350,7 +386,21 @@
   align-items: center;
   gap: 12px;
 }
+.establecimientos-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.puntos-emision-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
 .empresas-search-form .MuiTextField-root { width: min(100%, 260px); }
+.establecimientos-search-form .MuiTextField-root { width: min(100%, 260px); }
+.puntos-emision-search-form .MuiTextField-root { width: min(100%, 260px); }
 .empresas-search-result {
   display: flex;
   flex-direction: column;
@@ -367,44 +417,122 @@
   justify-content: flex-end;
   gap: 2px;
 }
-.empresas-list-heading { margin-top: 4px; }
+.establecimientos-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.puntos-emision-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.empresas-list-heading,
+.establecimientos-list-heading,
+.puntos-emision-list-heading { margin-top: 4px; }
 .empresas-table-panel {
   border-color: #e1e7ee;
   border-radius: 14px;
 }
+.establecimientos-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.puntos-emision-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
 .empresas-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.establecimientos-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.puntos-emision-table-panel .MuiTableHead-root { background: #f6f8fc; }
 .empresas-table-panel .MuiTableCell-head {
   color: #4b5f78;
   font-size: .78rem;
   font-weight: 800;
   white-space: nowrap;
 }
+.establecimientos-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.puntos-emision-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
 .empresas-table-panel .MuiTableCell-body { padding-block: 12px; }
+.establecimientos-table-panel .MuiTableCell-body { padding-block: 12px; }
+.puntos-emision-table-panel .MuiTableCell-body { padding-block: 12px; }
 .empresas-dialog-description { margin-top: 4px; }
+.establecimientos-dialog-description { margin-top: 4px; }
+.puntos-emision-dialog-description { margin-top: 4px; }
 .empresas-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   padding-top: 22px;
 }
+.establecimientos-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.puntos-emision-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
 .empresas-dialog-actions { padding: 16px 24px 22px; }
+.establecimientos-dialog-actions { padding: 16px 24px 22px; }
+.puntos-emision-dialog-actions { padding: 16px 24px 22px; }
 .empresas-page-date { align-self: flex-end; }
 @media (max-width: 900px) {
   .empresas-table-panel { overflow-x: auto; }
   .empresas-table-panel .MuiTable-root { min-width: 980px; }
+  .establecimientos-table-panel { overflow-x: auto; }
+  .establecimientos-table-panel .MuiTable-root { min-width: 980px; }
+  .puntos-emision-table-panel { overflow-x: auto; }
+  .puntos-emision-table-panel .MuiTable-root { min-width: 980px; }
 }
 @media (max-width: 650px) {
   .empresas-page-heading,
-  .empresas-list-heading {
+  .empresas-list-heading,
+  .establecimientos-page-heading,
+  .establecimientos-list-heading,
+  .puntos-emision-page-heading,
+  .puntos-emision-list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
   .empresas-page-heading .MuiButton-root { width: 100%; }
+  .establecimientos-page-heading .MuiButton-root { width: 100%; }
+  .puntos-emision-page-heading .MuiButton-root { width: 100%; }
   .empresas-search-panel { padding: 16px; }
+  .establecimientos-search-panel { padding: 16px; }
+  .puntos-emision-search-panel { padding: 16px; }
   .empresas-search-form { align-items: stretch; flex-direction: column; }
+  .establecimientos-search-form { align-items: stretch; flex-direction: column; }
+  .puntos-emision-search-form { align-items: stretch; flex-direction: column; }
   .empresas-search-form .MuiTextField-root { width: 100%; }
+  .establecimientos-search-form .MuiTextField-root { width: 100%; }
+  .puntos-emision-search-form .MuiTextField-root { width: 100%; }
   .empresas-search-form .MuiButton-root { width: 100%; }
+  .establecimientos-search-form .MuiButton-root { width: 100%; }
+  .puntos-emision-search-form .MuiButton-root { width: 100%; }
   .empresas-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .establecimientos-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .puntos-emision-form-grid { grid-template-columns: minmax(0, 1fr); }
   .empresas-dialog-actions { flex-wrap: wrap; }
+  .establecimientos-dialog-actions { flex-wrap: wrap; }
+  .puntos-emision-dialog-actions { flex-wrap: wrap; }
   .empresas-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+  .establecimientos-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+  .puntos-emision-row-actions { justify-content: flex-start; flex-wrap: wrap; }
 }

@@ -8,6 +8,8 @@ import DashboardPage from "../features/dashboard/presentation/DashboardPage";
 import LoginPage from "../features/login/presentation/LoginPage";
 import RecuperarContrasenaPage from "../features/login/presentation/RecuperarContrasenaPage";
 import EmpresasPage from "../features/empresas/presentation/EmpresasPage";
+import EstablecimientosPage from "../features/establecimientos/presentation/EstablecimientosPage";
+import PuntosEmisionPage from "../features/puntos-emision/presentation/PuntosEmisionPage";
 import RequireAccess from "./security/RequireAccess";
 import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
 
@@ -40,8 +42,8 @@ export default function AppRoutes() {
       <Route path="/app" element={<RequireAccess allowedRoles={APP_ROLES}><AppLayout /></RequireAccess>}>
         <Route index element={guarded("/app", <DashboardPage />)} />
         <Route path="empresas" element={guarded("/app/empresas", <EmpresasPage />)} />
-        <Route path="establecimientos" element={guarded("/app/establecimientos", <ModulePlaceholder title="Establecimientos" />)} />
-        <Route path="puntos-emision" element={guarded("/app/puntos-emision", <ModulePlaceholder title="Puntos de emisión" />)} />
+        <Route path="establecimientos" element={guarded("/app/establecimientos", <EstablecimientosPage />)} />
+        <Route path="puntos-emision" element={guarded("/app/puntos-emision", <PuntosEmisionPage />)} />
         <Route path="secuenciales" element={guarded("/app/secuenciales", <ModulePlaceholder title="Secuenciales" />)} />
         <Route path="certificados-firma" element={guarded("/app/certificados-firma", <ModulePlaceholder title="Certificados de firma electrónica" />)} />
         <Route path="configuracion">
