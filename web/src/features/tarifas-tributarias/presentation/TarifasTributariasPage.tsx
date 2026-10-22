@@ -83,10 +83,10 @@ export default function TarifasTributariasPage() {
   const [codigoImpuesto, setCodigoImpuesto] = useState("");
   const [codigoPorcentaje, setCodigoPorcentaje] = useState("");
   const [fechaConsulta, setFechaConsulta] = useState(fechaLocal());
-  const [filtroAplicado, setFiltroAplicado] = useState<TarifaTributariaFiltro | null>(null);
+  const [filtroAplicado, setFiltroAplicado] = useState<TarifaTributariaFiltro>({});
   const [tarifas, setTarifas] = useState<TarifaTributaria[]>([]);
   const [tarifaVigente, setTarifaVigente] = useState<TarifaTributaria | null>(null);
-  const [cargando, setCargando] = useState(false);
+  const [cargando, setCargando] = useState(true);
   const [consultandoVigente, setConsultandoVigente] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [operacionFilaId, setOperacionFilaId] = useState<number | null>(null);
@@ -142,6 +142,27 @@ export default function TarifasTributariasPage() {
     };
   }, [catalogoUseCases]);
 
+  useEffect(() => {
+    let vigente = true;
+    useCases
+      .listar({})
+      .then((resultado) => {
+        if (vigente) setTarifas(resultado);
+      })
+      .catch((exception: unknown) => {
+        if (vigente) {
+          setError(mensajeError(exception));
+          setTarifas([]);
+        }
+      })
+      .finally(() => {
+        if (vigente) setCargando(false);
+      });
+    return () => {
+      vigente = false;
+    };
+  }, [useCases]);
+
   const cargar = useCallback(
     async (filtro = filtroAplicado) => {
       if (!filtro) {
@@ -183,6 +204,15 @@ export default function TarifasTributariasPage() {
       : { codigoImpuesto: impuesto };
     setFiltroAplicado(filtro);
     await cargar(filtro);
+  };
+
+  const buscarTodos = async () => {
+    setCodigoImpuesto("");
+    setCodigoPorcentaje("");
+    setTarifaVigente(null);
+    setAviso(null);
+    setFiltroAplicado({});
+    await cargar({});
   };
 
   const consultarVigente = async () => {
@@ -429,6 +459,15 @@ export default function TarifasTributariasPage() {
             {resolveMessage(MessageCodes.TARIFA_CATALOGS_LOADING)}
           </Typography>
         )}
+        <Button
+          type="button"
+          variant="contained"
+          startIcon={<SearchOutlinedIcon />}
+          onClick={() => void buscarTodos()}
+          disabled={cargando}
+        >
+          {resolveMessage(MessageCodes.TARIFA_SEARCH_ALL)}
+        </Button>
         <Box component="form" className="tarifas-tributarias-search-form" onSubmit={buscar}>
           <TextField
             label={resolveMessage(MessageCodes.TARIFA_TAX_CODE)}
@@ -458,7 +497,6 @@ export default function TarifasTributariasPage() {
               setTarifaVigente(null);
             }}
             disabled={!codigoImpuesto || cargandoCatalogos || catalogoPorcentajes.length === 0}
-            helperText={resolveMessage(MessageCodes.TARIFA_PERCENT_OPTIONAL)}
           >
             <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
             {catalogoPorcentajes.map((item) => (
@@ -543,8 +581,6 @@ export default function TarifasTributariasPage() {
           <TableBody>
             {cargando ? (
               <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={26} /></TableCell></TableRow>
-            ) : !filtroAplicado ? (
-              <TableRow><TableCell colSpan={7} align="center">{resolveMessage(MessageCodes.TARIFA_SEARCH_PROMPT)}</TableCell></TableRow>
             ) : tarifas.length === 0 ? (
               <TableRow><TableCell colSpan={7} align="center">{resolveMessage(MessageCodes.TARIFA_EMPTY)}</TableCell></TableRow>
             ) : (

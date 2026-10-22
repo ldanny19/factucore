@@ -5,7 +5,7 @@ import type {
 } from "./TarifaTributaria";
 
 export interface TarifaTributariaRepository {
-  listar(filtro: TarifaTributariaFiltro): Promise<TarifaTributaria[]>;
+  listar(filtro?: TarifaTributariaFiltro): Promise<TarifaTributaria[]>;
   obtenerVigente(
     filtro: TarifaTributariaFiltro & { fecha: string },
   ): Promise<TarifaTributaria | null>;

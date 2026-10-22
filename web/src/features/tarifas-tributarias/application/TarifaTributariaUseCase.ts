@@ -6,7 +6,7 @@ import type {
 import type { TarifaTributariaRepository } from "../domain/TarifaTributariaRepository";
 
 export interface TarifaTributariaUseCase {
-  listar(filtro: TarifaTributariaFiltro): Promise<TarifaTributaria[]>;
+  listar(filtro?: TarifaTributariaFiltro): Promise<TarifaTributaria[]>;
   obtenerVigente(
     filtro: TarifaTributariaFiltro & { fecha: string },
   ): Promise<TarifaTributaria | null>;
