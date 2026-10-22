@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    publicDir: configDir,
+    publicDir: configDir || "public",
     server: {
       host: "0.0.0.0",
       port: 3000,
