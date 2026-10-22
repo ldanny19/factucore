@@ -134,9 +134,10 @@ export default function DocumentosXsdPage() {
           method: "GET",
           url: config.API_EMPRESAS_PATH,
         });
-        const empresasActivas = respuesta.filter(
-          (empresa) => empresa.estadoRegistro === "ACTIVO",
-        );
+        const empresasActivas = respuesta.filter((empresa) => {
+          const estado = String(empresa.estadoRegistro ?? "").trim().toUpperCase();
+          return estado === "A" || estado === "ACTIVO";
+        });
         setEmpresas(empresasActivas);
         setFormulario((actual) => ({
           ...actual,
