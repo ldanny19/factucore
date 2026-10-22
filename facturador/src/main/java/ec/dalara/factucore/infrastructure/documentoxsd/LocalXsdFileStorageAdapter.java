@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ public class LocalXsdFileStorageAdapter implements XsdFileStoragePort {
 			throw new InfrastructureException("FACTUCORE.XSD.ARCHIVO.REQUERIDO");
 		}
 
-		Path archivo = directorioBase.resolve(UUID.randomUUID() + ".xsd").normalize();
+		Path archivo = directorioBase.resolve(Path.of(nombreArchivo).getFileName()).normalize();
 		if (!archivo.startsWith(directorioBase)) {
 			throw new InfrastructureException(ERROR_GUARDAR);
 		}
