@@ -406,7 +406,11 @@ export default function MapeosXsdPage() {
   }, [cargarVersion, idVersionSeleccionada, setSearchParams]);
 
   const cambiarTipoOrigen = (tipoOrigen: string) => {
-    setFormulario({ ...FORMULARIO_INICIAL, tipoOrigen });
+    setFormulario((actual) => ({
+      ...FORMULARIO_INICIAL,
+      tipoOrigen,
+      destino: actual.destino,
+    }));
   };
 
   const obtenerOrigen = (): string => {
