@@ -34,12 +34,18 @@ import { resolveMessage } from "../../../shared/messages/MessageResolver";
 import type { Empresa, EmpresaDatos } from "../domain/Empresa";
 import "../../../styles/app.css";
 
-const FORMULARIO_VACIO: EmpresaDatos = {
+interface EmpresaFormulario extends Omit<EmpresaDatos, "obligadoContabilidad"> {
+  obligadoContabilidad: EmpresaDatos["obligadoContabilidad"] | "";
+}
+
+const RIMPE_NO_APLICA = "__NO_APLICA__";
+
+const FORMULARIO_VACIO: EmpresaFormulario = {
   ruc: "",
   razonSocial: "",
   nombreComercial: "",
   direccionMatriz: "",
-  obligadoContabilidad: "SI",
+  obligadoContabilidad: "",
   contribuyenteRimpe: null,
 };
 
@@ -66,7 +72,7 @@ export default function EmpresasPage() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [dialogoAbierto, setDialogoAbierto] = useState(false);
   const [empresaEdicion, setEmpresaEdicion] = useState<Empresa | null>(null);
-  const [formulario, setFormulario] = useState<EmpresaDatos>(FORMULARIO_VACIO);
+  const [formulario, setFormulario] = useState<EmpresaFormulario>(FORMULARIO_VACIO);
   const [idBusqueda, setIdBusqueda] = useState("");
   const [confirmacionEliminacion, setConfirmacionEliminacion] = useState<Empresa | null>(null);
 
@@ -102,14 +108,14 @@ export default function EmpresasPage() {
       nombreComercial: empresa.nombreComercial ?? "",
       direccionMatriz: empresa.direccionMatriz,
       obligadoContabilidad: empresa.obligadoContabilidad,
-      contribuyenteRimpe: empresa.contribuyenteRimpe,
+      contribuyenteRimpe: empresa.contribuyenteRimpe ?? RIMPE_NO_APLICA,
     });
     setError(null);
     setAviso(null);
     setDialogoAbierto(true);
   };
 
-  const cambiarCampo = (campo: keyof EmpresaDatos, valor: string) => {
+  const cambiarCampo = (campo: keyof EmpresaFormulario, valor: string) => {
     setFormulario((actual) => ({
       ...actual,
       [campo]: campo === "contribuyenteRimpe" ? (valor || null) : valor,
@@ -121,13 +127,23 @@ export default function EmpresasPage() {
     setError(null);
     setAviso(null);
 
+    if (!formulario.obligadoContabilidad) {
+      setError(resolveMessage(MessageCodes.EMPRESA_ACCOUNTING_VALUE_REQUIRED));
+      return;
+    }
+
     const datos: EmpresaDatos = {
       ...formulario,
+      obligadoContabilidad:
+        formulario.obligadoContabilidad === "SI" ? "SI" : "NO",
       ruc: formulario.ruc.trim(),
       razonSocial: formulario.razonSocial.trim(),
       nombreComercial: formulario.nombreComercial?.trim() || null,
       direccionMatriz: formulario.direccionMatriz.trim(),
-      contribuyenteRimpe: formulario.contribuyenteRimpe || null,
+      contribuyenteRimpe:
+        formulario.contribuyenteRimpe === RIMPE_NO_APLICA
+          ? null
+          : formulario.contribuyenteRimpe || null,
     };
 
     if (!/^\d{13}$/.test(datos.ruc)) {
@@ -336,27 +352,38 @@ export default function EmpresasPage() {
                 required
                 fullWidth
               />
-              <FormControl fullWidth>
-                <InputLabel id="obligado-contabilidad-label">{resolveMessage(MessageCodes.EMPRESA_ACCOUNTING_REQUIRED)}</InputLabel>
+              <FormControl fullWidth required>
+                <InputLabel id="obligado-contabilidad-label" shrink>{resolveMessage(MessageCodes.EMPRESA_ACCOUNTING_REQUIRED)}</InputLabel>
                 <Select
                   labelId="obligado-contabilidad-label"
                   label="Obligado a llevar contabilidad"
                   value={formulario.obligadoContabilidad}
-                  onChange={(event) => cambiarCampo("obligadoContabilidad", event.target.value)}
+                  displayEmpty
+                  onChange={(event) =>
+                    cambiarCampo("obligadoContabilidad", String(event.target.value ?? ""))
+                  }
+                  required
                 >
+                  <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                   <MenuItem value="SI">{resolveMessage(MessageCodes.COMMON_YES)}</MenuItem>
                   <MenuItem value="NO">{resolveMessage(MessageCodes.COMMON_NO)}</MenuItem>
                 </Select>
               </FormControl>
               <FormControl fullWidth>
-                <InputLabel id="contribuyente-rimpe-label">{resolveMessage(MessageCodes.EMPRESA_RIMPE)}</InputLabel>
+                <InputLabel id="contribuyente-rimpe-label" shrink>{resolveMessage(MessageCodes.EMPRESA_RIMPE)}</InputLabel>
                 <Select
                   labelId="contribuyente-rimpe-label"
                   label="Régimen tributario RIMPE"
                   value={formulario.contribuyenteRimpe ?? ""}
-                  onChange={(event) => cambiarCampo("contribuyenteRimpe", event.target.value)}
+                  displayEmpty
+                  onChange={(event) =>
+                    cambiarCampo("contribuyenteRimpe", String(event.target.value ?? ""))
+                  }
                 >
-                  <MenuItem value="">{resolveMessage(MessageCodes.EMPRESA_NO_APLICA)}</MenuItem>
+                  <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                  <MenuItem value={RIMPE_NO_APLICA}>
+                    {resolveMessage(MessageCodes.EMPRESA_NO_APLICA)}
+                  </MenuItem>
                   <MenuItem value="CONTRIBUYENTE RÉGIMEN RIMPE">{resolveMessage(MessageCodes.EMPRESA_RIMPE)}</MenuItem>
                 </Select>
               </FormControl>

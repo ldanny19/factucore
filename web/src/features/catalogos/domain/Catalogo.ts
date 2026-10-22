@@ -6,6 +6,12 @@ export interface Catalogo {
   estadoRegistro: string;
 }
 
+export interface CatalogoDatos {
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+}
+
 export interface CatalogoItem {
   id: number;
   idCatalogo: number;
@@ -14,4 +20,12 @@ export interface CatalogoItem {
   descripcion: string | null;
   orden: number | null;
   estadoRegistro: string;
+}
+
+export interface CatalogoItemDatos {
+  idCatalogo: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  orden: number | null;
 }

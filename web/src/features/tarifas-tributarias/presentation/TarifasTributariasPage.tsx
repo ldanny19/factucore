@@ -473,15 +473,17 @@ export default function TarifasTributariasPage() {
             label={resolveMessage(MessageCodes.TARIFA_TAX_CODE)}
             select
             value={codigoImpuesto}
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
             onChange={(event) => {
-              setCodigoImpuesto(event.target.value);
+              setCodigoImpuesto(String(event.target.value ?? ""));
               setCodigoPorcentaje("");
               setTarifaVigente(null);
             }}
             required
             disabled={cargandoCatalogos || catalogoImpuestos.length === 0}
           >
-            <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+            <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
             {catalogoImpuestos.map((item) => (
               <MenuItem key={item.id} value={item.codigo}>
                 {item.codigo} — {item.nombre}
@@ -492,13 +494,15 @@ export default function TarifasTributariasPage() {
             label={resolveMessage(MessageCodes.TARIFA_PERCENT_CODE)}
             select
             value={codigoPorcentaje}
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
             onChange={(event) => {
-              setCodigoPorcentaje(event.target.value);
+              setCodigoPorcentaje(String(event.target.value ?? ""));
               setTarifaVigente(null);
             }}
             disabled={!codigoImpuesto || cargandoCatalogos || catalogoPorcentajes.length === 0}
           >
-            <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+            <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
             {catalogoPorcentajes.map((item) => (
               <MenuItem key={item.id} value={item.codigo}>
                 {item.codigo} — {item.nombre}
@@ -648,10 +652,12 @@ export default function TarifasTributariasPage() {
                 label={resolveMessage(MessageCodes.TARIFA_TAX_CODE)}
                 select
                 value={formulario.codigoImpuesto}
+                SelectProps={{ displayEmpty: true }}
+                InputLabelProps={{ shrink: true }}
                 onChange={(event) =>
                   setFormulario((actual) => ({
                     ...actual,
-                    codigoImpuesto: event.target.value,
+                    codigoImpuesto: String(event.target.value ?? ""),
                     codigoPorcentaje: "",
                     idCatalogoItem: "",
                   }))
@@ -659,7 +665,7 @@ export default function TarifasTributariasPage() {
                 required
                 disabled={cargandoCatalogos}
               >
-                <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                 {edicion &&
                   !catalogoImpuestos.some((item) => item.codigo === formulario.codigoImpuesto) && (
                     <MenuItem value={formulario.codigoImpuesto}>{formulario.codigoImpuesto}</MenuItem>
@@ -674,8 +680,10 @@ export default function TarifasTributariasPage() {
                 label={resolveMessage(MessageCodes.TARIFA_PERCENT_CODE)}
                 select
                 value={formulario.codigoPorcentaje}
+                SelectProps={{ displayEmpty: true }}
+                InputLabelProps={{ shrink: true }}
                 onChange={(event) => {
-                  const codigo = event.target.value;
+                  const codigo = String(event.target.value ?? "");
                   const item = catalogoPorcentajes.find((opcion) => opcion.codigo === codigo);
                   setFormulario((actual) => ({
                     ...actual,
@@ -686,7 +694,7 @@ export default function TarifasTributariasPage() {
                 required
                 disabled={!formulario.codigoImpuesto || cargandoCatalogos}
               >
-                <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                 {edicion &&
                   !catalogoPorcentajes.some((item) => item.codigo === formulario.codigoPorcentaje) && (
                     <MenuItem value={formulario.codigoPorcentaje}>{formulario.codigoPorcentaje}</MenuItem>

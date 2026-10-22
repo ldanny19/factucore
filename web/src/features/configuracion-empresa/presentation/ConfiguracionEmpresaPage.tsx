@@ -48,7 +48,7 @@ interface ConfiguracionFormulario {
 const FORMULARIO_VACIO: ConfiguracionFormulario = {
   clave: "",
   valor: "",
-  tipoDato: "STRING",
+  tipoDato: "",
   fechaVigenciaDesde: fechaLocalInput(new Date()),
   fechaVigenciaHasta: "",
 };
@@ -118,7 +118,6 @@ export default function ConfiguracionEmpresaPage() {
         const resultado = await empresaUseCases.listar();
         if (!vigente) return;
         setEmpresas(resultado);
-        setEmpresaId((actual) => actual || resultado[0]?.id || "");
       } catch (exception) {
         if (vigente) setError(mensajeError(exception));
       } finally {
@@ -288,14 +287,18 @@ export default function ConfiguracionEmpresaPage() {
           size="small"
           label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
           value={empresaId}
+          SelectProps={{ displayEmpty: true }}
+          InputLabelProps={{ shrink: true }}
           onChange={(event) => {
             setError(null);
             setAviso(null);
-            setEmpresaId(Number(event.target.value));
+            const value = event.target.value;
+            setEmpresaId(String(value ?? "") === "" ? "" : Number(value));
           }}
           disabled={cargandoEmpresas || empresas.length === 0}
           sx={{ minWidth: 320 }}
         >
+          <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
           {empresas.map((empresa) => (
             <MenuItem key={empresa.id} value={empresa.id}>
               {empresa.ruc} - {empresa.razonSocial}
@@ -415,12 +418,17 @@ export default function ConfiguracionEmpresaPage() {
               />
               <TextField
                 label={resolveMessage(MessageCodes.CONFIGURACION_DATA_TYPE)}
+                select
+                SelectProps={{ displayEmpty: true }}
+                InputLabelProps={{ shrink: true }}
                 value={formulario.tipoDato}
-                onChange={(event) => cambiarCampo("tipoDato", event.target.value)}
+                onChange={(event) => cambiarCampo("tipoDato", String(event.target.value ?? ""))}
                 required
-                inputProps={{ maxLength: 30 }}
-                helperText={resolveMessage(MessageCodes.CONFIGURACION_DATA_TYPE_HELP)}
-              />
+              >
+                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                <MenuItem value="STRING">STRING</MenuItem>
+                <MenuItem value="INTEGER">INTEGER</MenuItem>
+              </TextField>
               <TextField
                 label={resolveMessage(MessageCodes.CONFIGURACION_VALUE)}
                 value={formulario.valor}

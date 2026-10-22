@@ -14,6 +14,7 @@ import SecuencialesPage from "../features/secuenciales/presentation/Secuenciales
 import ConfiguracionEmpresaPage from "../features/configuracion-empresa/presentation/ConfiguracionEmpresaPage";
 import CertificadosFirmaPage from "../features/certificados-firma/presentation/CertificadosFirmaPage";
 import TarifasTributariasPage from "../features/tarifas-tributarias/presentation/TarifasTributariasPage";
+import CatalogosPage from "../features/catalogos/presentation/CatalogosPage";
 import RequireAccess from "./security/RequireAccess";
 import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
 
@@ -55,7 +56,7 @@ export default function AppRoutes() {
           <Route path="empresa" element={guarded("/app/configuracion/empresa", <ConfiguracionEmpresaPage />)} />
         </Route>
         <Route path="tarifas-tributarias" element={guarded("/app/tarifas-tributarias", <TarifasTributariasPage />)} />
-        <Route path="catalogos-tributarios" element={guarded("/app/catalogos-tributarios", <ModulePlaceholder title="Catálogos tributarios" />)} />
+        <Route path="catalogos-tributarios" element={guarded("/app/catalogos-tributarios", <CatalogosPage />)} />
         <Route path="definiciones-documentales" element={guarded("/app/definiciones-documentales", <ModulePlaceholder title="Definiciones documentales y XSD" />)} />
         <Route path="mapeos-xsd" element={guarded("/app/mapeos-xsd", <ModulePlaceholder title="Mapeos XSD" />)} />
         <Route path="auditoria">

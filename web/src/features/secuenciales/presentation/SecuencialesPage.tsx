@@ -100,7 +100,8 @@ export default function SecuencialesPage() {
   const secuencialesVisibles = useMemo(
     () =>
       secuenciales.filter(
-        (secuencial) => secuencial.idPuntoEmision === puntoEmisionFiltroId,
+        (secuencial) =>
+          puntoEmisionFiltroId === "" || secuencial.idPuntoEmision === puntoEmisionFiltroId,
       ),
     [secuenciales, puntoEmisionFiltroId],
   );
@@ -133,7 +134,6 @@ export default function SecuencialesPage() {
         const resultado = await empresaUseCases.listar();
         if (!vigente) return;
         setEmpresas(resultado);
-        setEmpresaFiltroId((actual) => actual || resultado[0]?.id || "");
       } catch (exception) {
         if (vigente) setError(mensajeError(exception));
       } finally {
@@ -166,7 +166,6 @@ export default function SecuencialesPage() {
         const resultado = await establecimientoUseCases.listar(empresaFiltroId);
         if (!vigente) return;
         setEstablecimientos(resultado);
-        setEstablecimientoFiltroId(resultado[0]?.id || "");
       } catch (exception) {
         if (vigente) setError(mensajeError(exception));
       } finally {
@@ -197,7 +196,6 @@ export default function SecuencialesPage() {
         const resultado = await puntoEmisionUseCases.listar(establecimientoFiltroId);
         if (!vigente) return;
         setPuntosEmision(resultado);
-        setPuntoEmisionFiltroId(resultado[0]?.id || "");
       } catch (exception) {
         if (vigente) setError(mensajeError(exception));
       } finally {
@@ -379,20 +377,23 @@ export default function SecuencialesPage() {
         </Typography>
         <Box className="secuenciales-filter-form">
           <FormControl size="small" sx={{ minWidth: 240 }}>
-            <InputLabel id="secuencial-empresa-label">
+            <InputLabel id="secuencial-empresa-label" shrink>
               {resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
             </InputLabel>
             <Select
               labelId="secuencial-empresa-label"
               label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
               value={empresaFiltroId}
+              displayEmpty
               onChange={(event) => {
                 setError(null);
                 setAviso(null);
-                setEmpresaFiltroId(Number(event.target.value));
+                const value = event.target.value;
+                setEmpresaFiltroId(String(value ?? "") === "" ? "" : Number(value));
               }}
               disabled={cargandoEmpresas || empresas.length === 0}
             >
+              <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
               {empresas.map((empresa) => (
                 <MenuItem key={empresa.id} value={empresa.id}>
                   {empresa.ruc} - {empresa.razonSocial}
@@ -401,20 +402,23 @@ export default function SecuencialesPage() {
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 240 }}>
-            <InputLabel id="secuencial-establecimiento-label">
+            <InputLabel id="secuencial-establecimiento-label" shrink>
               {resolveMessage(MessageCodes.PUNTO_EMISION_ESTABLISHMENT)}
             </InputLabel>
             <Select
               labelId="secuencial-establecimiento-label"
               label={resolveMessage(MessageCodes.PUNTO_EMISION_ESTABLISHMENT)}
               value={establecimientoFiltroId}
+              displayEmpty
               onChange={(event) => {
                 setError(null);
                 setAviso(null);
-                setEstablecimientoFiltroId(Number(event.target.value));
+                const value = event.target.value;
+                setEstablecimientoFiltroId(String(value ?? "") === "" ? "" : Number(value));
               }}
               disabled={cargandoEstablecimientos || establecimientos.length === 0}
             >
+              <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
               {establecimientos.map((establecimiento) => (
                 <MenuItem key={establecimiento.id} value={establecimiento.id}>
                   {establecimiento.codigo} - {establecimiento.nombre}
@@ -423,20 +427,23 @@ export default function SecuencialesPage() {
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 240 }}>
-            <InputLabel id="secuencial-punto-emision-label">
+            <InputLabel id="secuencial-punto-emision-label" shrink>
               {resolveMessage(MessageCodes.SECUENCIAL_POINT)}
             </InputLabel>
             <Select
               labelId="secuencial-punto-emision-label"
               label={resolveMessage(MessageCodes.SECUENCIAL_POINT)}
               value={puntoEmisionFiltroId}
+              displayEmpty
               onChange={(event) => {
                 setError(null);
                 setAviso(null);
-                setPuntoEmisionFiltroId(Number(event.target.value));
+                const value = event.target.value;
+                setPuntoEmisionFiltroId(String(value ?? "") === "" ? "" : Number(value));
               }}
               disabled={cargandoPuntos || puntosEmision.length === 0}
             >
+              <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
               {puntosEmision.map((puntoEmision) => (
                 <MenuItem key={puntoEmision.id} value={puntoEmision.id}>
                   {puntoEmision.codigo} - {puntoEmision.nombre}

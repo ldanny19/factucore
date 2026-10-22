@@ -93,7 +93,6 @@ export default function EstablecimientosPage() {
     try {
       const resultado = await empresaUseCases.listar();
       setEmpresas(resultado);
-      setEmpresaFiltroId((actual) => actual || resultado[0]?.id || "");
     } catch (exception) {
       setError(mensajeError(exception));
     } finally {
@@ -116,10 +115,7 @@ export default function EstablecimientosPage() {
 
   const abrirCrear = () => {
     setEstablecimientoEdicion(null);
-    setFormulario({
-      ...FORMULARIO_VACIO,
-      idEmpresa: empresaFiltroId === "" ? 0 : empresaFiltroId,
-    });
+    setFormulario(FORMULARIO_VACIO);
     setError(null);
     setAviso(null);
     setDialogoAbierto(true);
@@ -290,16 +286,21 @@ export default function EstablecimientosPage() {
         </Typography>
         <Box component="form" className="establecimientos-search-form" onSubmit={buscarPorId}>
           <FormControl size="small" sx={{ minWidth: 260 }}>
-            <InputLabel id="establecimiento-filtro-empresa-label">
+            <InputLabel id="establecimiento-filtro-empresa-label" shrink>
               {resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
             </InputLabel>
             <Select
               labelId="establecimiento-filtro-empresa-label"
               label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
               value={empresaFiltroId}
-              onChange={(event) => setEmpresaFiltroId(Number(event.target.value))}
+              displayEmpty
+              onChange={(event) => {
+                const value = event.target.value;
+                setEmpresaFiltroId(String(value ?? "") === "" ? "" : Number(value));
+              }}
               disabled={cargandoEmpresas || empresas.length === 0}
             >
+              <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
               {empresas.map((empresa) => (
                 <MenuItem key={empresa.id} value={empresa.id}>
                   {empresa.ruc} - {empresa.razonSocial}
@@ -459,16 +460,21 @@ export default function EstablecimientosPage() {
             </Typography>
             <Box className="establecimientos-form-grid">
               <FormControl fullWidth required>
-                <InputLabel id="establecimiento-empresa-label">
+                <InputLabel id="establecimiento-empresa-label" shrink>
                   {resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
                 </InputLabel>
                 <Select
                   labelId="establecimiento-empresa-label"
                   label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
                   value={formulario.idEmpresa || ""}
-                  onChange={(event) => cambiarCampo("idEmpresa", Number(event.target.value))}
+                  displayEmpty
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    cambiarCampo("idEmpresa", String(value ?? "") === "" ? 0 : Number(value));
+                  }}
                   disabled={cargandoEmpresas || empresas.length === 0}
                 >
+                  <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                   {empresas.map((empresa) => (
                     <MenuItem key={empresa.id} value={empresa.id}>
                       {empresa.ruc} - {empresa.razonSocial}

@@ -121,7 +121,6 @@ export default function PuntosEmisionPage() {
     try {
       const resultado = await empresaUseCases.listar();
       setEmpresas(resultado);
-      setEmpresaFiltroId((actual) => actual || resultado[0]?.id || "");
     } catch (exception) {
       setError(mensajeError(exception));
     } finally {
@@ -138,7 +137,6 @@ export default function PuntosEmisionPage() {
       try {
         const resultado = await establecimientoUseCases.listar(idEmpresa);
         setEstablecimientos(resultado);
-        setEstablecimientoFiltroId(resultado[0]?.id || "");
       } catch (exception) {
         setError(mensajeError(exception));
         setEstablecimientos([]);
@@ -352,16 +350,21 @@ export default function PuntosEmisionPage() {
         </Typography>
         <Box component="form" className="puntos-emision-search-form" onSubmit={buscarPorId}>
           <FormControl size="small" sx={{ minWidth: 260 }}>
-            <InputLabel id="punto-emision-empresa-label">
+            <InputLabel id="punto-emision-empresa-label" shrink>
               {resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
             </InputLabel>
             <Select
               labelId="punto-emision-empresa-label"
               label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
               value={empresaFiltroId}
-              onChange={(event) => setEmpresaFiltroId(Number(event.target.value))}
+              displayEmpty
+              onChange={(event) => {
+                const value = event.target.value;
+                setEmpresaFiltroId(String(value ?? "") === "" ? "" : Number(value));
+              }}
               disabled={cargandoEmpresas || empresas.length === 0}
             >
+              <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
               {empresas.map((empresa) => (
                 <MenuItem key={empresa.id} value={empresa.id}>
                   {empresa.ruc} - {empresa.razonSocial}
@@ -370,16 +373,23 @@ export default function PuntosEmisionPage() {
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 260 }}>
-            <InputLabel id="punto-emision-establecimiento-label">
+            <InputLabel id="punto-emision-establecimiento-label" shrink>
               {resolveMessage(MessageCodes.PUNTO_EMISION_ESTABLISHMENT)}
             </InputLabel>
             <Select
               labelId="punto-emision-establecimiento-label"
               label={resolveMessage(MessageCodes.PUNTO_EMISION_ESTABLISHMENT)}
               value={establecimientoFiltroId}
-              onChange={(event) => setEstablecimientoFiltroId(Number(event.target.value))}
+              displayEmpty
+              onChange={(event) => {
+                const value = event.target.value;
+                setEstablecimientoFiltroId(
+                  String(value ?? "") === "" ? "" : Number(value),
+                );
+              }}
               disabled={cargandoEstablecimientos || establecimientos.length === 0}
             >
+              <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
               {establecimientos.map((establecimiento) => (
                 <MenuItem key={establecimiento.id} value={establecimiento.id}>
                   {establecimiento.codigo} - {establecimiento.nombre}
@@ -541,13 +551,14 @@ export default function PuntosEmisionPage() {
             </Typography>
             <Box className="puntos-emision-form-grid">
               <FormControl fullWidth>
-                <InputLabel id="punto-emision-form-empresa-label">
+                <InputLabel id="punto-emision-form-empresa-label" shrink>
                   {resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
                 </InputLabel>
                 <Select
                   labelId="punto-emision-form-empresa-label"
                   label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
                   value={formulario.idEmpresa || ""}
+                  displayEmpty
                   onChange={(event) => {
                     const empresaId = Number(event.target.value);
                     cambiarCampo("idEmpresa", empresaId);
@@ -556,6 +567,7 @@ export default function PuntosEmisionPage() {
                   }}
                   disabled
                 >
+                  <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                   {empresas.map((empresa) => (
                     <MenuItem key={empresa.id} value={empresa.id}>
                       {empresa.ruc} - {empresa.razonSocial}
@@ -564,23 +576,30 @@ export default function PuntosEmisionPage() {
                 </Select>
               </FormControl>
               <FormControl fullWidth>
-                <InputLabel id="punto-emision-form-establecimiento-label">
+                <InputLabel id="punto-emision-form-establecimiento-label" shrink>
                   {resolveMessage(MessageCodes.PUNTO_EMISION_ESTABLISHMENT)}
                 </InputLabel>
                 <Select
                   labelId="punto-emision-form-establecimiento-label"
                   label={resolveMessage(MessageCodes.PUNTO_EMISION_ESTABLISHMENT)}
                   value={formulario.idEstablecimiento || ""}
+                  displayEmpty
                   onChange={(event) => {
-                    const establecimiento = establecimientosFormulario.find(
-                      ({ id }) => id === Number(event.target.value),
+                    const value = event.target.value;
+                    const establecimientoId =
+                      String(value ?? "") === "" ? null : Number(value);
+                    const establecimiento = establecimientosFormulario.find(({ id }) =>
+                      id === establecimientoId,
                     );
                     if (establecimiento) {
                       cambiarCampo("idEstablecimiento", establecimiento.id);
                       cambiarCampo("idEmpresa", establecimiento.idEmpresa);
+                    } else if (establecimientoId === null) {
+                      cambiarCampo("idEstablecimiento", 0);
                     }
                   }}
                 >
+                  <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                   {establecimientosFormulario
                     .filter(({ idEmpresa }) => idEmpresa === formulario.idEmpresa)
                     .map((establecimiento) => (
