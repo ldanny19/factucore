@@ -172,10 +172,15 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
   const atributosActivos = definicion.atributos.filter(
     (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === EstadoRegistro.ACTIVO,
   );
-  const elementosFinales = elementosActivos.filter((elemento) =>
-    !elementosActivos.some((hijo) => hijo.idElementoPadre === elemento.id)
-      && !rutaElemento(elemento, elementosActivos).toLowerCase().split(".").includes("infotributaria"),
-  );
+  const elementosFinales = elementosActivos.filter((elemento) => {
+    const nombre = elemento.nombre.toLowerCase();
+    const ruta = rutaElemento(elemento, elementosActivos).toLowerCase().split(".");
+    return elemento.idElementoPadre !== null
+      && !elementosActivos.some((hijo) => hijo.idElementoPadre === elemento.id)
+      && nombre !== "map"
+      && nombre !== "list"
+      && !ruta.includes("infotributaria");
+  });
   const destinosElementos: DestinoXsd[] = elementosFinales
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
     .map((elemento) => ({
