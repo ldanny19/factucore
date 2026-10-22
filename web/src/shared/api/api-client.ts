@@ -120,3 +120,15 @@ export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {
     throw error;
   }
 }
+
+export async function apiRequestRaw<T>(config: AxiosRequestConfig): Promise<T> {
+  try {
+    const response = await client.request<T>(config);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(getHttpErrorMessage(error));
+    }
+    throw error;
+  }
+}
