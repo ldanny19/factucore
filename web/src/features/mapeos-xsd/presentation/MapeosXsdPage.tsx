@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
@@ -222,7 +222,6 @@ export default function MapeosXsdPage() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  const versionIdInicial = useRef(searchParams.get("versionId")).current;
   const config = getRuntimeConfig();
   const documentosPath = config.API_DOCUMENTOS_XSD_PATH.replace(/^\/+|\/+$/g, "");
   const mapeosPath = config.API_MAPEOS_XSD_PATH.replace(/^\/+|\/+$/g, "");
@@ -287,30 +286,10 @@ export default function MapeosXsdPage() {
       setEmpresas(empresasActivas);
       setFuentes(fuentesFactuCore);
       setCatalogos(catalogosActivos);
-      setIdEmpresa((actual) =>
-        empresasActivas.some((empresa) => String(empresa.id) === actual)
-          ? actual
-          : String(empresasActivas[0]?.id ?? ""),
-      );
-
-      const versionValida = versionesDisponibles.find(
-        (version) => String(version.id) === versionIdInicial,
-      );
-      if (versionValida) {
-        setIdVersionSeleccionada(String(versionValida.id));
-      } else if (versionIdInicial) {
-        setError(resolveMessage(MessageCodes.MAPEO_XSD_VERSION_NOT_FOUND));
-        setIdVersionSeleccionada("");
-        setSearchParams({}, { replace: true });
-      } else {
-        setIdVersionSeleccionada((actual) =>
-          versionesDisponibles.some((version) => String(version.id) === actual)
-            ? actual
-            : String(versionesDisponibles[0]?.id ?? ""),
-        );
-        if (versionesDisponibles.length === 0) {
-          setError("No hay versiones documentales XSD disponibles para configurar mapeos.");
-        }
+      setIdEmpresa("");
+      setIdVersionSeleccionada("");
+      if (versionesDisponibles.length === 0) {
+        setError("No hay versiones documentales XSD disponibles para configurar mapeos.");
       }
     } catch (exception) {
       setError(mensajeError(exception));
@@ -321,7 +300,7 @@ export default function MapeosXsdPage() {
     } finally {
       setCargando(false);
     }
-  }, [config.API_CATALOGOS_PATH, config.API_EMPRESAS_PATH, documentosPath, mapeosPath, setSearchParams, versionIdInicial]);
+  }, [config.API_CATALOGOS_PATH, config.API_EMPRESAS_PATH, documentosPath, mapeosPath]);
 
   const cargarVersion = useCallback(async (id: string) => {
     if (!id) {
@@ -495,17 +474,21 @@ export default function MapeosXsdPage() {
 
       {cargandoDefinicion && <CircularProgress />}
 
-      {definicion && !cargandoDefinicion && (
+      {!cargandoDefinicion && (
         <>
           <Paper variant="outlined" className="catalogos-panel">
             <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-              {resolveMessage(MessageCodes.MAPEO_XSD_DEFINITION_TITLE, {
-                codigo: definicion.documento.codigo,
-                version: definicion.version.version,
-              })}
+              {definicion
+                ? resolveMessage(MessageCodes.MAPEO_XSD_DEFINITION_TITLE, {
+                    codigo: definicion.documento.codigo,
+                    version: definicion.version.version,
+                  })
+                : resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)}
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2 }}>
-              {resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)}
+              {definicion
+                ? resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)
+                : "Selecciona una versión para cargar sus etiquetas XML y los mapeos existentes."}
             </Typography>
             <Box sx={{ display: "grid", gap: 2 }}>
               <TextField
@@ -529,7 +512,11 @@ export default function MapeosXsdPage() {
     <Typography variant="subtitle1" component="h3" sx={{ mb: 1 }}>{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography>
     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Selecciona la etiqueta o atributo XML que deseas mapear.</Typography>
     <Box sx={{ display: "grid", gap: 0.75, maxHeight: 440, overflowY: "auto" }}>
-      {destinos.map((destino) => {
+      {destinos.length === 0 ? (
+        <Typography color="text.secondary">
+          Selecciona una versión documental para mostrar las etiquetas y atributos XML.
+        </Typography>
+      ) : destinos.map((destino) => {
         const yaMapeado = mapeos.some((mapeo) => destino.tipoMapeo === "ELEMENTO"
           ? mapeo.idElementoXsd === destino.idElementoXsd : mapeo.idAtributoXsd === destino.idAtributoXsd);
         return <Button key={destino.key} variant={formulario.destino === destino.key ? "contained" : "outlined"}
@@ -590,7 +577,7 @@ export default function MapeosXsdPage() {
 <Button
                 variant="contained"
                 onClick={() => void guardarMapeo()}
-                disabled={guardando || cargandoDefinicion || empresas.length === 0}
+                disabled={guardando || cargandoDefinicion || !definicion || empresas.length === 0}
               >
                 {guardando
                   ? resolveMessage(MessageCodes.COMMON_SAVING)
