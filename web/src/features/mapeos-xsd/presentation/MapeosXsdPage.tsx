@@ -6,6 +6,12 @@ import {
   CircularProgress,
   MenuItem,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -166,7 +172,11 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
   const atributosActivos = definicion.atributos.filter(
     (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === EstadoRegistro.ACTIVO,
   );
-  const destinosElementos: DestinoXsd[] = elementosActivos
+  const elementosFinales = elementosActivos.filter((elemento) =>
+    !elementosActivos.some((hijo) => hijo.idElementoPadre === elemento.id)
+      && !rutaElemento(elemento, elementosActivos).toLowerCase().split(".").includes("infotributaria"),
+  );
+  const destinosElementos: DestinoXsd[] = elementosFinales
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
     .map((elemento) => ({
       key: `elemento:${elemento.id}`,
@@ -175,7 +185,10 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       idAtributoXsd: null,
       nombre: `${rutaElemento(elemento, elementosActivos)} (${elemento.tipoDato ?? "XML"})`,
     }));
-  const destinosAtributos: DestinoXsd[] = atributosActivos.map((atributo) => {
+  const destinosAtributos: DestinoXsd[] = atributosActivos.filter((atributo) => {
+    const elementoAtributo = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
+    return elementoAtributo && !rutaElemento(elementoAtributo, elementosActivos).toLowerCase().split(".").includes("infotributaria");
+  }).map((atributo) => {
     const elemento = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
     const ruta = elemento ? rutaElemento(elemento, elementosActivos) : "";
     return {
@@ -215,6 +228,7 @@ export default function MapeosXsdPage() {
   const [fuentes, setFuentes] = useState<FuenteFactuCore[]>([]);
   const [definicion, setDefinicion] = useState<DefinicionDocumento | null>(null);
   const [mapeos, setMapeos] = useState<MapeoXsd[]>([]);
+  const [mapeosPendientes, setMapeosPendientes] = useState<SolicitudMapeoXsd[]>([]);
   const [idVersionSeleccionada, setIdVersionSeleccionada] = useState("");
   const [idEmpresa, setIdEmpresa] = useState("");
   const [formulario, setFormulario] = useState<FormularioMapeo>(FORMULARIO_INICIAL);
@@ -227,10 +241,10 @@ export default function MapeosXsdPage() {
   const documentosPath = config.API_DOCUMENTOS_XSD_PATH.replace(/^\/+|\/+$/g, "");
   const mapeosPath = config.API_MAPEOS_XSD_PATH.replace(/^\/+|\/+$/g, "");
 
-  const destinos = useMemo(
-    () => (definicion ? crearDestinos(definicion) : []),
-    [definicion],
-  );
+  const destinosBase = useMemo(() => (definicion ? crearDestinos(definicion) : []), [definicion]);
+  const destinos = destinosBase.filter((destino) =>
+    !mapeos.some((mapeo) => destino.tipoMapeo === "ELEMENTO" ? mapeo.idElementoXsd === destino.idElementoXsd : mapeo.idAtributoXsd === destino.idAtributoXsd)
+    && !mapeosPendientes.some((mapeo) => destino.tipoMapeo === "ELEMENTO" ? mapeo.idElementoXsd === destino.idElementoXsd : mapeo.idAtributoXsd === destino.idAtributoXsd));
   const fuentesDisponibles = useMemo(
     () => fuentes.find((fuente) => fuente.codigo === formulario.codigoFuente) ?? null,
     [fuentes, formulario.codigoFuente],
@@ -289,6 +303,7 @@ export default function MapeosXsdPage() {
       setCatalogos(catalogosActivos);
       setIdEmpresa("");
       setIdVersionSeleccionada("");
+      setMapeosPendientes([]);
       if (versionesDisponibles.length === 0) {
         setError("No hay versiones documentales XSD disponibles para configurar mapeos.");
       }
@@ -325,6 +340,7 @@ export default function MapeosXsdPage() {
       ]);
       setDefinicion(definition);
       setMapeos(mappings);
+      setMapeosPendientes([]);
       setFormulario(FORMULARIO_INICIAL);
     } catch (exception) {
       setDefinicion(null);
@@ -347,6 +363,7 @@ export default function MapeosXsdPage() {
       setSearchParams({}, { replace: true });
       setDefinicion(null);
       setMapeos([]);
+      setMapeosPendientes([]);
     }
   }, [cargarVersion, idVersionSeleccionada, setSearchParams]);
 
@@ -366,7 +383,7 @@ export default function MapeosXsdPage() {
     return "";
   };
 
-  const guardarMapeo = async () => {
+  const agregarMapeo = () => {
     setError(null);
     setAviso(null);
     const origen = obtenerOrigen();
@@ -378,11 +395,11 @@ export default function MapeosXsdPage() {
       setError(resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_REQUIRED));
       return;
     }
-    if (mapeos.some((mapeo) => mapeo.origen === origen)) {
+    if (mapeos.some((mapeo) => mapeo.origen === origen) || mapeosPendientes.some((mapeo) => mapeo.origen === origen)) {
       setError(resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ALREADY_MAPPED));
       return;
     }
-    const destinoYaMapeado = mapeos.some((mapeo) =>
+    const destinoYaMapeado = [...mapeos, ...mapeosPendientes].some((mapeo) =>
       destinoSeleccionado.tipoMapeo === "ELEMENTO"
         ? mapeo.idElementoXsd === destinoSeleccionado.idElementoXsd
         : mapeo.idAtributoXsd === destinoSeleccionado.idAtributoXsd,
@@ -400,21 +417,27 @@ export default function MapeosXsdPage() {
       idAtributoXsd: destinoSeleccionado.idAtributoXsd,
       tipoMapeo: destinoSeleccionado.tipoMapeo,
     };
-    const solicitud: AdministracionRequest<SolicitudMapeoXsd[]> = {
-      fechaInicio: fechaHoraSolicitud(),
-      canal: "WEB",
-      idEmpresa: Number(idEmpresa),
-      datos: [mapeo],
-    };
+    setMapeosPendientes((actuales) => [...actuales, mapeo]);
+    setFormulario((actual) => ({ ...FORMULARIO_INICIAL, tipoOrigen: actual.tipoOrigen }));
+  };
 
+  const quitarMapeoPendiente = (indice: number) => setMapeosPendientes((actuales) => actuales.filter((_, i) => i !== indice));
+
+  const guardarMapeos = async () => {
+    setError(null);
+    setAviso(null);
+    if (!idEmpresa || !idVersionSeleccionada || mapeosPendientes.length === 0) {
+      setError(resolveMessage(MessageCodes.MAPEO_XSD_REQUIRED_FIELDS));
+      return;
+    }
+    const solicitud: AdministracionRequest<SolicitudMapeoXsd[]> = {
+      fechaInicio: fechaHoraSolicitud(), canal: "WEB", idEmpresa: Number(idEmpresa), datos: mapeosPendientes,
+    };
     setGuardando(true);
     try {
-      await apiRequest<MapeoXsd[]>({
-        method: "POST",
-        url: mapeosPath,
-        data: solicitud,
-      });
+      await apiRequest<MapeoXsd[]>({ method: "POST", url: mapeosPath, data: solicitud });
       setAviso(resolveMessage(MessageCodes.MAPEO_XSD_SAVED));
+      setMapeosPendientes([]);
       setFormulario(FORMULARIO_INICIAL);
       await cargarVersion(idVersionSeleccionada);
     } catch (exception) {
@@ -452,25 +475,25 @@ export default function MapeosXsdPage() {
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
       {aviso && <Alert severity="success" onClose={() => setAviso(null)}>{aviso}</Alert>}
 
-      <Paper variant="outlined" className="catalogos-panel">
-        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-          {resolveMessage(MessageCodes.MAPEO_XSD_VERSION)}
-        </Typography>
-        <TextField
-          select
-          label={resolveMessage(MessageCodes.MAPEO_XSD_SELECT_VERSION)}
-          value={idVersionSeleccionada}
-          onChange={(event) => setIdVersionSeleccionada(event.target.value)}
-          disabled={cargando || cargandoDefinicion || guardando}
-        >
+      <Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
+        <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6">Empresa</Typography></Box>
+        <Box sx={{ p: 2 }}><TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT)} value={idEmpresa}
+          onChange={(event) => { setIdEmpresa(event.target.value); setMapeosPendientes([]); }}
+          disabled={cargando || guardando || empresas.length === 0}>
           <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-          {versiones.map((version) => (
-            <MenuItem key={version.id} value={String(version.id)}>
-              {version.documentoCodigo} — {version.documentoNombre} · {version.version}
-            </MenuItem>
-          ))}
-        </TextField>
-        {cargando && <CircularProgress size={24} sx={{ ml: 2 }} />}
+          {empresas.map((empresa) => <MenuItem key={empresa.id} value={String(empresa.id)}>{empresa.razonSocial} · {empresa.ruc}</MenuItem>)}
+        </TextField></Box>
+      </Paper>
+      <Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
+        <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6" component="h2">{resolveMessage(MessageCodes.MAPEO_XSD_VERSION)}</Typography></Box>
+        <Box sx={{ p: 2, display: "flex", gap: 2, alignItems: "center" }}>
+          <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SELECT_VERSION)} value={idVersionSeleccionada}
+            onChange={(event) => { setIdVersionSeleccionada(event.target.value); setMapeosPendientes([]); }}
+            disabled={cargando || cargandoDefinicion || guardando || !idEmpresa}>
+            <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+            {versiones.map((version) => <MenuItem key={version.id} value={String(version.id)}>{version.documentoCodigo} — {version.documentoNombre} · {version.version}</MenuItem>)}
+          </TextField>{cargando && <CircularProgress size={24} />}
+        </Box>
       </Paper>
 
       {cargandoDefinicion && <CircularProgress />}
@@ -478,37 +501,22 @@ export default function MapeosXsdPage() {
       {!cargandoDefinicion && (
         <>
           <Paper variant="outlined" className="catalogos-panel">
-            <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-              {definicion
-                ? resolveMessage(MessageCodes.MAPEO_XSD_DEFINITION_TITLE, {
-                    codigo: definicion.documento.codigo,
-                    version: definicion.version.version,
-                  })
-                : resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)}
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 2 }}>
-              {definicion
-                ? resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)
-                : "Selecciona una versión para cargar sus etiquetas XML y los mapeos existentes."}
-            </Typography>
-            <Box sx={{ display: "grid", gap: 2 }}>
-              <TextField
-                select
-                label={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT)}
-                value={idEmpresa}
-                onChange={(event) => setIdEmpresa(event.target.value)}
-                disabled={guardando || empresas.length === 0}
-                helperText={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT_HELP)}
-              >
-                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-                {empresas.map((empresa) => (
-                  <MenuItem key={empresa.id} value={String(empresa.id)}>
-                    {empresa.razonSocial} · {empresa.ruc}
-                  </MenuItem>
-                ))}
-              </TextField>
-
+            <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}>
+              <Typography variant="h6" component="h2">{definicion ? resolveMessage(MessageCodes.MAPEO_XSD_DEFINITION_TITLE, { codigo: definicion.documento.codigo, version: definicion.version.version }) : resolveMessage(MessageCodes.MAPEO_XSD_MAPPING_DESCRIPTION)}</Typography>
+            </Box>
+            <Box sx={{ p: 2 }}>
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 2, alignItems: "start" }}>
+  <Paper variant="outlined" sx={{ p: 0, minWidth: 0, overflow: "hidden" }}>
+    <Box sx={{ px: 2, py: 1, bgcolor: "secondary.main", color: "secondary.contrastText" }}><Typography variant="subtitle1" component="h3">{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography></Box>
+    <Box sx={{ p: 2 }}>
+    <Box sx={{ display: "grid", gap: 0.75, maxHeight: 440, overflowY: "auto" }}>
+      {destinos.map((destino) => <Button key={destino.key} variant={formulario.destino === destino.key ? "contained" : "outlined"}
+        disabled={guardando} onClick={() => setFormulario((actual) => ({ ...actual, destino: destino.key }))}
+        sx={{ justifyContent: "flex-start", textAlign: "left", textTransform: "none" }}>
+        {destino.nombre}
+      </Button>)}
+    </Box>
+  </Paper>
   <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
     <Typography variant="subtitle1" component="h3" sx={{ mb: 1 }}>{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography>
     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Selecciona la etiqueta o atributo XML que deseas mapear.</Typography>
@@ -529,8 +537,9 @@ export default function MapeosXsdPage() {
       })}
     </Box>
   </Paper>
-  <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
-    <Typography variant="subtitle1" component="h3" sx={{ mb: 1 }}>Origen del dato</Typography>
+  <Paper variant="outlined" sx={{ p: 0, minWidth: 0, overflow: "hidden" }}>
+    <Box sx={{ px: 2, py: 1, bgcolor: "secondary.main", color: "secondary.contrastText" }}><Typography variant="subtitle1" component="h3">Origen del dato</Typography></Box>
+    <Box sx={{ p: 2 }}>
     <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_TYPE)}
       value={formulario.tipoOrigen} onChange={(event) => cambiarTipoOrigen(event.target.value)}
       disabled={guardando} sx={{ mb: 2 }}>
@@ -560,37 +569,38 @@ export default function MapeosXsdPage() {
     {formulario.tipoOrigen === "JSON" && <Box sx={{ display: "grid", gap: 2 }}>
       <TextField fullWidth multiline minRows={5} label="JSON de ejemplo del contrato canónico"
         value={formulario.ejemploJson} onChange={(event) => setFormulario((actual) => ({ ...actual, ejemploJson: event.target.value, rutaJson: "" }))}
-        disabled={guardando} helperText="Pega un ejemplo del contrato para descubrir y seleccionar sus rutas." />
+        disabled={guardando} />
       <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)} value={formulario.rutaJson}
         onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))}
         disabled={guardando || rutasJson.length === 0}
-        helperText={rutasJson.length === 0 ? "Introduce un JSON válido para listar sus atributos." : `${rutasJson.length} rutas disponibles`}>
+>
         <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
         {rutasJson.map((ruta) => <MenuItem key={ruta} value={ruta}>{ruta}</MenuItem>)}
       </TextField>
     </Box>}
     {formulario.tipoOrigen === "GENERADO" && <TextField fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
       value={formulario.origenGenerado} onChange={(event) => setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))}
-      disabled={guardando} inputProps={{ maxLength: 1000 }} helperText={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE_HELP)} />}
+      disabled={guardando} inputProps={{ maxLength: 1000 }} />}
+    </Box>
   </Paper>
 </Box>
+<Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
+  <Button variant="contained" onClick={agregarMapeo} disabled={guardando || !definicion || !idEmpresa || !formulario.destino || !obtenerOrigen()}>Agregar mapeo</Button>
+</Box>
+<Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
+  <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6">Mapeos por guardar ({mapeosPendientes.length})</Typography></Box>
+  <TableContainer><Table size="small"><TableHead><TableRow><TableCell>Origen</TableCell><TableCell>Destino XML</TableCell><TableCell align="right">Acciones</TableCell></TableRow></TableHead>
+  <TableBody>{mapeosPendientes.map((mapeo, indice) => <TableRow key={mapeo.origen + indice}>
+    <TableCell>{mapeo.tipoOrigen}: {mapeo.origen}</TableCell>
+    <TableCell>{destinosBase.find((d) => mapeo.tipoMapeo === "ELEMENTO" ? d.idElementoXsd === mapeo.idElementoXsd : d.idAtributoXsd === mapeo.idAtributoXsd)?.nombre ?? "—"}</TableCell>
+    <TableCell align="right"><Button color="error" onClick={() => quitarMapeoPendiente(indice)} disabled={guardando}>Quitar</Button></TableCell>
+  </TableRow>)}</TableBody></Table></TableContainer>
+  <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}><Button variant="contained" onClick={() => void guardarMapeos()} disabled={guardando || mapeosPendientes.length === 0 || !idEmpresa || !idVersionSeleccionada}>{guardando ? resolveMessage(MessageCodes.COMMON_SAVING) : resolveMessage(MessageCodes.MAPEO_XSD_SAVE)}</Button></Box>
+</Paper>
 
-<Button
-                variant="contained"
-                onClick={() => void guardarMapeo()}
-                disabled={guardando || cargandoDefinicion || !definicion || empresas.length === 0}
-              >
-                {guardando
-                  ? resolveMessage(MessageCodes.COMMON_SAVING)
-                  : resolveMessage(MessageCodes.MAPEO_XSD_SAVE)}
-              </Button>
-            </Box>
-          </Paper>
-
-          <Paper variant="outlined" className="catalogos-panel">
-            <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-              {resolveMessage(MessageCodes.MAPEO_XSD_EXISTING_TITLE)}
-            </Typography>
+          <Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
+            <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6" component="h2">{resolveMessage(MessageCodes.MAPEO_XSD_EXISTING_TITLE)}</Typography></Box>
+            <Box sx={{ p: 2 }}>
             {mapeos.length === 0 ? (
               <Typography color="text.secondary">
                 {resolveMessage(MessageCodes.MAPEO_XSD_EMPTY)}
@@ -615,6 +625,7 @@ export default function MapeosXsdPage() {
                 ))}
               </Box>
             )}
+            </Box>
           </Paper>
         </>
       )}
