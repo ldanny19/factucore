@@ -209,6 +209,37 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
   return [...destinosElementos, ...destinosAtributos];
 }
 
+
+function crearJsonEjemplo(valor: unknown, rutaSeleccionada: string): string {
+  const segmentos = rutaSeleccionada.replace(/\[\]/g, "").split(".").filter(Boolean);
+  const actualizar = (actual: unknown, indice: number): unknown => {
+    if (indice >= segmentos.length) {
+      if (actual === null || typeof actual !== "object") return ejemploPorTipo(actual);
+      return actual;
+    }
+    if (Array.isArray(actual)) {
+      return actual.length ? [actualizar(actual[0], indice)] : [crearValorEjemplo(segmentos, indice)];
+    }
+    if (!actual || typeof actual !== "object") return actual;
+    const clave = segmentos[indice];
+    const objeto = actual as Record<string, unknown>;
+    if (!(clave in objeto)) return objeto;
+    return { ...objeto, [clave]: actualizar(objeto[clave], indice + 1) };
+  };
+  return JSON.stringify(actualizar(valor, 0), null, 2);
+}
+
+function ejemploPorTipo(valor: unknown): unknown {
+  if (typeof valor === "number") return 0;
+  if (typeof valor === "boolean") return false;
+  if (typeof valor === "string") return "";
+  return valor;
+}
+
+function crearValorEjemplo(segmentos: string[], indice: number): unknown {
+  return indice >= segmentos.length ? "" : { [segmentos[indice]]: crearValorEjemplo(segmentos, indice + 1) };
+}
+
 function extraerRutasJson(valor: unknown, prefijo = "", rutas: string[] = []): string[] {
   if (valor === null || typeof valor !== "object") {
     if (prefijo) rutas.push(prefijo);
@@ -263,10 +294,11 @@ export default function MapeosXsdPage() {
     (catalogo) => catalogo.codigo === formulario.codigoCatalogo,
   );
   const destinoSeleccionado = destinos.find((destino) => destino.key === formulario.destino);
-  const rutasJson = useMemo(() => {
-    if (!formulario.ejemploJson.trim()) return [];
-    try { return extraerRutasJson(JSON.parse(formulario.ejemploJson)); } catch { return []; }
+  const plantillaJson = useMemo(() => {
+    if (!formulario.ejemploJson.trim()) return null;
+    try { return JSON.parse(formulario.ejemploJson) as unknown; } catch { return null; }
   }, [formulario.ejemploJson]);
+  const rutasJson = useMemo(() => plantillaJson === null ? [] : extraerRutasJson(plantillaJson), [plantillaJson]);
 
   const cargarRecursos = useCallback(async () => {
     setCargando(true);
@@ -548,10 +580,11 @@ export default function MapeosXsdPage() {
                       <TextField fullWidth multiline minRows={5} label="JSON de ejemplo del contrato canónico" value={formulario.ejemploJson}
                         onChange={(event) => setFormulario((actual) => ({ ...actual, ejemploJson: event.target.value, rutaJson: "" }))} disabled={guardando} />
                       <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)} value={formulario.rutaJson}
-                        onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))} disabled={guardando || rutasJson.length === 0}>
+                        onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value, origenGenerado: plantillaJson === null ? "" : crearJsonEjemplo(plantillaJson, event.target.value) }))} disabled={guardando || rutasJson.length === 0}>
                         <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
                         {rutasJson.map((ruta) => <MenuItem key={ruta} value={ruta}>{ruta}</MenuItem>)}
                       </TextField>
+                      {formulario.rutaJson && <TextField fullWidth multiline minRows={5} label="JSON de ejemplo generado" value={formulario.origenGenerado} InputProps={{ readOnly: true }} />}
                     </>}
                     {formulario.tipoOrigen === "GENERADO" && <TextField fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
                       value={formulario.origenGenerado} onChange={(event) => setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))}
