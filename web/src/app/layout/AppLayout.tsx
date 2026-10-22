@@ -166,14 +166,12 @@ export default function AppLayout() {
   }, []);
 
   useEffect(() => {
+    // Al entrar al menú, todos los módulos permanecen contraídos.
+    // Solo se abre el módulo que corresponde a la opción seleccionada.
     const activeGroup = visibleMenuItems.find(
       (item) => item.children?.some((child) => child.path === location.pathname),
     );
-    if (activeGroup) {
-      setOpenGroups((current) =>
-        current.includes(activeGroup.label) ? current : [...current, activeGroup.label],
-      );
-    }
+    setOpenGroups(activeGroup ? [activeGroup.label] : []);
   }, [location.pathname, accessContext.roles.join(",")]);
 
   const userName = getUserName(auth.user?.profile as Record<string, unknown> | undefined, accessContext.token);
@@ -201,7 +199,7 @@ export default function AppLayout() {
 
   const toggleGroup = (label: string) => {
     setOpenGroups((current) =>
-      current.includes(label) ? current.filter((item) => item !== label) : [...current, label],
+      current.includes(label) ? [] : [label],
     );
   };
 
