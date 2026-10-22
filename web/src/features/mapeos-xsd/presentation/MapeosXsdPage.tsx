@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import { getRuntimeConfig } from "../../../config/runtime-config";
+import { EstadoRegistro } from "../../../shared/domain/EstadoRegistro";
 import { apiRequest } from "../../../shared/api/api-client";
 import type { AdministracionRequest } from "../../../shared/api/administracion-contracts";
 import type { Empresa } from "../../empresas/domain/Empresa";
@@ -160,10 +161,10 @@ function rutaElemento(elemento: ElementoXsd, elementos: ElementoXsd[]): string {
 
 function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
   const elementosActivos = definicion.elementos.filter(
-    (elemento) => !elemento.estadoRegistro || elemento.estadoRegistro === "ACTIVO",
+    (elemento) => !elemento.estadoRegistro || elemento.estadoRegistro === EstadoRegistro.ACTIVO,
   );
   const atributosActivos = definicion.atributos.filter(
-    (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === "ACTIVO",
+    (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === EstadoRegistro.ACTIVO,
   );
   const destinosElementos: DestinoXsd[] = elementosActivos
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
@@ -254,18 +255,18 @@ export default function MapeosXsdPage() {
       const [documentos, empresasActivas, fuentesFactuCore, catalogosActivos] = await Promise.all([
         apiRequest<DocumentoXsd[]>({ method: "GET", url: documentosPath }),
         apiRequest<Empresa[]>({ method: "GET", url: config.API_EMPRESAS_PATH }).then((lista) =>
-          lista.filter((empresa) => empresa.estadoRegistro === "ACTIVO"),
+          lista.filter((empresa) => empresa.estadoRegistro === EstadoRegistro.ACTIVO),
         ),
         apiRequest<FuenteFactuCore[]>({
           method: "GET",
           url: `${mapeosPath}/fuentes/factucore`,
         }),
         apiRequest<Catalogo[]>({ method: "GET", url: config.API_CATALOGOS_PATH }).then((lista) =>
-          lista.filter((catalogo) => catalogo.estadoRegistro === "ACTIVO"),
+          lista.filter((catalogo) => catalogo.estadoRegistro === EstadoRegistro.ACTIVO),
         ),
       ]);
       const documentosActivos = documentos.filter(
-        (documento) => documento.estadoRegistro === "ACTIVO",
+        (documento) => documento.estadoRegistro === EstadoRegistro.ACTIVO,
       );
       const versionesPorDocumento = await Promise.all(
         documentosActivos.map(async (documento) => {
