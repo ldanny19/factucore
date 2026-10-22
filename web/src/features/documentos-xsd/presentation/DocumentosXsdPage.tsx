@@ -104,7 +104,7 @@ const FORMULARIO_INICIAL: FormularioDocumentoXsd = {
   descripcion: "",
   tipoDocumento: "",
   prefijoArchivo: "",
-  version: "1.0",
+  version: "",
   fechaInicio: fechaHoraLocal(new Date()),
 };
 
@@ -126,41 +126,55 @@ export default function DocumentosXsdPage() {
     setCargandoTipos(true);
     setCargandoEmpresas(true);
     setError(null);
-    try {
-      const config = getRuntimeConfig();
-      const [catalogos, empresasRespuesta] = await Promise.all([
-        catalogoUseCases.listar(),
-        apiRequest<Empresa[]>({ method: "GET", url: config.API_EMPRESAS_PATH }),
-      ]);
-      const empresasActivas = empresasRespuesta.filter(
-        (empresa) => empresa.estadoRegistro === "ACTIVO",
-      );
-      setEmpresas(empresasActivas);
-      setFormulario((actual) => ({
-        ...actual,
-        idEmpresa: empresasActivas.some((empresa) => String(empresa.id) === actual.idEmpresa)
-          ? actual.idEmpresa
-          : String(empresasActivas[0]?.id ?? ""),
-      }));
-      const catalogo = catalogos.find(
-        (item) => item.codigo === "TIPO_DOCUMENTO" && item.estadoRegistro === "ACTIVO",
-      );
-      if (!catalogo) {
-        throw new Error(resolveMessage(MessageCodes.DOCUMENTO_XSD_TYPES_NOT_CONFIGURED));
+    const config = getRuntimeConfig();
+
+    const cargarEmpresasActivas = async () => {
+      try {
+        const respuesta = await apiRequest<Empresa[]>({
+          method: "GET",
+          url: config.API_EMPRESAS_PATH,
+        });
+        const empresasActivas = respuesta.filter(
+          (empresa) => empresa.estadoRegistro === "ACTIVO",
+        );
+        setEmpresas(empresasActivas);
+        setFormulario((actual) => ({
+          ...actual,
+          idEmpresa: empresasActivas.some(
+            (empresa) => String(empresa.id) === actual.idEmpresa,
+          )
+            ? actual.idEmpresa
+            : "",
+        }));
+      } catch (exception) {
+        setEmpresas([]);
+        setFormulario((actual) => ({ ...actual, idEmpresa: "" }));
+        setError(mensajeError(exception));
+      } finally {
+        setCargandoEmpresas(false);
       }
-      setTiposDocumento(
-        (await catalogoUseCases.listarItems(catalogo.id)).filter(
-          (item) => item.estadoRegistro === "ACTIVO",
-        ),
-      );
-    } catch (exception) {
-      setEmpresas([]);
-      setTiposDocumento([]);
-      setError(mensajeError(exception));
-    } finally {
-      setCargandoTipos(false);
-      setCargandoEmpresas(false);
-    }
+    };
+
+    const cargarTipos = async () => {
+      try {
+        const catalogos = await catalogoUseCases.listar();
+        const catalogo = catalogos.find(
+          (item) => item.codigo === "TIPO_DOCUMENTO" && item.estadoRegistro === "ACTIVO",
+        );
+        if (!catalogo) {
+          throw new Error(resolveMessage(MessageCodes.DOCUMENTO_XSD_TYPES_NOT_CONFIGURED));
+        }
+        const items = await catalogoUseCases.listarItems(catalogo.id);
+        setTiposDocumento(items.filter((item) => item.estadoRegistro === "ACTIVO"));
+      } catch (exception) {
+        setTiposDocumento([]);
+        setError(mensajeError(exception));
+      } finally {
+        setCargandoTipos(false);
+      }
+    };
+
+    await Promise.all([cargarEmpresasActivas(), cargarTipos()]);
   }, [catalogoUseCases]);
 
   useEffect(() => {
