@@ -20,7 +20,7 @@ export function createHttpTarifaTributariaRepository(): TarifaTributariaReposito
   >(path, {
     mapListQuery: (filtro) => ({
       codigoImpuesto: filtro.codigoImpuesto,
-      codigoPorcentaje: filtro.codigoPorcentaje,
+      ...(filtro.codigoPorcentaje ? { codigoPorcentaje: filtro.codigoPorcentaje } : {}),
     }),
     getIdEmpresa: () => 0,
     mapRequestData: (datos) => datos,

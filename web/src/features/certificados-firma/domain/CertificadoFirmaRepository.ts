@@ -1,4 +1,7 @@
-import type { CertificadoFirma, CertificadoFirmaDatos } from "./CertificadoFirma";
+import type {
+  CertificadoFirma,
+  CertificadoFirmaDatos,
+} from "./CertificadoFirma";
 
 export interface CertificadoFirmaRepository {
   listar(idEmpresa: number): Promise<CertificadoFirma[]>;

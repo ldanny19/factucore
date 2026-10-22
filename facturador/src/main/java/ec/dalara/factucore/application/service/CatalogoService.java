@@ -40,7 +40,16 @@ public class CatalogoService extends BaseService<Catalogo> {
 	}
 
 	public Optional<Catalogo> obtenerPorCodigo(String codigo) {
-		return catalogoRepository.findByCodigo(codigo).filter(c -> EstadoRegistro.ACTIVO.equals(c.getEstadoRegistro()));
+		if (codigo == null || codigo.isBlank()) {
+			return Optional.empty();
+		}
+		return catalogoRepository.findByCodigo(codigo.trim())
+				.filter(c -> EstadoRegistro.ACTIVO.equals(c.getEstadoRegistro()));
+	}
+
+	@Override
+	public java.util.List<Catalogo> listar() {
+		return super.listar().stream().sorted(java.util.Comparator.comparing(Catalogo::getCodigo)).toList();
 	}
 
 	public boolean existePorCodigo(String codigo) {

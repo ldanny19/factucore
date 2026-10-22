@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   Alert,
   Box,
@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -28,6 +29,8 @@ import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
+import type { CatalogoItem } from "../../catalogos/domain/Catalogo";
+import { useCatalogoUseCase } from "../../catalogos/presentation/hooks/CatalogoUseCaseContext";
 import type {
   TarifaTributaria,
   TarifaTributariaDatos,
@@ -73,6 +76,10 @@ function mensajeError(error: unknown): string {
 
 export default function TarifasTributariasPage() {
   const useCases = useTarifaTributariaUseCase();
+  const catalogoUseCases = useCatalogoUseCase();
+  const [catalogoImpuestos, setCatalogoImpuestos] = useState<CatalogoItem[]>([]);
+  const [catalogoPorcentajes, setCatalogoPorcentajes] = useState<CatalogoItem[]>([]);
+  const [cargandoCatalogos, setCargandoCatalogos] = useState(true);
   const [codigoImpuesto, setCodigoImpuesto] = useState("");
   const [codigoPorcentaje, setCodigoPorcentaje] = useState("");
   const [fechaConsulta, setFechaConsulta] = useState(fechaLocal());
@@ -95,6 +102,45 @@ export default function TarifasTributariasPage() {
     if (!tarifaVigente) return null;
     return `${tarifaVigente.codigoImpuesto}/${tarifaVigente.codigoPorcentaje}: ${tarifaVigente.tarifa}%`;
   }, [tarifaVigente]);
+
+  useEffect(() => {
+    let vigente = true;
+    const cargarCatalogos = async () => {
+      setCargandoCatalogos(true);
+      try {
+        const catalogos = await catalogoUseCases.listar();
+        const catalogoImpuesto = catalogos.find(
+          (catalogo) => catalogo.codigo === "CODIGO_IMPUESTO" && catalogo.estadoRegistro === "ACTIVO",
+        );
+        const catalogoIva = catalogos.find(
+          (catalogo) => catalogo.codigo === "TARIFA_IVA" && catalogo.estadoRegistro === "ACTIVO",
+        );
+        if (!catalogoImpuesto || !catalogoIva) {
+          throw new Error(resolveMessage(MessageCodes.TARIFA_CATALOGS_EMPTY));
+        }
+        const [impuestos, porcentajes] = await Promise.all([
+          catalogoUseCases.listarItems(catalogoImpuesto.id),
+          catalogoUseCases.listarItems(catalogoIva.id),
+        ]);
+        if (!vigente) return;
+        const activosImpuesto = impuestos.filter((item) => item.estadoRegistro === "ACTIVO");
+        const activosPorcentaje = porcentajes.filter((item) => item.estadoRegistro === "ACTIVO");
+        if (activosImpuesto.length === 0 || activosPorcentaje.length === 0) {
+          throw new Error(resolveMessage(MessageCodes.TARIFA_CATALOGS_EMPTY));
+        }
+        setCatalogoImpuestos(activosImpuesto);
+        setCatalogoPorcentajes(activosPorcentaje);
+      } catch (exception) {
+        if (vigente) setError(mensajeError(exception));
+      } finally {
+        if (vigente) setCargandoCatalogos(false);
+      }
+    };
+    void cargarCatalogos();
+    return () => {
+      vigente = false;
+    };
+  }, [catalogoUseCases]);
 
   const cargar = useCallback(
     async (filtro = filtroAplicado) => {
@@ -123,11 +169,18 @@ export default function TarifasTributariasPage() {
     setTarifaVigente(null);
     const impuesto = codigoImpuesto.trim();
     const porcentaje = codigoPorcentaje.trim();
-    if (!/^\d{1,2}$/.test(impuesto) || !/^\d{1,4}$/.test(porcentaje)) {
+    if (
+      !/^\d{1,2}$/.test(impuesto) ||
+      !catalogoImpuestos.some((item) => item.codigo === impuesto) ||
+      (porcentaje && (!/^\d{1,4}$/.test(porcentaje) ||
+        !catalogoPorcentajes.some((item) => item.codigo === porcentaje)))
+    ) {
       setError(resolveMessage(MessageCodes.TARIFA_CODES_INVALID));
       return;
     }
-    const filtro = { codigoImpuesto: impuesto, codigoPorcentaje: porcentaje };
+    const filtro: TarifaTributariaFiltro = porcentaje
+      ? { codigoImpuesto: impuesto, codigoPorcentaje: porcentaje }
+      : { codigoImpuesto: impuesto };
     setFiltroAplicado(filtro);
     await cargar(filtro);
   };
@@ -137,7 +190,13 @@ export default function TarifasTributariasPage() {
     setAviso(null);
     const impuesto = codigoImpuesto.trim();
     const porcentaje = codigoPorcentaje.trim();
-    if (!/^\d{1,2}$/.test(impuesto) || !/^\d{1,4}$/.test(porcentaje) || !fechaConsulta) {
+    if (
+      !/^\d{1,2}$/.test(impuesto) ||
+      !/^\d{1,4}$/.test(porcentaje) ||
+      !catalogoImpuestos.some((item) => item.codigo === impuesto) ||
+      !catalogoPorcentajes.some((item) => item.codigo === porcentaje) ||
+      !fechaConsulta
+    ) {
       setError(resolveMessage(MessageCodes.TARIFA_VIGENTE_FILTER_INVALID));
       return;
     }
@@ -167,10 +226,17 @@ export default function TarifasTributariasPage() {
 
   const abrirCrear = () => {
     setEdicion(null);
+    const impuestoInicial = filtroAplicado?.codigoImpuesto ?? codigoImpuesto.trim();
+    const porcentajeInicial = filtroAplicado?.codigoPorcentaje ?? codigoPorcentaje.trim();
+    const porcentajeDisponible = catalogoPorcentajes.some((item) => item.codigo === porcentajeInicial);
     setFormulario({
       ...FORMULARIO_VACIO,
-      codigoImpuesto: filtroAplicado?.codigoImpuesto ?? codigoImpuesto.trim(),
-      codigoPorcentaje: filtroAplicado?.codigoPorcentaje ?? codigoPorcentaje.trim(),
+      codigoImpuesto: catalogoImpuestos.some((item) => item.codigo === impuestoInicial)
+        ? impuestoInicial
+        : "",
+      codigoPorcentaje: porcentajeDisponible ? porcentajeInicial : "",
+      idCatalogoItem:
+        catalogoPorcentajes.find((item) => item.codigo === porcentajeInicial)?.id.toString() ?? "",
       fechaVigenciaDesde: fechaLocal(),
     });
     setError(null);
@@ -198,11 +264,24 @@ export default function TarifasTributariasPage() {
     event.preventDefault();
     setError(null);
     setAviso(null);
-    const idCatalogoItem = Number(formulario.idCatalogoItem);
     const tarifa = Number(formulario.tarifa);
     const impuesto = formulario.codigoImpuesto.trim();
     const porcentaje = formulario.codigoPorcentaje.trim();
-    if (!Number.isSafeInteger(idCatalogoItem) || idCatalogoItem <= 0) {
+    const catalogoImpuesto = catalogoImpuestos.find((item) => item.codigo === impuesto);
+    const catalogoPorcentaje = catalogoPorcentajes.find((item) => item.codigo === porcentaje);
+    const impuestoValido = catalogoImpuesto || (edicion?.codigoImpuesto === impuesto);
+    const porcentajeValido = catalogoPorcentaje || (edicion?.codigoPorcentaje === porcentaje);
+    const idCatalogoItem =
+      catalogoPorcentaje?.id ??
+      (edicion?.codigoPorcentaje === porcentaje
+        ? edicion.idCatalogoItem
+        : Number(formulario.idCatalogoItem));
+    if (
+      !impuestoValido ||
+      !porcentajeValido ||
+      !Number.isSafeInteger(idCatalogoItem) ||
+      idCatalogoItem <= 0
+    ) {
       setError(resolveMessage(MessageCodes.TARIFA_CATALOG_ITEM_INVALID));
       return;
     }
@@ -328,7 +407,11 @@ export default function TarifasTributariasPage() {
           variant="contained"
           startIcon={<AddOutlinedIcon />}
           onClick={abrirCrear}
-          disabled={!codigoImpuesto.trim() || !codigoPorcentaje.trim()}
+          disabled={
+            cargandoCatalogos ||
+            catalogoImpuestos.length === 0 ||
+            catalogoPorcentajes.length === 0
+          }
         >
           {resolveMessage(MessageCodes.TARIFA_NEW)}
         </Button>
@@ -341,22 +424,55 @@ export default function TarifasTributariasPage() {
         <Typography variant="h6" component="h2">
           {resolveMessage(MessageCodes.TARIFA_SEARCH_TITLE)}
         </Typography>
+        {cargandoCatalogos && (
+          <Typography variant="body2" color="text.secondary">
+            {resolveMessage(MessageCodes.TARIFA_CATALOGS_LOADING)}
+          </Typography>
+        )}
         <Box component="form" className="tarifas-tributarias-search-form" onSubmit={buscar}>
           <TextField
             label={resolveMessage(MessageCodes.TARIFA_TAX_CODE)}
+            select
             value={codigoImpuesto}
-            onChange={(event) => setCodigoImpuesto(event.target.value)}
+            onChange={(event) => {
+              setCodigoImpuesto(event.target.value);
+              setCodigoPorcentaje("");
+              setTarifaVigente(null);
+            }}
             required
-            inputProps={{ maxLength: 2, inputMode: "numeric" }}
-          />
+            disabled={cargandoCatalogos || catalogoImpuestos.length === 0}
+          >
+            <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+            {catalogoImpuestos.map((item) => (
+              <MenuItem key={item.id} value={item.codigo}>
+                {item.codigo} — {item.nombre}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             label={resolveMessage(MessageCodes.TARIFA_PERCENT_CODE)}
+            select
             value={codigoPorcentaje}
-            onChange={(event) => setCodigoPorcentaje(event.target.value)}
-            required
-            inputProps={{ maxLength: 4, inputMode: "numeric" }}
-          />
-          <Button type="submit" variant="outlined" startIcon={<SearchOutlinedIcon />} disabled={cargando}>
+            onChange={(event) => {
+              setCodigoPorcentaje(event.target.value);
+              setTarifaVigente(null);
+            }}
+            disabled={!codigoImpuesto || cargandoCatalogos || catalogoPorcentajes.length === 0}
+            helperText={resolveMessage(MessageCodes.TARIFA_PERCENT_OPTIONAL)}
+          >
+            <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+            {catalogoPorcentajes.map((item) => (
+              <MenuItem key={item.id} value={item.codigo}>
+                {item.codigo} — {item.nombre}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Button
+            type="submit"
+            variant="outlined"
+            startIcon={<SearchOutlinedIcon />}
+            disabled={cargando || cargandoCatalogos || !codigoImpuesto}
+          >
             {resolveMessage(MessageCodes.COMMON_SEARCH)}
           </Button>
           <Button
@@ -374,13 +490,16 @@ export default function TarifasTributariasPage() {
             label={resolveMessage(MessageCodes.TARIFA_QUERY_DATE)}
             type="date"
             value={fechaConsulta}
-            onChange={(event) => setFechaConsulta(event.target.value)}
+            onChange={(event) => {
+              setFechaConsulta(event.target.value);
+              setTarifaVigente(null);
+            }}
             InputLabelProps={{ shrink: true }}
           />
           <Button
             variant="text"
             onClick={() => void consultarVigente()}
-            disabled={consultandoVigente}
+            disabled={consultandoVigente || cargandoCatalogos || !codigoImpuesto || !codigoPorcentaje}
           >
             {consultandoVigente
               ? resolveMessage(MessageCodes.TARIFA_QUERYING_CURRENT)
@@ -414,7 +533,6 @@ export default function TarifasTributariasPage() {
             <TableRow>
               <TableCell>{resolveMessage(MessageCodes.TARIFA_TAX_CODE)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.TARIFA_PERCENT_CODE)}</TableCell>
-              <TableCell>{resolveMessage(MessageCodes.TARIFA_CATALOG_ITEM_ID)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.TARIFA_RATE)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.TARIFA_VALID_FROM)}</TableCell>
               <TableCell>{resolveMessage(MessageCodes.TARIFA_VALID_UNTIL)}</TableCell>
@@ -424,17 +542,16 @@ export default function TarifasTributariasPage() {
           </TableHead>
           <TableBody>
             {cargando ? (
-              <TableRow><TableCell colSpan={8} align="center"><CircularProgress size={26} /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={26} /></TableCell></TableRow>
             ) : !filtroAplicado ? (
-              <TableRow><TableCell colSpan={8} align="center">{resolveMessage(MessageCodes.TARIFA_SEARCH_PROMPT)}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} align="center">{resolveMessage(MessageCodes.TARIFA_SEARCH_PROMPT)}</TableCell></TableRow>
             ) : tarifas.length === 0 ? (
-              <TableRow><TableCell colSpan={8} align="center">{resolveMessage(MessageCodes.TARIFA_EMPTY)}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} align="center">{resolveMessage(MessageCodes.TARIFA_EMPTY)}</TableCell></TableRow>
             ) : (
               tarifas.map((tarifa) => (
                 <TableRow hover key={tarifa.id}>
                   <TableCell>{tarifa.codigoImpuesto}</TableCell>
                   <TableCell>{tarifa.codigoPorcentaje}</TableCell>
-                  <TableCell>{tarifa.idCatalogoItem}</TableCell>
                   <TableCell>{tarifa.tarifa}%</TableCell>
                   <TableCell>{tarifa.fechaVigenciaDesde}</TableCell>
                   <TableCell>{tarifa.fechaVigenciaHasta ?? "—"}</TableCell>
@@ -485,30 +602,65 @@ export default function TarifasTributariasPage() {
             <Typography className="tarifas-tributarias-dialog-description" color="text.secondary">
               {resolveMessage(MessageCodes.TARIFA_FORM_DESCRIPTION)}
             </Typography>
+            {cargandoCatalogos && <CircularProgress size={24} />}
+            {!cargandoCatalogos &&
+              (catalogoImpuestos.length === 0 || catalogoPorcentajes.length === 0) && (
+                <Alert severity="error">{resolveMessage(MessageCodes.TARIFA_CATALOGS_EMPTY)}</Alert>
+              )}
             <Box className="tarifas-tributarias-form-grid">
               <TextField
-                label={resolveMessage(MessageCodes.TARIFA_CATALOG_ITEM_ID)}
-                type="number"
-                value={formulario.idCatalogoItem}
-                onChange={(event) => cambiarCampo("idCatalogoItem", event.target.value)}
-                required
-                inputProps={{ min: 1, step: 1 }}
-                helperText={resolveMessage(MessageCodes.TARIFA_CATALOG_ITEM_HELP)}
-              />
-              <TextField
                 label={resolveMessage(MessageCodes.TARIFA_TAX_CODE)}
+                select
                 value={formulario.codigoImpuesto}
-                onChange={(event) => cambiarCampo("codigoImpuesto", event.target.value)}
+                onChange={(event) =>
+                  setFormulario((actual) => ({
+                    ...actual,
+                    codigoImpuesto: event.target.value,
+                    codigoPorcentaje: "",
+                    idCatalogoItem: "",
+                  }))
+                }
                 required
-                inputProps={{ maxLength: 2, inputMode: "numeric" }}
-              />
+                disabled={cargandoCatalogos}
+              >
+                <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+                {edicion &&
+                  !catalogoImpuestos.some((item) => item.codigo === formulario.codigoImpuesto) && (
+                    <MenuItem value={formulario.codigoImpuesto}>{formulario.codigoImpuesto}</MenuItem>
+                  )}
+                {catalogoImpuestos.map((item) => (
+                  <MenuItem key={item.id} value={item.codigo}>
+                    {item.codigo} — {item.nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 label={resolveMessage(MessageCodes.TARIFA_PERCENT_CODE)}
+                select
                 value={formulario.codigoPorcentaje}
-                onChange={(event) => cambiarCampo("codigoPorcentaje", event.target.value)}
+                onChange={(event) => {
+                  const codigo = event.target.value;
+                  const item = catalogoPorcentajes.find((opcion) => opcion.codigo === codigo);
+                  setFormulario((actual) => ({
+                    ...actual,
+                    codigoPorcentaje: codigo,
+                    idCatalogoItem: item?.id.toString() ?? "",
+                  }));
+                }}
                 required
-                inputProps={{ maxLength: 4, inputMode: "numeric" }}
-              />
+                disabled={!formulario.codigoImpuesto || cargandoCatalogos}
+              >
+                <MenuItem value="">{resolveMessage(MessageCodes.TARIFA_CATALOG_SELECT)}</MenuItem>
+                {edicion &&
+                  !catalogoPorcentajes.some((item) => item.codigo === formulario.codigoPorcentaje) && (
+                    <MenuItem value={formulario.codigoPorcentaje}>{formulario.codigoPorcentaje}</MenuItem>
+                  )}
+                {catalogoPorcentajes.map((item) => (
+                  <MenuItem key={item.id} value={item.codigo}>
+                    {item.codigo} — {item.nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 label={resolveMessage(MessageCodes.TARIFA_RATE)}
                 type="number"

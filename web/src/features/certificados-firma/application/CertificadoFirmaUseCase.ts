@@ -1,4 +1,7 @@
-import type { CertificadoFirma, CertificadoFirmaDatos } from "../domain/CertificadoFirma";
+import type {
+  CertificadoFirma,
+  CertificadoFirmaDatos,
+} from "../domain/CertificadoFirma";
 import type { CertificadoFirmaRepository } from "../domain/CertificadoFirmaRepository";
 
 export interface CertificadoFirmaUseCase {

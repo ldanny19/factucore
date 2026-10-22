@@ -152,7 +152,7 @@ public class TarifaTributariaVigenciaController {
 
 	@GetMapping
 	public ResponseEntity<AdministracionResponse<List<TarifaTributariaVigenciaResponse>>> listar(
-			@RequestParam String codigoImpuesto, @RequestParam String codigoPorcentaje) {
+			@RequestParam String codigoImpuesto, @RequestParam(required = false) String codigoPorcentaje) {
 		List<TarifaTributariaVigenciaResponse> tarifas = tarifaService
 				.listarPorImpuestoYPorcentaje(codigoImpuesto, codigoPorcentaje).stream().map(this::toResponse).toList();
 		return ResponseEntity.ok(respuestas.exitoConsulta(tarifas));

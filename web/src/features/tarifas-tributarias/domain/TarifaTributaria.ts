@@ -26,5 +26,5 @@ export interface TarifaTributariaDatos {
 
 export interface TarifaTributariaFiltro {
   codigoImpuesto: string;
-  codigoPorcentaje: string;
+  codigoPorcentaje?: string;
 }

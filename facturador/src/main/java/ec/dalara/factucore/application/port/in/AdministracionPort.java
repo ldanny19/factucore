@@ -2,6 +2,8 @@ package ec.dalara.factucore.application.port.in;
 
 import java.util.List;
 
+import ec.dalara.factucore.application.contract.request.CatalogoItemRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoRequest;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
@@ -10,6 +12,8 @@ import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
 import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoItemResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
@@ -18,6 +22,32 @@ import ec.dalara.factucore.application.contract.response.PuntoEmisionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 
 public interface AdministracionPort {
+	CatalogoResponse guardarCatalogo(Long id, CatalogoRequest request, String canal);
+
+	CatalogoResponse obtenerCatalogo(Long id);
+
+	CatalogoResponse obtenerCatalogoPorCodigo(String codigo);
+
+	List<CatalogoResponse> listarCatalogos();
+
+	void inactivarCatalogo(Long id);
+
+	void reactivarCatalogo(Long id);
+
+	void eliminarCatalogo(Long id);
+
+	CatalogoItemResponse guardarCatalogoItem(Long id, CatalogoItemRequest request, String canal);
+
+	CatalogoItemResponse obtenerCatalogoItem(Long id);
+
+	List<CatalogoItemResponse> listarCatalogoItems(Long catalogoId);
+
+	void inactivarCatalogoItem(Long id);
+
+	void reactivarCatalogoItem(Long id);
+
+	void eliminarCatalogoItem(Long id);
+
 	EmpresaResponse guardarEmpresa(Long id, EmpresaRequest r);
 
 	EmpresaResponse obtenerEmpresa(Long id);

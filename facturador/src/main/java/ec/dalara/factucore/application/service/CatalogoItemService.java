@@ -47,7 +47,20 @@ public class CatalogoItemService extends BaseService<CatalogoItem> {
 
 	public List<CatalogoItem> listarPorCatalogo(Long catalogoId) {
 		return catalogoItemRepository.findByCatalogoId(catalogoId).stream()
-				.filter(i -> !EstadoRegistro.ELIMINADO.equals(i.getEstadoRegistro())).toList();
+				.filter(i -> !EstadoRegistro.ELIMINADO.equals(i.getEstadoRegistro()))
+				.sorted(java.util.Comparator.comparing(CatalogoItem::getOrden,
+						java.util.Comparator.nullsLast(Integer::compareTo)).thenComparing(CatalogoItem::getId))
+				.toList();
+	}
+
+	@Override
+	public List<CatalogoItem> listar() {
+		return super.listar().stream()
+				.sorted(java.util.Comparator.comparing((CatalogoItem item) -> item.getCatalogo().getId())
+						.thenComparing(CatalogoItem::getOrden,
+								java.util.Comparator.nullsLast(Integer::compareTo))
+						.thenComparing(CatalogoItem::getId))
+				.toList();
 	}
 
 	public Optional<CatalogoItem> obtenerPorCatalogoYCodigo(Long catalogoId, String codigo) {

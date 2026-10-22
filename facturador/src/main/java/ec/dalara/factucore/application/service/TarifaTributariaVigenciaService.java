@@ -48,9 +48,19 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
 	}
 
 	public List<TarifaTributariaVigencia> listarPorImpuestoYPorcentaje(String codigoImpuesto, String codigoPorcentaje) {
-		return tarifaRepository
-				.findByCodigoImpuestoAndCodigoPorcentajeOrderByFechaVigenciaDesdeAsc(codigoImpuesto, codigoPorcentaje)
-				.stream().filter(t -> !EstadoRegistro.ELIMINADO.equals(t.getEstadoRegistro())).toList();
+		if (codigoImpuesto == null || codigoImpuesto.isBlank()) {
+			throw new ApplicationException(MessageCodes.TARIFA_TRIBUTARIA_VIGENCIA_DATOS_REQUERIDOS);
+		}
+		codigoImpuesto = codigoImpuesto.trim();
+		if (codigoPorcentaje != null) {
+			codigoPorcentaje = codigoPorcentaje.trim();
+		}
+		List<TarifaTributariaVigencia> tarifas = codigoPorcentaje == null || codigoPorcentaje.isBlank()
+				? tarifaRepository.findByCodigoImpuestoOrderByCodigoPorcentajeAscFechaVigenciaDesdeAsc(codigoImpuesto)
+				: tarifaRepository
+						.findByCodigoImpuestoAndCodigoPorcentajeOrderByFechaVigenciaDesdeAsc(codigoImpuesto,
+								codigoPorcentaje);
+		return tarifas.stream().filter(t -> !EstadoRegistro.ELIMINADO.equals(t.getEstadoRegistro())).toList();
 	}
 
 	@Transactional(readOnly = true)

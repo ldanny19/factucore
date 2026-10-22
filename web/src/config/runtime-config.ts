@@ -12,6 +12,9 @@ export interface RuntimeConfig {
   API_CONFIGURACIONES_EMPRESA_PATH: string;
   API_COMPROBANTES_PATH: string;
   API_CERTIFICADOS_FIRMA_PATH: string;
+  API_CATALOGOS_PATH: string;
+  API_CATALOGO_ITEMS_PATH: string;
+  CERTIFICADO_STORAGE_PATH: string;
   OIDC_AUTHORITY: string;
   OIDC_CLIENT_ID: string;
   OIDC_REDIRECT_URI: string;
@@ -41,6 +44,9 @@ const requiredStringKeys: (keyof RuntimeConfig)[] = [
   "API_CONFIGURACIONES_EMPRESA_PATH",
   "API_COMPROBANTES_PATH",
   "API_CERTIFICADOS_FIRMA_PATH",
+  "API_CATALOGOS_PATH",
+  "API_CATALOGO_ITEMS_PATH",
+  "CERTIFICADO_STORAGE_PATH",
   "OIDC_AUTHORITY",
   "OIDC_CLIENT_ID",
   "OIDC_REDIRECT_URI",
@@ -66,8 +72,19 @@ export function getRuntimeConfig(): RuntimeConfig {
   const invalidSessionLimits =
     typeof config.SESSION_INACTIVITY_TIMEOUT_MINUTES === "number" &&
     config.SESSION_INACTIVITY_TIMEOUT_MINUTES > 15;
+  const storagePath = config.CERTIFICADO_STORAGE_PATH;
+  const invalidCertificateStoragePath =
+    typeof storagePath !== "string" ||
+    !storagePath.startsWith("/") ||
+    storagePath.includes("\\") ||
+    storagePath.split("/").some((segment) => segment === "." || segment === "..");
 
-  if (missingStrings.length || invalidNumbers.length || invalidSessionLimits) {
+  if (
+    missingStrings.length ||
+    invalidNumbers.length ||
+    invalidSessionLimits ||
+    invalidCertificateStoragePath
+  ) {
     throw new Error("La configuración externa de FactuCore contiene propiedades inválidas.");
   }
   return config as RuntimeConfig;

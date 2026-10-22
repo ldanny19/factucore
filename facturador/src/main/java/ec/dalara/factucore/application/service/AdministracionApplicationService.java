@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoItemRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
@@ -20,6 +22,8 @@ import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
 import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoItemResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
@@ -32,6 +36,8 @@ import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportRequest;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportResult;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
+import ec.dalara.factucore.infrastructure.persistence.entity.Catalogo;
+import ec.dalara.factucore.infrastructure.persistence.entity.CatalogoItem;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
@@ -53,6 +59,8 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final SecuencialService secuencialService;
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final CertificadoFirmaService certificadoFirmaService;
+	private final CatalogoService catalogoService;
+	private final CatalogoItemService catalogoItemService;
 	private final DocumentoXsdService documentoXsdService;
 	private final XsdImportService xsdImportService;
 
@@ -61,6 +69,87 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final EmpresaRepository empresaRepository;
 	private final EstablecimientoRepository establecimientoRepository;
 	private final PuntoEmisionRepository puntoEmisionRepository;
+
+	public CatalogoResponse guardarCatalogo(Long id, CatalogoRequest request, String canal) {
+		Catalogo catalogo = id == null ? null : catalogoService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
+		boolean nuevo = catalogo == null;
+		catalogo = AdministracionMapper.toEntity(request, catalogo);
+		if (nuevo) {
+			catalogo.setUsuarioCreacion(canal);
+			catalogo.setFechaCreacion(java.time.LocalDateTime.now());
+		} else {
+			catalogo.setUsuarioModificacion(canal);
+			catalogo.setFechaModificacion(java.time.LocalDateTime.now());
+		}
+		return AdministracionMapper.toResponse(catalogoService.guardar(catalogo));
+	}
+
+	public CatalogoResponse obtenerCatalogo(Long id) {
+		return catalogoService.obtenerPorId(id).map(AdministracionMapper::toResponse)
+				.orElseThrow(() -> noEncontrado(id));
+	}
+
+	public CatalogoResponse obtenerCatalogoPorCodigo(String codigo) {
+		Catalogo catalogo = catalogoService.obtenerPorCodigo(codigo)
+				.orElseThrow(() -> new ApplicationException(MessageCodes.REGISTRO_NO_ENCONTRADO, codigo));
+		return AdministracionMapper.toResponse(catalogo);
+	}
+
+	public List<CatalogoResponse> listarCatalogos() {
+		return catalogoService.listar().stream().map(AdministracionMapper::toResponse).toList();
+	}
+
+	public void inactivarCatalogo(Long id) {
+		catalogoService.inactivar(id);
+	}
+
+	public void reactivarCatalogo(Long id) {
+		catalogoService.reactivar(id);
+	}
+
+	public void eliminarCatalogo(Long id) {
+		catalogoService.eliminar(id);
+	}
+
+	public CatalogoItemResponse guardarCatalogoItem(Long id, CatalogoItemRequest request, String canal) {
+		CatalogoItem item = id == null ? null
+				: catalogoItemService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
+		boolean nuevo = item == null;
+		item = AdministracionMapper.toEntity(request, item);
+		item.setCatalogo(catalogoService.obtenerPorId(request.getIdCatalogo())
+				.orElseThrow(() -> noEncontrado(request.getIdCatalogo())));
+		if (nuevo) {
+			item.setUsuarioCreacion(canal);
+			item.setFechaCreacion(java.time.LocalDateTime.now());
+		} else {
+			item.setUsuarioModificacion(canal);
+			item.setFechaModificacion(java.time.LocalDateTime.now());
+		}
+		return AdministracionMapper.toResponse(catalogoItemService.guardar(item));
+	}
+
+	public CatalogoItemResponse obtenerCatalogoItem(Long id) {
+		return catalogoItemService.obtenerPorId(id).map(AdministracionMapper::toResponse)
+				.orElseThrow(() -> noEncontrado(id));
+	}
+
+	public List<CatalogoItemResponse> listarCatalogoItems(Long catalogoId) {
+		List<CatalogoItem> items = catalogoId == null ? catalogoItemService.listar()
+				: catalogoItemService.listarPorCatalogo(catalogoId);
+		return items.stream().map(AdministracionMapper::toResponse).toList();
+	}
+
+	public void inactivarCatalogoItem(Long id) {
+		catalogoItemService.inactivar(id);
+	}
+
+	public void reactivarCatalogoItem(Long id) {
+		catalogoItemService.reactivar(id);
+	}
+
+	public void eliminarCatalogoItem(Long id) {
+		catalogoItemService.eliminar(id);
+	}
 
 	public EmpresaResponse guardarEmpresa(Long id, EmpresaRequest r) {
 		Empresa e = id == null ? null : empresaService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));

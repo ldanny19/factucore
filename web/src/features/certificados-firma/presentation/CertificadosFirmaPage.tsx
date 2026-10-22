@@ -26,17 +26,20 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+import { getRuntimeConfig } from "../../../config/runtime-config";
 import { useEmpresaUseCases } from "../../empresas/presentation/hooks/EmpresaUseCasesContext";
 import type { Empresa } from "../../empresas/domain/Empresa";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
-import type { CertificadoFirma, CertificadoFirmaDatos } from "../domain/CertificadoFirma";
+import type {
+  CertificadoFirma,
+  CertificadoFirmaDatos,
+} from "../domain/CertificadoFirma";
 import { useCertificadoFirmaUseCase } from "./hooks/CertificadoFirmaUseCaseContext";
 import "../../../styles/app.css";
 
 interface CertificadoFormulario {
   nombreArchivo: string;
-  rutaCertificado: string;
   fechaInicio: string;
   fechaFin: string;
 }
@@ -71,9 +74,9 @@ export default function CertificadosFirmaPage() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [dialogoAbierto, setDialogoAbierto] = useState(false);
   const [edicion, setEdicion] = useState<CertificadoFirma | null>(null);
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null);
   const [formulario, setFormulario] = useState<CertificadoFormulario>({
     nombreArchivo: "",
-    rutaCertificado: "",
     fechaInicio: fechaLocalInput(new Date()),
     fechaFin: "",
   });
@@ -130,9 +133,9 @@ export default function CertificadosFirmaPage() {
 
   const abrirCrear = () => {
     setEdicion(null);
+    setArchivoSeleccionado(null);
     setFormulario({
       nombreArchivo: "",
-      rutaCertificado: "",
       fechaInicio: fechaLocalInput(new Date()),
       fechaFin: "",
     });
@@ -143,15 +146,47 @@ export default function CertificadosFirmaPage() {
 
   const abrirEdicion = (certificado: CertificadoFirma) => {
     setEdicion(certificado);
+    setArchivoSeleccionado(null);
     setFormulario({
       nombreArchivo: certificado.nombreArchivo ?? "",
-      rutaCertificado: certificado.rutaCertificado,
       fechaInicio: fechaParaInput(certificado.fechaInicio),
       fechaFin: fechaParaInput(certificado.fechaFin),
     });
     setError(null);
     setAviso(null);
     setDialogoAbierto(true);
+  };
+
+  const seleccionarArchivo = (archivo: File | undefined) => {
+    setError(null);
+    if (!archivo) return;
+    if (!/\.(p12|pfx)$/i.test(archivo.name)) {
+      setArchivoSeleccionado(null);
+      setFormulario((actual) => ({
+        ...actual,
+        nombreArchivo: edicion?.nombreArchivo ?? "",
+      }));
+      setError(resolveMessage(MessageCodes.CERTIFICADO_FILE_INVALID));
+      return;
+    }
+    const nombreArchivoInvalido =
+      archivo.name.includes("/") ||
+      archivo.name.includes("\\") ||
+      Array.from(archivo.name).some((caracter) => {
+        const codigo = caracter.charCodeAt(0);
+        return codigo < 32 || codigo === 127;
+      });
+    if (nombreArchivoInvalido) {
+      setArchivoSeleccionado(null);
+      setFormulario((actual) => ({
+        ...actual,
+        nombreArchivo: edicion?.nombreArchivo ?? "",
+      }));
+      setError(resolveMessage(MessageCodes.CERTIFICADO_FILE_INVALID));
+      return;
+    }
+    setArchivoSeleccionado(archivo);
+    setFormulario((actual) => ({ ...actual, nombreArchivo: archivo.name }));
   };
 
   const guardar = async (event: FormEvent<HTMLFormElement>) => {
@@ -162,9 +197,12 @@ export default function CertificadosFirmaPage() {
       setError(resolveMessage(MessageCodes.CERTIFICADO_EMPRESA_REQUIRED));
       return;
     }
-    const nombreArchivo = formulario.nombreArchivo.trim();
-    const rutaCertificado = formulario.rutaCertificado.trim();
-    if (nombreArchivo.length > 300 || !rutaCertificado || rutaCertificado.length > 1000) {
+    if (!edicion && !archivoSeleccionado) {
+      setError(resolveMessage(MessageCodes.CERTIFICADO_FILE_REQUIRED));
+      return;
+    }
+    const nombreArchivo = archivoSeleccionado?.name ?? formulario.nombreArchivo.trim();
+    if (nombreArchivo.length > 300) {
       setError(resolveMessage(MessageCodes.CERTIFICADO_FIELDS_INVALID));
       return;
     }
@@ -176,21 +214,37 @@ export default function CertificadosFirmaPage() {
       return;
     }
 
-    const datos: CertificadoFirmaDatos = {
+    const datosBase = {
       idEmpresa: empresaSeleccionada.id,
-      nombreArchivo,
-      rutaCertificado,
       fechaInicio: `${formulario.fechaInicio}:00`,
       fechaFin: formulario.fechaFin ? `${formulario.fechaFin}:00` : null,
     };
 
     setGuardando(true);
     try {
-      if (edicion) {
+      if (archivoSeleccionado) {
+        const storagePath = getRuntimeConfig().CERTIFICADO_STORAGE_PATH.replace(/\/+$/, "");
+        const datos: CertificadoFirmaDatos = {
+          ...datosBase,
+          nombreArchivo,
+          rutaCertificado: `${storagePath}/${nombreArchivo}`,
+        };
+        await useCases.crear(datos);
+      } else if (edicion) {
+        const datos: CertificadoFirmaDatos = {
+          ...datosBase,
+          nombreArchivo,
+          rutaCertificado: edicion.rutaCertificado,
+        };
         await useCases.actualizar(edicion.id, datos);
+      } else {
+        setError(resolveMessage(MessageCodes.CERTIFICADO_FILE_REQUIRED));
+        return;
+      }
+
+      if (edicion) {
         setAviso(resolveMessage(MessageCodes.CERTIFICADO_UPDATED));
       } else {
-        await useCases.crear(datos);
         setAviso(resolveMessage(MessageCodes.CERTIFICADO_CREATED));
       }
       setDialogoAbierto(false);
@@ -268,7 +322,9 @@ export default function CertificadosFirmaPage() {
         </Button>
       </Box>
 
-      {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+      {error && !dialogoAbierto && (
+        <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>
+      )}
       {aviso && <Alert severity="success" onClose={() => setAviso(null)}>{aviso}</Alert>}
 
       <Paper variant="outlined" className="certificados-firma-filter">
@@ -291,9 +347,6 @@ export default function CertificadosFirmaPage() {
             </MenuItem>
           ))}
         </TextField>
-        <Typography variant="body2" color="text.secondary">
-          {resolveMessage(MessageCodes.CERTIFICADO_PATH_HELP)}
-        </Typography>
       </Paper>
 
       <Box className="certificados-firma-list-heading">
@@ -337,9 +390,6 @@ export default function CertificadosFirmaPage() {
                   <TableCell>
                     <Typography variant="body2" fontWeight={700}>
                       {certificado.nombreArchivo || resolveMessage(MessageCodes.CERTIFICADO_FILE_NAME_EMPTY)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" className="certificado-file-path">
-                      {certificado.rutaCertificado}
                     </Typography>
                   </TableCell>
                   <TableCell>{certificado.fechaInicio?.replace("T", " ") ?? "—"}</TableCell>
@@ -391,6 +441,11 @@ export default function CertificadosFirmaPage() {
             <Alert severity="warning" sx={{ mt: 1 }}>
               {resolveMessage(MessageCodes.CERTIFICADO_SECURITY_WARNING)}
             </Alert>
+            {error && (
+              <Alert severity="error" onClose={() => setError(null)} sx={{ mt: 1 }}>
+                {error}
+              </Alert>
+            )}
             <Box className="certificados-firma-form-grid">
               <TextField
                 label={resolveMessage(MessageCodes.ESTABLECIMIENTO_COMPANY)}
@@ -398,23 +453,28 @@ export default function CertificadosFirmaPage() {
                 disabled
                 fullWidth
               />
-              <TextField
-                label={resolveMessage(MessageCodes.CERTIFICADO_FILE_NAME)}
-                value={formulario.nombreArchivo}
-                onChange={(event) => cambiarCampo("nombreArchivo", event.target.value)}
-                inputProps={{ maxLength: 300 }}
-                fullWidth
-              />
-              <TextField
-                label={resolveMessage(MessageCodes.CERTIFICADO_PATH)}
-                value={formulario.rutaCertificado}
-                onChange={(event) => cambiarCampo("rutaCertificado", event.target.value)}
-                required
-                inputProps={{ maxLength: 1000 }}
-                helperText={resolveMessage(MessageCodes.CERTIFICADO_PATH_HELP)}
-                fullWidth
-                sx={{ gridColumn: "1 / -1" }}
-              />
+              <Box sx={{ gridColumn: "1 / -1" }}>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  {resolveMessage(MessageCodes.CERTIFICADO_FILE_NAME)}:{" "}
+                  {formulario.nombreArchivo || resolveMessage(MessageCodes.CERTIFICADO_NO_FILE_SELECTED)}
+                </Typography>
+                {!edicion && (
+                  <>
+                    <Button component="label" variant="outlined" disabled={guardando}>
+                      {resolveMessage(MessageCodes.CERTIFICADO_SELECT_FILE)}
+                      <input
+                        hidden
+                        type="file"
+                        accept=".p12,.pfx,application/x-pkcs12"
+                        onChange={(event) => {
+                          seleccionarArchivo(event.currentTarget.files?.[0]);
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                    </Button>
+                  </>
+                )}
+              </Box>
               <TextField
                 label={resolveMessage(MessageCodes.CERTIFICADO_VALID_FROM)}
                 type="datetime-local"

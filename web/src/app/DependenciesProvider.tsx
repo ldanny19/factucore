@@ -21,6 +21,9 @@ import { CertificadoFirmaUseCaseContext } from "../features/certificados-firma/p
 import { createTarifaTributariaUseCases } from "../features/tarifas-tributarias/application/TarifaTributariaUseCase";
 import { createHttpTarifaTributariaRepository } from "../features/tarifas-tributarias/infrastructure/HttpTarifaTributariaRepository";
 import { TarifaTributariaUseCaseContext } from "../features/tarifas-tributarias/presentation/hooks/TarifaTributariaUseCaseContext";
+import { createCatalogoUseCases } from "../features/catalogos/application/CatalogoUseCase";
+import { createHttpCatalogoRepository } from "../features/catalogos/infrastructure/HttpCatalogoRepository";
+import { CatalogoUseCaseContext } from "../features/catalogos/presentation/hooks/CatalogoUseCaseContext";
 
 export default function DependenciesProvider({ children }: { children: ReactNode }) {
   const empresaUseCases = useMemo(
@@ -51,6 +54,10 @@ export default function DependenciesProvider({ children }: { children: ReactNode
     () => createTarifaTributariaUseCases(createHttpTarifaTributariaRepository()),
     [],
   );
+  const catalogoUseCases = useMemo(
+    () => createCatalogoUseCases(createHttpCatalogoRepository()),
+    [],
+  );
 
   return (
     <EmpresaUseCasesContext.Provider value={empresaUseCases}>
@@ -59,9 +66,11 @@ export default function DependenciesProvider({ children }: { children: ReactNode
           <SecuencialUseCaseContext.Provider value={secuencialUseCases}>
             <ConfiguracionEmpresaUseCaseContext.Provider value={configuracionEmpresaUseCases}>
               <CertificadoFirmaUseCaseContext.Provider value={certificadoFirmaUseCases}>
-                <TarifaTributariaUseCaseContext.Provider value={tarifaTributariaUseCases}>
-                  {children}
-                </TarifaTributariaUseCaseContext.Provider>
+                <CatalogoUseCaseContext.Provider value={catalogoUseCases}>
+                  <TarifaTributariaUseCaseContext.Provider value={tarifaTributariaUseCases}>
+                    {children}
+                  </TarifaTributariaUseCaseContext.Provider>
+                </CatalogoUseCaseContext.Provider>
               </CertificadoFirmaUseCaseContext.Provider>
             </ConfiguracionEmpresaUseCaseContext.Provider>
           </SecuencialUseCaseContext.Provider>
