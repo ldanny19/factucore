@@ -110,6 +110,7 @@ interface DestinoXsd {
 
 interface FormularioMapeo {
   tipoOrigen: string;
+  ejemploJson: string;
   codigoFuente: string;
   codigoCampo: string;
   codigoCatalogo: string;
@@ -120,6 +121,7 @@ interface FormularioMapeo {
 
 const FORMULARIO_INICIAL: FormularioMapeo = {
   tipoOrigen: "",
+  ejemploJson: "",
   codigoFuente: "",
   codigoCampo: "",
   codigoCatalogo: "",
@@ -187,6 +189,23 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
   return [...destinosElementos, ...destinosAtributos];
 }
 
+function extraerRutasJson(valor: unknown, prefijo = "", rutas: string[] = []): string[] {
+  if (valor === null || typeof valor !== "object") {
+    if (prefijo) rutas.push(prefijo);
+    return rutas;
+  }
+  if (Array.isArray(valor)) {
+    if (valor.length === 0) { if (prefijo) rutas.push(prefijo); return rutas; }
+    return extraerRutasJson(valor[0], prefijo ? `${prefijo}[]` : "[]", rutas);
+  }
+  const entradas = Object.entries(valor as Record<string, unknown>);
+  if (entradas.length === 0 && prefijo) rutas.push(prefijo);
+  for (const [clave, contenido] of entradas) {
+    extraerRutasJson(contenido, prefijo ? `${prefijo}.${clave}` : clave, rutas);
+  }
+  return rutas;
+}
+
 export default function MapeosXsdPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [versiones, setVersiones] = useState<VersionSeleccionable[]>([]);
@@ -224,6 +243,10 @@ export default function MapeosXsdPage() {
     (catalogo) => catalogo.codigo === formulario.codigoCatalogo,
   );
   const destinoSeleccionado = destinos.find((destino) => destino.key === formulario.destino);
+  const rutasJson = useMemo(() => {
+    if (!formulario.ejemploJson.trim()) return [];
+    try { return extraerRutasJson(JSON.parse(formulario.ejemploJson)); } catch { return []; }
+  }, [formulario.ejemploJson]);
 
   const cargarRecursos = useCallback(async () => {
     setCargando(true);
@@ -491,126 +514,70 @@ export default function MapeosXsdPage() {
                 ))}
               </TextField>
 
-              <TextField
-                select
-                label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_TYPE)}
-                value={formulario.tipoOrigen}
-                onChange={(event) => cambiarTipoOrigen(event.target.value)}
-                disabled={guardando}
-              >
-                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-                <MenuItem value="JSON">JSON</MenuItem>
-                <MenuItem value="FACTUCORE">FACTUCORE</MenuItem>
-                <MenuItem value="GENERADO">GENERADO</MenuItem>
-              </TextField>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 2, alignItems: "start" }}>
+  <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
+    <Typography variant="subtitle1" component="h3" sx={{ mb: 1 }}>{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography>
+    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Selecciona la etiqueta o atributo XML que deseas mapear.</Typography>
+    <Box sx={{ display: "grid", gap: 0.75, maxHeight: 440, overflowY: "auto" }}>
+      {destinos.map((destino) => {
+        const yaMapeado = mapeos.some((mapeo) => destino.tipoMapeo === "ELEMENTO"
+          ? mapeo.idElementoXsd === destino.idElementoXsd : mapeo.idAtributoXsd === destino.idAtributoXsd);
+        return <Button key={destino.key} variant={formulario.destino === destino.key ? "contained" : "outlined"}
+          color={yaMapeado ? "success" : "primary"} disabled={guardando || yaMapeado}
+          onClick={() => setFormulario((actual) => ({ ...actual, destino: destino.key }))}
+          sx={{ justifyContent: "flex-start", textAlign: "left", textTransform: "none" }}>
+          {destino.nombre}{yaMapeado ? " · Mapeado" : ""}
+        </Button>;
+      })}
+    </Box>
+  </Paper>
+  <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
+    <Typography variant="subtitle1" component="h3" sx={{ mb: 1 }}>Origen del dato</Typography>
+    <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_TYPE)}
+      value={formulario.tipoOrigen} onChange={(event) => cambiarTipoOrigen(event.target.value)}
+      disabled={guardando} sx={{ mb: 2 }}>
+      <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+      <MenuItem value="JSON">JSON</MenuItem><MenuItem value="FACTUCORE">FACTUCORE</MenuItem><MenuItem value="GENERADO">GENERADO</MenuItem>
+    </TextField>
+    {formulario.tipoOrigen === "FACTUCORE" && <Box sx={{ display: "grid", gap: 2 }}>
+      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ENTITY)} value={formulario.codigoFuente}
+        onChange={(event) => setFormulario((actual) => ({ ...actual, codigoFuente: event.target.value, codigoCampo: "", codigoCatalogo: "" }))}
+        disabled={guardando}>
+        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+        {fuentes.map((fuente) => <MenuItem key={fuente.codigo} value={fuente.codigo}>{fuente.nombre}</MenuItem>)}
+      </TextField>
+      {fuentesDisponibles?.requiereCatalogo && <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_CATALOG)}
+        value={formulario.codigoCatalogo} onChange={(event) => setFormulario((actual) => ({ ...actual, codigoCatalogo: event.target.value, codigoCampo: "" }))}
+        disabled={guardando}>
+        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+        {catalogos.map((catalogo) => <MenuItem key={catalogo.id} value={catalogo.codigo}>{catalogo.codigo} — {catalogo.nombre}</MenuItem>)}
+      </TextField>}
+      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_FIELD)} value={formulario.codigoCampo}
+        onChange={(event) => setFormulario((actual) => ({ ...actual, codigoCampo: event.target.value }))}
+        disabled={guardando || !fuentesDisponibles}>
+        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+        {camposDisponibles.map((campo) => <MenuItem key={campo.codigo} value={campo.codigo}>{campo.nombre} · {campo.tipoDato}</MenuItem>)}
+      </TextField>
+    </Box>}
+    {formulario.tipoOrigen === "JSON" && <Box sx={{ display: "grid", gap: 2 }}>
+      <TextField fullWidth multiline minRows={5} label="JSON de ejemplo del contrato canónico"
+        value={formulario.ejemploJson} onChange={(event) => setFormulario((actual) => ({ ...actual, ejemploJson: event.target.value, rutaJson: "" }))}
+        disabled={guardando} helperText="Pega un ejemplo del contrato para descubrir y seleccionar sus rutas." />
+      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)} value={formulario.rutaJson}
+        onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))}
+        disabled={guardando || rutasJson.length === 0}
+        helperText={rutasJson.length === 0 ? "Introduce un JSON válido para listar sus atributos." : `${rutasJson.length} rutas disponibles`}>
+        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+        {rutasJson.map((ruta) => <MenuItem key={ruta} value={ruta}>{ruta}</MenuItem>)}
+      </TextField>
+    </Box>}
+    {formulario.tipoOrigen === "GENERADO" && <TextField fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
+      value={formulario.origenGenerado} onChange={(event) => setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))}
+      disabled={guardando} inputProps={{ maxLength: 1000 }} helperText={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE_HELP)} />}
+  </Paper>
+</Box>
 
-              {formulario.tipoOrigen === "FACTUCORE" && (
-                <>
-                  <TextField
-                    select
-                    label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ENTITY)}
-                    value={formulario.codigoFuente}
-                    onChange={(event) =>
-                      setFormulario((actual) => ({
-                        ...actual,
-                        codigoFuente: event.target.value,
-                        codigoCampo: "",
-                        codigoCatalogo: "",
-                      }))
-                    }
-                    disabled={guardando}
-                  >
-                    <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-                    {fuentes.map((fuente) => (
-                      <MenuItem key={fuente.codigo} value={fuente.codigo}>
-                        {fuente.nombre}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  {fuentesDisponibles?.requiereCatalogo && (
-                    <TextField
-                      select
-                      label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_CATALOG)}
-                      value={formulario.codigoCatalogo}
-                      onChange={(event) =>
-                        setFormulario((actual) => ({
-                          ...actual,
-                          codigoCatalogo: event.target.value,
-                          codigoCampo: "",
-                        }))
-                      }
-                      disabled={guardando}
-                    >
-                      <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-                      {catalogos.map((catalogo) => (
-                        <MenuItem key={catalogo.id} value={catalogo.codigo}>
-                          {catalogo.codigo} — {catalogo.nombre}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  )}
-                  <TextField
-                    select
-                    label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_FIELD)}
-                    value={formulario.codigoCampo}
-                    onChange={(event) =>
-                      setFormulario((actual) => ({ ...actual, codigoCampo: event.target.value }))
-                    }
-                    disabled={guardando || !fuentesDisponibles}
-                  >
-                    <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-                    {camposDisponibles.map((campo) => (
-                      <MenuItem key={campo.codigo} value={campo.codigo}>
-                        {campo.nombre} · {campo.tipoDato}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </>
-              )}
-
-              {formulario.tipoOrigen === "JSON" && (
-                <TextField
-                  label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)}
-                  value={formulario.rutaJson}
-                  onChange={(event) =>
-                    setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))
-                  }
-                  disabled={guardando}
-                  inputProps={{ maxLength: 1000 }}
-                />
-              )}
-
-              {formulario.tipoOrigen === "GENERADO" && (
-                <TextField
-                  label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
-                  value={formulario.origenGenerado}
-                  onChange={(event) =>
-                    setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))
-                  }
-                  disabled={guardando}
-                  inputProps={{ maxLength: 1000 }}
-                  helperText={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE_HELP)}
-                />
-              )}
-
-              <TextField
-                select
-                label={resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}
-                value={formulario.destino}
-                onChange={(event) =>
-                  setFormulario((actual) => ({ ...actual, destino: event.target.value }))
-                }
-                disabled={guardando || destinos.length === 0}
-              >
-                <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-                {destinos.map((destino) => (
-                  <MenuItem key={destino.key} value={destino.key}>
-                    {destino.nombre}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              <Button
+<Button
                 variant="contained"
                 onClick={() => void guardarMapeo()}
                 disabled={guardando || cargandoDefinicion || empresas.length === 0}
