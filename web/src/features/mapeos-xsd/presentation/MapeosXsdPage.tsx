@@ -300,7 +300,17 @@ export default function MapeosXsdPage() {
         setIdVersionSeleccionada(String(versionValida.id));
       } else if (versionIdInicial) {
         setError(resolveMessage(MessageCodes.MAPEO_XSD_VERSION_NOT_FOUND));
+        setIdVersionSeleccionada("");
         setSearchParams({}, { replace: true });
+      } else {
+        setIdVersionSeleccionada((actual) =>
+          versionesDisponibles.some((version) => String(version.id) === actual)
+            ? actual
+            : String(versionesDisponibles[0]?.id ?? ""),
+        );
+        if (versionesDisponibles.length === 0) {
+          setError("No hay versiones documentales XSD disponibles para configurar mapeos.");
+        }
       }
     } catch (exception) {
       setError(mensajeError(exception));
