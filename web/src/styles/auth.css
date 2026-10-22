@@ -63,21 +63,29 @@
 }
 .auth-brand-icon {
   display: grid;
-  width: 54px;
-  height: 54px;
+  width: 82px;
+  height: 70px;
+  flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 12px;
-  background: rgba(255,255,255,.12);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 9px;
+  background: transparent;
 }
-.auth-brand-icon .MuiSvgIcon-root { font-size: 30px; }
-.auth-brand-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -.04em; }
+.auth-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+.auth-brand-lockup { display: flex; align-items: center; gap: 14px; }
+.auth-brand-name.MuiTypography-root { color: #fff; font-size: 1.5rem; font-weight: 800; letter-spacing: -.04em; }
+.auth-brand-name span, .auth-form-brand-name span { color: #20b7f4; }
 .auth-brand-heading { max-width: 340px; margin-top: 20px; font-size: clamp(1.65rem, 3vw, 2.15rem); font-weight: 750; line-height: 1.2; letter-spacing: -.04em; }
 .auth-brand-description { max-width: 340px; margin-top: 16px; color: rgba(255,255,255,.72); line-height: 1.8; }
 .auth-brand-footer { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.78); }
 .auth-brand-footer .MuiSvgIcon-root { color: #8fc8ff; }
 .auth-login-form-panel { display: flex; align-items: center; justify-content: center; padding: 48px 56px; background: #fff; }
 .auth-login-form { width: 100%; max-width: 390px; }
+.auth-form-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.auth-form-brand-icon { width: 72px; height: 60px; flex: 0 0 auto; overflow: hidden; }
+.auth-form-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+.auth-form-brand-name.MuiTypography-root { color: #092f68; font-size: 1.4rem; font-weight: 800; letter-spacing: -.04em; }
 .auth-eyebrow { color: #1976d2; font-size: .75rem; font-weight: 800; letter-spacing: .12em; }
 .auth-login-title { margin-top: 8px; font-size: clamp(1.8rem, 3vw, 2.1rem); font-weight: 800; }
 .auth-login-description { margin: 8px 0 28px; color: #65758c; line-height: 1.7; }

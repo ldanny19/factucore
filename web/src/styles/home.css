@@ -65,5 +65,6 @@
 .home-page :focus-visible { outline: 3px solid rgba(37,99,235,.55); outline-offset: 3px; }
 
 /* Identidad visual FactuCore */
-.home-brand-icon { background: transparent; box-shadow: none; }
+.home-brand-icon { overflow: hidden; border: 1px solid #e5ebf2; background: #fff; box-shadow: 0 4px 12px rgba(18,48,74,.08); }
 .home-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+.home-brand-name span { color: #0788f5; }

@@ -17,7 +17,6 @@ import {
 } from "@mui/material";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
-import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -209,9 +208,9 @@ export default function AppLayout() {
   const sidebar = (
     <Box className="app-sidebar-content">
       <Box className="app-brand">
-        <Box className="app-brand-mark"><img src="/factucore-icon.svg" alt="" /></Box>
+        <Box className="app-brand-mark"><img src="/factucore-icon-dark.png" alt="" /></Box>
         <Box>
-          <Typography className="app-brand-name">FactuCore</Typography>
+          <Typography className="app-brand-name">Factu<span>Core</span></Typography>
           <Typography className="app-brand-caption">MENÚ PRINCIPAL</Typography>
         </Box>
       </Box>
@@ -298,7 +297,7 @@ export default function AppLayout() {
       <AppBar position="fixed" elevation={0} className="app-header">
         <Toolbar className="app-header-toolbar">
           <Box className="app-header-brand">
-            <Box className="app-header-logo"><img src="/factucore-icon.svg" alt="" /></Box>
+            <Box className="app-header-logo"><img src="/factucore-icon.png" alt="" /></Box>
           </Box>
           <IconButton
             aria-label="Abrir menú"
@@ -308,7 +307,7 @@ export default function AppLayout() {
             <MenuRoundedIcon />
           </IconButton>
           <Box className="app-header-system">
-            <Typography className="app-header-system-name">FactuCore</Typography>
+            <Typography className="app-header-system-name">Factu<span>Core</span></Typography>
             <Typography className="app-header-system-slogan">Facturación electrónica empresarial</Typography>
           </Box>
           <Box className="app-header-spacer" />
