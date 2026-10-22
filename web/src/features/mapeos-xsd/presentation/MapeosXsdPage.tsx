@@ -475,26 +475,21 @@ export default function MapeosXsdPage() {
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
       {aviso && <Alert severity="success" onClose={() => setAviso(null)}>{aviso}</Alert>}
 
-      <Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
-        <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6">Empresa</Typography></Box>
-        <Box sx={{ p: 2 }}><TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT)} value={idEmpresa}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(240px, 0.8fr) minmax(320px, 1.5fr)" }, gap: 2, alignItems: "center" }}>
+        <TextField select fullWidth size="small" label={resolveMessage(MessageCodes.MAPEO_XSD_COMPANY_CONTEXT)} value={idEmpresa}
           onChange={(event) => { setIdEmpresa(event.target.value); setMapeosPendientes([]); }}
           disabled={cargando || guardando || empresas.length === 0}>
           <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
           {empresas.map((empresa) => <MenuItem key={empresa.id} value={String(empresa.id)}>{empresa.razonSocial} · {empresa.ruc}</MenuItem>)}
-        </TextField></Box>
-      </Paper>
-      <Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
-        <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6" component="h2">{resolveMessage(MessageCodes.MAPEO_XSD_VERSION)}</Typography></Box>
-        <Box sx={{ p: 2, display: "flex", gap: 2, alignItems: "center" }}>
-          <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SELECT_VERSION)} value={idVersionSeleccionada}
-            onChange={(event) => { setIdVersionSeleccionada(event.target.value); setMapeosPendientes([]); }}
-            disabled={cargando || cargandoDefinicion || guardando || !idEmpresa}>
-            <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-            {versiones.map((version) => <MenuItem key={version.id} value={String(version.id)}>{version.documentoCodigo} — {version.documentoNombre} · {version.version}</MenuItem>)}
-          </TextField>{cargando && <CircularProgress size={24} />}
-        </Box>
-      </Paper>
+        </TextField>
+        <TextField select fullWidth size="small" label={resolveMessage(MessageCodes.MAPEO_XSD_SELECT_VERSION)} value={idVersionSeleccionada}
+          onChange={(event) => { setIdVersionSeleccionada(event.target.value); setMapeosPendientes([]); }}
+          disabled={cargando || cargandoDefinicion || guardando || !idEmpresa}>
+          <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+          {versiones.map((version) => <MenuItem key={version.id} value={String(version.id)}>{version.documentoCodigo} — {version.documentoNombre} · {version.version}</MenuItem>)}
+        </TextField>
+        {cargando && <CircularProgress size={24} />}
+      </Box>
 
       {cargandoDefinicion && <CircularProgress />}
 
