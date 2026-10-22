@@ -209,7 +209,7 @@ export default function AppLayout() {
   const sidebar = (
     <Box className="app-sidebar-content">
       <Box className="app-brand">
-        <Box className="app-brand-mark"><ReceiptLongRoundedIcon /></Box>
+        <Box className="app-brand-mark"><img src="/factucore-icon.svg" alt="" /></Box>
         <Box>
           <Typography className="app-brand-name">FactuCore</Typography>
           <Typography className="app-brand-caption">MENÚ PRINCIPAL</Typography>
@@ -298,7 +298,7 @@ export default function AppLayout() {
       <AppBar position="fixed" elevation={0} className="app-header">
         <Toolbar className="app-header-toolbar">
           <Box className="app-header-brand">
-            <Box className="app-header-logo"><ReceiptLongRoundedIcon /></Box>
+            <Box className="app-header-logo"><img src="/factucore-icon.svg" alt="" /></Box>
           </Box>
           <IconButton
             aria-label="Abrir menú"

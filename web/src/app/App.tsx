@@ -53,7 +53,7 @@ export default function App() {
       <AppBar position="sticky" elevation={0} className="home-header">
         <Toolbar className="home-toolbar">
           <Box className="home-brand">
-            <Box className="home-brand-icon"><ReceiptLongRoundedIcon /></Box>
+            <Box className="home-brand-icon"><img src="/factucore-icon.svg" alt="" /></Box>
             <Box>
               <Typography className="home-brand-name">FactuCore</Typography>
               <Typography className="home-brand-caption">FACTURACIÓN ELECTRÓNICA</Typography>

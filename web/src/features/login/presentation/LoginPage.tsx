@@ -161,7 +161,7 @@ export default function LoginPage() {
                   border: "1px solid rgba(255,255,255,0.18)",
                 }}
               >
-                <DescriptionOutlinedIcon sx={{ fontSize: 30 }} />
+                <Box component="img" src="/factucore-icon.svg" alt="FactuCore" sx={{ width: 44, height: 44, objectFit: "contain" }} />
               </Box>
               <Box>
                 <Typography variant="h5" component="p" fontWeight={800} letterSpacing="-0.04em">
@@ -209,7 +209,8 @@ export default function LoginPage() {
               backgroundColor: "#ffffff",
             }}
           >
-            <Box sx={{ width: "100%", maxWidth: 390 }}>
+            <Box className="auth-login-form" sx={{ width: "100%", maxWidth: 390, position: "relative" }}>
+              <Box component="img" src="/factucore-logo.svg" alt="FactuCore" sx={{ display: "block", width: 118, height: 72, objectFit: "contain", objectPosition: "left center", mb: 1 }} />
               <Typography
                 variant="overline"
                 sx={{ color: "secondary.main", fontWeight: 800, letterSpacing: "0.12em" }}
