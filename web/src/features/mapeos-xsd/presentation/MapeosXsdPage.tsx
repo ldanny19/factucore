@@ -18,7 +18,7 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { getRuntimeConfig } from "../../../config/runtime-config";
 import { EstadoRegistro } from "../../../shared/domain/EstadoRegistro";
-import { apiRequest } from "../../../shared/api/api-client";
+import { apiRequest, apiRequestRaw } from "../../../shared/api/api-client";
 import type { AdministracionRequest } from "../../../shared/api/administracion-contracts";
 import type { Empresa } from "../../empresas/domain/Empresa";
 import type { Catalogo } from "../../catalogos/domain/Catalogo";
@@ -405,6 +405,30 @@ export default function MapeosXsdPage() {
     }
   }, [cargarVersion, idVersionSeleccionada, setSearchParams]);
 
+  useEffect(() => {
+    if (formulario.tipoOrigen !== "JSON" || !idVersionSeleccionada) return;
+    let cancelado = false;
+    const cargarPlantilla = async () => {
+      try {
+        const respuesta = await apiRequestRaw<string>({
+          method: "GET",
+          url: documentosPath + "/versiones/" + idVersionSeleccionada + "/plantilla-json",
+          responseType: "text",
+        });
+        if (cancelado) return;
+        const plantilla = typeof respuesta === "string" ? respuesta : JSON.stringify(respuesta);
+        JSON.parse(plantilla);
+        setFormulario((actual) => ({ ...actual, ejemploJson: plantilla, rutaJson: "", origenGenerado: "" }));
+      } catch (exception) {
+        if (!cancelado) {
+          setFormulario((actual) => ({ ...actual, ejemploJson: "", rutaJson: "", origenGenerado: "" }));
+          setError(mensajeError(exception));
+        }
+      }
+    };
+    void cargarPlantilla();
+    return () => { cancelado = true; };
+  }, [documentosPath, formulario.tipoOrigen, idVersionSeleccionada]);
   const cambiarTipoOrigen = (tipoOrigen: string) => {
     setFormulario((actual) => ({
       ...FORMULARIO_INICIAL,
@@ -581,8 +605,8 @@ export default function MapeosXsdPage() {
                       </TextField>
                     </>}
                     {formulario.tipoOrigen === "JSON" && <>
-                      <TextField fullWidth multiline minRows={5} label="JSON de ejemplo del contrato canónico" value={formulario.ejemploJson}
-                        onChange={(event) => setFormulario((actual) => ({ ...actual, ejemploJson: event.target.value, rutaJson: "" }))} disabled={guardando} />
+                      <TextField fullWidth multiline minRows={5} label="Plantilla JSON del contrato canónico" value={formulario.ejemploJson}
+                        InputProps={{ readOnly: true }} disabled={guardando || !idVersionSeleccionada} />
                       <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)} value={formulario.rutaJson}
                         onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value, origenGenerado: plantillaJson === null ? "" : crearJsonEjemplo(plantillaJson, event.target.value) }))} disabled={guardando || rutasJson.length === 0}>
                         <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
