@@ -506,97 +506,74 @@ export default function MapeosXsdPage() {
             </Box>
             <Box sx={{ p: 2 }}>
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 2, alignItems: "start" }}>
-  <Paper variant="outlined" sx={{ p: 0, minWidth: 0, overflow: "hidden" }}>
-    <Box sx={{ px: 2, py: 1, bgcolor: "secondary.main", color: "secondary.contrastText" }}><Typography variant="subtitle1" component="h3">{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography></Box>
-    <Box sx={{ p: 2 }}>
-    <Box sx={{ display: "grid", gap: 0.75, maxHeight: 440, overflowY: "auto" }}>
-      {destinos.map((destino) => <Button key={destino.key} variant={formulario.destino === destino.key ? "contained" : "outlined"}
-        disabled={guardando} onClick={() => setFormulario((actual) => ({ ...actual, destino: destino.key }))}
-        sx={{ justifyContent: "flex-start", textAlign: "left", textTransform: "none" }}>
-        {destino.nombre}
-      </Button>)}
-    </Box>
-  </Paper>
-  <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
-    <Typography variant="subtitle1" component="h3" sx={{ mb: 1 }}>{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography>
-    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Selecciona la etiqueta o atributo XML que deseas mapear.</Typography>
-    <Box sx={{ display: "grid", gap: 0.75, maxHeight: 440, overflowY: "auto" }}>
-      {destinos.length === 0 ? (
-        <Typography color="text.secondary">
-          Selecciona una versión documental para mostrar las etiquetas y atributos XML.
-        </Typography>
-      ) : destinos.map((destino) => {
-        const yaMapeado = mapeos.some((mapeo) => destino.tipoMapeo === "ELEMENTO"
-          ? mapeo.idElementoXsd === destino.idElementoXsd : mapeo.idAtributoXsd === destino.idAtributoXsd);
-        return <Button key={destino.key} variant={formulario.destino === destino.key ? "contained" : "outlined"}
-          color={yaMapeado ? "success" : "primary"} disabled={guardando || yaMapeado}
-          onClick={() => setFormulario((actual) => ({ ...actual, destino: destino.key }))}
-          sx={{ justifyContent: "flex-start", textAlign: "left", textTransform: "none" }}>
-          {destino.nombre}{yaMapeado ? " · Mapeado" : ""}
-        </Button>;
-      })}
-    </Box>
-  </Paper>
-  <Paper variant="outlined" sx={{ p: 0, minWidth: 0, overflow: "hidden" }}>
-    <Box sx={{ px: 2, py: 1, bgcolor: "secondary.main", color: "secondary.contrastText" }}><Typography variant="subtitle1" component="h3">Origen del dato</Typography></Box>
-    <Box sx={{ p: 2 }}>
-    <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_TYPE)}
-      value={formulario.tipoOrigen} onChange={(event) => cambiarTipoOrigen(event.target.value)}
-      disabled={guardando} sx={{ mb: 2 }}>
-      <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-      <MenuItem value="JSON">JSON</MenuItem><MenuItem value="FACTUCORE">FACTUCORE</MenuItem><MenuItem value="GENERADO">GENERADO</MenuItem>
-    </TextField>
-    {formulario.tipoOrigen === "FACTUCORE" && <Box sx={{ display: "grid", gap: 2 }}>
-      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ENTITY)} value={formulario.codigoFuente}
-        onChange={(event) => setFormulario((actual) => ({ ...actual, codigoFuente: event.target.value, codigoCampo: "", codigoCatalogo: "" }))}
-        disabled={guardando}>
-        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-        {fuentes.map((fuente) => <MenuItem key={fuente.codigo} value={fuente.codigo}>{fuente.nombre}</MenuItem>)}
-      </TextField>
-      {fuentesDisponibles?.requiereCatalogo && <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_CATALOG)}
-        value={formulario.codigoCatalogo} onChange={(event) => setFormulario((actual) => ({ ...actual, codigoCatalogo: event.target.value, codigoCampo: "" }))}
-        disabled={guardando}>
-        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-        {catalogos.map((catalogo) => <MenuItem key={catalogo.id} value={catalogo.codigo}>{catalogo.codigo} — {catalogo.nombre}</MenuItem>)}
-      </TextField>}
-      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_FIELD)} value={formulario.codigoCampo}
-        onChange={(event) => setFormulario((actual) => ({ ...actual, codigoCampo: event.target.value }))}
-        disabled={guardando || !fuentesDisponibles}>
-        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-        {camposDisponibles.map((campo) => <MenuItem key={campo.codigo} value={campo.codigo}>{campo.nombre} · {campo.tipoDato}</MenuItem>)}
-      </TextField>
-    </Box>}
-    {formulario.tipoOrigen === "JSON" && <Box sx={{ display: "grid", gap: 2 }}>
-      <TextField fullWidth multiline minRows={5} label="JSON de ejemplo del contrato canónico"
-        value={formulario.ejemploJson} onChange={(event) => setFormulario((actual) => ({ ...actual, ejemploJson: event.target.value, rutaJson: "" }))}
-        disabled={guardando} />
-      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)} value={formulario.rutaJson}
-        onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))}
-        disabled={guardando || rutasJson.length === 0}
->
-        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
-        {rutasJson.map((ruta) => <MenuItem key={ruta} value={ruta}>{ruta}</MenuItem>)}
-      </TextField>
-    </Box>}
-    {formulario.tipoOrigen === "GENERADO" && <TextField fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
-      value={formulario.origenGenerado} onChange={(event) => setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))}
-      disabled={guardando} inputProps={{ maxLength: 1000 }} />}
-    </Box>
-  </Paper>
-</Box>
-<Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
-  <Button variant="contained" onClick={agregarMapeo} disabled={guardando || !definicion || !idEmpresa || !formulario.destino || !obtenerOrigen()}>Agregar mapeo</Button>
-</Box>
-<Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
-  <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6">Mapeos por guardar ({mapeosPendientes.length})</Typography></Box>
-  <TableContainer><Table size="small"><TableHead><TableRow><TableCell>Origen</TableCell><TableCell>Destino XML</TableCell><TableCell align="right">Acciones</TableCell></TableRow></TableHead>
-  <TableBody>{mapeosPendientes.map((mapeo, indice) => <TableRow key={mapeo.origen + indice}>
-    <TableCell>{mapeo.tipoOrigen}: {mapeo.origen}</TableCell>
-    <TableCell>{destinosBase.find((d) => mapeo.tipoMapeo === "ELEMENTO" ? d.idElementoXsd === mapeo.idElementoXsd : d.idAtributoXsd === mapeo.idAtributoXsd)?.nombre ?? "—"}</TableCell>
-    <TableCell align="right"><Button color="error" onClick={() => quitarMapeoPendiente(indice)} disabled={guardando}>Quitar</Button></TableCell>
-  </TableRow>)}</TableBody></Table></TableContainer>
-  <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}><Button variant="contained" onClick={() => void guardarMapeos()} disabled={guardando || mapeosPendientes.length === 0 || !idEmpresa || !idVersionSeleccionada}>{guardando ? resolveMessage(MessageCodes.COMMON_SAVING) : resolveMessage(MessageCodes.MAPEO_XSD_SAVE)}</Button></Box>
-</Paper>
+                <Paper variant="outlined" sx={{ p: 0, minWidth: 0, overflow: "hidden" }}>
+                  <Box sx={{ px: 2, py: 1, bgcolor: "secondary.main", color: "secondary.contrastText" }}><Typography variant="subtitle1" component="h3">{resolveMessage(MessageCodes.MAPEO_XSD_XML_TARGET)}</Typography></Box>
+                  <Box sx={{ p: 2 }}>
+                    <Box sx={{ display: "grid", gap: 0.75, maxHeight: 440, overflowY: "auto" }}>
+                      {destinos.length === 0 ? <Typography color="text.secondary">{idVersionSeleccionada ? resolveMessage(MessageCodes.MAPEO_XSD_EMPTY) : resolveMessage(MessageCodes.MAPEO_XSD_SELECT_VERSION)}</Typography> : destinos.map((destino) => (
+                        <Button key={destino.key} variant={formulario.destino === destino.key ? "contained" : "outlined"} disabled={guardando}
+                          onClick={() => setFormulario((actual) => ({ ...actual, destino: destino.key }))}
+                          sx={{ justifyContent: "flex-start", textAlign: "left", textTransform: "none" }}>{destino.nombre}</Button>
+                      ))}
+                    </Box>
+                  </Box>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 0, minWidth: 0, overflow: "hidden" }}>
+                  <Box sx={{ px: 2, py: 1, bgcolor: "secondary.main", color: "secondary.contrastText" }}><Typography variant="subtitle1" component="h3">Origen del dato</Typography></Box>
+                  <Box sx={{ p: 2, display: "grid", gap: 2 }}>
+                    <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_TYPE)} value={formulario.tipoOrigen}
+                      onChange={(event) => cambiarTipoOrigen(event.target.value)} disabled={guardando}>
+                      <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                      <MenuItem value="JSON">JSON</MenuItem><MenuItem value="FACTUCORE">FACTUCORE</MenuItem><MenuItem value="GENERADO">GENERADO</MenuItem>
+                    </TextField>
+                    {formulario.tipoOrigen === "FACTUCORE" && <>
+                      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_ENTITY)} value={formulario.codigoFuente}
+                        onChange={(event) => setFormulario((actual) => ({ ...actual, codigoFuente: event.target.value, codigoCampo: "", codigoCatalogo: "" }))} disabled={guardando}>
+                        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                        {fuentes.map((fuente) => <MenuItem key={fuente.codigo} value={fuente.codigo}>{fuente.nombre}</MenuItem>)}
+                      </TextField>
+                      {fuentesDisponibles?.requiereCatalogo && <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_CATALOG)}
+                        value={formulario.codigoCatalogo} onChange={(event) => setFormulario((actual) => ({ ...actual, codigoCatalogo: event.target.value, codigoCampo: "" }))} disabled={guardando}>
+                        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                        {catalogos.map((catalogo) => <MenuItem key={catalogo.id} value={catalogo.codigo}>{catalogo.codigo} — {catalogo.nombre}</MenuItem>)}
+                      </TextField>}
+                      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_SOURCE_FIELD)} value={formulario.codigoCampo}
+                        onChange={(event) => setFormulario((actual) => ({ ...actual, codigoCampo: event.target.value }))} disabled={guardando || !fuentesDisponibles}>
+                        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                        {camposDisponibles.map((campo) => <MenuItem key={campo.codigo} value={campo.codigo}>{campo.nombre} · {campo.tipoDato}</MenuItem>)}
+                      </TextField>
+                    </>}
+                    {formulario.tipoOrigen === "JSON" && <>
+                      <TextField fullWidth multiline minRows={5} label="JSON de ejemplo del contrato canónico" value={formulario.ejemploJson}
+                        onChange={(event) => setFormulario((actual) => ({ ...actual, ejemploJson: event.target.value, rutaJson: "" }))} disabled={guardando} />
+                      <TextField select fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_JSON_PATH)} value={formulario.rutaJson}
+                        onChange={(event) => setFormulario((actual) => ({ ...actual, rutaJson: event.target.value }))} disabled={guardando || rutasJson.length === 0}>
+                        <MenuItem value="">{resolveMessage(MessageCodes.COMMON_SELECT_OPTION)}</MenuItem>
+                        {rutasJson.map((ruta) => <MenuItem key={ruta} value={ruta}>{ruta}</MenuItem>)}
+                      </TextField>
+                    </>}
+                    {formulario.tipoOrigen === "GENERADO" && <TextField fullWidth label={resolveMessage(MessageCodes.MAPEO_XSD_GENERATED_SOURCE)}
+                      value={formulario.origenGenerado} onChange={(event) => setFormulario((actual) => ({ ...actual, origenGenerado: event.target.value }))}
+                      disabled={guardando} inputProps={{ maxLength: 1000 }} />}
+                  </Box>
+                </Paper>
+              </Box>
+              <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
+                <Button variant="contained" onClick={agregarMapeo} disabled={guardando || !definicion || !idEmpresa || !formulario.destino || !obtenerOrigen()}>Agregar</Button>
+              </Box>
+              <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+                <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6">Mapeos por guardar ({mapeosPendientes.length})</Typography></Box>
+                <TableContainer><Table size="small"><TableHead><TableRow><TableCell>Origen</TableCell><TableCell>Destino XML</TableCell><TableCell align="right">Acciones</TableCell></TableRow></TableHead>
+                  <TableBody>{mapeosPendientes.map((mapeo, indice) => <TableRow key={mapeo.origen + indice}>
+                    <TableCell>{mapeo.tipoOrigen}: {mapeo.origen}</TableCell>
+                    <TableCell>{destinosBase.find((d) => mapeo.tipoMapeo === "ELEMENTO" ? d.idElementoXsd === mapeo.idElementoXsd : d.idAtributoXsd === mapeo.idAtributoXsd)?.nombre ?? "—"}</TableCell>
+                    <TableCell align="right"><Button color="error" onClick={() => quitarMapeoPendiente(indice)} disabled={guardando}>Quitar</Button></TableCell>
+                  </TableRow>)}</TableBody>
+                </Table></TableContainer>
+                <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}><Button variant="contained" onClick={() => void guardarMapeos()} disabled={guardando || mapeosPendientes.length === 0 || !idEmpresa || !idVersionSeleccionada}>{guardando ? resolveMessage(MessageCodes.COMMON_SAVING) : resolveMessage(MessageCodes.MAPEO_XSD_SAVE)}</Button></Box>
+              </Paper>
+            </Box>
+          </Paper>
 
           <Paper variant="outlined" className="catalogos-panel" sx={{ overflow: "hidden" }}>
             <Box sx={{ px: 2, py: 1, bgcolor: "primary.main", color: "primary.contrastText" }}><Typography variant="h6" component="h2">{resolveMessage(MessageCodes.MAPEO_XSD_EXISTING_TITLE)}</Typography></Box>
