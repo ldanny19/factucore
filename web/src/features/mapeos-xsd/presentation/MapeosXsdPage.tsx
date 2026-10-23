@@ -182,7 +182,7 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       tipoMapeo: "ELEMENTO",
       idElementoXsd: elemento.id,
       idAtributoXsd: null,
-      nombre: `ID ${elemento.id} — ${rutaElemento(elemento, elementosActivos)}`,
+      nombre: rutaElemento(elemento, elementosActivos),
     }));
   const destinosAtributos: DestinoXsd[] = atributosActivos.map((atributo) => {
     const elemento = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
@@ -191,7 +191,7 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       tipoMapeo: "ATRIBUTO",
       idElementoXsd: null,
       idAtributoXsd: atributo.id,
-      nombre: `ID ${atributo.id} — ${elemento ? rutaElemento(elemento, elementosActivos) : ""}.@${atributo.nombre}`,
+      nombre: `${elemento ? rutaElemento(elemento, elementosActivos) : ""}.@${atributo.nombre}`,
     };
   });
 
@@ -475,12 +475,12 @@ export default function MapeosXsdPage() {
   const descripcionDestino = (mapeo: MapeoXsd): string => {
     if (mapeo.idElementoXsd !== null) {
       const elemento = definicion?.elementos.find((actual) => actual.id === mapeo.idElementoXsd);
-      return elemento ? `ID ${elemento.id} — ${rutaElemento(elemento, definicion?.elementos ?? [])}` : String(mapeo.idElementoXsd);
+      return elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : String(mapeo.idElementoXsd);
     }
     const atributo = definicion?.atributos.find((actual) => actual.id === mapeo.idAtributoXsd);
     const elemento = definicion?.elementos.find((actual) => actual.id === atributo?.idElementoXsd);
     return atributo
-      ? `ID ${atributo.id} — ${elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : ""}.@${atributo.nombre}`
+      ? `${elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : ""}.@${atributo.nombre}`
       : String(mapeo.idAtributoXsd);
   };
 
