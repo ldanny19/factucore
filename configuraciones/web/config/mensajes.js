@@ -1,43 +1,91 @@
 window.FACTUCORE_MESSAGES = {
   LOGIN_REQUIRED_FIELDS: "Ingresa tu usuario y contraseña.",
-  LOGIN_AUTHENTICATION_FAILED: "No fue posible iniciar sesión con las credenciales proporcionadas.",
-  LOGIN_AUTHENTICATION_NOT_CONFIGURED: "El servicio de autenticación todavía no está conectado.",
-  LOGIN_SERVICE_UNAVAILABLE: "El servicio de autenticación no está disponible. Inténtalo más tarde.",
+  LOGIN_AUTHENTICATION_FAILED:
+    "No fue posible iniciar sesión con las credenciales proporcionadas.",
+  LOGIN_REFRESH_TOKEN_MISSING:
+    "Keycloak no devolvió un refresh token. Verifica que Direct Access Grants esté habilitado para el cliente.",
+  LOGIN_AUTHENTICATION_NOT_CONFIGURED:
+    "El servicio de autenticación todavía no está conectado.",
+  LOGIN_SERVICE_UNAVAILABLE:
+    "El servicio de autenticación no está disponible. Inténtalo más tarde.",
   LOGIN_UNEXPECTED_ERROR: "Ocurrió un error inesperado. Inténtalo más tarde.",
   SESSION_EXPIRING_TITLE: "Tu sesión está por caducar",
-  SESSION_EXPIRING_DESCRIPTION: "Tu sesión está por finalizar debido a inactividad o expiración. ¿Deseas continuar trabajando? Si no respondes a tiempo, se cerrará la sesión.",
-  SESSION_CONTINUE: "Continuar sesión", SESSION_END: "Cerrar sesión",
-  COMMON_MESSAGE_NOT_CONFIGURED: "No se pudo mostrar el mensaje solicitado. Contacta al administrador.",
-  COMMON_OPERATION_FAILED: "No fue posible completar la operación.", COMMON_SEARCH: "Buscar", COMMON_CLEAR_SEARCH: "Limpiar búsqueda",
+  SESSION_EXPIRING_DESCRIPTION:
+    "Tu sesión está por finalizar debido a inactividad. ¿Deseas continuar trabajando? Si no respondes a tiempo, se cerrará la sesión.",
+  SESSION_CONTINUE: "Continuar sesión",
+  SESSION_END: "Cerrar sesión",
+  SESSION_RENEWAL_FAILED: "No se pudo renovar la sesión. Puedes intentarlo nuevamente; tu sesión no se cerró.",
+  SESSION_RETRY: "Reintentar",
+  COMMON_MESSAGE_NOT_CONFIGURED:
+    "No se pudo mostrar el mensaje solicitado. Contacta al administrador.",
+  COMMON_OPERATION_FAILED: "No fue posible completar la operación.",
+  COMMON_SEARCH: "Buscar",
+  COMMON_CLEAR_SEARCH: "Limpiar búsqueda",
   COMMON_SELECT_OPTION: "Seleccione una opción",
-  COMMON_REFRESH: "Actualizar", COMMON_STATUS: "Estado", COMMON_ACTIONS: "Acciones", COMMON_EDIT: "Editar", COMMON_DELETE: "Eliminar",
-  COMMON_CANCEL: "Cancelar", COMMON_SAVE: "Guardar", COMMON_YES: "Sí", COMMON_NO: "No", API_OPERATION_FAILED: "La operación no fue exitosa.",
+  COMMON_REFRESH: "Actualizar",
+  COMMON_STATUS: "Estado",
+  COMMON_ACTIONS: "Acciones",
+  COMMON_EDIT: "Editar",
+  COMMON_DELETE: "Eliminar",
+  COMMON_CANCEL: "Cancelar",
+  COMMON_SAVE: "Guardar",
+  COMMON_YES: "Sí",
+  COMMON_NO: "No",
+  API_OPERATION_FAILED: "La operación no fue exitosa.",
   API_HTTP_BAD_REQUEST: "La solicitud enviada no es válida.",
-  API_HTTP_UNAUTHORIZED: "Tu sesión no está autenticada. Inicia sesión nuevamente.",
+  API_HTTP_UNAUTHORIZED:
+    "Tu sesión no está autenticada. Inicia sesión nuevamente.",
   API_HTTP_FORBIDDEN: "No tienes permisos para realizar esta operación.",
   API_HTTP_NOT_FOUND: "No se encontró el recurso solicitado.",
   API_HTTP_INTERNAL_SERVER_ERROR: "Ocurrió un error interno en el servidor.",
   API_HTTP_UNEXPECTED_ERROR: "Ocurrió un error inesperado (HTTP {status}).",
-  API_CONNECTION_ERROR: "No fue posible conectarse con el servidor. Inténtalo nuevamente.",
+  API_CONNECTION_ERROR:
+    "No fue posible conectarse con el servidor. Inténtalo nuevamente.",
   API_INVALID_RESPONSE: "El servidor devolvió una respuesta inválida.",
-  ACCESS_DENIED_TITLE: "Acceso denegado", ACCESS_DENIED_DESCRIPTION: "Tu usuario no tiene permisos para acceder a esta opción.", ACCESS_DENIED_HOME: "Volver al inicio",
-  EMPRESA_PAGE_TITLE: "Empresas", EMPRESA_PAGE_DESCRIPTION: "Administra las empresas registradas en FactuCore.", EMPRESA_NEW: "Nueva empresa",
-  EMPRESA_SEARCH_TITLE: "Buscar empresa por ID", EMPRESA_ID_LABEL: "ID de empresa", EMPRESA_SEARCH_RESULT: "Resultado de búsqueda",
-  EMPRESA_LIST_TITLE: "Listado de empresas", EMPRESA_RUC: "RUC", EMPRESA_LEGAL_NAME: "Razón social", EMPRESA_TRADE_NAME: "Nombre comercial",
-  EMPRESA_ACCOUNTING_REQUIRED: "Obligado a llevar contabilidad", EMPRESA_EDIT_TITLE: "Modificar empresa", EMPRESA_CREATE_TITLE: "Crear empresa",
-  EMPRESA_FORM_DESCRIPTION: "Los campos se validan antes de enviarse a la API de FactuCore.", EMPRESA_RUC_INVALID: "El RUC debe contener exactamente 13 dígitos.",
-  EMPRESA_REQUIRED_FIELDS: "Completa la razón social y la dirección de la matriz.", EMPRESA_ACCOUNTING_VALUE_REQUIRED: "Selecciona si la empresa está obligada a llevar contabilidad.", EMPRESA_ID_INVALID: "Ingresa un ID de empresa válido.",
-  EMPRESA_CREATED: "La empresa se creó correctamente.", EMPRESA_UPDATED: "La empresa se actualizó correctamente.", EMPRESA_FOUND: "Empresa {id} encontrada.",
-  EMPRESA_DELETED: "La empresa {name} fue eliminada lógicamente.", EMPRESA_EMPTY: "No hay empresas registradas.",
-  EMPRESA_LIST_DESCRIPTION: "{count} registro(s). Se incluyen empresas activas e inactivas, no las eliminadas.",
-  EMPRESA_DELETE_CONFIRM_TITLE: "Confirmar eliminación", EMPRESA_DELETE_CONFIRM_DESCRIPTION: "¿Deseas eliminar esta empresa?",
-  EMPRESA_ADDRESS_REQUIRED: "Dirección de la matriz *", EMPRESA_RIMPE: "Contribuyente régimen RIMPE",
-  EMPRESA_NO_APLICA: "No aplica", EMPRESA_DELETE_TITLE: "Eliminar empresa",
+  ACCESS_DENIED_TITLE: "Acceso denegado",
+  ACCESS_DENIED_DESCRIPTION:
+    "Tu usuario no tiene permisos para acceder a esta opción.",
+  ACCESS_DENIED_HOME: "Volver al inicio",
+  EMPRESA_PAGE_TITLE: "Empresas",
+  EMPRESA_PAGE_DESCRIPTION: "Administra las empresas registradas en FactuCore.",
+  EMPRESA_NEW: "Nueva empresa",
+  EMPRESA_SEARCH_TITLE: "Buscar empresa por ID",
+  EMPRESA_ID_LABEL: "ID de empresa",
+  EMPRESA_SEARCH_RESULT: "Resultado de búsqueda",
+  EMPRESA_LIST_TITLE: "Listado de empresas",
+  EMPRESA_RUC: "RUC",
+  EMPRESA_LEGAL_NAME: "Razón social",
+  EMPRESA_TRADE_NAME: "Nombre comercial",
+  EMPRESA_ACCOUNTING_REQUIRED: "Obligado a llevar contabilidad",
+  EMPRESA_EDIT_TITLE: "Modificar empresa",
+  EMPRESA_CREATE_TITLE: "Crear empresa",
+  EMPRESA_FORM_DESCRIPTION:
+    "Los campos se validan antes de enviarse a la API de FactuCore.",
+  EMPRESA_RUC_INVALID: "El RUC debe contener exactamente 13 dígitos.",
+  EMPRESA_REQUIRED_FIELDS:
+    "Completa la razón social y la dirección de la matriz.",
+  EMPRESA_ACCOUNTING_VALUE_REQUIRED:
+    "Selecciona si la empresa está obligada a llevar contabilidad.",
+  EMPRESA_ID_INVALID: "Ingresa un ID de empresa válido.",
+  EMPRESA_CREATED: "La empresa se creó correctamente.",
+  EMPRESA_UPDATED: "La empresa se actualizó correctamente.",
+  EMPRESA_FOUND: "Empresa {id} encontrada.",
+  EMPRESA_DELETED: "La empresa {name} fue eliminada lógicamente.",
+  EMPRESA_EMPTY: "No hay empresas registradas.",
+  EMPRESA_LIST_DESCRIPTION:
+    "{count} registro(s). Se incluyen empresas activas e inactivas, no las eliminadas.",
+  EMPRESA_DELETE_CONFIRM_TITLE: "Confirmar eliminación",
+  EMPRESA_DELETE_CONFIRM_DESCRIPTION: "¿Deseas eliminar esta empresa?",
+  EMPRESA_ADDRESS_REQUIRED: "Dirección de la matriz *",
+  EMPRESA_RIMPE: "Contribuyente régimen RIMPE",
+  EMPRESA_NO_APLICA: "No aplica",
+  EMPRESA_DELETE_TITLE: "Eliminar empresa",
   EMPRESA_DELETE_CONFIRM_PREFIX: "¿Confirmas la eliminación lógica de",
   COMMON_DELETING: "Eliminando...",
   EMPRESA_QUERY_DATE: "Consulta realizada el {date}",
   ESTABLECIMIENTO_PAGE_TITLE: "Establecimientos",
-  ESTABLECIMIENTO_PAGE_DESCRIPTION: "Administra los establecimientos asociados a las empresas registradas.",
+  ESTABLECIMIENTO_PAGE_DESCRIPTION:
+    "Administra los establecimientos asociados a las empresas registradas.",
   ESTABLECIMIENTO_NEW: "Nuevo establecimiento",
   ESTABLECIMIENTO_SEARCH_TITLE: "Buscar establecimiento por ID",
   ESTABLECIMIENTO_ID_LABEL: "ID de establecimiento",
@@ -50,7 +98,8 @@ window.FACTUCORE_MESSAGES = {
   ESTABLECIMIENTO_EMPTY: "No hay establecimientos registrados.",
   ESTABLECIMIENTO_CREATE_TITLE: "Crear establecimiento",
   ESTABLECIMIENTO_EDIT_TITLE: "Modificar establecimiento",
-  ESTABLECIMIENTO_FORM_DESCRIPTION: "Selecciona la empresa y completa los datos del establecimiento.",
+  ESTABLECIMIENTO_FORM_DESCRIPTION:
+    "Selecciona la empresa y completa los datos del establecimiento.",
   ESTABLECIMIENTO_EMPRESA_REQUIRED: "Selecciona una empresa válida.",
   ESTABLECIMIENTO_CODE_REQUIRED: "Ingresa el código del establecimiento.",
   ESTABLECIMIENTO_NAME_REQUIRED: "Ingresa el nombre del establecimiento.",
@@ -62,11 +111,13 @@ window.FACTUCORE_MESSAGES = {
   ESTABLECIMIENTO_DELETED: "El establecimiento {name} fue eliminado.",
   ESTABLECIMIENTO_DELETE_TITLE: "Eliminar establecimiento",
   ESTABLECIMIENTO_DELETE_CONFIRM_PREFIX: "¿Confirmas la eliminación de",
-  ESTABLECIMIENTO_DELETE_CONFIRM_DESCRIPTION: "Esta acción no se puede deshacer.",
+  ESTABLECIMIENTO_DELETE_CONFIRM_DESCRIPTION:
+    "Esta acción no se puede deshacer.",
   ESTABLECIMIENTO_DELETE_CONFIRM: "Confirmar eliminación",
   ESTABLECIMIENTO_SAVING: "Guardando...",
   PUNTO_EMISION_PAGE_TITLE: "Puntos de emisión",
-  PUNTO_EMISION_PAGE_DESCRIPTION: "Administra los puntos de emisión de cada establecimiento.",
+  PUNTO_EMISION_PAGE_DESCRIPTION:
+    "Administra los puntos de emisión de cada establecimiento.",
   PUNTO_EMISION_NEW: "Nuevo punto de emisión",
   PUNTO_EMISION_SEARCH_TITLE: "Buscar punto de emisión por ID",
   PUNTO_EMISION_ID_LABEL: "ID de punto de emisión",
@@ -78,11 +129,13 @@ window.FACTUCORE_MESSAGES = {
   PUNTO_EMISION_EMPTY: "No hay puntos de emisión registrados.",
   PUNTO_EMISION_CREATE_TITLE: "Crear punto de emisión",
   PUNTO_EMISION_EDIT_TITLE: "Modificar punto de emisión",
-  PUNTO_EMISION_FORM_DESCRIPTION: "Selecciona el establecimiento y completa los datos del punto de emisión.",
+  PUNTO_EMISION_FORM_DESCRIPTION:
+    "Selecciona el establecimiento y completa los datos del punto de emisión.",
   PUNTO_EMISION_COMPANY_REQUIRED: "Selecciona una empresa válida.",
   PUNTO_EMISION_ESTABLISHMENT_REQUIRED: "Selecciona un establecimiento válido.",
   PUNTO_EMISION_CODE_REQUIRED: "Ingresa un código de hasta 3 caracteres.",
-  PUNTO_EMISION_NAME_REQUIRED: "Ingresa un nombre válido de hasta 300 caracteres.",
+  PUNTO_EMISION_NAME_REQUIRED:
+    "Ingresa un nombre válido de hasta 300 caracteres.",
   PUNTO_EMISION_ID_INVALID: "Ingresa un ID de punto de emisión válido.",
   PUNTO_EMISION_CREATED: "El punto de emisión se creó correctamente.",
   PUNTO_EMISION_UPDATED: "El punto de emisión se actualizó correctamente.",
@@ -94,25 +147,33 @@ window.FACTUCORE_MESSAGES = {
   PUNTO_EMISION_DELETE_CONFIRM: "Confirmar eliminación",
   PUNTO_EMISION_SAVING: "Guardando...",
   SECUENCIAL_PAGE_TITLE: "Secuenciales",
-  SECUENCIAL_PAGE_DESCRIPTION: "Administra la numeración por tipo de documento y punto de emisión.",
+  SECUENCIAL_PAGE_DESCRIPTION:
+    "Administra la numeración por tipo de documento y punto de emisión.",
   SECUENCIAL_NEW: "Nuevo secuencial",
-  SECUENCIAL_FILTER_TITLE: "Selecciona la empresa, el establecimiento y el punto de emisión.",
+  SECUENCIAL_FILTER_TITLE:
+    "Selecciona la empresa, el establecimiento y el punto de emisión.",
   SECUENCIAL_LIST_TITLE: "Secuenciales del punto de emisión",
   SECUENCIAL_RECORDS: "registro(s) en la consulta actual.",
-  SECUENCIAL_EMPTY: "No hay secuenciales registrados para este punto de emisión.",
+  SECUENCIAL_EMPTY:
+    "No hay secuenciales registrados para este punto de emisión.",
   SECUENCIAL_ID_LABEL: "ID de secuencial",
   SECUENCIAL_POINT: "Punto de emisión",
   SECUENCIAL_DOCUMENT_CODE: "Código de documento",
   SECUENCIAL_LAST_NUMBER: "Último secuencial utilizado",
   SECUENCIAL_CREATE_TITLE: "Crear secuencial",
   SECUENCIAL_EDIT_TITLE: "Modificar secuencial",
-  SECUENCIAL_FORM_DESCRIPTION: "Define el tipo de documento y el último número utilizado para este punto de emisión.",
-  SECUENCIAL_DOCUMENT_CODE_HELP: "Ingresa exactamente dos dígitos, por ejemplo 01.",
-  SECUENCIAL_LAST_NUMBER_HELP: "Puedes modificarlo; un valor menor puede provocar duplicados y uno mayor puede generar saltos.",
+  SECUENCIAL_FORM_DESCRIPTION:
+    "Define el tipo de documento y el último número utilizado para este punto de emisión.",
+  SECUENCIAL_DOCUMENT_CODE_HELP:
+    "Ingresa exactamente dos dígitos, por ejemplo 01.",
+  SECUENCIAL_LAST_NUMBER_HELP:
+    "Puedes modificarlo; un valor menor puede provocar duplicados y uno mayor puede generar saltos.",
   SECUENCIAL_COMPANY_REQUIRED: "Selecciona una empresa válida.",
   SECUENCIAL_POINT_REQUIRED: "Selecciona un punto de emisión válido.",
-  SECUENCIAL_DOCUMENT_CODE_INVALID: "El código de documento debe contener exactamente dos dígitos.",
-  SECUENCIAL_LAST_NUMBER_INVALID: "El último secuencial debe ser un entero entre 0 y 999999999.",
+  SECUENCIAL_DOCUMENT_CODE_INVALID:
+    "El código de documento debe contener exactamente dos dígitos.",
+  SECUENCIAL_LAST_NUMBER_INVALID:
+    "El último secuencial debe ser un entero entre 0 y 999999999.",
   SECUENCIAL_CREATED: "El secuencial se creó correctamente.",
   SECUENCIAL_UPDATED: "El secuencial se actualizó correctamente.",
   SECUENCIAL_INACTIVATED: "El secuencial se inactivó correctamente.",
@@ -121,14 +182,18 @@ window.FACTUCORE_MESSAGES = {
   SECUENCIAL_INACTIVATE: "Inactivar",
   SECUENCIAL_REACTIVATE: "Reactivar",
   SECUENCIAL_DELETE_TITLE: "Eliminar secuencial",
-  SECUENCIAL_DELETE_CONFIRM_PREFIX: "¿Confirmas la eliminación lógica del código",
-  SECUENCIAL_DELETE_CONFIRM_DESCRIPTION: "El registro se marcará como eliminado y no podrá reactivarse.",
+  SECUENCIAL_DELETE_CONFIRM_PREFIX:
+    "¿Confirmas la eliminación lógica del código",
+  SECUENCIAL_DELETE_CONFIRM_DESCRIPTION:
+    "El registro se marcará como eliminado y no podrá reactivarse.",
   SECUENCIAL_DELETE_CONFIRM: "Confirmar eliminación",
   SECUENCIAL_SAVING: "Guardando...",
   CONFIGURACION_PAGE_TITLE: "Configuración de empresa",
-  CONFIGURACION_PAGE_DESCRIPTION: "Administra claves y valores con vigencia para cada empresa.",
+  CONFIGURACION_PAGE_DESCRIPTION:
+    "Administra claves y valores con vigencia para cada empresa.",
   CONFIGURACION_NEW: "Nueva configuración",
-  CONFIGURACION_FILTER_HELP: "La lista muestra configuraciones activas e inactivas de la empresa seleccionada.",
+  CONFIGURACION_FILTER_HELP:
+    "La lista muestra configuraciones activas e inactivas de la empresa seleccionada.",
   CONFIGURACION_LIST_TITLE: "Configuraciones registradas",
   CONFIGURACION_RECORDS: "registro(s) en la consulta actual.",
   CONFIGURACION_EMPTY: "No hay configuraciones registradas para esta empresa.",
@@ -139,10 +204,13 @@ window.FACTUCORE_MESSAGES = {
   CONFIGURACION_VALID_UNTIL: "Vigente hasta",
   CONFIGURACION_CREATE_TITLE: "Crear configuración de empresa",
   CONFIGURACION_EDIT_TITLE: "Modificar configuración de empresa",
-  CONFIGURACION_FORM_DESCRIPTION: "Define el valor y su periodo de vigencia para la empresa seleccionada.",
+  CONFIGURACION_FORM_DESCRIPTION:
+    "Define el valor y su periodo de vigencia para la empresa seleccionada.",
   CONFIGURACION_REQUIRED: "Selecciona una empresa válida.",
-  CONFIGURACION_FIELDS_INVALID: "La clave y el tipo de dato son obligatorios y deben respetar su longitud máxima.",
-  CONFIGURACION_DATE_RANGE_INVALID: "La fecha inicial es obligatoria y la fecha final no puede ser anterior.",
+  CONFIGURACION_FIELDS_INVALID:
+    "La clave y el tipo de dato son obligatorios y deben respetar su longitud máxima.",
+  CONFIGURACION_DATE_RANGE_INVALID:
+    "La fecha inicial es obligatoria y la fecha final no puede ser anterior.",
   CONFIGURACION_VALUE_INVALID: "El valor no puede superar 2000 caracteres.",
   CONFIGURACION_CREATED: "La configuración se creó correctamente.",
   CONFIGURACION_UPDATED: "La configuración se actualizó correctamente.",
@@ -152,12 +220,15 @@ window.FACTUCORE_MESSAGES = {
   CONFIGURACION_INACTIVATE: "Inactivar",
   CONFIGURACION_REACTIVATE: "Reactivar",
   CONFIGURACION_DELETE_TITLE: "Eliminar configuración",
-  CONFIGURACION_DELETE_CONFIRM_PREFIX: "¿Confirmas la eliminación lógica de la clave",
-  CONFIGURACION_DELETE_CONFIRM_DESCRIPTION: "El registro se marcará como eliminado y no podrá reactivarse.",
+  CONFIGURACION_DELETE_CONFIRM_PREFIX:
+    "¿Confirmas la eliminación lógica de la clave",
+  CONFIGURACION_DELETE_CONFIRM_DESCRIPTION:
+    "El registro se marcará como eliminado y no podrá reactivarse.",
   CONFIGURACION_DELETE_CONFIRM: "Confirmar eliminación",
   CONFIGURACION_SAVING: "Guardando...",
   CERTIFICADO_PAGE_TITLE: "Certificados de firma electrónica",
-  CERTIFICADO_PAGE_DESCRIPTION: "Administra los certificados registrados por empresa y su periodo de vigencia.",
+  CERTIFICADO_PAGE_DESCRIPTION:
+    "Administra los certificados registrados por empresa y su periodo de vigencia.",
   CERTIFICADO_NEW: "Registrar certificado",
   CERTIFICADO_LIST_TITLE: "Certificados registrados",
   CERTIFICADO_RECORDS: "registro(s) en la consulta actual.",
@@ -168,14 +239,18 @@ window.FACTUCORE_MESSAGES = {
   CERTIFICADO_VALID_UNTIL: "Vigente hasta",
   CERTIFICADO_CREATE_TITLE: "Registrar certificado de firma",
   CERTIFICADO_EDIT_TITLE: "Modificar certificado de firma",
-  CERTIFICADO_SECURITY_WARNING: "Copia previamente el certificado en el directorio persistente del servidor. La selección solo registra su nombre; el contenido del archivo no se envía por la API.",
+  CERTIFICADO_SECURITY_WARNING:
+    "Copia previamente el certificado en el directorio persistente del servidor. La selección solo registra su nombre; el contenido del archivo no se envía por la API.",
   CERTIFICADO_EMPRESA_REQUIRED: "Selecciona una empresa válida.",
-  CERTIFICADO_FIELDS_INVALID: "El nombre del archivo debe respetar la longitud máxima.",
+  CERTIFICADO_FIELDS_INVALID:
+    "El nombre del archivo debe respetar la longitud máxima.",
   CERTIFICADO_SELECT_FILE: "Seleccionar certificado",
   CERTIFICADO_NO_FILE_SELECTED: "No se ha seleccionado un archivo.",
-  CERTIFICADO_FILE_REQUIRED: "Selecciona un archivo de certificado para continuar.",
+  CERTIFICADO_FILE_REQUIRED:
+    "Selecciona un archivo de certificado para continuar.",
   CERTIFICADO_FILE_INVALID: "El archivo debe tener extensión .p12 o .pfx.",
-  CERTIFICADO_DATE_RANGE_INVALID: "La fecha inicial es obligatoria y la fecha final no puede ser anterior.",
+  CERTIFICADO_DATE_RANGE_INVALID:
+    "La fecha inicial es obligatoria y la fecha final no puede ser anterior.",
   CERTIFICADO_CREATED: "El certificado se registró correctamente.",
   CERTIFICADO_UPDATED: "El certificado se actualizó correctamente.",
   CERTIFICADO_INACTIVATED: "El certificado se inactivó correctamente.",
@@ -184,29 +259,37 @@ window.FACTUCORE_MESSAGES = {
   CERTIFICADO_INACTIVATE: "Inactivar",
   CERTIFICADO_REACTIVATE: "Reactivar",
   CERTIFICADO_DELETE_TITLE: "Eliminar certificado",
-  CERTIFICADO_DELETE_CONFIRM_PREFIX: "¿Confirmas la eliminación lógica del certificado",
-  CERTIFICADO_DELETE_CONFIRM_DESCRIPTION: "El registro se marcará como eliminado y no podrá reactivarse.",
+  CERTIFICADO_DELETE_CONFIRM_PREFIX:
+    "¿Confirmas la eliminación lógica del certificado",
+  CERTIFICADO_DELETE_CONFIRM_DESCRIPTION:
+    "El registro se marcará como eliminado y no podrá reactivarse.",
   CERTIFICADO_DELETE_CONFIRM: "Confirmar eliminación",
   CERTIFICADO_SAVING: "Guardando...",
   TARIFA_PAGE_TITLE: "Tarifas tributarias",
-  TARIFA_PAGE_DESCRIPTION: "Administra tarifas tributarias y consulta cuál está vigente para una fecha.",
+  TARIFA_PAGE_DESCRIPTION:
+    "Administra tarifas tributarias y consulta cuál está vigente para una fecha.",
   TARIFA_NEW: "Nueva tarifa",
-  TARIFA_SEARCH_TITLE: "Consulta todas las tarifas o filtra por código de impuesto y porcentaje.",
+  TARIFA_SEARCH_TITLE:
+    "Consulta todas las tarifas o filtra por código de impuesto y porcentaje.",
   TARIFA_TAX_CODE: "Código de impuesto",
   TARIFA_PERCENT_CODE: "Código de porcentaje",
   TARIFA_CATALOGS_LOADING: "Cargando catálogos...",
-  TARIFA_CATALOGS_EMPTY: "No hay ítems activos disponibles en los catálogos requeridos.",
+  TARIFA_CATALOGS_EMPTY:
+    "No hay ítems activos disponibles en los catálogos requeridos.",
   TARIFA_SEARCH_ALL: "Buscar todos",
   TARIFA_QUERY_DATE: "Fecha de consulta",
   TARIFA_QUERY_CURRENT: "Consultar tarifa vigente",
   TARIFA_QUERYING_CURRENT: "Consultando...",
   TARIFA_CURRENT_SUMMARY: "Tarifa vigente para {date}: {result}.",
-  TARIFA_VIGENTE_FOUND: "Se encontró una tarifa vigente de {rate}% para {date}.",
+  TARIFA_VIGENTE_FOUND:
+    "Se encontró una tarifa vigente de {rate}% para {date}.",
   TARIFA_VIGENTE_NOT_FOUND: "No hay una tarifa vigente para la fecha {date}.",
-  TARIFA_VIGENTE_FILTER_INVALID: "Ingresa códigos de impuesto y porcentaje válidos y selecciona una fecha.",
+  TARIFA_VIGENTE_FILTER_INVALID:
+    "Ingresa códigos de impuesto y porcentaje válidos y selecciona una fecha.",
   TARIFA_LIST_TITLE: "Historial de vigencias",
   TARIFA_RECORDS: "registro(s) encontrados.",
-  TARIFA_SEARCH_PROMPT: "Selecciona un código de impuesto y busca para consultar el historial.",
+  TARIFA_SEARCH_PROMPT:
+    "Selecciona un código de impuesto y busca para consultar el historial.",
   TARIFA_EMPTY: "No existen tarifas para los códigos indicados.",
   TARIFA_CATALOG_ITEM_ID: "Ítem de catálogo",
   TARIFA_RATE: "Tarifa (%)",
@@ -215,12 +298,17 @@ window.FACTUCORE_MESSAGES = {
   TARIFA_OBSERVATION: "Observación",
   TARIFA_CREATE_TITLE: "Crear tarifa tributaria",
   TARIFA_EDIT_TITLE: "Modificar tarifa tributaria",
-  TARIFA_FORM_DESCRIPTION: "Registra el código, valor porcentual y periodo de vigencia. El backend valida que las fechas no se solapen.",
+  TARIFA_FORM_DESCRIPTION:
+    "Registra el código, valor porcentual y periodo de vigencia. El backend valida que las fechas no se solapen.",
   TARIFA_CATALOG_ITEM_HELP: "Este valor se obtiene del catálogo TARIFA_IVA.",
-  TARIFA_CODES_INVALID: "El código de impuesto debe tener hasta 2 dígitos y el de porcentaje hasta 4.",
-  TARIFA_CATALOG_ITEM_INVALID: "Selecciona opciones válidas de los catálogos activos.",
-  TARIFA_RATE_INVALID: "La tarifa debe ser un número entre 0 y 9999.9999 con hasta 4 decimales.",
-  TARIFA_DATE_RANGE_INVALID: "La fecha inicial es obligatoria y la fecha final no puede ser anterior.",
+  TARIFA_CODES_INVALID:
+    "El código de impuesto debe tener hasta 2 dígitos y el de porcentaje hasta 4.",
+  TARIFA_CATALOG_ITEM_INVALID:
+    "Selecciona opciones válidas de los catálogos activos.",
+  TARIFA_RATE_INVALID:
+    "La tarifa debe ser un número entre 0 y 9999.9999 con hasta 4 decimales.",
+  TARIFA_DATE_RANGE_INVALID:
+    "La fecha inicial es obligatoria y la fecha final no puede ser anterior.",
   TARIFA_OBSERVATION_INVALID: "La observación no puede superar 500 caracteres.",
   TARIFA_CREATED: "La tarifa se creó correctamente.",
   TARIFA_UPDATED: "La tarifa se actualizó correctamente.",
@@ -231,7 +319,8 @@ window.FACTUCORE_MESSAGES = {
   TARIFA_REACTIVATE: "Reactivar",
   TARIFA_DELETE_TITLE: "Eliminar tarifa",
   TARIFA_DELETE_CONFIRM_PREFIX: "¿Confirmas la eliminación lógica de la tarifa",
-  TARIFA_DELETE_CONFIRM_DESCRIPTION: "El registro se marcará como eliminado y no podrá reactivarse.",
+  TARIFA_DELETE_CONFIRM_DESCRIPTION:
+    "El registro se marcará como eliminado y no podrá reactivarse.",
   TARIFA_DELETE_CONFIRM: "Confirmar eliminación",
   TARIFA_SAVING: "Guardando...",
   COMMON_DELETE_CONFIRM_TITLE: "Confirmar eliminación",
@@ -239,12 +328,15 @@ window.FACTUCORE_MESSAGES = {
   COMMON_REACTIVATE: "Reactivar",
   COMMON_SAVING: "Guardando...",
   CATALOGO_PAGE_TITLE: "Catálogos tributarios",
-  CATALOGO_PAGE_DESCRIPTION: "Administra catálogos generales y los ítems que pertenecen a cada uno.",
+  CATALOGO_PAGE_DESCRIPTION:
+    "Administra catálogos generales y los ítems que pertenecen a cada uno.",
   CATALOGO_NEW: "Nuevo catálogo",
   CATALOGO_LIST_TITLE: "Catálogos",
-  CATALOGO_LIST_DESCRIPTION: "Selecciona un catálogo para consultar y administrar sus ítems.",
+  CATALOGO_LIST_DESCRIPTION:
+    "Selecciona un catálogo para consultar y administrar sus ítems.",
   CATALOGO_ITEMS_TITLE: "Ítems del catálogo",
-  CATALOGO_ITEMS_PROMPT: "Selecciona un catálogo de la lista para ver sus ítems.",
+  CATALOGO_ITEMS_PROMPT:
+    "Selecciona un catálogo de la lista para ver sus ítems.",
   CATALOGO_CODE: "Código",
   CATALOGO_NAME: "Nombre",
   CATALOGO_DESCRIPTION: "Descripción",
@@ -269,11 +361,17 @@ window.FACTUCORE_MESSAGES = {
   CATALOGO_DELETE_CONFIRM: "¿Deseas eliminar el catálogo {name}?",
   CATALOGO_ITEM_DELETE_CONFIRM: "¿Deseas eliminar el ítem {name}?",
   CATALOGO_REQUIRED_FIELDS: "Completa los campos obligatorios.",
-  CATALOGO_ORDER_INVALID: "El orden debe ser un número entero igual o mayor que cero.",
+  CATALOGO_ORDER_INVALID:
+    "El orden debe ser un número entero igual o mayor que cero.",
   DOCUMENTO_XSD_PAGE_TITLE: "Definiciones documentales XSD",
-  DOCUMENTO_XSD_PAGE_DESCRIPTION: "Carga una versión de esquema XSD para almacenarla y registrarla en FactuCore.",
+  DOCUMENTO_XSD_PAGE_DESCRIPTION:
+    "Consulta y administra las definiciones documentales registradas en FactuCore.",
+  DOCUMENTO_XSD_NEW: "Nuevo",
+  DOCUMENTO_XSD_LIST_TITLE: "Definiciones registradas",
+  DOCUMENTO_XSD_LIST_EMPTY: "No hay definiciones documentales registradas.",
   DOCUMENTO_XSD_COMPANY: "Empresa asociada",
-  DOCUMENTO_XSD_COMPANY_REQUIRED: "Selecciona la empresa asociada a esta definición documental.",
+  DOCUMENTO_XSD_COMPANY_REQUIRED:
+    "Selecciona la empresa asociada a esta definición documental.",
   DOCUMENTO_XSD_UPLOAD_TITLE: "Cargar definición y versión",
   DOCUMENTO_XSD_CODE: "Código de definición",
   DOCUMENTO_XSD_NAME: "Nombre de la definición",
@@ -283,40 +381,70 @@ window.FACTUCORE_MESSAGES = {
   DOCUMENTO_XSD_VERSION: "Versión",
   DOCUMENTO_XSD_VALID_FROM: "Vigente desde",
   DOCUMENTO_XSD_SELECT_FILE: "Seleccionar archivo XSD",
-  DOCUMENTO_XSD_STORAGE_INFO: "El archivo se guardará en el almacenamiento persistente, bajo la carpeta del tipo de comprobante. La ruta registrada será la ruta interna del contenedor.",
+  DOCUMENTO_XSD_STORAGE_INFO:
+    "El archivo se guardará en el almacenamiento persistente, bajo la carpeta del tipo de comprobante. La ruta registrada será la ruta interna del contenedor.",
   DOCUMENTO_XSD_UPLOAD: "Cargar XSD",
   DOCUMENTO_XSD_UPLOAD_SUCCESS: "Definición cargada correctamente.",
-  DOCUMENTO_XSD_UPLOADED: "Definición {codigo} cargada correctamente. ID de versión: {versionId}.",
-  DOCUMENTO_XSD_TYPES_NOT_CONFIGURED: "No se encontró el catálogo activo de tipos de documento.",
+  DOCUMENTO_XSD_UPLOADED:
+    "Definición {codigo} cargada correctamente. ID de versión: {versionId}.",
+  DOCUMENTO_XSD_TYPES_NOT_CONFIGURED:
+    "No se encontró el catálogo activo de tipos de documento.",
   DOCUMENTO_XSD_TYPE_REQUIRED: "Selecciona un tipo de comprobante.",
   DOCUMENTO_XSD_FILE_REQUIRED: "Selecciona el archivo XSD que deseas cargar.",
-  DOCUMENTO_XSD_FILE_INVALID: "El archivo seleccionado debe tener extensión .xsd.",
-  DOCUMENTO_XSD_FILE_READ_ERROR: "No se pudo leer el contenido del archivo XSD.",
-  DOCUMENTO_XSD_FILE_READ_ERROR: "No se pudo leer el contenido del archivo XSD.",
+  DOCUMENTO_XSD_FILE_INVALID:
+    "El archivo seleccionado debe tener extensión .xsd.",
+  DOCUMENTO_XSD_FILE_READ_ERROR:
+    "No se pudo leer el contenido del archivo XSD.",
+  DOCUMENTO_XSD_FILE_READ_ERROR:
+    "No se pudo leer el contenido del archivo XSD.",
   DOCUMENTO_XSD_CONFIGURE_MAPPING: "Configurar mapeo",
   MAPEO_XSD_PAGE_TITLE: "Mapeos XSD",
-  MAPEO_XSD_PAGE_DESCRIPTION: "Relaciona los campos de origen con los elementos y atributos XML de una versión documental.",
+  MAPEO_XSD_PAGE_DESCRIPTION:
+    "Relaciona los campos de origen con los elementos y atributos XML de una versión documental.",
   MAPEO_XSD_VERSION: "Versión documental",
   MAPEO_XSD_SELECT_VERSION: "Seleccionar definición y versión",
   MAPEO_XSD_VERSION_NOT_FOUND: "No se encontró la versión documental indicada.",
   MAPEO_XSD_DEFINITION_TITLE: "Mapeo para {codigo}, versión {version}",
-  MAPEO_XSD_MAPPING_DESCRIPTION: "El mapeo indica de dónde obtiene FactuCore cada valor del XML definido por el XSD.",
+  MAPEO_XSD_MAPPING_DESCRIPTION:
+    "El mapeo indica de dónde obtiene FactuCore cada valor del XML definido por el XSD.",
   MAPEO_XSD_COMPANY_CONTEXT: "Empresa de contexto",
-  MAPEO_XSD_COMPANY_CONTEXT_HELP: "El contrato actual de administración solicita una empresa para guardar el mapeo; el mapeo permanece asociado a la versión XSD.",
-  MAPEO_XSD_COMPANY_REQUIRED: "Selecciona una empresa para completar la solicitud de administración.",
+  MAPEO_XSD_COMPANY_CONTEXT_HELP:
+    "El contrato actual de administración solicita una empresa para guardar el mapeo; el mapeo permanece asociado a la versión XSD.",
+  MAPEO_XSD_COMPANY_REQUIRED:
+    "Selecciona una empresa para completar la solicitud de administración.",
   MAPEO_XSD_SOURCE_TYPE: "Tipo de origen",
   MAPEO_XSD_SOURCE_ENTITY: "Entidad de FactuCore",
+  MAPEO_XSD_SOURCE_COMPANY_CONFIGURATION: "Configuración de empresa",
   MAPEO_XSD_SOURCE_FIELD: "Campo de origen",
   MAPEO_XSD_SOURCE_CATALOG: "Catálogo",
   MAPEO_XSD_JSON_PATH: "Ruta del campo en el JSON",
   MAPEO_XSD_GENERATED_SOURCE: "Clave generada o valor fijo",
-  MAPEO_XSD_GENERATED_SOURCE_HELP: "Usa claveAcceso o secuencial para valores generados; otros textos se consideran valores fijos.",
+  MAPEO_XSD_GENERATED_SOURCE_HELP:
+    "Usa claveAcceso o secuencial para valores generados; otros textos se consideran valores fijos.",
   MAPEO_XSD_XML_TARGET: "Elemento o atributo del XML",
   MAPEO_XSD_SAVE: "Guardar mapeo",
   MAPEO_XSD_SAVED: "El mapeo se guardó correctamente.",
   MAPEO_XSD_EXISTING_TITLE: "Mapeos de esta versión",
   MAPEO_XSD_EMPTY: "Esta versión todavía no tiene mapeos.",
   MAPEO_XSD_REQUIRED_FIELDS: "Completa el origen y el destino del mapeo.",
-  MAPEO_XSD_SOURCE_ALREADY_MAPPED: "Este origen ya está mapeado en la versión seleccionada.",
-  MAPEO_XSD_TARGET_ALREADY_MAPPED: "Este destino XML ya tiene un mapeo en la versión seleccionada."
+  MAPEO_XSD_SOURCE_ALREADY_MAPPED:
+    "Este origen ya está mapeado en la versión seleccionada.",
+  MAPEO_XSD_TARGET_ALREADY_MAPPED:
+    "Este destino XML ya tiene un mapeo en la versión seleccionada.",
+  MAPEO_XSD_XSD_TREE_HELP:
+    "Selecciona una sección para generar sus mapeos JSON automáticamente. Los atributos y las ramas infoTributaria e infoAdicional.campoAdicional requieren configuración individual.",
+  MAPEO_XSD_XSD_TREE_MANUAL_HELP:
+    "Selecciona un campo del árbol XSD para asignarle el origen FactuCore o generado.",
+  MAPEO_XSD_JSON_TREE_HELP:
+    "Selecciona la sección JSON equivalente. Si no seleccionas una, se buscarán rutas con el mismo nombre y estructura que el XSD.",
+  MAPEO_XSD_JSON_TREE_EMPTY:
+    "La plantilla JSON todavía no está disponible o no contiene rutas seleccionables.",
+  MAPEO_XSD_TREE_ADDED:
+    "Se agregaron {total} mapeos JSON a la lista pendiente.",
+  MAPEO_XSD_TREE_NO_TARGETS:
+    "La selección no contiene destinos nuevos que puedan mapearse automáticamente.",
+  MAPEO_XSD_JSON_PATH_NOT_FOUND:
+    "No se encontró una ruta JSON válida para {total} destinos seleccionados. Revisa la selección o completa esos destinos manualmente.",
+  MAPEO_XSD_UNMAPPED_TARGETS:
+    "No se puede guardar: faltan {total} destinos XSD por mapear. Completa los destinos listados.",
 };

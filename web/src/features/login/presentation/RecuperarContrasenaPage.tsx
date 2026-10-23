@@ -75,10 +75,20 @@ export default function RecuperarContrasenaPage() {
                     },
                   }}
                 />
-                <Button type="submit" variant="contained" size="large" fullWidth>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{ alignSelf: "flex-start" }}
+                >
                   Continuar
                 </Button>
-                <Button component={RouterLink} to="/login" variant="text" fullWidth startIcon={<ArrowBackRoundedIcon />}>
+                <Button
+                  component={RouterLink}
+                  to="/login"
+                  variant="text"
+                  startIcon={<ArrowBackRoundedIcon />}
+                  sx={{ alignSelf: "flex-start" }}
+                >
                   Volver al inicio de sesión
                 </Button>
               </Stack>

@@ -64,11 +64,11 @@ function decodePayload(token: string): JwtPayload | null {
  * Role claims are read only to adapt the UI. The backend must validate the JWT
  * signature and enforce authorization on every protected operation.
  */
-export function getAccessContext(oidcToken?: string): AccessContext {
+export function getAccessContext(): AccessContext {
   const storedToken = typeof window !== "undefined"
     ? window.sessionStorage.getItem("factucore.access_token")
     : null;
-  const token = oidcToken || storedToken;
+  const token = storedToken;
   if (!token) return { token: null, roles: [], permissions: [], isTokenValid: false };
 
   const payload = decodePayload(token);
@@ -76,7 +76,6 @@ export function getAccessContext(oidcToken?: string): AccessContext {
     payload && typeof payload.exp === "number" && payload.exp * 1000 > Date.now(),
   );
   if (!payload || !isTokenValid) {
-    if (storedToken === token) window.sessionStorage.removeItem("factucore.access_token");
     return { token: null, roles: [], permissions: [], isTokenValid: false };
   }
 

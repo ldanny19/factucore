@@ -1,10 +1,16 @@
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
-import type { ReactNode } from "react";
-import { useAuth } from "react-oidc-context";
+import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { MessageCodes } from "../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../shared/messages/MessageResolver";
 import { getAccessContext, type AppRole } from "../../shared/security/authorization";
+import {
+  clearTokenSession,
+  hasRefreshToken,
+  renewAccessToken,
+  SESSION_UPDATED_EVENT,
+  TokenRenewalError,
+} from "../../shared/infrastructure/auth/token-session";
 
 interface RequireAccessProps {
   children: ReactNode;
@@ -28,15 +34,62 @@ function AccessDenied() {
 }
 
 export default function RequireAccess({ children, allowedRoles }: RequireAccessProps) {
-  const auth = useAuth();
   const location = useLocation();
-  const context = getAccessContext(auth.user?.access_token);
+  const context = getAccessContext();
+  const [tokenRevision, setTokenRevision] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshFailed, setRefreshFailed] = useState(false);
+  const refreshTokenAvailable = hasRefreshToken();
 
-  if (auth.isLoading && !context.token && !auth.isAuthenticated) {
-    return <Box sx={{ minHeight: "40vh", display: "grid", placeItems: "center" }}><CircularProgress /></Box>;
-  }
+  useEffect(() => {
+    const handleSessionUpdate = () => setTokenRevision((revision) => revision + 1);
+    window.addEventListener(SESSION_UPDATED_EVENT, handleSessionUpdate);
+    return () => window.removeEventListener(SESSION_UPDATED_EVENT, handleSessionUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (context.isTokenValid || !refreshTokenAvailable) return;
+
+    let active = true;
+    setRefreshing(true);
+    setRefreshFailed(false);
+    renewAccessToken()
+      .then(() => {
+        if (active) {
+          setTokenRevision((revision) => revision + 1);
+          setRefreshing(false);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (error instanceof TokenRenewalError && error.invalidGrant) {
+          clearTokenSession();
+        }
+        setRefreshFailed(true);
+        setRefreshing(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [context.isTokenValid, refreshTokenAvailable, tokenRevision]);
 
   if (!context.isTokenValid) {
+    if (refreshTokenAvailable) {
+      if (refreshing || !refreshFailed) {
+        return <Box sx={{ minHeight: "40vh", display: "grid", placeItems: "center" }}><CircularProgress /></Box>;
+      }
+      return (
+        <Box sx={{ maxWidth: 640, mx: "auto", py: { xs: 5, md: 9 } }}>
+          <Stack spacing={2}>
+            <Alert severity="error">{resolveMessage(MessageCodes.SESSION_RENEWAL_FAILED)}</Alert>
+            <Button variant="contained" onClick={() => setTokenRevision((revision) => revision + 1)}>
+              {resolveMessage(MessageCodes.SESSION_RETRY)}
+            </Button>
+          </Stack>
+        </Box>
+      );
+    }
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 

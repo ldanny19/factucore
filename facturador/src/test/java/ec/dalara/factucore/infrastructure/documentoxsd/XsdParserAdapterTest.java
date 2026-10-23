@@ -1,13 +1,17 @@
 package ec.dalara.factucore.infrastructure.documentoxsd;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class XsdParserAdapterTest {
 
@@ -120,6 +124,47 @@ class XsdParserAdapterTest {
 
 		assertEquals(0, opcional.minOcurrencias());
 		assertTrue(!opcional.esObligatorio());
+	}
+
+	@Test
+	void debeExcluirSignatureXmlDsigDeLosElementosParseados(@TempDir Path directorio) throws Exception {
+		Path xsdFirma = directorio.resolve("xmldsig-core-schema.xsd");
+		Files.writeString(xsdFirma, """
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+				           targetNamespace="http://www.w3.org/2000/09/xmldsig#"
+				           xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+				           elementFormDefault="qualified">
+				  <xs:element name="Signature" type="ds:SignatureType"/>
+				  <xs:complexType name="SignatureType">
+				    <xs:sequence>
+				      <xs:element name="SignedInfo" type="xs:string"/>
+				    </xs:sequence>
+				  </xs:complexType>
+				</xs:schema>
+				""");
+		String xsdFactura = """
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+				           xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+				  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#"
+				             schemaLocation="xmldsig-core-schema.xsd"/>
+				  <xs:element name="factura">
+				    <xs:complexType>
+				      <xs:sequence>
+				        <xs:element name="infoFactura" type="xs:string"/>
+				        <xs:element ref="ds:Signature" minOccurs="0"/>
+				      </xs:sequence>
+				    </xs:complexType>
+				  </xs:element>
+				</xs:schema>
+				""";
+		Path archivoFactura = directorio.resolve("factura.xsd");
+		Files.writeString(archivoFactura, xsdFactura);
+
+		var definition = parser.parse(new ByteArrayInputStream(Files.readAllBytes(archivoFactura)),
+				archivoFactura.toAbsolutePath().normalize().toUri().toString());
+
+		assertTrue(definition.elementos().stream().anyMatch(elemento -> "factura.infoFactura".equals(elemento.ruta())));
+		assertFalse(definition.elementos().stream().anyMatch(elemento -> elemento.ruta().contains("Signature")));
 	}
 
 }

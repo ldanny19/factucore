@@ -10,4 +10,7 @@ export const oidcConfig: UserManagerSettings = {
   post_logout_redirect_uri: runtimeConfig.OIDC_POST_LOGOUT_REDIRECT_URI,
   response_type: "code",
   scope: "openid profile email",
+  automaticSilentRenew: true,
+  accessTokenExpiringNotificationTimeInSeconds:
+    runtimeConfig.SESSION_TOKEN_WARNING_MINUTES * 60,
 };

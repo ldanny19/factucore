@@ -7,31 +7,41 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Alert,
   Stack,
   Typography,
 } from "@mui/material";
-import { useAuth } from "react-oidc-context";
 import { useNavigate } from "react-router-dom";
 import { MessageCodes } from "../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../shared/messages/MessageResolver";
 import { getRuntimeConfig } from "../../config/runtime-config";
+import {
+  clearTokenSession,
+  getAccessTokenRenewalDelayMs,
+  hasTokenSession,
+  renewAccessToken,
+  SESSION_UPDATED_EVENT,
+  TokenRenewalError,
+} from "../../shared/infrastructure/auth/token-session";
 
 const runtimeConfig = getRuntimeConfig();
 const INACTIVITY_TIMEOUT_MS = runtimeConfig.SESSION_INACTIVITY_TIMEOUT_MINUTES * 60 * 1000;
-const TOKEN_WARNING_BEFORE_EXPIRY_MS = runtimeConfig.SESSION_TOKEN_WARNING_MINUTES * 60 * 1000;
+const INACTIVITY_WARNING_BEFORE_END_MS =
+  runtimeConfig.SESSION_TOKEN_WARNING_MINUTES * 60 * 1000;
 const PROMPT_TIMEOUT_SECONDS = runtimeConfig.SESSION_PROMPT_TIMEOUT_SECONDS;
-const ACCESS_TOKEN_KEY = "factucore.access_token";
+const TOKEN_RENEWAL_RETRY_MS = 30 * 1000;
 
 type SessionLifecycleProps = {
   children: ReactNode;
 };
 
 export default function SessionLifecycle({ children }: SessionLifecycleProps) {
-  const auth = useAuth();
   const navigate = useNavigate();
+  const [sessionActive, setSessionActive] = useState(hasTokenSession);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(PROMPT_TIMEOUT_SECONDS);
   const [isRenewing, setIsRenewing] = useState(false);
+  const [renewalError, setRenewalError] = useState(false);
   const lastActivityAtRef = useRef(Date.now());
   const dialogOpenRef = useRef(false);
   const logoutStartedRef = useRef(false);
@@ -45,75 +55,60 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
     window.clearInterval(logoutTimerRef.current);
   }, []);
 
-  const endSession = useCallback(async () => {
+  const endSession = useCallback(() => {
     if (logoutStartedRef.current) return;
     logoutStartedRef.current = true;
     clearSessionTimers();
     dialogOpenRef.current = false;
     setDialogOpen(false);
-    window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-
-    try {
-      if (auth.user || auth.isAuthenticated) {
-        await auth.signoutRedirect();
-        return;
-      }
-    } catch {
-      // Continue with local logout if the identity provider is unavailable.
-    }
-
-    await auth.removeUser();
+    clearTokenSession();
+    setSessionActive(false);
     navigate("/login", { replace: true });
-  }, [auth, clearSessionTimers, navigate]);
+  }, [clearSessionTimers, navigate]);
 
-  const showWarning = useCallback(() => {
+  const showWarning = useCallback((remainingSeconds: number) => {
     if (logoutStartedRef.current || dialogOpenRef.current) return;
     dialogOpenRef.current = true;
-    setSecondsLeft(PROMPT_TIMEOUT_SECONDS);
+    setSecondsLeft(remainingSeconds);
+    setRenewalError(false);
     setDialogOpen(true);
   }, []);
 
   const checkSessionDeadline = useCallback(() => {
-    if (!auth.isAuthenticated || !auth.user || logoutStartedRef.current || dialogOpenRef.current) return;
+    if (!sessionActive || logoutStartedRef.current) return;
 
     const now = Date.now();
     const inactivityDeadline = lastActivityAtRef.current + INACTIVITY_TIMEOUT_MS;
-    const tokenDeadline =
-      typeof auth.user.expires_at === "number" ? auth.user.expires_at * 1000 : now;
-    const deadline = Math.min(inactivityDeadline, tokenDeadline);
-    const remainingMs = deadline - now;
 
     window.clearTimeout(warningTimerRef.current);
     window.clearTimeout(expiryTimerRef.current);
 
-    if (remainingMs <= 0) {
+    if (now >= inactivityDeadline) {
       void endSession();
       return;
     }
 
-    const warningLeadMs = Math.min(TOKEN_WARNING_BEFORE_EXPIRY_MS, remainingMs);
-    warningTimerRef.current = window.setTimeout(
-      () => {
-        const currentDeadline = Math.min(
-          lastActivityAtRef.current + INACTIVITY_TIMEOUT_MS,
-          typeof auth.user?.expires_at === "number" ? auth.user.expires_at * 1000 : 0,
-        );
-        if (currentDeadline <= Date.now()) {
-          void endSession();
-          return;
-        }
-        showWarning();
-      },
-      Math.max(0, remainingMs - warningLeadMs),
-    );
+    const warningDeadline = inactivityDeadline - INACTIVITY_WARNING_BEFORE_END_MS;
+    if (now >= warningDeadline && !dialogOpenRef.current) {
+      showWarning(Math.max(1, Math.ceil((inactivityDeadline - now) / 1000)));
+    } else if (!dialogOpenRef.current) {
+      warningTimerRef.current = window.setTimeout(checkSessionDeadline, warningDeadline - now);
+    }
+
     expiryTimerRef.current = window.setTimeout(() => {
-      if (Date.now() >= deadline) void endSession();
+      if (Date.now() >= lastActivityAtRef.current + INACTIVITY_TIMEOUT_MS) void endSession();
       else checkSessionDeadline();
-    }, remainingMs);
-  }, [auth.isAuthenticated, auth.user, endSession, showWarning]);
+    }, inactivityDeadline - now);
+  }, [sessionActive, endSession, showWarning]);
 
   useEffect(() => {
-    if (!auth.isAuthenticated || !auth.user) {
+    const synchronizeSession = () => setSessionActive(hasTokenSession());
+    window.addEventListener(SESSION_UPDATED_EVENT, synchronizeSession);
+    return () => window.removeEventListener(SESSION_UPDATED_EVENT, synchronizeSession);
+  }, []);
+
+  useEffect(() => {
+    if (!sessionActive) {
       clearSessionTimers();
       dialogOpenRef.current = false;
       setDialogOpen(false);
@@ -124,9 +119,21 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
     lastActivityAtRef.current = Date.now();
     checkSessionDeadline();
 
-    const handleActivity = () => {
-      if (dialogOpenRef.current || logoutStartedRef.current) return;
+    const handleActivity = (event: Event) => {
+      if (logoutStartedRef.current) return;
+      const target = event.target;
+      const interactionInWarningDialog =
+        dialogOpenRef.current &&
+        target instanceof Element &&
+        target.closest('[role="dialog"]') !== null;
+
       lastActivityAtRef.current = Date.now();
+      if (dialogOpenRef.current && !interactionInWarningDialog) {
+        dialogOpenRef.current = false;
+        setDialogOpen(false);
+        setSecondsLeft(PROMPT_TIMEOUT_SECONDS);
+        setRenewalError(false);
+      }
       checkSessionDeadline();
     };
     const handleVisibilityOrFocus = () => {
@@ -154,7 +161,57 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
       window.removeEventListener("focus", handleVisibilityOrFocus);
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
-  }, [auth.isAuthenticated, auth.user, checkSessionDeadline, clearSessionTimers]);
+  }, [sessionActive, checkSessionDeadline, clearSessionTimers]);
+
+  useEffect(() => {
+    if (!sessionActive) return;
+
+    let cancelado = false;
+    let timer: number | undefined;
+    const programarRenovacion = () => {
+      window.clearTimeout(timer);
+      if (cancelado || !hasTokenSession()) return;
+      const espera = getAccessTokenRenewalDelayMs(
+        runtimeConfig.SESSION_TOKEN_WARNING_MINUTES * 60 * 1000,
+      ) ?? 0;
+      timer = window.setTimeout(() => void renovar(), espera);
+    };
+    const renovar = async () => {
+      try {
+        await renewAccessToken();
+        if (!cancelado) {
+          setRenewalError(false);
+          programarRenovacion();
+        }
+      } catch (error: unknown) {
+        if (cancelado) return;
+        if (error instanceof TokenRenewalError && error.invalidGrant) {
+          endSession();
+          return;
+        }
+        setRenewalError(true);
+        timer = window.setTimeout(() => void renovar(), TOKEN_RENEWAL_RETRY_MS);
+      }
+    };
+    const renovarSiEsNecesario = () => {
+      const espera = getAccessTokenRenewalDelayMs(
+        runtimeConfig.SESSION_TOKEN_WARNING_MINUTES * 60 * 1000,
+      );
+      if (espera === null || espera <= 0) {
+        void renovar();
+      }
+    };
+
+    programarRenovacion();
+    window.addEventListener("focus", renovarSiEsNecesario);
+    document.addEventListener("visibilitychange", renovarSiEsNecesario);
+    return () => {
+      cancelado = true;
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", renovarSiEsNecesario);
+      document.removeEventListener("visibilitychange", renovarSiEsNecesario);
+    };
+  }, [endSession, sessionActive]);
 
   useEffect(() => {
     if (!dialogOpen || isRenewing) {
@@ -163,39 +220,32 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
     }
 
     logoutTimerRef.current = window.setInterval(() => {
-      setSecondsLeft((current) => {
-        if (current <= 1) {
-          window.clearInterval(logoutTimerRef.current);
-          void endSession();
-          return 0;
-        }
-        return current - 1;
-      });
+      const deadline = lastActivityAtRef.current + INACTIVITY_TIMEOUT_MS;
+      setSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
     }, 1000);
 
     return () => window.clearInterval(logoutTimerRef.current);
-  }, [dialogOpen, endSession, isRenewing]);
+  }, [dialogOpen, isRenewing]);
 
   const continueSession = async () => {
     if (isRenewing || logoutStartedRef.current) return;
     setIsRenewing(true);
+    setRenewalError(false);
     try {
-      const renewedUser = await auth.signinSilent();
-      if (
-        !renewedUser?.access_token ||
-        typeof renewedUser.expires_at !== "number" ||
-        renewedUser.expires_at * 1000 <= Date.now()
-      ) {
-        throw new Error("No se recibió un token renovado válido.");
-      }
-
-      window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+      await renewAccessToken();
       lastActivityAtRef.current = Date.now();
       dialogOpenRef.current = false;
       setDialogOpen(false);
       setSecondsLeft(PROMPT_TIMEOUT_SECONDS);
-    } catch {
-      await endSession();
+      setRenewalError(false);
+    } catch (error: unknown) {
+      if (error instanceof TokenRenewalError && error.invalidGrant) {
+        endSession();
+        return;
+      }
+      lastActivityAtRef.current = Date.now();
+      setRenewalError(true);
+      checkSessionDeadline();
     } finally {
       setIsRenewing(false);
     }
@@ -221,6 +271,11 @@ export default function SessionLifecycle({ children }: SessionLifecycleProps) {
             <DialogContentText id="session-expiry-description">
               {resolveMessage(MessageCodes.SESSION_EXPIRING_DESCRIPTION)}
             </DialogContentText>
+            {renewalError && (
+              <Alert severity="error">
+                {resolveMessage(MessageCodes.SESSION_RENEWAL_FAILED)}
+              </Alert>
+            )}
             <Typography variant="h4" textAlign="center" aria-live="polite">
               {Math.floor(secondsLeft / 60).toString().padStart(2, "0")}:
               {(secondsLeft % 60).toString().padStart(2, "0")}

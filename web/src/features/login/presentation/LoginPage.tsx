@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
   Alert,
   Box,
@@ -15,8 +15,8 @@ import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { MessageCodes } from "../../../shared/messages/MessageCodes";
 import { resolveMessage } from "../../../shared/messages/MessageResolver";
-import { useAuth } from "react-oidc-context";
 import { oidcConfig } from "../../../shared/infrastructure/auth/oidc-config";
+import { storeTokenResponse } from "../../../shared/infrastructure/auth/token-session";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +24,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const auth = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!auth.isLoading && auth.isAuthenticated) {
-      navigate("/app/empresas", { replace: true });
-    }
-  }, [auth.isAuthenticated, auth.isLoading, navigate]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,6 +55,7 @@ export default function LoginPage() {
 
       const tokenResponse = (await response.json()) as {
         access_token?: string;
+        refresh_token?: string;
         error?: string;
       };
 
@@ -70,8 +64,11 @@ export default function LoginPage() {
         return;
       }
 
-      // Sesión temporal para la prueba del portal; no se almacena la contraseña.
-      sessionStorage.setItem("factucore.access_token", tokenResponse.access_token);
+      if (!storeTokenResponse(tokenResponse)) {
+        setError(resolveMessage(MessageCodes.LOGIN_REFRESH_TOKEN_MISSING));
+        return;
+      }
+
       setPassword("");
       navigate("/app/empresas", { replace: true });
     } catch {
@@ -285,15 +282,19 @@ export default function LoginPage() {
                   <Button
                     type="submit"
                     variant="contained"
-                    fullWidth
-                    size="large"
                     disabled={isSubmitting}
-                    sx={{ mt: 0.5, py: 1.4 }}
+                    sx={{ mt: 0.5, alignSelf: "flex-start" }}
                   >
                     {isSubmitting ? "Validando..." : "Iniciar sesión"}
                   </Button>
 
-                  <Button component={RouterLink} to="/" variant="text" color="primary" fullWidth>
+                  <Button
+                    component={RouterLink}
+                    to="/"
+                    variant="text"
+                    color="primary"
+                    sx={{ alignSelf: "flex-start" }}
+                  >
                     Volver al inicio
                   </Button>
                 </Stack>

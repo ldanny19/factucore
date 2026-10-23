@@ -318,7 +318,7 @@ export default function EstablecimientosPage() {
           />
           <Button
             type="submit"
-            variant="outlined"
+            variant="contained"
             startIcon={<SearchOutlinedIcon />}
             disabled={empresaFiltroId === ""}
           >

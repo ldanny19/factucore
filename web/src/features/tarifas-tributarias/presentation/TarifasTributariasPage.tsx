@@ -511,7 +511,7 @@ export default function TarifasTributariasPage() {
           </TextField>
           <Button
             type="submit"
-            variant="outlined"
+            variant="contained"
             startIcon={<SearchOutlinedIcon />}
             disabled={cargando || cargandoCatalogos || !codigoImpuesto}
           >

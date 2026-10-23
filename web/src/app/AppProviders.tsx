@@ -32,6 +32,7 @@ const theme = createTheme({
   },
   shape: { borderRadius: 12 },
   typography: {
+    fontSize: 13,
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     button: { fontWeight: 600 },
     h4: { letterSpacing: "-0.025em" },
@@ -43,7 +44,8 @@ const theme = createTheme({
           borderRadius: 10,
           textTransform: "none",
           fontWeight: 600,
-          padding: "10px 18px",
+          minHeight: 36,
+          padding: "6px 14px",
           boxShadow: "none",
         },
         containedPrimary: {
@@ -59,6 +61,11 @@ const theme = createTheme({
             backgroundColor: "rgba(18, 48, 74, 0.04)",
           },
         },
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        size: "small",
       },
     },
     MuiOutlinedInput: {

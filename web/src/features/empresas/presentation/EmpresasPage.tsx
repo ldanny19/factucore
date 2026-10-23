@@ -249,7 +249,7 @@ export default function EmpresasPage() {
             onChange={(event) => setIdBusqueda(event.target.value)}
             inputProps={{ min: 1, step: 1 }}
           />
-          <Button type="submit" variant="outlined" startIcon={<SearchOutlinedIcon />}>{resolveMessage(MessageCodes.COMMON_SEARCH)}</Button>
+          <Button type="submit" variant="contained" startIcon={<SearchOutlinedIcon />}>{resolveMessage(MessageCodes.COMMON_SEARCH)}</Button>
           <Button type="button" variant="outlined" startIcon={<RefreshOutlinedIcon />} onClick={() => void buscarTodas()} disabled={cargando}>
             {resolveMessage(MessageCodes.COMMON_REFRESH)}
           </Button>

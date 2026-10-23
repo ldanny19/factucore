@@ -184,15 +184,8 @@ public class XsdParserAdapter implements XsdParserPort {
 			if (referenced == null)
 				throw new InfrastructureException("FACTUCORE.XSD.REFERENCIA.NO_ENCONTRADA", ref);
 
-			if ("http://www.w3.org/2000/09/xmldsig#".equals(referenceNamespace)) {
-				String name = localTypeName(ref);
-				String path = parentPath.isBlank() ? name : parentPath + "." + name;
-				Integer min = minOcurrencias;
-				Integer max = maxOcurrencias;
-				String typeName = localTypeName(attr(referenced, "type"));
-
-				elementos.add(new XsdElementSource(path, name, typeName, order, min, max, null, null, null, null, null,
-						null, null));
+			if ("http://www.w3.org/2000/09/xmldsig#".equals(referenceNamespace)
+					&& "Signature".equals(localTypeName(ref))) {
 				return;
 			}
 			element = referenced;

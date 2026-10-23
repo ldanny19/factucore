@@ -29,6 +29,7 @@ import { Link as RouterLink, Outlet, useLocation, useNavigate } from "react-rout
 import { useAuth } from "react-oidc-context";
 import "../../styles/app.css";
 import { canAccessPath, getAccessContext, getPrimaryRole } from "../../shared/security/authorization";
+import { clearTokenSession } from "../../shared/infrastructure/auth/token-session";
 
 type MenuItem = {
   label: string;
@@ -150,7 +151,7 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [now, setNow] = useState(() => new Date());
-  const accessContext = getAccessContext(auth.user?.access_token);
+  const accessContext = getAccessContext();
   const primaryRole = getPrimaryRole(accessContext.roles);
   const visibleMenuItems = menuItems.flatMap((item) => {
     if (item.children?.length) {
@@ -188,12 +189,8 @@ export default function AppLayout() {
     hour12: false,
   }).format(now);
 
-  const handleLogout = async () => {
-    sessionStorage.removeItem("factucore.access_token");
-    if (auth.isAuthenticated) {
-      await auth.signoutRedirect();
-      return;
-    }
+  const handleLogout = () => {
+    clearTokenSession();
     navigate("/login", { replace: true });
   };
 

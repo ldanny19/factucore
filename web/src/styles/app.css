@@ -740,13 +740,6 @@
   .certificados-firma-list-heading { align-items: flex-start; flex-direction: column; }
   .tarifas-tributarias-heading,
   .tarifas-tributarias-list-heading { align-items: flex-start; flex-direction: column; }
-  .empresas-page-heading .MuiButton-root { width: 100%; }
-  .establecimientos-page-heading .MuiButton-root { width: 100%; }
-  .puntos-emision-page-heading .MuiButton-root { width: 100%; }
-  .secuenciales-page-heading .MuiButton-root { width: 100%; }
-  .configuracion-empresa-heading .MuiButton-root { width: 100%; }
-  .certificados-firma-heading .MuiButton-root { width: 100%; }
-  .tarifas-tributarias-heading .MuiButton-root { width: 100%; }
   .empresas-search-panel { padding: 16px; }
   .establecimientos-search-panel { padding: 16px; }
   .puntos-emision-search-panel { padding: 16px; }
@@ -760,23 +753,21 @@
   .tarifas-tributarias-current-form { align-items: stretch; flex-direction: column; }
   .tarifas-tributarias-search-form .MuiTextField-root,
   .tarifas-tributarias-current-form .MuiTextField-root { width: 100%; }
-  .empresas-search-form { align-items: stretch; flex-direction: column;     .configuracion-empresa-form-grid { grid-template-columns: 1fr; }
-    .certificados-firma-form-grid { grid-template-columns: 1fr; }
-    .tarifas-tributarias-form-grid { grid-template-columns: 1fr; }
+  .empresas-search-form,
+  .establecimientos-search-form,
+  .puntos-emision-search-form,
+  .secuenciales-filter-form,
+  .tarifas-tributarias-search-form,
+  .tarifas-tributarias-current-form {
+    align-items: flex-start;
+    flex-direction: column;
   }
-  .establecimientos-search-form { align-items: stretch; flex-direction: column; }
-  .puntos-emision-search-form { align-items: stretch; flex-direction: column; }
-  .secuenciales-filter-form { align-items: stretch; flex-direction: column; }
   .empresas-search-form .MuiTextField-root { width: 100%; }
   .establecimientos-search-form .MuiTextField-root { width: 100%; }
   .puntos-emision-search-form .MuiTextField-root { width: 100%; }
-  .secuenciales-form-grid { grid-template-columns: 1fr; }
-  .empresas-search-form .MuiButton-root { width: 100%; }
-  .establecimientos-search-form .MuiButton-root { width: 100%; }
-  .puntos-emision-search-form .MuiButton-root { width: 100%; }
-  .empresas-form-grid { grid-template-columns: minmax(0, 1fr); }
-  .establecimientos-form-grid { grid-template-columns: minmax(0, 1fr); }
-  .puntos-emision-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .secuenciales-filter-form .MuiTextField-root,
+  .tarifas-tributarias-search-form .MuiTextField-root,
+  .tarifas-tributarias-current-form .MuiTextField-root { width: 100%; }
   .empresas-dialog-actions { flex-wrap: wrap; }
   .establecimientos-dialog-actions { flex-wrap: wrap; }
   .puntos-emision-dialog-actions { flex-wrap: wrap; }
@@ -793,3 +784,39 @@
 .app-main::before { content: ""; position: absolute; z-index: -1; pointer-events: none; width: min(42vw, 460px); aspect-ratio: 1; top: 50%; left: 50%; transform: translate(-50%, -45%); background: url("/factucore-icon.png") center / contain no-repeat; opacity: .035; }
 .app-content { position: relative; }
 .app-brand-name span, .app-header-system-name span { color: #0788f5; }
+
+/* Keep data-entry dialogs compact while letting their grids adapt to narrow viewports. */
+[class$="-form-grid"] {
+  gap: 12px;
+  padding-top: 16px;
+}
+.MuiDialogTitle-root {
+  padding: 16px 20px 12px;
+  font-size: 1.1rem;
+}
+.MuiDialogContent-root {
+  padding: 0 20px 16px;
+}
+.MuiDialogActions-root {
+  padding: 8px 20px 16px;
+}
+@media (max-width: 760px) {
+  [class$="-form-grid"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .MuiDialog-paperFullWidth {
+    width: calc(100% - 24px);
+    margin: 12px;
+  }
+  .MuiDialogTitle-root {
+    padding: 14px 16px 10px;
+  }
+  .MuiDialogContent-root {
+    padding: 0 16px 12px;
+  }
+  .MuiDialogActions-root {
+    padding: 8px 16px 12px;
+  }
+}

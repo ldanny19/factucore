@@ -1,5 +1,6 @@
 package ec.dalara.factucore.infrastructure.persistence.adapter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,6 +27,25 @@ import ec.dalara.factucore.domain.documentoxsd.importacion.XsdElementSource;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdEnumerationSource;
 
 class XsdDefinitionPersistenceAdapterTest {
+
+	@Test
+	void debeClasificarComoObjetoLosElementosConDescendientesDelXsd() throws Exception {
+		var infoTributaria = new XsdElementSource("factura.infoTributaria", "infoTributaria", "InfoType", 1, 1, 1,
+				null, null, null, null, null, null, null);
+		var definition = new XsdDefinitionSource("urn:test", "factura",
+				List.of(new XsdElementSource("factura", "factura", "FacturaType", 1, 1, 1, null, null, null, null,
+						null, null, null),
+						infoTributaria,
+						new XsdElementSource("factura.infoTributaria.ruc", "ruc", "string", 1, 1, 1, null, null,
+								null, null, null, null, null)),
+				List.of(), List.of());
+		var adapter = new XsdDefinitionPersistenceAdapter(null, null, null, null, null, new ObjectMapper());
+		Method method = XsdDefinitionPersistenceAdapter.class.getDeclaredMethod("tipoDatoRuntime",
+				XsdElementSource.class, XsdDefinitionSource.class);
+		method.setAccessible(true);
+
+		assertEquals("MAP", method.invoke(adapter, infoTributaria, definition));
+	}
 
 	@Test
 	void debeExcluirInfoTributariaYDatosTecnicosDePlantillaFactura() throws Exception {

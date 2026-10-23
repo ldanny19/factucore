@@ -405,7 +405,7 @@ export default function PuntosEmisionPage() {
             onChange={(event) => setIdBusqueda(event.target.value)}
             inputProps={{ min: 1, step: 1 }}
           />
-          <Button type="submit" variant="outlined" startIcon={<SearchOutlinedIcon />}>
+          <Button type="submit" variant="contained" startIcon={<SearchOutlinedIcon />}>
             {resolveMessage(MessageCodes.COMMON_SEARCH)}
           </Button>
           <Button

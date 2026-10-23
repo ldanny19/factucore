@@ -45,7 +45,9 @@ function createClient(): AxiosInstance {
         ? user.access_token
         : null;
     const storedToken = getStoredAccessToken();
-    const accessToken = oidcToken ?? (storedToken && !isTokenExpired(storedToken) ? storedToken : null);
+    const accessToken = storedToken
+      ? isTokenExpired(storedToken) ? null : storedToken
+      : oidcToken;
 
     if (accessToken) {
       request.headers.set("Authorization", `Bearer ${accessToken}`);
