@@ -1,5 +1,5 @@
 window.FACTUCORE_CONFIG = {
-  API_BASE_URL: "http://localhost:8081/facturador-api",
+  API_BASE_URL: "/facturador-api",
   API_PATH_PREFIX: "/api",
   API_VERSION: "v1",
   API_EMPRESAS_PATH: "/empresas",
@@ -11,7 +11,7 @@ window.FACTUCORE_CONFIG = {
   API_DOCUMENTOS_XSD_PATH: "/documentos-xsd",
   API_CONFIGURACIONES_EMPRESA_PATH: "/configuraciones-empresa",
   API_COMPROBANTES_PATH: "/comprobantes",
-  API_NOTIFICACION_BASE_URL: "http://localhost:8082",
+  API_NOTIFICACION_BASE_URL: "/notificacion-api",
   API_CERTIFICADOS_FIRMA_PATH: "/certificados-firma",
   API_CATALOGOS_PATH: "/catalogos",
   API_CATALOGO_ITEMS_PATH: "/catalogo-items",
