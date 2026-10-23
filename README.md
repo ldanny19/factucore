@@ -202,6 +202,20 @@ Con el contexto de la aplicación `/facturador-api`:
 
 La documentación se irá completando mediante anotaciones OpenAPI en los controllers y contratos conforme se implementen los casos de uso.
 
+### Administración de catálogos
+
+La API administra catálogos e ítems mediante recursos genéricos:
+
+- `GET /api/v1/catalogos` lista catálogos y `GET /api/v1/catalogos?codigo=CODIGO_IMPUESTO` consulta uno por código.
+- `GET /api/v1/catalogos/{id}` obtiene un catálogo por identificador.
+- `POST /api/v1/catalogos` y `PUT /api/v1/catalogos/{id}` crean y actualizan catálogos.
+- `GET /api/v1/catalogo-items?catalogoId={id}` lista los ítems de un catálogo; sin filtro lista todos.
+- `GET /api/v1/catalogo-items/{id}` obtiene un ítem por identificador.
+- `POST /api/v1/catalogo-items` y `PUT /api/v1/catalogo-items/{id}` crean y actualizan ítems.
+- Ambos recursos exponen `PATCH /api/v1/{recurso}/{id}/inactivar`, `PATCH /api/v1/{recurso}/{id}/reactivar` y `DELETE /api/v1/{recurso}/{id}` para gestionar el estado y realizar la eliminación lógica; `{recurso}` es `catalogos` o `catalogo-items`.
+
+Las operaciones de escritura reciben `AdministracionGlobalRequest`, porque los catálogos no pertenecen a una empresa. La pantalla de tarifas tributarias consume `CODIGO_IMPUESTO` y `TARIFA_IVA` desde estos recursos; el porcentaje puede omitirse al consultar el historial por impuesto.
+
 ## Proxy inverso HTTP
 
 El servicio **API Gateway**, implementado con Nginx, centraliza la entrada HTTP en `http://api.facturador.com:8080`. Enruta `/facturador-api/**` hacia Facturador y publica Keycloak bajo `/auth/**`. Keycloak escucha internamente en la raíz (`/`), sin configurar `KC_HTTP_RELATIVE_PATH=/auth`; Nginx elimina el prefijo público `/auth` al reenviar las peticiones al servicio `auth-server`. Por eso, la URL pública para autenticación conserva el prefijo `/auth`, mientras que las URLs internas de Keycloak no lo incluyen. El issuer OIDC público debe ser `http://api.facturador.com:8080/auth/realms/facturador`, y Facturador obtiene las claves JWK desde la dirección interna `http://auth-server:8080/realms/facturador/protocol/openid-connect/certs`. El nombre lógico del servicio y del contenedor es `api-gateway`; la tecnología de implementación no determina el nombre del componente arquitectónico. El puerto `8080` se declara directamente en `compose/docker-compose.yml`. El gateway registra el identificador de petición, el código HTTP y los tiempos de respuesta; Facturador mantiene la validación JWT. La configuración de referencia está en `configuraciones/nginx/config/default.conf` y el instalador la copia a `FACTUCORE_HOME/nginx/config` sin sobrescribir archivos existentes.

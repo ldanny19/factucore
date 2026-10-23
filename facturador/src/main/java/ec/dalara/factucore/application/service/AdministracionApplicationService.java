@@ -5,14 +5,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import ec.dalara.factucore.application.ApplicationException;
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoItemRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
@@ -20,6 +25,8 @@ import ec.dalara.factucore.application.contract.request.EstablecimientoRequest;
 import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
 import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoItemResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
@@ -28,10 +35,13 @@ import ec.dalara.factucore.application.contract.response.PuntoEmisionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.application.mapper.AdministracionMapper;
 import ec.dalara.factucore.application.port.in.AdministracionPort;
+import ec.dalara.factucore.application.port.out.XsdFileStoragePort;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportRequest;
 import ec.dalara.factucore.domain.documentoxsd.importacion.XsdImportResult;
 import ec.dalara.factucore.domain.shared.MessageCodes;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
+import ec.dalara.factucore.infrastructure.persistence.entity.Catalogo;
+import ec.dalara.factucore.infrastructure.persistence.entity.CatalogoItem;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
@@ -53,14 +63,98 @@ public class AdministracionApplicationService implements AdministracionPort {
 	private final SecuencialService secuencialService;
 	private final ConfiguracionEmpresaService configuracionEmpresaService;
 	private final CertificadoFirmaService certificadoFirmaService;
+	private final CatalogoService catalogoService;
+	private final CatalogoItemService catalogoItemService;
 	private final DocumentoXsdService documentoXsdService;
 	private final XsdImportService xsdImportService;
 
-	@Value("${factucore.path.documentos}")
-	private String rutaDocumentos;
+	@Value("${factucore.path.xsd}")
+	private String rutaXsdBase;
 	private final EmpresaRepository empresaRepository;
 	private final EstablecimientoRepository establecimientoRepository;
 	private final PuntoEmisionRepository puntoEmisionRepository;
+	private final XsdFileStoragePort xsdFileStorage;
+
+	public CatalogoResponse guardarCatalogo(Long id, CatalogoRequest request, String canal) {
+		Catalogo catalogo = id == null ? null : catalogoService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
+		boolean nuevo = catalogo == null;
+		catalogo = AdministracionMapper.toEntity(request, catalogo);
+		if (nuevo) {
+			catalogo.setUsuarioCreacion(canal);
+			catalogo.setFechaCreacion(java.time.LocalDateTime.now());
+		} else {
+			catalogo.setUsuarioModificacion(canal);
+			catalogo.setFechaModificacion(java.time.LocalDateTime.now());
+		}
+		return AdministracionMapper.toResponse(catalogoService.guardar(catalogo));
+	}
+
+	public CatalogoResponse obtenerCatalogo(Long id) {
+		return catalogoService.obtenerPorId(id).map(AdministracionMapper::toResponse)
+				.orElseThrow(() -> noEncontrado(id));
+	}
+
+	public CatalogoResponse obtenerCatalogoPorCodigo(String codigo) {
+		Catalogo catalogo = catalogoService.obtenerPorCodigo(codigo)
+				.orElseThrow(() -> new ApplicationException(MessageCodes.REGISTRO_NO_ENCONTRADO, codigo));
+		return AdministracionMapper.toResponse(catalogo);
+	}
+
+	public List<CatalogoResponse> listarCatalogos() {
+		return catalogoService.listar().stream().map(AdministracionMapper::toResponse).toList();
+	}
+
+	public void inactivarCatalogo(Long id) {
+		catalogoService.inactivar(id);
+	}
+
+	public void reactivarCatalogo(Long id) {
+		catalogoService.reactivar(id);
+	}
+
+	public void eliminarCatalogo(Long id) {
+		catalogoService.eliminar(id);
+	}
+
+	public CatalogoItemResponse guardarCatalogoItem(Long id, CatalogoItemRequest request, String canal) {
+		CatalogoItem item = id == null ? null
+				: catalogoItemService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
+		boolean nuevo = item == null;
+		item = AdministracionMapper.toEntity(request, item);
+		item.setCatalogo(catalogoService.obtenerPorId(request.getIdCatalogo())
+				.orElseThrow(() -> noEncontrado(request.getIdCatalogo())));
+		if (nuevo) {
+			item.setUsuarioCreacion(canal);
+			item.setFechaCreacion(java.time.LocalDateTime.now());
+		} else {
+			item.setUsuarioModificacion(canal);
+			item.setFechaModificacion(java.time.LocalDateTime.now());
+		}
+		return AdministracionMapper.toResponse(catalogoItemService.guardar(item));
+	}
+
+	public CatalogoItemResponse obtenerCatalogoItem(Long id) {
+		return catalogoItemService.obtenerPorId(id).map(AdministracionMapper::toResponse)
+				.orElseThrow(() -> noEncontrado(id));
+	}
+
+	public List<CatalogoItemResponse> listarCatalogoItems(Long catalogoId) {
+		List<CatalogoItem> items = catalogoId == null ? catalogoItemService.listar()
+				: catalogoItemService.listarPorCatalogo(catalogoId);
+		return items.stream().map(AdministracionMapper::toResponse).toList();
+	}
+
+	public void inactivarCatalogoItem(Long id) {
+		catalogoItemService.inactivar(id);
+	}
+
+	public void reactivarCatalogoItem(Long id) {
+		catalogoItemService.reactivar(id);
+	}
+
+	public void eliminarCatalogoItem(Long id) {
+		catalogoItemService.eliminar(id);
+	}
 
 	public EmpresaResponse guardarEmpresa(Long id, EmpresaRequest r) {
 		Empresa e = id == null ? null : empresaService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
@@ -239,6 +333,10 @@ public class AdministracionApplicationService implements AdministracionPort {
 		if (id != null)
 			return guardarDocumentoXsdExistente(id, r);
 
+		if (r.getContenidoXsd() != null) {
+			return guardarDocumentoXsdConContenido(r);
+		}
+
 		Path rutaXsd = validarRutaXsd(r);
 		String usuario = SecurityContextHolder.getContext().getAuthentication().getName();
 		String nombreArchivo = r.getVersion().getNombreArchivo();
@@ -262,6 +360,38 @@ public class AdministracionApplicationService implements AdministracionPort {
 		return AdministracionMapper.toResponse(documento, resultado.versionDocumentoXsdId());
 	}
 
+	private DocumentoXsdResponse guardarDocumentoXsdConContenido(DocumentoXsdRequest request) {
+		String nombreArchivo = request.getVersion().getNombreArchivo();
+		if (nombreArchivo == null || nombreArchivo.isBlank()
+				|| !nombreArchivo.toLowerCase(Locale.ROOT).endsWith(".xsd")) {
+			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_EXTENSION_INVALIDA);
+		}
+		if (nombreArchivo.length() > 300) {
+			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_NOMBRE_INVALIDO);
+		}
+		byte[] contenido = request.getContenidoXsd();
+		if (contenido.length == 0) {
+			throw new ApplicationException(MessageCodes.XSD_ARCHIVO_REQUERIDO);
+		}
+
+		Path rutaAlmacenada = xsdFileStorage.guardar(null, nombreArchivo, contenido);
+		request.getVersion().setRutaXsd(rutaAlmacenada.toString());
+
+		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCompletion(int status) {
+					if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+						xsdFileStorage.eliminar(rutaAlmacenada);
+					}
+				}
+			});
+		}
+
+		request.setContenidoXsd(null);
+		return guardarDocumentoXsd(null, request);
+	}
+
 	private DocumentoXsdResponse guardarDocumentoXsdExistente(Long id, DocumentoXsdRequest r) {
 		DocumentoXsd e = documentoXsdService.obtenerPorId(id).orElseThrow(() -> noEncontrado(id));
 		return AdministracionMapper.toResponse(documentoXsdService.guardar(AdministracionMapper.toEntity(r, e)));
@@ -269,7 +399,10 @@ public class AdministracionApplicationService implements AdministracionPort {
 
 	private Path validarRutaXsd(DocumentoXsdRequest r) {
 		String rutaSolicitada = r.getVersion().getRutaXsd();
-		Path base = Path.of(rutaDocumentos).toAbsolutePath().normalize();
+		if (rutaSolicitada == null || rutaSolicitada.isBlank()) {
+			throw new ApplicationException(MessageCodes.VERSION_DOCUMENTO_XSD_RUTA_REQUERIDA);
+		}
+		Path base = Path.of(rutaXsdBase).toAbsolutePath().normalize();
 		Path ruta = Path.of(rutaSolicitada);
 		if (!ruta.isAbsolute())
 			ruta = base.resolve(ruta).normalize();

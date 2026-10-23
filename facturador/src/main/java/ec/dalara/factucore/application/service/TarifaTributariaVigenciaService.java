@@ -48,9 +48,23 @@ public class TarifaTributariaVigenciaService extends BaseService<TarifaTributari
 	}
 
 	public List<TarifaTributariaVigencia> listarPorImpuestoYPorcentaje(String codigoImpuesto, String codigoPorcentaje) {
-		return tarifaRepository
-				.findByCodigoImpuestoAndCodigoPorcentajeOrderByFechaVigenciaDesdeAsc(codigoImpuesto, codigoPorcentaje)
-				.stream().filter(t -> !EstadoRegistro.ELIMINADO.equals(t.getEstadoRegistro())).toList();
+		if (codigoImpuesto == null || codigoImpuesto.isBlank()) {
+			if (codigoPorcentaje != null && !codigoPorcentaje.isBlank()) {
+				throw new ApplicationException(MessageCodes.TARIFA_TRIBUTARIA_VIGENCIA_DATOS_REQUERIDOS);
+			}
+			return tarifaRepository.findByEstadoRegistroNot(EstadoRegistro.ELIMINADO).stream()
+					.sorted(java.util.Comparator.comparing(TarifaTributariaVigencia::getCodigoImpuesto)
+							.thenComparing(TarifaTributariaVigencia::getCodigoPorcentaje)
+							.thenComparing(TarifaTributariaVigencia::getFechaVigenciaDesde))
+					.toList();
+		}
+		String impuesto = codigoImpuesto.trim();
+		String porcentaje = codigoPorcentaje == null ? null : codigoPorcentaje.trim();
+		List<TarifaTributariaVigencia> tarifas = porcentaje == null || porcentaje.isBlank()
+				? tarifaRepository.findByCodigoImpuestoOrderByCodigoPorcentajeAscFechaVigenciaDesdeAsc(impuesto)
+				: tarifaRepository
+						.findByCodigoImpuestoAndCodigoPorcentajeOrderByFechaVigenciaDesdeAsc(impuesto, porcentaje);
+		return tarifas.stream().filter(t -> !EstadoRegistro.ELIMINADO.equals(t.getEstadoRegistro())).toList();
 	}
 
 	@Transactional(readOnly = true)

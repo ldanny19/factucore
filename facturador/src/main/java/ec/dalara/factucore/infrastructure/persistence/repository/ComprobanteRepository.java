@@ -5,12 +5,23 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 
-public interface ComprobanteRepository extends BaseRepository<Comprobante, Long> {
+public interface ComprobanteRepository extends BaseRepository<Comprobante, Long>,
+		JpaSpecificationExecutor<Comprobante>, ComprobanteReporteQueryRepository {
+
+	@Override
+	@EntityGraph(attributePaths = { "empresa", "establecimiento", "puntoEmision", "documentoXsd" })
+	Page<Comprobante> findAll(Specification<Comprobante> specification, Pageable pageable);
+
+	Optional<Comprobante> findByIdAndEmpresaIdAndEstadoRegistro(Long id, Long empresaId, String estadoRegistro);
 
 	@EntityGraph(attributePaths = "empresa")
 	@Query("select c from Comprobante c where c.id = :id")

@@ -1,0 +1,93 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import { CircularProgress } from "@mui/material";
+import { useAuth } from "react-oidc-context";
+import type { ReactNode } from "react";
+import App from "./App";
+import AppLayout from "./layout/AppLayout";
+import DashboardPage from "../features/dashboard/presentation/DashboardPage";
+import LoginPage from "../features/login/presentation/LoginPage";
+import RecuperarContrasenaPage from "../features/login/presentation/RecuperarContrasenaPage";
+import EmpresasPage from "../features/empresas/presentation/EmpresasPage";
+import EstablecimientosPage from "../features/establecimientos/presentation/EstablecimientosPage";
+import PuntosEmisionPage from "../features/puntos-emision/presentation/PuntosEmisionPage";
+import SecuencialesPage from "../features/secuenciales/presentation/SecuencialesPage";
+import ConfiguracionEmpresaPage from "../features/configuracion-empresa/presentation/ConfiguracionEmpresaPage";
+import CertificadosFirmaPage from "../features/certificados-firma/presentation/CertificadosFirmaPage";
+import TarifasTributariasPage from "../features/tarifas-tributarias/presentation/TarifasTributariasPage";
+import CatalogosPage from "../features/catalogos/presentation/CatalogosPage";
+import DocumentosXsdPage from "../features/documentos-xsd/presentation/DocumentosXsdPage";
+import MapeosXsdPage from "../features/mapeos-xsd/presentation/MapeosXsdPage";
+import ReportesComprobantesPage from "../features/reportes-comprobantes/presentation/ReportesComprobantesPage";
+import RequireAccess from "./security/RequireAccess";
+import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
+import AccessManagementPage from "../features/accesos/presentation/AccessManagementPage";
+
+function AuthCallback() {
+  const auth = useAuth();
+  if (auth.isLoading) return <CircularProgress />;
+  return <Navigate to={auth.isAuthenticated ? "/app" : "/login"} replace />;
+}
+
+function ModulePlaceholder({ title }: { title: string }) {
+  return (
+    <div className="module-placeholder">
+      <h1>{title}</h1>
+      <p>Esta opción está preparada en el menú. Su funcionalidad se implementará en una tarea posterior.</p>
+    </div>
+  );
+}
+
+function guarded(path: string, element: ReactNode) {
+  return <RequireAccess allowedRoles={getAllowedRolesForPath(path)}>{element}</RequireAccess>;
+}
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<App />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/recuperar-contrasena" element={<RecuperarContrasenaPage />} />
+      <Route path="/app" element={<RequireAccess allowedRoles={APP_ROLES}><AppLayout /></RequireAccess>}>
+        <Route index element={guarded("/app", <DashboardPage />)} />
+        <Route path="empresas" element={guarded("/app/empresas", <EmpresasPage />)} />
+        <Route path="establecimientos" element={guarded("/app/establecimientos", <EstablecimientosPage />)} />
+        <Route path="puntos-emision" element={guarded("/app/puntos-emision", <PuntosEmisionPage />)} />
+        <Route path="secuenciales" element={guarded("/app/secuenciales", <SecuencialesPage />)} />
+        <Route path="certificados-firma" element={guarded("/app/certificados-firma", <CertificadosFirmaPage />)} />
+        <Route path="configuracion">
+          <Route index element={<Navigate to="empresa" replace />} />
+          <Route path="empresa" element={guarded("/app/configuracion/empresa", <ConfiguracionEmpresaPage />)} />
+        </Route>
+        <Route path="tarifas-tributarias" element={guarded("/app/tarifas-tributarias", <TarifasTributariasPage />)} />
+        <Route path="catalogos-tributarios" element={guarded("/app/catalogos-tributarios", <CatalogosPage />)} />
+        <Route path="definiciones-documentales" element={guarded("/app/definiciones-documentales", <DocumentosXsdPage />)} />
+        <Route path="mapeos-xsd" element={guarded("/app/mapeos-xsd", <MapeosXsdPage />)} />
+        <Route path="auditoria">
+          <Route index element={<Navigate to="historial" replace />} />
+          <Route path="historial" element={guarded("/app/auditoria/historial", <ModulePlaceholder title="Historial de acciones" />)} />
+          <Route path="trazabilidad" element={guarded("/app/auditoria/trazabilidad", <ModulePlaceholder title="Trazabilidad de comprobantes y procesos" />)} />
+          <Route path="evidencias" element={guarded("/app/auditoria/evidencias", <ModulePlaceholder title="Evidencias de procesamiento" />)} />
+        </Route>
+        <Route path="reportes-comprobantes">
+          <Route index element={<Navigate to="resumen" replace />} />
+          <Route path="resumen" element={guarded("/app/reportes-comprobantes/resumen", <ReportesComprobantesPage />)} />
+          <Route path="consulta" element={guarded("/app/reportes-comprobantes/consulta", <ReportesComprobantesPage />)} />
+          <Route path="seguimiento" element={guarded("/app/reportes-comprobantes/seguimiento", <ReportesComprobantesPage />)} />
+          <Route path="pendientes-fallidos" element={guarded("/app/reportes-comprobantes/pendientes-fallidos", <ReportesComprobantesPage />)} />
+          <Route path="busqueda" element={guarded("/app/reportes-comprobantes/busqueda", <ReportesComprobantesPage />)} />
+        </Route>
+        <Route path="comprobantes" element={<Navigate to="/app/reportes-comprobantes" replace />} />
+        <Route path="accesos">
+          <Route index element={<Navigate to="usuarios" replace />} />
+          <Route path="usuarios" element={guarded("/app/accesos/usuarios", <AccessManagementPage />)} />
+          <Route path="roles" element={guarded("/app/accesos/roles", <AccessManagementPage />)} />
+          <Route path="permisos" element={guarded("/app/accesos/permisos", <AccessManagementPage />)} />
+          <Route path="asignacion-roles" element={guarded("/app/accesos/asignacion-roles", <AccessManagementPage />)} />
+        </Route>
+      </Route>
+      <Route path="/empresas" element={<Navigate to="/app" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

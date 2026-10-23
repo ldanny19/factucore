@@ -222,6 +222,14 @@ public class FactuCoreSourceJpaAdapter implements FactuCoreSourcePort {
 			throw new ApplicationException(MessageCodes.MAPEO_XSD_ORIGEN_REQUERIDO);
 		}
 
+		String prefijoConfiguracion = "configuracion_empresa.";
+		if (origen.regionMatches(true, 0, prefijoConfiguracion, 0, prefijoConfiguracion.length())) {
+			String claveConfiguracion = origen.substring(prefijoConfiguracion.length());
+			if (!claveConfiguracion.isBlank()) {
+				return new OrigenPartes("configuracion_empresa", null, claveConfiguracion, origen);
+			}
+		}
+
 		String[] partes = origen.split("\\.", -1);
 
 		if (partes.length == 2 && !partes[0].isBlank() && !partes[1].isBlank()) {

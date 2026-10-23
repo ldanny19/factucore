@@ -1,0 +1,129 @@
+:root {
+  --factucore-blue: #1976d2;
+  --factucore-blue-dark: #12304a;
+  --factucore-page-background: #f3f6fa;
+  --factucore-border: #e1e7ee;
+  --factucore-shadow: 0 24px 70px rgba(18, 48, 74, 0.12);
+}
+
+.auth-page {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px 16px;
+  background: radial-gradient(circle at 12% 12%, rgba(25, 118, 210, 0.08), transparent 28%), var(--factucore-page-background);
+}
+.auth-container { width: 100%; }
+.auth-login-card.MuiPaper-root {
+  display: grid;
+  grid-template-columns: .9fr 1.1fr;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--factucore-border);
+  border-radius: 24px;
+  box-shadow: var(--factucore-shadow);
+}
+.auth-login-brand-panel {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 590px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 48px;
+  color: #fff;
+  background: linear-gradient(145deg, #0a1f33 0%, #12304a 58%, #1b5278 100%);
+}
+.auth-login-brand-panel::before,
+.auth-login-brand-panel::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  border-radius: 50%;
+  pointer-events: none;
+}
+.auth-login-brand-panel::before {
+  top: -100px;
+  right: -110px;
+  width: 290px;
+  height: 290px;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 0 0 35px rgba(255,255,255,.035), 0 0 0 75px rgba(255,255,255,.025);
+}
+.auth-login-brand-panel::after {
+  bottom: -115px;
+  left: -95px;
+  width: 190px;
+  height: 190px;
+  background: rgba(25,118,210,.18);
+}
+.auth-brand-icon {
+  display: grid;
+  width: 82px;
+  height: 70px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: visible;
+  background: transparent;
+}
+.auth-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+.auth-brand-lockup { display: flex; align-items: center; gap: 14px; }
+.auth-brand-name.MuiTypography-root { color: #fff; font-size: 1.5rem; font-weight: 800; letter-spacing: -.04em; }
+.auth-brand-name span, .auth-form-brand-name span { color: #20b7f4; }
+.auth-brand-heading { max-width: 340px; margin-top: 20px; font-size: clamp(1.65rem, 3vw, 2.15rem); font-weight: 750; line-height: 1.2; letter-spacing: -.04em; }
+.auth-brand-description { max-width: 340px; margin-top: 16px; color: rgba(255,255,255,.72); line-height: 1.8; }
+.auth-brand-footer { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.78); }
+.auth-brand-footer .MuiSvgIcon-root { color: #8fc8ff; }
+.auth-login-form-panel { display: flex; align-items: center; justify-content: center; padding: 48px 56px; background: #fff; }
+.auth-login-form { width: 100%; max-width: 390px; }
+.auth-form-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.auth-form-brand-icon { width: 72px; height: 60px; flex: 0 0 auto; overflow: hidden; }
+.auth-form-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+.auth-form-brand-name.MuiTypography-root { color: #092f68; font-size: 1.4rem; font-weight: 800; letter-spacing: -.04em; }
+.auth-eyebrow { color: #1976d2; font-size: .75rem; font-weight: 800; letter-spacing: .12em; }
+.auth-login-title { margin-top: 8px; font-size: clamp(1.8rem, 3vw, 2.1rem); font-weight: 800; }
+.auth-login-description { margin: 8px 0 28px; color: #65758c; line-height: 1.7; }
+.auth-error { margin-bottom: 20px; border-radius: 8px; }
+.auth-password-icon { flex-shrink: 0; margin-right: 10px; color: #74839a; font-size: 20px; }
+.auth-forgot-link { display: flex; justify-content: flex-end; margin-top: -4px; }
+.auth-forgot-link .MuiLink-root { font-size: .9rem; font-weight: 600; }
+.auth-submit-button.MuiButton-root { margin-top: 4px; padding-block: 11px; }
+.auth-recovery-card.MuiPaper-root {
+  width: 100%;
+  max-width: 430px;
+  margin-inline: auto;
+  padding: 28px;
+  border: 1px solid var(--factucore-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(18,48,74,.09);
+}
+.auth-recovery-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--factucore-blue);
+  background: #edf4fb;
+}
+.auth-recovery-title { margin-top: 4px; color: var(--factucore-blue-dark); }
+.auth-recovery-description { margin-top: 12px; line-height: 1.7; }
+.auth-recovery-form { width: 100%; }
+@media (min-width: 600px) {
+  .auth-recovery-card.MuiPaper-root { padding: 36px; }
+}
+@media (max-width: 899px) {
+  .auth-login-card.MuiPaper-root { grid-template-columns: 1fr; max-width: 620px; }
+  .auth-login-brand-panel { min-height: 250px; gap: 32px; padding: 32px; }
+  .auth-login-form-panel { padding: 36px 32px; }
+}
+@media (max-width: 480px) {
+  .auth-page { padding: 12px; }
+  .auth-login-card.MuiPaper-root { border-radius: 16px; }
+  .auth-login-brand-panel { min-height: 220px; padding: 24px; }
+  .auth-login-form-panel { padding: 28px 22px; }
+}

@@ -1,0 +1,842 @@
+.app-shell {
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #172b4d;
+}
+.app-header.MuiAppBar-root {
+  z-index: 1201;
+  color: #203c64;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e4eaf3;
+  backdrop-filter: blur(14px);
+}
+.app-header-toolbar.MuiToolbar-root {
+  min-height: 76px;
+  padding-inline: clamp(16px, 2.5vw, 36px);
+  display: flex;
+  gap: 16px;
+}
+.app-header-section { font-size: 1rem; font-weight: 800; color: #173765; }
+.app-header-date { margin-top: 3px; color: #74839a; font-size: .78rem; }
+.app-header-spacer { flex: 1; }
+.app-user-button.MuiIconButton-root { display: flex; gap: 10px; padding: 6px 10px; border-radius: 12px; }
+.app-user-avatar.MuiAvatar-root { width: 38px; height: 38px; font-size: .95rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #2563eb, #0f9f8f); }
+.app-user-details { text-align: left; }
+.app-user-name { color: #263e60; font-size: .84rem; font-weight: 750; }
+.app-user-role { color: #7b899d; font-size: .72rem; }
+.app-mobile-menu.MuiIconButton-root { display: none; }
+.app-sidebar-content { display: flex; flex-direction: column; min-height: 100%; padding: 22px 16px 16px; background: #fff; }
+.app-brand { display: flex; align-items: center; gap: 12px; padding: 2px 8px 18px; }
+.app-brand-mark { display: grid; place-items: center; width: 82px; height: 70px; flex: 0 0 auto; border-radius: 0; color: #fff; background: transparent; box-shadow: none; }
+.app-brand-name { color: #173765; font-size: 1.16rem; font-weight: 850; line-height: 1.2; white-space: nowrap; }
+.app-brand-caption { margin-top: 4px; color: #8390a4; font-size: .58rem; font-weight: 750; letter-spacing: .06em; white-space: nowrap; }
+.app-sidebar-divider.MuiDivider-root { margin: 0 4px 22px; border-color: #edf1f7; }
+.app-menu-caption { padding: 0 12px 10px; color: #8a97aa; font-size: .67rem; font-weight: 850; letter-spacing: .1em; }
+.app-navigation { display: flex; flex-direction: column; gap: 5px; }
+.app-navigation-item.MuiListItemButton-root { min-height: 58px; padding: 9px 12px; border-radius: 12px; color: #536780; }
+.app-navigation-item.MuiListItemButton-root.Mui-selected { color: #2458c7; background: #edf3ff; }
+.app-navigation-item.MuiListItemButton-root.Mui-selected:hover { background: #e5edff; }
+.app-navigation-icon.MuiListItemIcon-root { min-width: 40px; color: inherit; }
+.app-sidebar-footer { display: flex; flex-direction: column; gap: 4px; margin-top: auto; padding: 18px 12px 4px; color: #8592a5; }
+.app-main { display: flex; flex-direction: column; min-height: 100vh; margin-left: 258px; padding-top: 76px; }
+.app-content { flex: 1; width: 100%; max-width: 1600px; margin: 0 auto; padding: clamp(22px, 3vw, 42px); }
+.app-footer { padding: 14px clamp(22px, 3vw, 42px); border-top: 1px solid #e7ecf4; color: #8793a5; background: #fff; }
+.dashboard-page { max-width: 1320px; margin: 0 auto; }
+.page-title-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: #2563eb; background: #eaf1ff; }
+.page-title.MuiTypography-root { color: #173765; font-weight: 850; letter-spacing: -.035em; }
+.dashboard-metric.MuiPaper-root { height: 100%; padding: 22px; border-color: #e4eaf3; border-radius: 16px; box-shadow: 0 6px 22px rgba(25,45,85,.035); }
+.dashboard-metric-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; }
+.dashboard-metric-value { margin-top: 20px; color: #173765; font-size: 2rem; line-height: 1.1; font-weight: 850; }
+.dashboard-welcome.MuiPaper-root { margin-top: 24px; padding: clamp(22px, 3vw, 32px); border-color: #e4eaf3; border-radius: 16px; background: linear-gradient(120deg, #fff, #f8fbff); }
+.comprobantes-report-page { max-width: 1500px; margin: 0 auto; }
+.comprobantes-report-print { display: none; }
+@media (max-width: 899px) {
+  .app-mobile-menu.MuiIconButton-root { display: inline-flex; }
+  .app-main { margin-left: 0; }
+  .app-header-toolbar.MuiToolbar-root { min-height: 68px; gap: 10px; }
+  .app-main { padding-top: 68px; }
+  .app-header-date { font-size: .7rem; }
+}
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  body * { visibility: hidden !important; }
+  .comprobantes-report-print,
+  .comprobantes-report-print * { visibility: visible !important; }
+  .comprobantes-report-print {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    color: #111;
+    background: #fff;
+  }
+  .comprobantes-report-print table { width: 100%; border-collapse: collapse; }
+  .comprobantes-report-print th,
+  .comprobantes-report-print td { padding: 5px; border: 1px solid #888; font-size: 9pt; }
+  .comprobantes-report-print tr { break-inside: avoid; }
+}
+@media (max-width: 480px) {
+  .app-user-details { display: none; }
+  .app-content { padding: 20px 14px; }
+  .app-header-date { max-width: 170px; }
+}
+
+/* Estilos compartidos por las páginas internas que contienen formularios. */
+.forms-page {
+  min-height: 100vh;
+  padding-block: clamp(32px, 7vh, 72px);
+  background: #f6f8fc;
+}
+.forms-page .form-panel {
+  padding: clamp(24px, 4vw, 40px);
+  border-color: #e1e7ee;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(18, 48, 74, 0.05);
+}
+.forms-page .form-panel h1, .forms-page .form-panel h2 { letter-spacing: -0.025em; }
+
+ 
+/* Encabezado: marca a la izquierda, identidad del sistema al centro y sesión a la derecha. */
+.app-header-toolbar.MuiToolbar-root {
+  justify-content: space-between;
+}
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.app-header-logo {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(145deg, #0a1f33 0%, #12304a 58%, #1b5278 100%);
+}
+.app-header-logo .MuiSvgIcon-root { font-size: 27px; }
+.app-header-system {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  min-width: 220px;
+}
+.app-header-system-name {
+  color: #173765;
+  font-size: 1.12rem;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -.025em;
+}
+.app-header-system-slogan {
+  margin-top: 3px;
+  color: #70809a;
+  font-size: .7rem;
+  font-weight: 650;
+  letter-spacing: .035em;
+}
+.app-header-session {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+.app-header-clock { text-align: right; white-space: nowrap; }
+.app-header-clock .app-header-date { margin: 0; color: #74839a; font-size: .73rem; }
+.app-header-time { margin-top: 2px; color: #173765; font-size: .9rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.app-header-session-divider.MuiDivider-root { border-color: #e4eaf3; }
+.app-header-user { display: flex; align-items: center; gap: 9px; }
+.app-logout-button.MuiButton-root {
+  min-height: 38px;
+  padding-inline: 13px;
+  border-color: #d6e0ee;
+  border-radius: 10px;
+  color: #24436e;
+  text-transform: none;
+  font-weight: 750;
+}
+.app-logout-button.MuiButton-root:hover {
+  border-color: #2563eb;
+  background: #edf3ff;
+}
+.app-sidebar-content {
+  color: #fff;
+  background: linear-gradient(160deg, #0a1f33 0%, #12304a 58%, #1b5278 100%);
+}
+.app-brand-name { color: #fff; }
+.app-brand-caption { color: rgba(255,255,255,.65); }
+.app-brand-mark {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.17);
+  box-shadow: none;
+}
+.app-sidebar-divider.MuiDivider-root { border-color: rgba(255,255,255,.14); }
+.app-menu-caption { color: rgba(255,255,255,.58); }
+.app-navigation-item.MuiListItemButton-root { color: rgba(255,255,255,.78); }
+.app-navigation-item.MuiListItemButton-root:hover { background: rgba(255,255,255,.08); }
+.app-navigation-item.MuiListItemButton-root.Mui-selected {
+  color: #fff;
+  background: rgba(64,132,255,.28);
+  box-shadow: inset 3px 0 0 #8fc8ff;
+}
+.app-navigation-item.MuiListItemButton-root.Mui-selected:hover { background: rgba(64,132,255,.36); }
+.app-navigation-icon.MuiListItemIcon-root { color: inherit; }
+.app-sidebar-content .MuiListItemText-secondary { color: rgba(255,255,255,.58); }
+.app-sidebar-footer { color: rgba(255,255,255,.52); }
+@media (max-width: 1100px) {
+  .app-header-toolbar.MuiToolbar-root { gap: 10px; }
+  .app-header-session { gap: 10px; }
+  .app-header-system-slogan { font-size: .64rem; }
+}
+@media (max-width: 899px) {
+  .app-header-system {
+    position: static;
+    transform: none;
+    text-align: left;
+    min-width: 0;
+    margin-left: 2px;
+  }
+  .app-header-session { margin-left: auto; }
+  .app-header-clock { display: none; }
+  .app-header-session-divider.MuiDivider-root { display: none; }
+}
+@media (max-width: 600px) {
+  .app-header-brand { display: none; }
+  .app-header-system-name { font-size: .98rem; }
+  .app-header-system-slogan { display: none; }
+  .app-user-details { display: none; }
+  .app-logout-button.MuiButton-root { min-width: 0; padding-inline: 8px; }
+  .app-logout-button .MuiButton-startIcon { margin-right: 4px; margin-left: 0; }
+}
+
+
+/* El encabezado ocupa únicamente el área de trabajo, sin cubrir el menú lateral. */
+@media (min-width: 900px) {
+  .app-header.MuiAppBar-root {
+    width: calc(100% - 258px);
+    margin-left: 258px;
+  }
+}
+
+/* Simplificar el eslogan mientras se define la identidad visual definitiva. */
+.app-header-system-slogan {
+  font-size: 0;
+}
+.app-header-system-slogan::after {
+  content: "Facturación electrónica";
+  font-size: .7rem;
+}
+@media (max-width: 1100px) {
+  .app-header-system-slogan::after {
+    font-size: .64rem;
+  }
+}
+@media (max-width: 899px) {
+  .app-header.MuiAppBar-root {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Navegación jerárquica del menú lateral. */
+.app-navigation-group.MuiListItemButton-root { min-height: 58px; }
+.app-navigation-group .MuiListItemText-root { min-width: 0; }
+.app-navigation-group > .MuiSvgIcon-root { flex: 0 0 auto; color: rgba(255,255,255,.65); }
+.app-subnavigation { margin: 2px 0 6px; }
+.app-subnavigation-item.MuiListItemButton-root {
+  min-height: 39px;
+  margin: 2px 0 2px 14px;
+  padding: 7px 10px 7px 22px;
+  border-radius: 9px;
+  color: rgba(255,255,255,.72);
+}
+.app-subnavigation-item .MuiListItemText-primary { font-size: .82rem; line-height: 1.35; }
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected {
+  color: #fff;
+  background: rgba(64,132,255,.25);
+  box-shadow: inset 2px 0 0 #8fc8ff;
+}
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected:hover { background: rgba(64,132,255,.34); }
+
+
+/* El encabezado lateral permanece fijo; únicamente la lista de módulos tiene scroll. */
+.app-sidebar-content {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.app-brand,
+.app-sidebar-divider,
+.app-brand-caption { flex-shrink: 0; }
+.app-navigation {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.3) transparent;
+}
+.app-navigation::-webkit-scrollbar { width: 6px; }
+.app-navigation::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(255,255,255,.3);
+}
+.app-sidebar-content > .app-sidebar-footer { flex-shrink: 0; }
+.app-navigation-group.MuiListItemButton-root.Mui-selected {
+  color: rgba(255,255,255,.78);
+  background: transparent;
+  box-shadow: none;
+}
+.app-navigation-group.MuiListItemButton-root.Mui-selected:hover {
+  background: rgba(255,255,255,.08);
+}
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected {
+  color: #fff;
+  background: rgba(143,200,255,.22);
+  box-shadow: inset 3px 0 0 #8fc8ff;
+}
+.app-subnavigation-item.MuiListItemButton-root.Mui-selected:hover {
+  background: rgba(143,200,255,.3);
+}
+@media (max-height: 760px) {
+  .app-sidebar-content { padding-top: 14px; padding-bottom: 10px; }
+  .app-sidebar-divider.MuiDivider-root { margin-bottom: 14px; }
+  .app-navigation { gap: 2px; }
+  .app-navigation-group.MuiListItemButton-root { min-height: 50px; }
+}
+@media (max-width: 899px) {
+  .app-sidebar-content { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+}
+
+/* Distribución de los Drawer definida en CSS, no en los componentes React. */
+.app-drawer .MuiDrawer-paper {
+  height: 100dvh;
+  max-height: 100vh;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+}
+.app-drawer-mobile .MuiDrawer-paper { width: min(258px, 86vw); }
+.app-drawer-desktop .MuiDrawer-paper { width: 258px; }
+@media (min-width: 600px) {
+  .app-drawer-mobile .MuiDrawer-paper { width: 258px; }
+}
+@media (max-width: 899px) {
+  .app-drawer-mobile { display: block; }
+  .app-drawer-desktop { display: none; }
+}
+@media (min-width: 900px) {
+  .app-drawer-mobile { display: none; }
+  .app-drawer-desktop { display: block; }
+}
+.dashboard-title-row { margin-bottom: 8px; }
+.dashboard-intro { margin-top: 16px; margin-bottom: 24px; }
+.dashboard-icon-blue { color: #2563eb; background: #eaf1ff; }
+.dashboard-icon-green { color: #0f9f8f; background: #e5f8f4; }
+.dashboard-icon-amber { color: #b7791f; background: #fff3df; }
+.dashboard-welcome-title.MuiTypography-root { font-weight: 800; }
+.dashboard-welcome-description.MuiTypography-root { margin-top: 8px; line-height: 1.8; }
+.dashboard-company-link.MuiChip-root { margin-top: 16px; }
+
+/* Módulo Empresas: estilos centralizados para reutilizar el CSS del layout. */
+.empresas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.establecimientos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.puntos-emision-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.secuenciales-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.configuracion-empresa-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.certificados-firma-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.tarifas-tributarias-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.empresas-page-heading,
+.empresas-list-heading,
+.establecimientos-page-heading,
+.establecimientos-list-heading,
+.puntos-emision-page-heading,
+.puntos-emision-list-heading,
+.secuenciales-page-heading,
+.secuenciales-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.configuracion-empresa-heading,
+.configuracion-empresa-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.configuracion-empresa-heading .page-title { margin-bottom: 8px; }
+.certificados-firma-heading,
+.certificados-firma-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.certificados-firma-heading .page-title { margin-bottom: 8px; }
+.tarifas-tributarias-heading,
+.tarifas-tributarias-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.tarifas-tributarias-heading .page-title { margin-bottom: 8px; }
+.empresas-page-heading .page-title { margin-bottom: 8px; }
+.establecimientos-page-heading .page-title { margin-bottom: 8px; }
+.puntos-emision-page-heading .page-title { margin-bottom: 8px; }
+.secuenciales-page-heading .page-title { margin-bottom: 8px; }
+.empresas-feedback { margin-bottom: 0; overflow-wrap: anywhere; }
+.empresas-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.establecimientos-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.puntos-emision-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.secuenciales-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.configuracion-empresa-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.certificados-firma-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.tarifas-tributarias-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.empresas-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.establecimientos-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.puntos-emision-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.secuenciales-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.empresas-search-form .MuiTextField-root { width: min(100%, 260px); }
+.establecimientos-search-form .MuiTextField-root { width: min(100%, 260px); }
+.puntos-emision-search-form .MuiTextField-root { width: min(100%, 260px); }
+.empresas-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #dce8f7;
+  border-radius: 12px;
+  background: #f7faff;
+  overflow-wrap: anywhere;
+}
+.empresas-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.establecimientos-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.puntos-emision-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.secuenciales-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.configuracion-empresa-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.certificados-firma-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.tarifas-tributarias-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.empresas-list-heading,
+.establecimientos-list-heading,
+.puntos-emision-list-heading { margin-top: 4px; }
+.secuenciales-list-heading { margin-top: 4px; }
+.configuracion-empresa-list-heading { margin-top: 4px; }
+.certificados-firma-list-heading { margin-top: 4px; }
+.tarifas-tributarias-list-heading { margin-top: 4px; }
+.empresas-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.establecimientos-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.puntos-emision-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.secuenciales-table-panel {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.configuracion-empresa-table {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.certificados-firma-table {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.tarifas-tributarias-table {
+  border-color: #e1e7ee;
+  border-radius: 14px;
+}
+.empresas-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.establecimientos-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.puntos-emision-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.secuenciales-table-panel .MuiTableHead-root { background: #f6f8fc; }
+.configuracion-empresa-table .MuiTableHead-root { background: #f6f8fc; }
+.certificados-firma-table .MuiTableHead-root { background: #f6f8fc; }
+.tarifas-tributarias-table .MuiTableHead-root { background: #f6f8fc; }
+.empresas-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.establecimientos-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.puntos-emision-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.secuenciales-table-panel .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.configuracion-empresa-table .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.certificados-firma-table .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.tarifas-tributarias-table .MuiTableCell-head {
+  color: #4b5f78;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.empresas-table-panel .MuiTableCell-body { padding-block: 12px; }
+.establecimientos-table-panel .MuiTableCell-body { padding-block: 12px; }
+.puntos-emision-table-panel .MuiTableCell-body { padding-block: 12px; }
+.secuenciales-table-panel .MuiTableCell-body { padding-block: 12px; }
+.configuracion-empresa-table .MuiTableCell-body { padding-block: 12px; }
+.certificados-firma-table .MuiTableCell-body { padding-block: 12px; }
+.tarifas-tributarias-table .MuiTableCell-body { padding-block: 12px; }
+.certificado-file-path { display: block; max-width: 400px; overflow-wrap: anywhere; }
+.configuracion-value-cell { max-width: 300px; overflow-wrap: anywhere; }
+.empresas-dialog-description { margin-top: 4px; }
+.establecimientos-dialog-description { margin-top: 4px; }
+.puntos-emision-dialog-description { margin-top: 4px; }
+.secuenciales-dialog-description { margin-top: 4px; }
+.configuracion-empresa-dialog-description { margin-top: 4px; }
+.empresas-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.establecimientos-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.puntos-emision-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.secuenciales-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.empresas-dialog-actions { padding: 16px 24px 22px; }
+.establecimientos-dialog-actions { padding: 16px 24px 22px; }
+.puntos-emision-dialog-actions { padding: 16px 24px 22px; }
+.secuenciales-dialog-actions { padding: 16px 24px 22px; }
+.configuracion-empresa-dialog-actions { padding: 16px 24px 22px; }
+.certificados-firma-dialog-actions { padding: 16px 24px 22px; }
+.tarifas-tributarias-dialog-description { margin-top: 4px; }
+.tarifas-tributarias-dialog-actions { padding: 16px 24px 22px; }
+.configuracion-empresa-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.certificados-firma-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.tarifas-tributarias-search-form,
+.tarifas-tributarias-current-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.tarifas-tributarias-search-form .MuiTextField-root { width: min(100%, 220px); }
+.tarifas-tributarias-current-form .MuiTextField-root { width: min(100%, 220px); }
+.tarifas-tributarias-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 22px;
+}
+.empresas-page-date { align-self: flex-end; }
+@media (max-width: 900px) {
+  .empresas-table-panel { overflow-x: auto; }
+  .empresas-table-panel .MuiTable-root { min-width: 980px; }
+  .establecimientos-table-panel { overflow-x: auto; }
+  .establecimientos-table-panel .MuiTable-root { min-width: 980px; }
+  .puntos-emision-table-panel { overflow-x: auto; }
+  .puntos-emision-table-panel .MuiTable-root { min-width: 980px; }
+  .secuenciales-table-panel { overflow-x: auto; }
+  .secuenciales-table-panel .MuiTable-root { min-width: 1240px; }
+  .configuracion-empresa-table { overflow-x: auto; }
+  .configuracion-empresa-table .MuiTable-root { min-width: 1200px; }
+  .certificados-firma-table { overflow-x: auto; }
+  .certificados-firma-table .MuiTable-root { min-width: 1100px; }
+  .tarifas-tributarias-table { overflow-x: auto; }
+  .tarifas-tributarias-table .MuiTable-root { min-width: 1200px; }
+}
+@media (max-width: 650px) {
+  .empresas-page-heading,
+  .empresas-list-heading,
+  .establecimientos-page-heading,
+  .establecimientos-list-heading,
+  .puntos-emision-page-heading,
+  .puntos-emision-list-heading,
+  .secuenciales-page-heading,
+  .secuenciales-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .configuracion-empresa-heading,
+  .configuracion-empresa-list-heading { align-items: flex-start; flex-direction: column; }
+  .certificados-firma-heading,
+  .certificados-firma-list-heading { align-items: flex-start; flex-direction: column; }
+  .tarifas-tributarias-heading,
+  .tarifas-tributarias-list-heading { align-items: flex-start; flex-direction: column; }
+  .empresas-search-panel { padding: 16px; }
+  .establecimientos-search-panel { padding: 16px; }
+  .puntos-emision-search-panel { padding: 16px; }
+  .secuenciales-filter-panel { padding: 16px; }
+  .configuracion-empresa-filter { align-items: stretch; flex-direction: column; padding: 16px; }
+  .configuracion-empresa-filter .MuiTextField-root { width: 100%; }
+  .certificados-firma-filter { align-items: stretch; flex-direction: column; padding: 16px; }
+  .certificados-firma-filter .MuiTextField-root { width: 100%; }
+  .tarifas-tributarias-search-panel { padding: 16px; }
+  .tarifas-tributarias-search-form,
+  .tarifas-tributarias-current-form { align-items: stretch; flex-direction: column; }
+  .tarifas-tributarias-search-form .MuiTextField-root,
+  .tarifas-tributarias-current-form .MuiTextField-root { width: 100%; }
+  .empresas-search-form,
+  .establecimientos-search-form,
+  .puntos-emision-search-form,
+  .secuenciales-filter-form,
+  .tarifas-tributarias-search-form,
+  .tarifas-tributarias-current-form {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .empresas-search-form .MuiTextField-root { width: 100%; }
+  .establecimientos-search-form .MuiTextField-root { width: 100%; }
+  .puntos-emision-search-form .MuiTextField-root { width: 100%; }
+  .secuenciales-filter-form .MuiTextField-root,
+  .tarifas-tributarias-search-form .MuiTextField-root,
+  .tarifas-tributarias-current-form .MuiTextField-root { width: 100%; }
+  .empresas-dialog-actions { flex-wrap: wrap; }
+  .establecimientos-dialog-actions { flex-wrap: wrap; }
+  .puntos-emision-dialog-actions { flex-wrap: wrap; }
+  .empresas-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+  .establecimientos-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+  .puntos-emision-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+}
+
+/* Logotipo oficial y marca de agua de FactuCore */
+.app-brand-mark { overflow: visible; border: 0; background: transparent; box-shadow: none; }
+.app-header-logo { overflow: hidden; border: 1px solid #e5ebf2; background: #fff; box-shadow: 0 4px 12px rgba(18,48,74,.08); }
+.app-brand-mark img, .app-header-logo img { width: 100%; height: 100%; object-fit: contain; }
+.app-main { position: relative; isolation: isolate; }
+.app-main::before { content: ""; position: absolute; z-index: -1; pointer-events: none; width: min(42vw, 460px); aspect-ratio: 1; top: 50%; left: 50%; transform: translate(-50%, -45%); background: url("/factucore-icon.png") center / contain no-repeat; opacity: .035; }
+.app-content { position: relative; }
+.app-brand-name span, .app-header-system-name span { color: #0788f5; }
+
+/* Keep data-entry dialogs compact while letting their grids adapt to narrow viewports. */
+[class$="-form-grid"] {
+  gap: 12px;
+  padding-top: 16px;
+}
+.MuiDialogTitle-root {
+  padding: 16px 20px 12px;
+  font-size: 1.1rem;
+}
+.MuiDialogContent-root {
+  padding: 0 20px 16px;
+}
+.MuiDialogActions-root {
+  padding: 8px 20px 16px;
+}
+@media (max-width: 760px) {
+  [class$="-form-grid"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .MuiDialog-paperFullWidth {
+    width: calc(100% - 24px);
+    margin: 12px;
+  }
+  .MuiDialogTitle-root {
+    padding: 14px 16px 10px;
+  }
+  .MuiDialogContent-root {
+    padding: 0 16px 12px;
+  }
+  .MuiDialogActions-root {
+    padding: 8px 16px 12px;
+  }
+}

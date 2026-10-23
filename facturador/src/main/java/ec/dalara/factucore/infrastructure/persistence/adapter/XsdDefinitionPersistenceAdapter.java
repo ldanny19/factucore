@@ -467,7 +467,8 @@ public class XsdDefinitionPersistenceAdapter implements XsdDefinitionPersistence
 	}
 
 	private boolean tieneEstructuraObjeto(XsdElementSource source, XsdDefinitionSource definition) {
-		return tieneHijos(source.ruta(), definition)
+		String prefijoHijos = source.ruta() + ".";
+		return definition.elementos().stream().anyMatch(elemento -> elemento.ruta().startsWith(prefijoHijos))
 				|| definition.atributos().stream().anyMatch(a -> !esSeccionFactuCore(a.rutaElemento(), definition)
 						&& !esAtributoTecnico(a, definition) && source.ruta().equals(a.rutaElemento()));
 	}

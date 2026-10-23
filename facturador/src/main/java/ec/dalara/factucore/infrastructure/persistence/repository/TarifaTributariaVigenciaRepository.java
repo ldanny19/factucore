@@ -14,6 +14,9 @@ public interface TarifaTributariaVigenciaRepository extends BaseRepository<Tarif
 	List<TarifaTributariaVigencia> findByCodigoImpuestoAndCodigoPorcentajeOrderByFechaVigenciaDesdeAsc(
 			String codigoImpuesto, String codigoPorcentaje);
 
+	List<TarifaTributariaVigencia> findByCodigoImpuestoOrderByCodigoPorcentajeAscFechaVigenciaDesdeAsc(
+			String codigoImpuesto);
+
 	@Query("""
 			SELECT t
 			FROM TarifaTributariaVigencia t

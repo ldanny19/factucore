@@ -19,6 +19,34 @@ printf '%s\n%s\n' "$REALM_NAME" "$APP_PASSWORD" | MSYS_NO_PATHCONV=1 "${COMPOSE[
   "$KCADM" config credentials --server http://127.0.0.1:8080 --realm master --user admin --password "$ADMIN_PASSWORD" >/dev/null
   if ! "$KCADM" get "realms/$REALM_NAME" >/dev/null 2>&1; then echo "Creando realm."; "$KCADM" create realms -s "realm=$REALM_NAME" -s enabled=true >/dev/null; else echo "Realm existente; se conserva."; fi
   if ! "$KCADM" get "roles/SUPERADMIN" -r "$REALM_NAME" >/dev/null 2>&1; then "$KCADM" create roles -r "$REALM_NAME" -s name=SUPERADMIN >/dev/null; fi
+  SUPERADMIN_ID=$("$KCADM" get "roles/SUPERADMIN" -r "$REALM_NAME" 2>/dev/null | grep -oE "\"id\"[[:space:]]*:[[:space:]]*\"[^\"]+\"" | head -n 1 | cut -d ":" -f 2 | tr -d " \"" || true)
+  [ -n "$SUPERADMIN_ID" ] || { echo "No fue posible obtener el ID del rol SUPERADMIN." >&2; exit 1; }
+  for ADMIN_ROLE in query-users view-users manage-users view-realm manage-realm; do
+    if ! "$KCADM" get "roles-by-id/$SUPERADMIN_ID/composites" -r "$REALM_NAME" 2>/dev/null | grep -Eq "\"name\"[[:space:]]*:[[:space:]]*\"$ADMIN_ROLE\""; then
+      "$KCADM" add-roles -r "$REALM_NAME" --rname SUPERADMIN --cclientid realm-management --rolename "$ADMIN_ROLE" >/dev/null
+    fi
+  done
+  CLIENT_ID=$("$KCADM" get clients -r "$REALM_NAME" -q "clientId=facturador-app" 2>/dev/null | grep -oE '"id"[[:space:]]*:[[:space:]]*"[^"]+"' | head -n 1 | cut -d ":" -f 2 | tr -d ' "' || true)
+  if [ -z "$CLIENT_ID" ]; then
+    echo "Creando cliente facturador-app para el portal FactuCore."
+    "$KCADM" create clients -r "$REALM_NAME" \
+      -s clientId=facturador-app \
+      -s enabled=true \
+      -s publicClient=true \
+      -s directAccessGrantsEnabled=true \
+      -s standardFlowEnabled=true \
+      -s "redirectUris=[\"http://localhost:3000/*\",\"http://api.facturador.com:8080/*\",\"http://app.factucore.local/*\"]" \
+      -s "webOrigins=[\"http://localhost:3000\",\"http://api.facturador.com:8080\",\"http://app.factucore.local\"]" >/dev/null
+  else
+    echo "Actualizando cliente facturador-app para habilitar el login del portal."
+    "$KCADM" update "clients/$CLIENT_ID" -r "$REALM_NAME" \
+      -s enabled=true \
+      -s publicClient=true \
+      -s directAccessGrantsEnabled=true \
+      -s standardFlowEnabled=true \
+      -s "redirectUris=[\"http://localhost:3000/*\",\"http://api.facturador.com:8080/*\",\"http://app.factucore.local/*\"]" \
+      -s "webOrigins=[\"http://localhost:3000\",\"http://api.facturador.com:8080\",\"http://app.factucore.local\"]" >/dev/null
+  fi
   USER_ID=$("$KCADM" get users -r "$REALM_NAME" -q "username=superApp" 2>/dev/null | grep -oE "\"id\"[[:space:]]*:[[:space:]]*\"[^\"]+\"" | head -n 1 | cut -d ":" -f 2 | tr -d " \"" || true)
   if [ -z "$USER_ID" ]; then
     echo "Creando usuario superApp."
@@ -35,4 +63,4 @@ printf '%s\n%s\n' "$REALM_NAME" "$APP_PASSWORD" | MSYS_NO_PATHCONV=1 "${COMPOSE[
   echo "Aprovisionamiento de Keycloak finalizado."
 '
 unset APP_PASSWORD
-printf "\n==> Realm, rol SUPERADMIN y usuario superApp verificados.\n"
+printf "\n==> Realm, permisos del rol SUPERADMIN y usuario superApp verificados.\n"

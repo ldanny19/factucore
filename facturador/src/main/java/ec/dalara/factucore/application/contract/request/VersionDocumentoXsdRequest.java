@@ -20,7 +20,6 @@ public class VersionDocumentoXsdRequest {
 	@Size(max = 20)
 	private String version;
 
-	@NotBlank
 	@Size(max = 1000)
 	private String rutaXsd;
 

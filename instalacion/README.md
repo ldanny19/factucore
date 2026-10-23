@@ -43,6 +43,8 @@ FACTUCORE_HOME/
     └── logs/
 ```
 
+Los certificados PKCS#12 se copian manualmente a `FACTUCORE_HOME/facturador/certificados`. La pantalla web solo registra el nombre y la ruta del archivo; no transfiere sus bytes. `CERTIFICADO_STORAGE_PATH` en la configuración externa de la web debe coincidir con la ruta efectiva `factucore.path.certificados` del Facturador (por defecto, `/app/certificados`).
+
 Keycloak utiliza PostgreSQL para su base de datos, por lo que su persistencia queda bajo `base_datos/postgres/data`; no necesita un volumen de datos duplicado. La carpeta `vault/runtime-secrets` puede contener secretos renderizados legibles por los procesos que los consumen: protege su acceso y nunca la versionas ni la sincronices a repositorios públicos.
 
 ## 2. Requisitos

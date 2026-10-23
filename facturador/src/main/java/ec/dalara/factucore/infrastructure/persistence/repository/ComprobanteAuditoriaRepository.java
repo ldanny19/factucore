@@ -8,5 +8,8 @@ public interface ComprobanteAuditoriaRepository extends BaseRepository<Comproban
 
 	List<ComprobanteAuditoria> findByComprobanteIdOrderByFechaCreacionDesc(Long comprobanteId);
 
+	List<ComprobanteAuditoria> findByComprobanteIdAndEstadoRegistroOrderByFechaInicioDesc(Long comprobanteId,
+			String estadoRegistro);
+
 	List<ComprobanteAuditoria> findByComprobanteIdAndEtapaOrderByIntentoDesc(Long comprobanteId, String etapa);
 }

@@ -1,6 +1,8 @@
 package ec.dalara.factucore.application.mapper;
 
 import ec.dalara.factucore.application.contract.request.CertificadoFirmaRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoItemRequest;
+import ec.dalara.factucore.application.contract.request.CatalogoRequest;
 import ec.dalara.factucore.application.contract.request.ConfiguracionEmpresaRequest;
 import ec.dalara.factucore.application.contract.request.DocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.request.EmpresaRequest;
@@ -9,6 +11,8 @@ import ec.dalara.factucore.application.contract.request.PuntoEmisionRequest;
 import ec.dalara.factucore.application.contract.request.SecuencialRequest;
 import ec.dalara.factucore.application.contract.request.VersionDocumentoXsdRequest;
 import ec.dalara.factucore.application.contract.response.CertificadoFirmaResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoItemResponse;
+import ec.dalara.factucore.application.contract.response.CatalogoResponse;
 import ec.dalara.factucore.application.contract.response.ConfiguracionEmpresaResponse;
 import ec.dalara.factucore.application.contract.response.DocumentoXsdResponse;
 import ec.dalara.factucore.application.contract.response.EmpresaResponse;
@@ -16,6 +20,8 @@ import ec.dalara.factucore.application.contract.response.EstablecimientoResponse
 import ec.dalara.factucore.application.contract.response.PuntoEmisionResponse;
 import ec.dalara.factucore.application.contract.response.SecuencialResponse;
 import ec.dalara.factucore.infrastructure.persistence.entity.CertificadoFirma;
+import ec.dalara.factucore.infrastructure.persistence.entity.Catalogo;
+import ec.dalara.factucore.infrastructure.persistence.entity.CatalogoItem;
 import ec.dalara.factucore.infrastructure.persistence.entity.ConfiguracionEmpresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
@@ -115,6 +121,41 @@ public final class AdministracionMapper {
 				.usuarioCreacion(e.getUsuarioCreacion()).usuarioModificacion(e.getUsuarioModificacion())
 				.fechaCreacion(e.getFechaCreacion()).fechaModificacion(e.getFechaModificacion())
 				.observacion(e.getObservacion()).build();
+	}
+
+	public static Catalogo toEntity(CatalogoRequest r, Catalogo e) {
+		if (e == null)
+			e = new Catalogo();
+		e.setCodigo(r.getCodigo().trim());
+		e.setNombre(r.getNombre().trim());
+		e.setDescripcion(r.getDescripcion());
+		return e;
+	}
+
+	public static CatalogoResponse toResponse(Catalogo e) {
+		return CatalogoResponse.builder().id(e.getId()).codigo(e.getCodigo()).nombre(e.getNombre())
+				.descripcion(e.getDescripcion()).estadoRegistro(e.getEstadoRegistro())
+				.usuarioCreacion(e.getUsuarioCreacion()).usuarioModificacion(e.getUsuarioModificacion())
+				.fechaCreacion(e.getFechaCreacion()).fechaModificacion(e.getFechaModificacion())
+				.observacion(e.getObservacion()).build();
+	}
+
+	public static CatalogoItem toEntity(CatalogoItemRequest r, CatalogoItem e) {
+		if (e == null)
+			e = new CatalogoItem();
+		e.setCodigo(r.getCodigo().trim());
+		e.setNombre(r.getNombre().trim());
+		e.setDescripcion(r.getDescripcion());
+		e.setOrden(r.getOrden());
+		return e;
+	}
+
+	public static CatalogoItemResponse toResponse(CatalogoItem e) {
+		return CatalogoItemResponse.builder().id(e.getId()).idCatalogo(e.getCatalogo().getId())
+				.codigo(e.getCodigo()).nombre(e.getNombre()).descripcion(e.getDescripcion()).orden(e.getOrden())
+				.estadoRegistro(e.getEstadoRegistro()).usuarioCreacion(e.getUsuarioCreacion())
+				.usuarioModificacion(e.getUsuarioModificacion()).fechaCreacion(e.getFechaCreacion())
+				.fechaModificacion(e.getFechaModificacion()).observacion(e.getObservacion()).build();
 	}
 
 	public static ConfiguracionEmpresa toEntity(ConfiguracionEmpresaRequest r, ConfiguracionEmpresa e) {
