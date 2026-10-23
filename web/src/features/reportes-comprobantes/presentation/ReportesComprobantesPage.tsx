@@ -28,6 +28,7 @@ import {
   Typography,
 } from "@mui/material";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -40,6 +41,7 @@ import type {
   ComprobanteReporteDia,
   ComprobanteReporte,
   DetalleComprobanteReporte,
+  EnvioNotificacion,
   EmpresaReporte,
   FiltrosReporteComprobantes,
   PaginaComprobantes,
@@ -144,6 +146,14 @@ function fechaVisible(valor: string | null | undefined): string {
   return Number.isNaN(fecha.getTime()) ? valor : fecha.toLocaleString("es-EC");
 }
 
+function generarIdSolicitud(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hexadecimal = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hexadecimal.slice(0, 8)}-${hexadecimal.slice(8, 12)}-${hexadecimal.slice(12, 16)}-${hexadecimal.slice(16, 20)}-${hexadecimal.slice(20)}`;
+}
+
 function diasResumen(
   porDia: ComprobanteReporteDia[],
   fechaDesde: string,
@@ -202,6 +212,9 @@ export default function ReportesComprobantesPage() {
   const repositorio = useMemo(() => createHttpReporteComprobantesRepository(), []);
   const acceso = useMemo(() => getAccessContext(), []);
   const puedeReprocesar = canReprocessComprobante(acceso);
+  const puedeConsultarCorreo = acceso.isTokenValid &&
+    acceso.roles.some((role) => role === "SUPERADMIN" || role === "ADMIN");
+  const puedeReenviarCorreo = puedeConsultarCorreo;
   const [empresas, setEmpresas] = useState<EmpresaReporte[]>([]);
   const [formulario, setFormulario] = useState<FiltrosFormulario>(() => filtrosIniciales(vista));
   const [filtrosAplicados, setFiltrosAplicados] = useState<FiltrosReporteComprobantes | null>(null);
@@ -217,9 +230,18 @@ export default function ReportesComprobantesPage() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [detalle, setDetalle] = useState<DetalleComprobanteReporte | null>(null);
   const [cargandoDetalle, setCargandoDetalle] = useState(false);
+  const [comprobanteCorreo, setComprobanteCorreo] = useState<ComprobanteReporte | null>(null);
+  const [enviosCorreo, setEnviosCorreo] = useState<EnvioNotificacion[]>([]);
+  const [cargandoCorreo, setCargandoCorreo] = useState(false);
+  const [errorCorreo, setErrorCorreo] = useState<string | null>(null);
+  const [avisoCorreo, setAvisoCorreo] = useState<string | null>(null);
+  const [reenvioEnCurso, setReenvioEnCurso] = useState(false);
+  const [confirmarReenvio, setConfirmarReenvio] = useState(false);
   const [filasImpresion, setFilasImpresion] = useState<ComprobanteReporte[] | null>(null);
   const [actualizacion, setActualizacion] = useState(0);
   const solicitudDetalle = useRef(0);
+  const solicitudCorreo = useRef(0);
+  const claveSolicitudReenvio = useRef<string | null>(null);
   const idEmpresaActual = useRef<number | "">("");
   const mostrarHistograma = Boolean(
     vista === "resumen" &&
@@ -435,6 +457,93 @@ export default function ReportesComprobantesPage() {
     solicitudDetalle.current += 1;
     setDetalle(null);
     setCargandoDetalle(false);
+  };
+
+  const cargarEnviosCorreo = async (
+    idTransaccion: string,
+    solicitud: number,
+  ): Promise<EnvioNotificacion[] | null> => {
+    setCargandoCorreo(true);
+    setErrorCorreo(null);
+    try {
+      const resultado = await repositorio.consultarEnvios(idTransaccion);
+      if (solicitud === solicitudCorreo.current) {
+        setEnviosCorreo(resultado);
+        return resultado;
+      }
+    } catch (exception) {
+      if (solicitud === solicitudCorreo.current) setErrorCorreo(mensajeError(exception));
+    } finally {
+      if (solicitud === solicitudCorreo.current) setCargandoCorreo(false);
+    }
+    return null;
+  };
+
+  const abrirHistorialCorreo = async (
+    comprobante: ComprobanteReporte,
+    confirmarReenvio = false,
+  ) => {
+    const solicitud = ++solicitudCorreo.current;
+    setComprobanteCorreo(comprobante);
+    setEnviosCorreo([]);
+    setAvisoCorreo(null);
+    setErrorCorreo(null);
+    setConfirmarReenvio(false);
+    const envios = await cargarEnviosCorreo(comprobante.idTransaccion, solicitud);
+    const ultimoEnvio = envios?.[0];
+    if (
+      confirmarReenvio &&
+      solicitud === solicitudCorreo.current &&
+      ultimoEnvio &&
+      !["PENDIENTE", "EN_PROCESO"].includes(ultimoEnvio.estado)
+    ) {
+      setConfirmarReenvio(true);
+    }
+  };
+
+  const cerrarHistorialCorreo = () => {
+    solicitudCorreo.current += 1;
+    setComprobanteCorreo(null);
+    setCargandoCorreo(false);
+    setConfirmarReenvio(false);
+  };
+
+  const reenviarCorreo = async () => {
+    if (!comprobanteCorreo || !puedeReenviarCorreo) return;
+    setReenvioEnCurso(true);
+    setErrorCorreo(null);
+    setAvisoCorreo(null);
+    try {
+      const idSolicitud = claveSolicitudReenvio.current ?? generarIdSolicitud();
+      claveSolicitudReenvio.current = idSolicitud;
+      const envio = await repositorio.solicitarReenvio(comprobanteCorreo.idTransaccion, idSolicitud);
+      claveSolicitudReenvio.current = null;
+      setEnviosCorreo((anteriores) => [envio, ...anteriores].slice(0, 20));
+      setAvisoCorreo(resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RESEND_SUCCESS));
+      setConfirmarReenvio(false);
+    } catch (exception) {
+      setErrorCorreo(mensajeError(exception));
+    } finally {
+      setReenvioEnCurso(false);
+    }
+  };
+
+  const verRide = async (comprobante: ComprobanteReporte) => {
+    setError(null);
+    try {
+      const archivo = await repositorio.obtenerRide(comprobante.idEmpresa, comprobante.id);
+      const url = URL.createObjectURL(archivo);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.target = "_blank";
+      enlace.rel = "noopener noreferrer";
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (exception) {
+      setError(mensajeError(exception));
+    }
   };
 
   const exportarCsv = async () => {
@@ -1334,10 +1443,35 @@ export default function ReportesComprobantesPage() {
                           )}
                         </TableCell>
                         <TableCell align="right">
-                          <Stack direction="row" justifyContent="flex-end">
-                            <Button size="small" onClick={() => void abrirDetalle(comprobante)}>
-                              {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_DETAIL)}
+                          <Stack direction="row" justifyContent="flex-end" flexWrap="wrap" gap={0.5}>
+                            <Button
+                              size="small"
+                              startIcon={<PictureAsPdfOutlinedIcon fontSize="small" />}
+                              onClick={() => void verRide(comprobante)}
+                              disabled={exportando}
+                            >
+                              {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_VIEW_RIDE)}
                             </Button>
+                            {puedeConsultarCorreo && (
+                              <>
+                                <Button
+                                  size="small"
+                                  startIcon={<EmailOutlinedIcon fontSize="small" />}
+                                  onClick={() => void abrirHistorialCorreo(comprobante)}
+                                  disabled={!comprobante.idTransaccion}
+                                >
+                                  {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_VIEW)}
+                                </Button>
+                                <Button
+                                  size="small"
+                                  startIcon={<RefreshOutlinedIcon fontSize="small" />}
+                                  onClick={() => void abrirHistorialCorreo(comprobante, true)}
+                                  disabled={!comprobante.idTransaccion}
+                                >
+                                  {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RESEND)}
+                                </Button>
+                              </>
+                            )}
                             {puedeReprocesar && esReprocesable(comprobante) && (
                               <Button
                                 size="small"
@@ -1440,6 +1574,118 @@ export default function ReportesComprobantesPage() {
           </TableBody>
         </Table>
       </Box>
+
+      <Dialog
+        open={Boolean(comprobanteCorreo)}
+        onClose={cerrarHistorialCorreo}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>{resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_HISTORY)}</DialogTitle>
+        <DialogContent dividers>
+          {comprobanteCorreo && (
+            <Stack spacing={2}>
+              <Typography variant="body2">
+                {comprobanteCorreo.numeroComprobante} · {comprobanteCorreo.claveAcceso}
+              </Typography>
+              {errorCorreo && <Alert severity="error">{errorCorreo}</Alert>}
+              {avisoCorreo && <Alert severity="success">{avisoCorreo}</Alert>}
+              <Alert severity="info">
+                {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_SMTP_NOTICE)}
+              </Alert>
+              {cargandoCorreo ? (
+                <CircularProgress />
+              ) : enviosCorreo.length === 0 ? (
+                <Typography color="text.secondary">
+                  {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_EMPTY)}
+                </Typography>
+              ) : (
+                enviosCorreo.map((envio) => {
+                  const codigoEstado = {
+                    PENDIENTE: MessageCodes.REPORTE_COMPROBANTES_EMAIL_STATE_PENDING,
+                    EN_PROCESO: MessageCodes.REPORTE_COMPROBANTES_EMAIL_STATE_PROCESSING,
+                    ENVIADA: MessageCodes.REPORTE_COMPROBANTES_EMAIL_STATE_SENT,
+                    FALLIDA: MessageCodes.REPORTE_COMPROBANTES_EMAIL_STATE_FAILED,
+                  }[envio.estado];
+                  const colorEstadoEnvio =
+                    envio.estado === "ENVIADA" ? "success" :
+                      envio.estado === "FALLIDA" ? "error" :
+                        envio.estado === "PENDIENTE" || envio.estado === "EN_PROCESO" ? "warning" : "default";
+                  return (
+                    <Paper key={envio.id} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" gap={1}>
+                        <Box>
+                          <Typography variant="body2">
+                            {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RECIPIENT)}: {envio.destinatario}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RECEIVED)}: {fechaVisible(envio.fechaRecepcion)}
+                          </Typography>
+                          {envio.fechaEnvio && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_SENT)}: {fechaVisible(envio.fechaEnvio)}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_ATTEMPTS)}: {envio.numeroIntentos}
+                          </Typography>
+                          {envio.usuarioSolicitud && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_REQUESTED_BY)}: {envio.usuarioSolicitud}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Chip size="small" color={colorEstadoEnvio} label={resolveMessage(codigoEstado)} />
+                      </Stack>
+                    </Paper>
+                  );
+                })
+              )}
+              {confirmarReenvio ? (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Stack direction="row" spacing={1}>
+                      <Button size="small" onClick={() => setConfirmarReenvio(false)}>
+                        {resolveMessage(MessageCodes.COMMON_CANCEL)}
+                      </Button>
+                      <Button
+                        size="small"
+                        color="inherit"
+                        onClick={() => void reenviarCorreo()}
+                        disabled={reenvioEnCurso}
+                      >
+                        {reenvioEnCurso
+                          ? resolveMessage(MessageCodes.COMMON_SAVING)
+                          : resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RESEND)}
+                      </Button>
+                    </Stack>
+                  }
+                >
+                  {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RESEND_CONFIRM)}
+                </Alert>
+              ) : puedeReenviarCorreo ? (
+                <Button
+                  variant="contained"
+                  onClick={() => setConfirmarReenvio(true)}
+                  disabled={cargandoCorreo || reenvioEnCurso || enviosCorreo.length === 0 ||
+                    ["PENDIENTE", "EN_PROCESO"].includes(enviosCorreo[0]?.estado ?? "")}
+                >
+                  {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_EMAIL_RESEND)}
+                </Button>
+              ) : null}
+              <Button
+                variant="text"
+                startIcon={<RefreshOutlinedIcon />}
+                onClick={() => void cargarEnviosCorreo(comprobanteCorreo.idTransaccion, solicitudCorreo.current)}
+                disabled={cargandoCorreo || reenvioEnCurso}
+              >
+                {resolveMessage(MessageCodes.REPORTE_COMPROBANTES_REFRESH)}
+              </Button>
+            </Stack>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={vista !== "seguimiento" && (Boolean(detalle) || cargandoDetalle)}

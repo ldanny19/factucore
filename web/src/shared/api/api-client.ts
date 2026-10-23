@@ -91,6 +91,8 @@ function getHttpErrorMessage(error: AxiosError<unknown>): string {
       return resolveMessage(MessageCodes.API_HTTP_INTERNAL_SERVER_ERROR);
     case 413:
       return resolveMessage(MessageCodes.API_HTTP_PAYLOAD_TOO_LARGE);
+    case 409:
+      return resolveMessage(MessageCodes.API_HTTP_CONFLICT);
     default:
       return status
         ? resolveMessage(MessageCodes.API_HTTP_UNEXPECTED_ERROR, { status })

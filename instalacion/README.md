@@ -45,6 +45,8 @@ FACTUCORE_HOME/
 
 Los certificados PKCS#12 se copian manualmente a `FACTUCORE_HOME/facturador/certificados`. La pantalla web solo registra el nombre y la ruta del archivo; no transfiere sus bytes. `CERTIFICADO_STORAGE_PATH` en la configuración externa de la web debe coincidir con la ruta efectiva `factucore.path.certificados` del Facturador (por defecto, `/app/certificados`).
 
+La configuración pública del frontend incluye `API_NOTIFICACION_BASE_URL` para las acciones de consulta de correo y reenvío. En desarrollo puede apuntar al puerto de Notificación (`http://localhost:8082`); en una instalación detrás de Nginx debe apuntar a la ruta del gateway, por ejemplo `http://api.facturador.com:8080/notificacion-api`. Notificación valida los JWT de Keycloak; no se debe desproteger su API ni incluir credenciales en `config.js`.
+
 Keycloak utiliza PostgreSQL para su base de datos, por lo que su persistencia queda bajo `base_datos/postgres/data`; no necesita un volumen de datos duplicado. La carpeta `vault/runtime-secrets` puede contener secretos renderizados legibles por los procesos que los consumen: protege su acceso y nunca la versionas ni la sincronices a repositorios públicos.
 
 ## 2. Requisitos
@@ -112,7 +114,13 @@ El archivo de referencia de mensajes se encuentra en `configuraciones/messaging/
 
 Los cambios operativos deben realizarse en la copia externa, no en el repositorio. El resolver consulta el catálogo externo y conserva el catálogo empaquetado como respaldo según su configuración de caché.
 
-## 6. Secretos y configuración de Vault
+## 6. Actualización de Notificación y gateway
+
+Notificación expone las APIs protegidas de consulta y reenvío bajo `/api/v1/notificaciones`. Nginx publica esas rutas en `/notificacion-api/` y conserva el encabezado `Authorization`. La configuración de Keycloak debe usar el mismo issuer y URL de claves que Facturador (`FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI` y `FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI`).
+
+Al actualizar una instalación existente, actualiza la copia externa de `configuraciones/nginx/config/default.conf` y agrega `API_NOTIFICACION_BASE_URL` a `FACTUCORE_HOME/web/config/config.js` sin sobrescribir otros valores operativos. Reconstruye la imagen de Notificación para incluir las APIs y la dependencia de seguridad. Flyway aplicará automáticamente la migración que agrega la relación e idempotencia de los reenvíos.
+
+## 7. Secretos y configuración de Vault
 
 Responsabilidades principales:
 
@@ -123,13 +131,13 @@ Responsabilidades principales:
 
 No guardes secretos en `.env`, YAML versionado, SQL, Dockerfiles ni código fuente. El archivo del certificado de firma y los secretos operativos deben mantenerse fuera del repositorio.
 
-## 7. Migrar instalaciones existentes
+## 8. Migrar instalaciones existentes
 
 Antes de cambiar la distribución de carpetas, detén los servicios y realiza un respaldo. Si una instalación anterior guardaba información en rutas distintas, identifica el origen y el destino a partir de `FACTUCORE_HOME` y migra los datos de forma controlada.
 
 No muevas ni combines directorios a ciegas si el destino ya existe. Compara el contenido, conserva una copia de respaldo y verifica la persistencia de PostgreSQL, Kafka y Vault antes de eliminar cualquier copia antigua. El instalador puede detenerse al detectar datos heredados para evitar iniciar accidentalmente una base de datos o un Vault vacíos.
 
-## 8. Operación habitual
+## 9. Operación habitual
 
 Desde la raíz del repositorio, con `compose/.env` configurado:
 

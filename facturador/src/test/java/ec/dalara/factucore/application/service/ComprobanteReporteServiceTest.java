@@ -1,6 +1,7 @@
 package ec.dalara.factucore.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,11 +11,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -25,11 +30,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ec.dalara.factucore.application.contract.request.ComprobanteReporteFiltro;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
+import ec.dalara.factucore.infrastructure.persistence.entity.ComprobanteEvidencia;
 import ec.dalara.factucore.infrastructure.persistence.entity.DocumentoXsd;
 import ec.dalara.factucore.infrastructure.persistence.entity.Empresa;
 import ec.dalara.factucore.infrastructure.persistence.entity.Establecimiento;
 import ec.dalara.factucore.infrastructure.persistence.entity.PuntoEmision;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteAuditoriaRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteEvidenciaRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteReporteDiaProjection;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.EmpresaRepository;
@@ -44,13 +51,20 @@ class ComprobanteReporteServiceTest {
 	private ComprobanteAuditoriaRepository auditoriaRepository;
 
 	@Mock
+	private ComprobanteEvidenciaRepository evidenciaRepository;
+
+	@Mock
 	private EmpresaRepository empresaRepository;
+
+	@TempDir
+	private Path directorioTemporal;
 
 	private ComprobanteReporteService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new ComprobanteReporteService(comprobanteRepository, auditoriaRepository, empresaRepository);
+		service = new ComprobanteReporteService(comprobanteRepository, auditoriaRepository, evidenciaRepository,
+				empresaRepository);
 	}
 
 	@Test
@@ -59,6 +73,25 @@ class ComprobanteReporteServiceTest {
 
 		assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
 		verify(comprobanteRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+	}
+
+	@Test
+	void obtenerRideLeeLaEvidenciaActualDelComprobante() throws Exception {
+		byte[] contenido = "%PDF-1.7".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+		Path ruta = directorioTemporal.resolve("ride.pdf");
+		Files.write(ruta, contenido);
+		ComprobanteEvidencia evidencia = new ComprobanteEvidencia();
+		evidencia.setNombreArchivo("ride.pdf");
+		evidencia.setRutaArchivo(ruta.toString());
+		when(comprobanteRepository.findByIdAndEmpresaIdAndEstadoRegistro(anyLong(), anyLong(), any()))
+				.thenReturn(Optional.of(new Comprobante()));
+		when(evidenciaRepository.findByComprobanteIdAndTipoEvidenciaAndActualTrue(8L, "RIDE"))
+				.thenReturn(Optional.of(evidencia));
+
+		var resultado = service.obtenerRide(3L, 8L);
+
+		assertEquals("ride.pdf", resultado.nombreArchivo());
+		assertArrayEquals(contenido, resultado.contenido());
 	}
 
 	@Test

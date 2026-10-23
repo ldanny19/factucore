@@ -8,7 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.dalara.factucore.messaging.api.EventoMensaje;
 import ec.dalara.factucore.messaging.api.notificacion.ComprobanteAutorizado;
 import ec.dalara.factucore.notificacion.infrastructure.persistence.NotificacionEnvio;
@@ -23,6 +27,7 @@ public class NotificacionPersistenciaService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionPersistenciaService.class);
 
 	private final NotificacionEnvioRepository repository;
+	private final ObjectMapper objectMapper;
 
 	@Transactional
 	public NotificacionEnvio registrar(EventoMensaje evento, ComprobanteAutorizado comprobante, String eventoJson,
@@ -108,6 +113,66 @@ public class NotificacionPersistenciaService {
 			LOGGER.info("Consulta de notificaciones pendientes completada. CANTIDAD={}.", pendientes.size());
 		}
 		return pendientes;
+	}
+
+	@Transactional(readOnly = true)
+	public List<NotificacionEnvio> historial(String idTransaccion) {
+		return repository.findTop20ByIdTransaccionOrderByFechaRecepcionDesc(idTransaccion);
+	}
+
+	@Transactional
+	public NotificacionEnvio solicitarReenvio(String idTransaccion, String idSolicitudReenvio,
+			String usuarioSolicitud) {
+		Optional<NotificacionEnvio> solicitudExistente = repository.findByIdSolicitudReenvio(idSolicitudReenvio);
+		if (solicitudExistente.isPresent()) {
+			NotificacionEnvio envio = solicitudExistente.get();
+			if (!idTransaccion.equals(envio.getIdTransaccion())) {
+				throw new ResponseStatusException(HttpStatus.CONFLICT);
+			}
+			return envio;
+		}
+
+		NotificacionEnvio origen = repository.findTopByIdTransaccionOrderByFechaRecepcionDesc(idTransaccion)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		if (origen.getEstadoEnvio() == EstadoEnvio.PENDIENTE || origen.getEstadoEnvio() == EstadoEnvio.EN_PROCESO) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT);
+		}
+
+		EventoMensaje eventoOrigen;
+		try {
+			eventoOrigen = objectMapper.readValue(origen.getEventoJson(), EventoMensaje.class);
+		} catch (JsonProcessingException exception) {
+			throw new IllegalStateException("No se pudo recuperar el evento de notificación original.", exception);
+		}
+		EventoMensaje eventoReenvio = EventoMensaje.crear(eventoOrigen.tipo(), eventoOrigen.version(),
+				eventoOrigen.correlationId(), eventoOrigen.payload());
+		String eventoJson;
+		try {
+			eventoJson = objectMapper.writeValueAsString(eventoReenvio);
+		} catch (JsonProcessingException exception) {
+			throw new IllegalStateException("No se pudo preparar el evento de reenvío.", exception);
+		}
+
+		Instant ahora = Instant.now();
+		NotificacionEnvio reenvio = new NotificacionEnvio();
+		reenvio.setIdEvento(eventoReenvio.id());
+		reenvio.setIdTransaccion(origen.getIdTransaccion());
+		reenvio.setIdEnvioOrigen(origen.getId());
+		reenvio.setIdSolicitudReenvio(idSolicitudReenvio);
+		reenvio.setUsuarioSolicitud(usuarioSolicitud);
+		reenvio.setEventoJson(eventoJson);
+		reenvio.setDestinatario(origen.getDestinatario());
+		reenvio.setAsunto(origen.getAsunto());
+		reenvio.setContenidoHtml(origen.getContenidoHtml());
+		reenvio.setRutaXmlAutorizado(origen.getRutaXmlAutorizado());
+		reenvio.setRutaRide(origen.getRutaRide());
+		reenvio.setEstadoEnvio(EstadoEnvio.PENDIENTE);
+		reenvio.setNumeroIntentos(0);
+		reenvio.setFechaRecepcion(ahora);
+		reenvio.setFechaCreacion(ahora);
+		reenvio.setFechaModificacion(ahora);
+
+		return repository.saveAndFlush(reenvio);
 	}
 
 	@Transactional(readOnly = true)

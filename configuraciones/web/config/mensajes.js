@@ -41,6 +41,8 @@ window.FACTUCORE_MESSAGES = {
   API_HTTP_INTERNAL_SERVER_ERROR: "Ocurrió un error interno en el servidor.",
   API_HTTP_PAYLOAD_TOO_LARGE:
     "La exportación supera el límite permitido. Reduce el rango de fechas o agrega filtros.",
+  API_HTTP_CONFLICT:
+    "Ya existe una operación pendiente para este comprobante. Actualiza el historial antes de volver a intentarlo.",
   API_HTTP_UNEXPECTED_ERROR: "Ocurrió un error inesperado (HTTP {status}).",
   API_CONNECTION_ERROR:
     "No fue posible conectarse con el servidor. Inténtalo nuevamente.",
@@ -600,5 +602,24 @@ window.FACTUCORE_MESSAGES = {
     "El PDF se genera desde la impresión del navegador. Selecciona «Guardar como PDF» en el destino.",
   REPORTE_COMPROBANTES_REPROCESS: "Reprocesar",
   REPORTE_COMPROBANTES_REPROCESS_SUCCESS: "Se solicitó el reproceso del comprobante.",
+  REPORTE_COMPROBANTES_VIEW_RIDE: "Ver PDF",
+  REPORTE_COMPROBANTES_EMAIL_HISTORY: "Historial de correo",
+  REPORTE_COMPROBANTES_EMAIL_VIEW: "Ver correo",
+  REPORTE_COMPROBANTES_EMAIL_EMPTY: "Todavía no existe un envío de correo para este comprobante.",
+  REPORTE_COMPROBANTES_EMAIL_RECIPIENT: "Destinatario",
+  REPORTE_COMPROBANTES_EMAIL_STATUS: "Estado",
+  REPORTE_COMPROBANTES_EMAIL_ATTEMPTS: "Intentos",
+  REPORTE_COMPROBANTES_EMAIL_REQUESTED_BY: "Solicitado por",
+  REPORTE_COMPROBANTES_EMAIL_RECEIVED: "Solicitado",
+  REPORTE_COMPROBANTES_EMAIL_SENT: "Aceptado por SMTP",
+  REPORTE_COMPROBANTES_EMAIL_SMTP_NOTICE:
+    "El estado enviado confirma que SMTP aceptó la solicitud; no confirma la entrega final al destinatario.",
+  REPORTE_COMPROBANTES_EMAIL_RESEND: "Reenviar correo",
+  REPORTE_COMPROBANTES_EMAIL_RESEND_CONFIRM: "¿Deseas solicitar un nuevo envío para este comprobante?",
+  REPORTE_COMPROBANTES_EMAIL_RESEND_SUCCESS: "El reenvío quedó en cola para procesamiento.",
+  REPORTE_COMPROBANTES_EMAIL_STATE_PENDING: "Pendiente",
+  REPORTE_COMPROBANTES_EMAIL_STATE_PROCESSING: "En proceso",
+  REPORTE_COMPROBANTES_EMAIL_STATE_SENT: "Enviado a SMTP",
+  REPORTE_COMPROBANTES_EMAIL_STATE_FAILED: "Fallido",
   REPORTE_COMPROBANTES_DATE_RANGE_INVALID: "La fecha desde no puede ser posterior a la fecha hasta.",
 };

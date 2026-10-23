@@ -2,6 +2,7 @@ import { getRuntimeConfig } from "../../../config/runtime-config";
 import { apiRequest, apiRequestRaw } from "../../../shared/api/api-client";
 import type {
   DetalleComprobanteReporte,
+  EnvioNotificacion,
   EmpresaReporte,
   FiltrosReporteComprobantes,
   PaginaComprobantes,
@@ -14,12 +15,17 @@ export interface ReporteComprobantesRepository {
   resumir(filtros: FiltrosReporteComprobantes): Promise<ResumenComprobantes>;
   obtenerDetalle(idEmpresa: number, id: number): Promise<DetalleComprobanteReporte>;
   exportarCsv(filtros: FiltrosReporteComprobantes): Promise<Blob>;
+  obtenerRide(idEmpresa: number, id: number): Promise<Blob>;
+  consultarEnvios(idTransaccion: string): Promise<EnvioNotificacion[]>;
+  solicitarReenvio(idTransaccion: string, idSolicitud: string): Promise<EnvioNotificacion>;
   reprocesar(id: number): Promise<void>;
 }
 
 export function createHttpReporteComprobantesRepository(): ReporteComprobantesRepository {
-  const comprobantesPath = getRuntimeConfig().API_COMPROBANTES_PATH.replace(/^\/+|\/+$/g, "");
+  const runtimeConfig = getRuntimeConfig();
+  const comprobantesPath = runtimeConfig.API_COMPROBANTES_PATH.replace(/^\/+|\/+$/g, "");
   const reportesPath = `${comprobantesPath}/reportes`;
+  const notificacionBaseUrl = runtimeConfig.API_NOTIFICACION_BASE_URL.replace(/\/+$/, "");
   const parametros = (filtros: FiltrosReporteComprobantes) => ({
     ...filtros,
     idEstablecimiento: filtros.idEstablecimiento || undefined,
@@ -57,6 +63,24 @@ export function createHttpReporteComprobantesRepository(): ReporteComprobantesRe
         url: `${reportesPath}/exportacion.csv`,
         params: parametros(filtros),
         responseType: "blob",
+      }),
+    obtenerRide: (idEmpresa, id) =>
+      apiRequestRaw<Blob>({
+        method: "GET",
+        url: `${reportesPath}/${id}/ride`,
+        params: { idEmpresa },
+        responseType: "blob",
+      }),
+    consultarEnvios: (idTransaccion) =>
+      apiRequestRaw<EnvioNotificacion[]>({
+        method: "GET",
+        url: `${notificacionBaseUrl}/api/v1/notificaciones/comprobantes/${encodeURIComponent(idTransaccion)}/envios`,
+      }),
+    solicitarReenvio: (idTransaccion, idSolicitud) =>
+      apiRequestRaw<EnvioNotificacion>({
+        method: "POST",
+        url: `${notificacionBaseUrl}/api/v1/notificaciones/comprobantes/${encodeURIComponent(idTransaccion)}/reenvios`,
+        headers: { "Idempotency-Key": idSolicitud },
       }),
     reprocesar: async (id) => {
       await apiRequestRaw<unknown>({

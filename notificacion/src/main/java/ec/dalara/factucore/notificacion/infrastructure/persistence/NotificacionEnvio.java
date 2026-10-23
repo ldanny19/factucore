@@ -2,10 +2,9 @@ package ec.dalara.factucore.notificacion.infrastructure.persistence;
 
 import java.time.Instant;
 
-import org.apache.kafka.shaded.com.google.protobuf.DescriptorProtos.FeatureSet.EnumType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,6 +31,15 @@ public class NotificacionEnvio {
 
 	@Column(name = "ID_TRANSACCION", length = 100)
 	private String idTransaccion;
+
+	@Column(name = "ID_ENVIO_ORIGEN")
+	private Long idEnvioOrigen;
+
+	@Column(name = "ID_SOLICITUD_REENVIO", unique = true, length = 36)
+	private String idSolicitudReenvio;
+
+	@Column(name = "USUARIO_SOLICITUD", length = 100)
+	private String usuarioSolicitud;
 
 	@Column(name = "EVENTO_JSON", nullable = false, columnDefinition = "text")
 	private String eventoJson;

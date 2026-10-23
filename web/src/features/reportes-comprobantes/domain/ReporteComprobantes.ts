@@ -21,6 +21,7 @@ export interface FiltrosReporteComprobantes {
 
 export interface ComprobanteReporte {
   id: number;
+  idTransaccion: string;
   idEmpresa: number;
   razonSocialEmisor: string;
   rucEmisor: string;
@@ -39,6 +40,17 @@ export interface ComprobanteReporte {
   fechaAutorizacion: string | null;
   codigoError: string | null;
   mensajeError: string | null;
+}
+
+export interface EnvioNotificacion {
+  id: number;
+  idEnvioOrigen: number | null;
+  destinatario: string;
+  estado: "PENDIENTE" | "EN_PROCESO" | "ENVIADA" | "FALLIDA";
+  numeroIntentos: number;
+  usuarioSolicitud: string | null;
+  fechaRecepcion: string;
+  fechaEnvio: string | null;
 }
 
 export interface PaginaComprobantes {

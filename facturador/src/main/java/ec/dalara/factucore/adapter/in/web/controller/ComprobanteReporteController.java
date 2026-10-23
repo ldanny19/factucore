@@ -1,7 +1,9 @@
 package ec.dalara.factucore.adapter.in.web.controller;
 
 import java.util.List;
+import java.nio.charset.StandardCharsets;
 
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +61,17 @@ public class ComprobanteReporteController {
 			@Valid @ModelAttribute ComprobanteReporteFiltro filtro, @PathVariable Long id) {
 		return ResponseEntity.ok(
 				respuestas.exitoConsulta(reporteService.obtenerDetalle(filtro.getIdEmpresa(), id)));
+	}
+
+	@GetMapping("/{id}/ride")
+	public ResponseEntity<byte[]> obtenerRide(@Valid @ModelAttribute ComprobanteReporteFiltro filtro,
+			@PathVariable Long id) {
+		var evidencia = reporteService.obtenerRide(filtro.getIdEmpresa(), id);
+		return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+				.header(HttpHeaders.CONTENT_DISPOSITION,
+						ContentDisposition.inline().filename(evidencia.nombreArchivo(), StandardCharsets.UTF_8).build()
+								.toString())
+				.contentLength(evidencia.contenido().length).body(evidencia.contenido());
 	}
 
 	@GetMapping("/exportacion.csv")

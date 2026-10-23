@@ -5,15 +5,24 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 
 import ec.dalara.factucore.notificacion.infrastructure.persistence.NotificacionEnvio.EstadoEnvio;
 
 public interface NotificacionEnvioRepository extends JpaRepository<NotificacionEnvio, Long> {
 
 	Optional<NotificacionEnvio> findByIdEvento(String idEvento);
+
+	Optional<NotificacionEnvio> findByIdSolicitudReenvio(String idSolicitudReenvio);
+
+	List<NotificacionEnvio> findTop20ByIdTransaccionOrderByFechaRecepcionDesc(String idTransaccion);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<NotificacionEnvio> findTopByIdTransaccionOrderByFechaRecepcionDesc(String idTransaccion);
 
 	List<NotificacionEnvio> findTop50ByEstadoEnvioOrderByFechaRecepcionAsc(EstadoEnvio estadoEnvio);
 

@@ -1,6 +1,9 @@
 package ec.dalara.factucore.application.service;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +28,11 @@ import ec.dalara.factucore.application.contract.response.ComprobanteReporteEmpre
 import ec.dalara.factucore.application.contract.response.ComprobanteReportePaginaResponse;
 import ec.dalara.factucore.application.contract.response.ComprobanteReporteResumenResponse;
 import ec.dalara.factucore.application.contract.response.ComprobanteReporteResponse;
+import ec.dalara.factucore.application.contract.response.EvidenciaArchivoResponse;
 import ec.dalara.factucore.domain.shared.EstadoRegistro;
 import ec.dalara.factucore.infrastructure.persistence.entity.Comprobante;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteAuditoriaRepository;
+import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteEvidenciaRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.ComprobanteRepository;
 import ec.dalara.factucore.infrastructure.persistence.repository.EmpresaRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +52,7 @@ public class ComprobanteReporteService {
 			.and(Sort.by(Sort.Direction.DESC, "id"));
 	private final ComprobanteRepository comprobanteRepository;
 	private final ComprobanteAuditoriaRepository auditoriaRepository;
+	private final ComprobanteEvidenciaRepository evidenciaRepository;
 	private final EmpresaRepository empresaRepository;
 
 	@Transactional(readOnly = true)
@@ -108,6 +114,23 @@ public class ComprobanteReporteService {
 				.toList();
 		return ComprobanteReporteDetalleResponse.builder().comprobante(mapear(comprobante)).auditoria(auditoria)
 				.build();
+	}
+
+	@Transactional(readOnly = true)
+	public EvidenciaArchivoResponse obtenerRide(Long idEmpresa, Long id) {
+		comprobanteRepository.findByIdAndEmpresaIdAndEstadoRegistro(id, idEmpresa, EstadoRegistro.ACTIVO)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		var evidencia = evidenciaRepository.findByComprobanteIdAndTipoEvidenciaAndActualTrue(id, "RIDE")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Path archivo = Path.of(evidencia.getRutaArchivo()).normalize();
+		if (!Files.isRegularFile(archivo)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+		try {
+			return new EvidenciaArchivoResponse(evidencia.getNombreArchivo(), Files.readAllBytes(archivo));
+		} catch (IOException exception) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, null, exception);
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -221,6 +244,7 @@ public class ComprobanteReporteService {
 					+ comprobante.getPuntoEmision().getCodigo() + "-" + comprobante.getSecuencial();
 		}
 		return ComprobanteReporteResponse.builder().id(comprobante.getId())
+				.idTransaccion(comprobante.getIdTransaccion())
 				.idEmpresa(comprobante.getEmpresa().getId()).razonSocialEmisor(comprobante.getRazonSocialEmisor())
 				.rucEmisor(comprobante.getRucEmisor()).idEstablecimiento(comprobante.getEstablecimiento().getId())
 				.idPuntoEmision(comprobante.getPuntoEmision().getId())

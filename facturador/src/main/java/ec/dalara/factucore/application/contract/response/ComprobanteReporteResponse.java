@@ -11,6 +11,7 @@ import lombok.Value;
 public class ComprobanteReporteResponse {
 
 	Long id;
+	String idTransaccion;
 	Long idEmpresa;
 	String razonSocialEmisor;
 	String rucEmisor;
