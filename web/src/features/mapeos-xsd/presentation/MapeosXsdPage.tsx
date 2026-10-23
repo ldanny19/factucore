@@ -166,13 +166,21 @@ function rutaElemento(elemento: ElementoXsd, elementos: ElementoXsd[]): string {
 }
 
 function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
+  const idsElementosPadre = new Set(
+    definicion.elementos
+      .filter((elemento) => elemento.idElementoPadre !== null)
+      .map((elemento) => elemento.idElementoPadre as number),
+  );
+
   return definicion.elementos
     .filter((elemento) => {
       const tipoDato = elemento.tipoDato?.trim().toUpperCase();
       const activo = !elemento.estadoRegistro || elemento.estadoRegistro === EstadoRegistro.ACTIVO;
+      const esContenedor = tipoDato === "MAP" || tipoDato === "LIST";
+      const tieneHijos = idsElementosPadre.has(elemento.id);
 
-      // Solo se mapean nodos simples; MAP y LIST son contenedores.
-      return activo && tipoDato !== undefined && tipoDato !== "MAP" && tipoDato !== "LIST";
+      // Solo se ofrecen elementos hoja: algunos contenedores están mal tipados en los datos como STRING.
+      return activo && tipoDato !== undefined && !esContenedor && !tieneHijos;
     })
     .sort((a, b) => {
       const orden = (a.orden ?? 0) - (b.orden ?? 0);
@@ -183,7 +191,7 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       tipoMapeo: "ELEMENTO",
       idElementoXsd: elemento.id,
       idAtributoXsd: null,
-      // La etiqueta es la ruta completa desde la raíz; el ID solo se envía en el payload.
+      // Se muestra la ruta completa; el ID se conserva únicamente para guardar el mapeo.
       nombre: rutaElemento(elemento, definicion.elementos),
     }));
 }
