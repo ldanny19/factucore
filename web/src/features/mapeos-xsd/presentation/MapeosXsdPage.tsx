@@ -172,37 +172,26 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
   const atributosActivos = definicion.atributos.filter(
     (atributo) => !atributo.estadoRegistro || atributo.estadoRegistro === EstadoRegistro.ACTIVO,
   );
-  const elementosFinales = elementosActivos.filter((elemento) => {
-    const nombre = elemento.nombre.trim().toLowerCase();
-    const tipoDato = (elemento.tipoDato ?? "").trim().toLowerCase();
-    const ruta = rutaElemento(elemento, elementosActivos).toLowerCase().split(".");
-    const esContenedor = nombre === "map" || nombre === "list"
-      || tipoDato === "map" || tipoDato === "list"
-      || tipoDato.startsWith("map<") || tipoDato.startsWith("list<");
-    const esRaiz = elemento.idElementoPadre === null;
-    const tieneHijos = elementosActivos.some((hijo) => hijo.idElementoPadre === elemento.id);
-    return !esRaiz && !tieneHijos && !esContenedor && !ruta.includes("infotributaria");
-  });
-  const destinosElementos: DestinoXsd[] = elementosFinales
-    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+  const destinosElementos: DestinoXsd[] = [...elementosActivos]
+    .sort((a, b) => {
+      const orden = (a.orden ?? 0) - (b.orden ?? 0);
+      return orden || a.id - b.id;
+    })
     .map((elemento) => ({
       key: `elemento:${elemento.id}`,
       tipoMapeo: "ELEMENTO",
       idElementoXsd: elemento.id,
       idAtributoXsd: null,
-      nombre: rutaElemento(elemento, elementosActivos),
+      nombre: `ID ${elemento.id} — ${rutaElemento(elemento, elementosActivos)}`,
     }));
-  const destinosAtributos: DestinoXsd[] = atributosActivos.filter((atributo) => {
-    const elementoAtributo = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
-    return elementoAtributo && !rutaElemento(elementoAtributo, elementosActivos).toLowerCase().split(".").includes("infotributaria");
-  }).map((atributo) => {
+  const destinosAtributos: DestinoXsd[] = atributosActivos.map((atributo) => {
     const elemento = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
     return {
       key: `atributo:${atributo.id}`,
       tipoMapeo: "ATRIBUTO",
       idElementoXsd: null,
       idAtributoXsd: atributo.id,
-      nombre: `${elemento ? rutaElemento(elemento, elementosActivos) : ""}.@${atributo.nombre}`,
+      nombre: `ID ${atributo.id} — ${elemento ? rutaElemento(elemento, elementosActivos) : ""}.@${atributo.nombre}`,
     };
   });
 
@@ -486,12 +475,12 @@ export default function MapeosXsdPage() {
   const descripcionDestino = (mapeo: MapeoXsd): string => {
     if (mapeo.idElementoXsd !== null) {
       const elemento = definicion?.elementos.find((actual) => actual.id === mapeo.idElementoXsd);
-      return elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : String(mapeo.idElementoXsd);
+      return elemento ? `ID ${elemento.id} — ${rutaElemento(elemento, definicion?.elementos ?? [])}` : String(mapeo.idElementoXsd);
     }
     const atributo = definicion?.atributos.find((actual) => actual.id === mapeo.idAtributoXsd);
     const elemento = definicion?.elementos.find((actual) => actual.id === atributo?.idElementoXsd);
     return atributo
-      ? `${elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : ""}.@${atributo.nombre}`
+      ? `ID ${atributo.id} — ${elemento ? rutaElemento(elemento, definicion?.elementos ?? []) : ""}.@${atributo.nombre}`
       : String(mapeo.idAtributoXsd);
   };
 
