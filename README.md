@@ -1,457 +1,323 @@
 # FactuCore
 
-Motor empresarial de facturación electrónica para Ecuador, diseñado para integrar el ciclo de emisión de comprobantes electrónicos con el **Servicio de Rentas Internas (SRI)**.
+**FactuCore** es un motor empresarial de facturación electrónica para Ecuador. Su propósito es centralizar la emisión de comprobantes electrónicos y la integración con el Servicio de Rentas Internas (SRI) mediante contratos API canónicos, configuración externa y límites de responsabilidad explícitos.
 
-FactuCore está orientado a ser un producto genérico, multiempresa, multidocumento, versionable y configurable. El núcleo no conoce la estructura interna de ERP/POS de los clientes: cada cliente transforma sus datos al contrato canónico de FactuCore.
+> **Estado:** versión 1.0.0. Este README describe la solución y el despliegue del repositorio en la rama `develop`. Las capacidades concretas deben contrastarse con el código y la configuración de cada módulo; la presencia de una tecnología en la arquitectura no implica que todas las funcionalidades de negocio estén completas.
 
-## Estado actual
+## Contenido
 
-El proyecto se encuentra en construcción incremental sobre la rama `develop`.
+- [Objetivo y alcance](#objetivo-y-alcance)
+- [Arquitectura](#arquitectura)
+- [Flujo de emisión](#flujo-de-emisión)
+- [Principios de diseño](#principios-de-diseño)
+- [Tecnologías](#tecnologías)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Requisitos](#requisitos)
+- [Instalación y ejecución](#instalación-y-ejecución)
+- [Configuración externa](#configuración-externa)
+- [API y autenticación](#api-y-autenticación)
+- [Persistencia y seguridad](#persistencia-y-seguridad)
+- [Desarrollo y validación](#desarrollo-y-validación)
+- [Versionado y documentación](#versionado-y-documentación)
+- [Documentación relacionada](#documentación-relacionada)
 
-Actualmente ya están definidos y/o implementados componentes de:
+## Objetivo y alcance
 
-- arquitectura modular y hexagonal;
-- Facturador;
-- Notification;
-- librería técnica de mensajería;
-- PostgreSQL y Flyway;
-- Keycloak/OAuth2/OIDC/JWT;
-- Vault para secretos técnicos;
-- Kafka como broker actual;
-- configuración externa;
-- Apache Camel XML DSL para workflow;
-- integración base con servicios del SRI;
-- firma electrónica;
-- generación/validación XML;
-- documentación OpenAPI/Swagger UI en Facturador.
+FactuCore evoluciona el facturador existente hacia un motor más genérico, configurable y reutilizable, sin acoplar el núcleo a la estructura de un ERP o POS particular.
 
-Las capacidades funcionales se incorporan progresivamente; el README no considera como terminada una capacidad que todavía esté en desarrollo.
+El producto contempla capacidades para administrar empresas y sus datos de emisión, procesar documentos electrónicos, generar y validar XML, firmar comprobantes, comunicarse con el SRI, gestionar autorizaciones, producir RIDE/PDF, mantener evidencias y coordinar notificaciones.
+
+La disponibilidad de cada operación debe verificarse en los endpoints, casos de uso y pruebas de la versión desplegada. Las decisiones futuras no deben confundirse con funcionalidades ya disponibles.
 
 ## Arquitectura
 
-La arquitectura inicial evita una distribución innecesaria:
+FactuCore mantiene separados los servicios de negocio y la infraestructura. Los microservicios iniciales son **Facturador** y **Notification**. PostgreSQL, Keycloak, Vault, Kafka y Nginx son componentes de infraestructura, no microservicios de negocio.
 
 ```text
-                         ┌─────────────────────┐
-                         │      Keycloak       │
-                         │ OAuth2 / OIDC / JWT │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-┌───────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
-│ ERP / POS     │── JSON ▶│    API Gateway     │───────▶│     Facturador      │
-│ del cliente   │        │  Implementado con  │        │ Modular / Hexagonal │
-└───────────────┘        └─────────────────────┘        └──────┬──────┬───────┘
-                                │      │
-                         ┌──────▼──┐ ┌─▼────────────┐
-                         │PostgreSQL│ │    Vault     │
-                         └─────────┘ └──────────────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │    Kafka     │
-                         └──────┬───────┘
-                                │
-                                ▼
-                         ┌─────────────────────┐
-                         │    Notification     │
-                         │ correo / plantillas │
-                         └─────────────────────┘
+Cliente / ERP / POS
+       |
+       | Contrato JSON canónico
+       v
+Nginx (API Gateway)
+       |--------------------------> Keycloak (OIDC / OAuth2 / JWT)
+       |
+       +--------------------------> Facturador
+       |                              |-- PostgreSQL
+       |                              |-- Vault / secretos
+       |                              |-- XML, XSD y firma
+       |                              |-- Integración SRI
+       |                              |-- Workflow y evidencias
+       |
+       +--------------------------> Notification
+                                      |-- PostgreSQL
+                                      |-- Kafka
+                                      |-- SMTP / plantillas / adjuntos
 ```
 
-**Facturador** y **Notification** son los microservicios iniciales. PostgreSQL, Keycloak, Vault y Kafka son infraestructura.
+Facturador conserva dentro de su límite las capacidades documentales y del SRI: definición documental, mapping, XML/XSD, validación, firma electrónica, recepción y autorización, RIDE/PDF, workflow, auditoría y evidencias. No se separan en microservicios independientes sin una necesidad arquitectónica demostrable.
 
-Dentro de Facturador, XML, XSD, validación, firma, SRI, autorización, RIDE/PDF, workflow, auditoría y evidencias permanecen en el mismo límite modular mientras no exista una razón arquitectónica real para separarlos.
+### Contrato canónico
 
-## Principios de diseño
-
-- Java 21 y Spring Boot 3.5.x.
-- Arquitectura Hexagonal.
-- DDD pragmático.
-- SOLID, alta cohesión y bajo acoplamiento.
-- Organización por dominio/feature/capacidad.
-- Inversión de dependencias mediante puertos e interfaces.
-- No se crean adapters específicos para SAP, Odoo, Dynamics u otros ERP.
-- No se crean microservicios por cada capacidad interna.
-- No se introducen Kafka, RabbitMQ, Redis, Elasticsearch, Kubernetes, CQRS, Event Sourcing u otras tecnologías distribuidas sin una necesidad real.
-- Las comunicaciones internas del monolito modular no utilizan REST.
-- Las configuraciones operativas deben permanecer externalizadas cuando corresponda.
-
-## Contrato canónico
-
-FactuCore utiliza el concepto de un contrato canónico de entrada y salida, independiente del ERP y extensible a múltiples tipos de comprobantes.
-
-El contrato no se diseña como un espejo del XSD:
+El cliente adapta sus propios datos al contrato de FactuCore. El motor no interpreta modelos internos de SAP, Odoo, Dynamics ni de otros ERP/POS.
 
 ```text
-JSON canónico
-      │
-      ▼
-Validación
-      │
-      ▼
-DocumentDefinition
-      │
-      ▼
-Mapping
-      │
-      ▼
-XML
-      │
-      ▼
-XSD
+ERP/POS del cliente
+       |
+Transformación del cliente
+       |
+JSON canónico de FactuCore
+       |
+API REST
+       |
+Validación -> Definición documental -> Mapping -> XML -> XSD
 ```
 
-El modelo conceptual precede al diseño definitivo de los campos del API. El contrato contempla como preocupaciones arquitectónicas versionamiento, extensibilidad, idempotencia, errores, estados, workflow y snapshot histórico.
+El contrato canónico no debe ser un espejo 1:1 del XSD. Su evolución debe considerar versionamiento, extensibilidad, idempotencia, errores, estados, workflow y trazabilidad.
 
-## DocumentDefinition y XSD
+### Definiciones documentales y XSD
 
-El motor electrónico utiliza:
+El diseño contempla `DocumentDefinition` y `DocumentDefinitionVersion` para identificar el tipo y la versión documental, su XSD, restricciones, cardinalidad, mappings y reglas aplicables. El XSD no se copia dentro de cada comprobante: el documento conserva la referencia a la definición utilizada y el motor resuelve la versión correspondiente.
 
-- `DocumentDefinition`;
-- `DocumentDefinitionVersion`;
-- definición del tipo y versión del documento;
-- versión del XSD;
-- elementos, atributos, tipos y restricciones;
-- cardinalidad;
-- mappings;
-- reglas de negocio;
-- JSON Schema y ejemplos cuando corresponda;
-- vigencia y estado.
+### Evidencias e historia
 
-El XSD no se almacena dentro de cada comprobante. El documento conserva la referencia/metadata de la definición utilizada y el motor puede resolverla mediante un `DefinitionProvider` y cache cuando corresponda.
-
-## Snapshot histórico
-
-Un comprobante emitido conserva los valores necesarios para reconstruir históricamente la información utilizada durante la emisión, incluyendo emisor, receptor, establecimiento, punto de emisión, secuencial, detalles, impuestos, pagos, información adicional y demás datos necesarios para XML/RIDE.
-
-Los identificadores de las entidades maestras pueden mantenerse para trazabilidad, pero la reconstrucción histórica no depende de los valores actuales de dichas entidades.
+Las evidencias del comprobante pueden incluir XML generado, firmado o autorizado, respuestas del SRI y RIDE/PDF según corresponda. Deben conservarse asociadas al comprobante y permitir trazabilidad de la representación emitida. La reconstrucción histórica no debe depender de que los datos actuales de las entidades maestras sigan siendo iguales a los utilizados durante la emisión.
 
 ## Flujo de emisión
 
+El flujo conceptual es:
+
 ```text
-JSON
-  │
-  ▼
-Validación
-  │
-  ▼
-DocumentDefinition
-  │
-  ▼
-Mapping
-  │
-  ▼
-XML
-  │
-  ▼
-XSD
-  │
-  ▼
-Firma electrónica
-  │
-  ▼
-SRI
-  │
-  ▼
-Autorización
-  │
-  ▼
-RIDE / PDF
-  │
-  ▼
-Notification
+JSON canónico
+  -> Validación
+  -> DocumentDefinition
+  -> Mapping
+  -> XML
+  -> Validación XSD
+  -> Firma electrónica
+  -> Recepción SRI
+  -> Autorización
+  -> RIDE / PDF
+  -> Notification
 ```
 
-El workflow está diseñado para ser persistente, trazable, reanudable e idempotente, permitiendo reintentos y continuación desde el último estado válido.
+El workflow debe ser trazable y persistente, admitir reintentos y permitir continuar desde el último estado válido sin repetir innecesariamente etapas completadas.
 
-## Facturador
+## Principios de diseño
 
-**Versión actual: 1.0.0**
+- Java 21 y Spring Boot 3.5.x en el backend de FactuCore.
+- Arquitectura hexagonal y DDD pragmático.
+- Organización por dominio, capacidad o funcionalidad.
+- SOLID, alta cohesión, bajo acoplamiento e inversión de dependencias.
+- Contratos explícitos entre módulos; no utilizar REST para comunicación interna dentro de un mismo módulo de negocio.
+- PostgreSQL como infraestructura de persistencia; no como microservicio.
+- Flyway como mecanismo de evolución del esquema; no usar `ddl-auto=update` en producción.
+- No crear adapters específicos de ERP/POS.
+- No introducir microservicios, patrones ni infraestructura distribuida sin una necesidad concreta.
+- No hardcodear mensajes visibles: resolverlos mediante los catálogos de mensajes configurados.
+- Mantener secretos, certificados, datos persistentes y configuración operativa fuera del código versionado.
+- Configurar lo que cambia; codificar el comportamiento real del dominio.
 
-Facturador es el núcleo de emisión electrónica y concentra las capacidades relacionadas con:
+## Tecnologías
 
-- empresas;
-- establecimientos;
-- puntos de emisión;
-- secuenciales;
-- configuración;
-- catálogos;
-- comprobantes;
-- DocumentDefinition;
-- XML;
-- XSD;
-- validación;
-- firma electrónica;
-- integración SRI;
-- autorización;
-- RIDE/PDF;
-- workflow;
-- auditoría;
-- evidencias.
+Las versiones de referencia declaradas para el entorno del proyecto incluyen:
 
-### OpenAPI
+| Componente | Tecnología / versión de referencia |
+|---|---|
+| Backend | Java 21, Spring Boot 3.5.x, Maven |
+| Persistencia | PostgreSQL 17, JPA/Hibernate, Flyway |
+| Seguridad | Spring Security, Keycloak 26.7.4, OAuth2/OIDC/JWT |
+| Workflow | Apache Camel 4.10.7 |
+| Mensajería | Kafka 4.0.2 mediante FactuCore Messaging |
+| Secretos | HashiCorp Vault 1.20 y Vault Agent |
+| API | SpringDoc OpenAPI 2.9.1 en Facturador |
+| Firma electrónica | EU DSS 6.5 |
+| PDF | Apache PDFBox 3.0.5 |
+| Entrada HTTP | Nginx como API Gateway |
+| Frontend | React, TypeScript, Vite y Material UI |
 
-Facturador incorpora **SpringDoc OpenAPI 2.9.1**, compatible con la línea Spring Boot 3.5.x utilizada actualmente. La dependencia genera la especificación OpenAPI y Swagger UI automáticamente para los endpoints REST existentes y futuros. urlSpringDoc OpenAPIhttps://springdoc.org/
+Estas versiones son referencias de la configuración documentada y deben confirmarse contra los POM y archivos de despliegue de la revisión que se vaya a instalar.
 
-Con el contexto de la aplicación `/facturador-api`:
+## Estructura del repositorio
+
+La organización principal de la rama `develop` incluye:
+
+```text
+factucore/
+├── auditoria/                   # Capacidades de auditoría
+├── facturador/                  # Motor de facturación electrónica
+├── notificacion/                # Servicio de notificaciones
+├── factucore-messaging/         # Infraestructura compartida de mensajería
+├── web/                         # Frontend React y TypeScript
+├── configuraciones/
+│   ├── facturador/              # Configuración, workflow, Jasper y XSD
+│   ├── messaging/               # Catálogos de mensajes de mensajería
+│   ├── nginx/                   # Configuración del gateway
+│   ├── notificacion/            # Configuración y plantillas
+│   └── web/                     # Configuración pública de ejecución web
+├── compose/                     # Docker Compose y archivos de construcción
+├── infraestructura/             # Recursos de infraestructura y Vault
+├── instalacion/                 # Guía de instalación y operación
+├── docs/                        # Documentación técnica
+├── instalar-factucore.sh        # Instalador del entorno
+├── AGENTS.md                    # Instrucciones para agentes de desarrollo
+└── README.md
+```
+
+Consulta el árbol real de la rama antes de asumir que un directorio o archivo existe en otra revisión.
+
+## Requisitos
+
+Para el despliegue de referencia se necesita:
+
+- Git Bash para ejecutar el instalador y los comandos documentados.
+- Docker Engine o Docker Desktop.
+- Docker Compose v2.
+- Acceso al repositorio y a las imágenes de los servicios.
+- Espacio de disco y permisos para la carpeta externa definida por `FACTUCORE_HOME`.
+
+Para compilar los módulos Java se requiere JDK 21 y Maven, ya sea instalado localmente o disponible en el entorno de compilación. Para desarrollar el frontend se necesita Node.js/npm compatibles con la versión declarada en `web/package.json`.
+
+## Instalación y ejecución
+
+La guía detallada se encuentra en [instalacion/README.md](instalacion/README.md). Los pasos siguientes son un resumen; sigue la guía completa para preparar secretos y revisar instalaciones existentes.
+
+### 1. Preparar configuración
+
+Desde la raíz del repositorio, crea `compose/.env` a partir de `compose/.env.example` si aún no existe y configura las variables requeridas para el entorno. No copies secretos reales a archivos versionados.
+
+Verifica la rama y la ubicación:
+
+```bash
+git branch --show-current
+pwd
+```
+
+### 2. Ejecutar el instalador
+
+```bash
+bash ./instalar-factucore.sh
+```
+
+El instalador prepara las carpetas externas y copia configuraciones de referencia cuando no existen. Revisa sus mensajes y detente ante avisos sobre datos heredados, Vault existente o secretos faltantes; no elimines datos ni reinicialices servicios para intentar resolverlos sin investigar primero.
+
+### 3. Validar Docker Compose
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml config --quiet
+```
+
+### 4. Iniciar servicios
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml up -d
+docker compose --env-file compose/.env -f compose/docker-compose.yml ps
+```
+
+Para revisar logs:
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml logs --tail=100
+```
+
+Para detener los servicios sin eliminar los datos persistentes:
+
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml down
+```
+
+No utilices `down -v` como operación rutinaria. Antes de eliminar volúmenes o datos persistentes, confirma el alcance y la existencia de un respaldo válido.
+
+## Configuración externa
+
+La variable `FACTUCORE_HOME`, definida en `compose/.env`, determina la raíz externa donde se mantienen los datos persistentes y la configuración operativa. Las rutas de los volúmenes deben resolverse a partir de esta variable.
+
+La estructura externa se organiza por responsabilidad e incluye, según los servicios habilitados:
+
+- `vault/`: configuración, datos, políticas y secretos operativos de Vault.
+- `base_datos/postgres/`: datos e inicialización de PostgreSQL.
+- `mensajeria/`: datos y configuración de mensajería.
+- `facturador/`: configuración, documentos generados, certificados, reportes, imágenes y logs.
+- `notificacion/`: configuración y logs.
+- `nginx/`: configuración efectiva del gateway.
+- `web/config/`: configuración pública de ejecución del frontend.
+
+Los nombres y rutas efectivos deben revisarse en `compose/docker-compose.yml` y en la guía de instalación.
+
+### Seguridad de la configuración
+
+- No guardar contraseñas, tokens, claves privadas ni contraseñas de certificados en el repositorio.
+- No incluir secretos en `.env`, YAML versionado, SQL, Dockerfiles ni `config.js` público.
+- El archivo del certificado de firma debe mantenerse fuera del repositorio; Vault puede administrar su contraseña.
+- Proteger las carpetas que contienen secretos renderizados por Vault Agent.
+- No versionar datos persistentes, documentos generados ni logs operativos.
+
+## API y autenticación
+
+Facturador publica documentación OpenAPI mediante SpringDoc. Con el contexto de aplicación `/facturador-api`, las rutas configuradas de referencia son:
 
 - Swagger UI: `/facturador-api/swagger-ui.html`
 - OpenAPI JSON: `/facturador-api/v3/api-docs`
 - OpenAPI YAML: `/facturador-api/v3/api-docs.yaml`
 
-La documentación se irá completando mediante anotaciones OpenAPI en los controllers y contratos conforme se implementen los casos de uso.
+En el despliegue de referencia, Nginx expone la entrada HTTP pública en el puerto `8080` y enruta las peticiones a Facturador y Notification. La configuración pública de Keycloak utiliza el prefijo `/auth`; internamente Keycloak escucha en la raíz y Nginx gestiona ese prefijo.
 
-### Administración de catálogos
+La autenticación y validación de tokens se delegan a Keycloak y Spring Security mediante OAuth2, OIDC y JWT. No se implementa un sistema de autenticación propio. Los endpoints y permisos disponibles deben verificarse en la documentación OpenAPI y la configuración desplegada.
 
-La API administra catálogos e ítems mediante recursos genéricos:
+## Persistencia y seguridad
 
-- `GET /api/v1/catalogos` lista catálogos y `GET /api/v1/catalogos?codigo=CODIGO_IMPUESTO` consulta uno por código.
-- `GET /api/v1/catalogos/{id}` obtiene un catálogo por identificador.
-- `POST /api/v1/catalogos` y `PUT /api/v1/catalogos/{id}` crean y actualizan catálogos.
-- `GET /api/v1/catalogo-items?catalogoId={id}` lista los ítems de un catálogo; sin filtro lista todos.
-- `GET /api/v1/catalogo-items/{id}` obtiene un ítem por identificador.
-- `POST /api/v1/catalogo-items` y `PUT /api/v1/catalogo-items/{id}` crean y actualizan ítems.
-- Ambos recursos exponen `PATCH /api/v1/{recurso}/{id}/inactivar`, `PATCH /api/v1/{recurso}/{id}/reactivar` y `DELETE /api/v1/{recurso}/{id}` para gestionar el estado y realizar la eliminación lógica; `{recurso}` es `catalogos` o `catalogo-items`.
+- PostgreSQL es la infraestructura de datos.
+- JPA/Hibernate gestiona la persistencia y Flyway controla las migraciones.
+- Los nombres de tablas y columnas de negocio siguen las convenciones en español.
+- `ESTADO_REGISTRO` representa la vigencia del registro; `ESTADO_PROCESO` se reserva para procesos y workflow.
+- Los campos de auditoría estándar son `ESTADO_REGISTRO`, `USUARIO_CREACION`, `USUARIO_MODIFICACION`, `FECHA_CREACION`, `FECHA_MODIFICACION` y `OBSERVACION`.
+- Los secuenciales deben ser seguros frente a concurrencia y manejarse transaccionalmente.
+- Los mensajes visibles se resuelven mediante catálogos de mensajes, no mediante textos hardcodeados en el código.
 
-Las operaciones de escritura reciben `AdministracionGlobalRequest`, porque los catálogos no pertenecen a una empresa. La pantalla de tarifas tributarias consume `CODIGO_IMPUESTO` y `TARIFA_IVA` desde estos recursos; el porcentaje puede omitirse al consultar el historial por impuesto.
+## Desarrollo y validación
 
-## Proxy inverso HTTP
+Antes de modificar el código:
 
-El servicio **API Gateway**, implementado con Nginx, centraliza la entrada HTTP en `http://api.facturador.com:8080`. Enruta `/facturador-api/**` hacia Facturador y publica Keycloak bajo `/auth/**`. Keycloak escucha internamente en la raíz (`/`), sin configurar `KC_HTTP_RELATIVE_PATH=/auth`; Nginx elimina el prefijo público `/auth` al reenviar las peticiones al servicio `auth-server`. Por eso, la URL pública para autenticación conserva el prefijo `/auth`, mientras que las URLs internas de Keycloak no lo incluyen. El issuer OIDC público debe ser `http://api.facturador.com:8080/auth/realms/facturador`, y Facturador obtiene las claves JWK desde la dirección interna `http://auth-server:8080/realms/facturador/protocol/openid-connect/certs`. El nombre lógico del servicio y del contenedor es `api-gateway`; la tecnología de implementación no determina el nombre del componente arquitectónico. El puerto `8080` se declara directamente en `compose/docker-compose.yml`. El gateway registra el identificador de petición, el código HTTP y los tiempos de respuesta; Facturador mantiene la validación JWT. La configuración de referencia está en `configuraciones/nginx/config/default.conf` y el instalador la copia a `FACTUCORE_HOME/nginx/config` sin sobrescribir archivos existentes.
+1. Comprende el requerimiento y revisa la implementación existente.
+2. Identifica módulo, dominio, caso de uso, contratos y dependencias afectadas.
+3. Evalúa impacto sobre persistencia, Flyway, seguridad, workflow, SRI, evidencias y frontend.
+4. Mantén compatibilidad con V1 salvo que un cambio aprobado requiera explícitamente otra cosa.
+5. Implementa pruebas apropiadas y ejecuta las comprobaciones disponibles.
+6. Informa qué comandos se ejecutaron y cuáles fueron sus resultados; no afirmes que una compilación o prueba pasó si no se ejecutó.
 
-## Notification
+Para validar Compose:
 
-**Versión actual: 1.0.0**
-
-Microservicio responsable de:
-
-- consumo de eventos de notificación;
-- envío de correo;
-- plantillas;
-- adjuntos;
-- configuración SMTP;
-- reintentos mediante la infraestructura de mensajería;
-- notificación de comprobantes autorizados.
-
-La configuración operativa se mantiene externamente. Las credenciales sensibles, como la contraseña SMTP, son entregadas desde Vault mediante configtree.
-
-## FactuCore Messaging
-
-**Versión actual: 1.0.0**
-
-Librería técnica compartida para mensajería. Su responsabilidad es infraestructura y no lógica de negocio.
-
-Incluye:
-
-- API genérica de publicación y consumo;
-- selección de broker por configuración;
-- Kafka;
-- RabbitMQ;
-- serialización del contrato de evento;
-- consumidores;
-- reintentos;
-- DLQ/DLT cuando corresponda;
-- auto-configuración Spring Boot;
-- health checks dinámicos del broker seleccionado.
-
-El broker configurado actualmente en el entorno es **Kafka**.
-
-## Seguridad
-
-La autenticación y autorización se delegan a Keycloak mediante:
-
-- OAuth2;
-- OpenID Connect;
-- JWT;
-- Spring Security;
-- Resource Server.
-
-FactuCore no implementa autenticación propia ni almacena contraseñas de usuarios.
-
-## Secretos
-
-Vault centraliza secretos técnicos y funcionales sensibles.
-
-Entre ellos:
-
-- credenciales de PostgreSQL;
-- credencial administrativa de PostgreSQL;
-- credencial administrativa de Keycloak;
-- contraseña SMTP;
-- contraseña del certificado de firma electrónica.
-
-El archivo del certificado de firma permanece fuera de Vault; Vault administra su contraseña.
-
-Los secretos no deben almacenarse en `.env`, código fuente, SQL, YAML versionado ni Dockerfiles.
-
-## Persistencia
-
-PostgreSQL es la infraestructura de persistencia.
-
-Se utilizan:
-
-- JPA/Hibernate;
-- Flyway;
-- `ddl-auto=validate`;
-- migraciones versionadas;
-- nombres de tablas y columnas en español.
-
-Los estados de registro y los estados de workflow se mantienen conceptualmente separados:
-
-- `ESTADO_REGISTRO` para vigencia del registro;
-- `ESTADO_PROCESO` exclusivamente para workflow/proceso.
-
-La auditoría utiliza:
-
-```text
-ESTADO_REGISTRO
-USUARIO_CREACION
-USUARIO_MODIFICACION
-FECHA_CREACION
-FECHA_MODIFICACION
-OBSERVACION
+```bash
+docker compose --env-file compose/.env -f compose/docker-compose.yml config --quiet
 ```
 
-## Firma electrónica
+Los comandos Maven y npm concretos deben tomarse de los POM y de `web/package.json` de la revisión actual. No se asume que las herramientas estén instaladas ni que el build haya sido validado sin ejecutarlo.
 
-Facturador incorpora la base técnica para firma electrónica utilizando DSS.
+## Versionado y documentación
 
-La arquitectura contempla certificados PKCS#12 y perfiles de firma compatibles con los requerimientos aplicables del SRI. La implementación concreta se valida contra los XSD, especificaciones técnicas y servicios del SRI correspondientes a cada versión.
+La versión funcional documentada de los componentes principales es:
 
-## Integración SRI
-
-La integración con SRI se mantiene aislada como un adaptador externo.
-
-El flujo contempla:
-
-1. generación del comprobante;
-2. validación;
-3. firma;
-4. envío al servicio de recepción;
-5. consulta/gestión de recepción;
-6. consulta de autorización;
-7. persistencia de respuestas y evidencias;
-8. actualización del workflow.
-
-Las URLs de los ambientes de pruebas y producción se administran mediante configuración externa.
-
-## Workflow
-
-Apache Camel se utiliza como motor de workflow en Facturador.
-
-Las rutas se externalizan mediante XML, por ejemplo:
-
-```text
-/app/config/camel/facturacion.xml
-```
-
-Esto permite evolucionar el flujo sin convertir toda la orquestación en código Java.
-
-## Infraestructura local
-
-La composición actual incluye:
-
-- API Gateway para enrutar la entrada HTTP (implementado con Nginx);
-- Vault;
-- Vault Agent;
-- PostgreSQL;
-- Keycloak;
-- Kafka;
-- Facturador;
-- Notification.
-
-La configuración sensible se entrega mediante volúmenes/configtree y Vault Agent.
-
-## Configuración externa
-
-Los archivos de configuración operativa, secretos, certificados, documentos generados, logs y datos persistentes se mantienen fuera del repositorio.
-
-La raíz de almacenamiento externo se configura mediante la variable `FACTUCORE_HOME` en `compose/.env`. Cada cliente puede definir la ubicación que corresponda a su entorno. Los archivos Compose y los scripts deben construir las rutas a partir de esta variable, sin depender de rutas absolutas fijadas en el código. En el entorno de desarrollo actual se conserva el valor configurado en `compose/.env`.
-
-Dentro de esa raíz, las carpetas se organizan por responsabilidad: `vault`, `base_datos/postgres`, `mensajeria`, `facturador` y `notificacion`. PostgreSQL y Kafka mantienen sus datos persistentes fuera del workspace del repositorio.
-
-Los mensajes de la librería compartida tienen como referencia versionada `configuraciones/messaging/message.properties`. El instalador lo copia, si falta, a `FACTUCORE_HOME/mensajeria/config/message.properties`; Docker Compose monta esa configuración externa como solo lectura en los servicios correspondientes. El resolver consulta el catálogo externo y mantiene el catálogo empaquetado como respaldo.
-
-## Instalación
-
-La instalación, los requisitos, la configuración de `FACTUCORE_HOME`, los comandos de Git Bash y la operación de Docker Compose se documentan en la [Guía de instalación](instalacion/README.md). Ejecuta el instalador y los comandos de Compose desde la raíz del workspace del repositorio; los datos persistentes y la configuración operativa permanecen en la ubicación externa configurada. El instalador no requiere `yq`: procesa el formato controlado del catálogo YAML con herramientas estándar de Git Bash.
-
-## Estructura relevante del repositorio
-
-```text
-factucore/
-├── facturador/
-├── notificacion/
-├── factucore-messaging/
-├── configuraciones/
-│   ├── nginx/
-│   ├── facturador/
-│   ├── notificacion/
-│   └── messaging/
-├── compose/
-│   ├── postgres/
-│   └── vault/
-├── docs/
-└── README.md
-```
-
-## Versiones de módulos
-
-| Módulo | Versión |
+| Componente | Versión |
 |---|---|
 | Facturador | 1.0.0 |
 | Notification | 1.0.0 |
 | FactuCore Messaging | 1.0.0 |
 
-Las versiones de los módulos son independientes y se incrementarán cuando cambie funcionalmente cada módulo.
+Cada módulo mantiene su historial en el CHANGELOG correspondiente, cuando existe:
 
-## Documentación por módulo
+- [Facturador CHANGELOG](facturador/CHANGELOG.md)
+- [Notification CHANGELOG](notificacion/CHANGELOG.md)
+- [FactuCore Messaging CHANGELOG](factucore-messaging/CHANGELOG.md)
 
-Cada módulo mantiene su propio CHANGELOG:
+Las versiones de módulos pueden evolucionar independientemente cuando sus ciclos de liberación lo requieran. Los cambios de contrato o arquitectura deben documentar su impacto y mantener trazabilidad de las decisiones.
 
-- `facturador/CHANGELOG.md`
-- `notificacion/CHANGELOG.md`
-- `factucore-messaging/CHANGELOG.md`
+## Documentación relacionada
 
-Esto evita mezclar la evolución funcional de módulos con ciclos de liberación diferentes.
+- [Guía de instalación y operación](instalacion/README.md)
+- [Instrucciones del agente de desarrollo](AGENTS.md)
+- [Configuración de Docker Compose](compose/docker-compose.yml)
+- [Configuración del gateway](configuraciones/nginx/config/default.conf)
+- [Configuración de ejecución del frontend](configuraciones/web/config/config.js)
 
-## Desarrollo
+---
 
-La rama de trabajo principal para esta etapa es `develop`.
-
-Tecnologías base actuales:
-
-- Java 21;
-- Spring Boot 3.5.16;
-- Maven;
-- PostgreSQL 17;
-- Hibernate/JPA;
-- Flyway;
-- Apache Camel 4.10.7;
-- Spring Security;
-- Keycloak 26.7.4;
-- Apache Kafka 4.0.2;
-- HashiCorp Vault 1.20;
-- SpringDoc OpenAPI 2.9.1 en Facturador;
-- EU DSS 6.5;
-- Apache PDFBox 3.0.5.
-
-## Principios para nuevas funcionalidades
-
-Antes de agregar una funcionalidad se debe validar:
-
-1. modelo conceptual;
-2. bounded context y límite del módulo;
-3. reglas de negocio;
-4. versionamiento;
-5. idempotencia;
-6. errores y mensajes;
-7. workflow;
-8. snapshot histórico;
-9. persistencia;
-10. contrato API;
-11. DocumentDefinition/XSD;
-12. pruebas.
-
-Las abstracciones y tecnologías nuevas deben introducirse solamente cuando exista una necesidad real.
+**Principio rector:** FactuCore debe ser genérico, configurable y extensible para múltiples empresas y documentos, sin introducir abstracciones o complejidad distribuida que no respondan a una necesidad real.
