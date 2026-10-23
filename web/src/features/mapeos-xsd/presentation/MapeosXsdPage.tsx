@@ -190,7 +190,7 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       tipoMapeo: "ELEMENTO",
       idElementoXsd: elemento.id,
       idAtributoXsd: null,
-      nombre: `${elemento.nombre} (${elemento.tipoDato ?? "XML"})`,
+      nombre: rutaElemento(elemento, elementosActivos),
     }));
   const destinosAtributos: DestinoXsd[] = atributosActivos.filter((atributo) => {
     const elementoAtributo = elementosActivos.find((actual) => actual.id === atributo.idElementoXsd);
@@ -202,7 +202,7 @@ function crearDestinos(definicion: DefinicionDocumento): DestinoXsd[] {
       tipoMapeo: "ATRIBUTO",
       idElementoXsd: null,
       idAtributoXsd: atributo.id,
-      nombre: `${elemento?.nombre ?? ""}.@${atributo.nombre} (${atributo.tipoDato ?? "XML"})`,
+      nombre: `${elemento ? rutaElemento(elemento, elementosActivos) : ""}.@${atributo.nombre}`,
     };
   });
 
