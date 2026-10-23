@@ -17,7 +17,7 @@ export interface ConfiguracionEmpresa {
 export interface ConfiguracionEmpresaDatos {
   idEmpresa: number;
   clave: string;
-  valor: string;
+  valor: string | null;
   tipoDato: string;
   fechaVigenciaDesde: string;
   fechaVigenciaHasta: string | null;

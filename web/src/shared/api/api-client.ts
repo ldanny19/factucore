@@ -89,6 +89,8 @@ function getHttpErrorMessage(error: AxiosError<unknown>): string {
       return resolveMessage(MessageCodes.API_HTTP_NOT_FOUND);
     case 500:
       return resolveMessage(MessageCodes.API_HTTP_INTERNAL_SERVER_ERROR);
+    case 413:
+      return resolveMessage(MessageCodes.API_HTTP_PAYLOAD_TOO_LARGE);
     default:
       return status
         ? resolveMessage(MessageCodes.API_HTTP_UNEXPECTED_ERROR, { status })

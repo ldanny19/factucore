@@ -17,8 +17,10 @@ import TarifasTributariasPage from "../features/tarifas-tributarias/presentation
 import CatalogosPage from "../features/catalogos/presentation/CatalogosPage";
 import DocumentosXsdPage from "../features/documentos-xsd/presentation/DocumentosXsdPage";
 import MapeosXsdPage from "../features/mapeos-xsd/presentation/MapeosXsdPage";
+import ReportesComprobantesPage from "../features/reportes-comprobantes/presentation/ReportesComprobantesPage";
 import RequireAccess from "./security/RequireAccess";
 import { APP_ROLES, getAllowedRolesForPath } from "../shared/security/authorization";
+import AccessManagementPage from "../features/accesos/presentation/AccessManagementPage";
 
 function AuthCallback() {
   const auth = useAuth();
@@ -69,19 +71,19 @@ export default function AppRoutes() {
         </Route>
         <Route path="reportes-comprobantes">
           <Route index element={<Navigate to="resumen" replace />} />
-          <Route path="resumen" element={guarded("/app/reportes-comprobantes/resumen", <ModulePlaceholder title="Resumen del día" />)} />
-          <Route path="consulta" element={guarded("/app/reportes-comprobantes/consulta", <ModulePlaceholder title="Consulta de comprobantes" />)} />
-          <Route path="seguimiento" element={guarded("/app/reportes-comprobantes/seguimiento", <ModulePlaceholder title="Seguimiento de estados" />)} />
-          <Route path="pendientes-fallidos" element={guarded("/app/reportes-comprobantes/pendientes-fallidos", <ModulePlaceholder title="Comprobantes pendientes o fallidos" />)} />
-          <Route path="busqueda" element={guarded("/app/reportes-comprobantes/busqueda", <ModulePlaceholder title="Filtros y búsqueda de comprobantes" />)} />
+          <Route path="resumen" element={guarded("/app/reportes-comprobantes/resumen", <ReportesComprobantesPage />)} />
+          <Route path="consulta" element={guarded("/app/reportes-comprobantes/consulta", <ReportesComprobantesPage />)} />
+          <Route path="seguimiento" element={guarded("/app/reportes-comprobantes/seguimiento", <ReportesComprobantesPage />)} />
+          <Route path="pendientes-fallidos" element={guarded("/app/reportes-comprobantes/pendientes-fallidos", <ReportesComprobantesPage />)} />
+          <Route path="busqueda" element={guarded("/app/reportes-comprobantes/busqueda", <ReportesComprobantesPage />)} />
         </Route>
         <Route path="comprobantes" element={<Navigate to="/app/reportes-comprobantes" replace />} />
         <Route path="accesos">
           <Route index element={<Navigate to="usuarios" replace />} />
-          <Route path="usuarios" element={guarded("/app/accesos/usuarios", <ModulePlaceholder title="Usuarios" />)} />
-          <Route path="roles" element={guarded("/app/accesos/roles", <ModulePlaceholder title="Roles" />)} />
-          <Route path="permisos" element={guarded("/app/accesos/permisos", <ModulePlaceholder title="Permisos" />)} />
-          <Route path="asignacion-roles" element={guarded("/app/accesos/asignacion-roles", <ModulePlaceholder title="Asignación de roles a usuarios" />)} />
+          <Route path="usuarios" element={guarded("/app/accesos/usuarios", <AccessManagementPage />)} />
+          <Route path="roles" element={guarded("/app/accesos/roles", <AccessManagementPage />)} />
+          <Route path="permisos" element={guarded("/app/accesos/permisos", <AccessManagementPage />)} />
+          <Route path="asignacion-roles" element={guarded("/app/accesos/asignacion-roles", <AccessManagementPage />)} />
         </Route>
       </Route>
       <Route path="/empresas" element={<Navigate to="/app" replace />} />

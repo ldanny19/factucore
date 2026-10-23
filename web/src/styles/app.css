@@ -48,12 +48,32 @@
 .dashboard-metric-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; }
 .dashboard-metric-value { margin-top: 20px; color: #173765; font-size: 2rem; line-height: 1.1; font-weight: 850; }
 .dashboard-welcome.MuiPaper-root { margin-top: 24px; padding: clamp(22px, 3vw, 32px); border-color: #e4eaf3; border-radius: 16px; background: linear-gradient(120deg, #fff, #f8fbff); }
+.comprobantes-report-page { max-width: 1500px; margin: 0 auto; }
+.comprobantes-report-print { display: none; }
 @media (max-width: 899px) {
   .app-mobile-menu.MuiIconButton-root { display: inline-flex; }
   .app-main { margin-left: 0; }
   .app-header-toolbar.MuiToolbar-root { min-height: 68px; gap: 10px; }
   .app-main { padding-top: 68px; }
   .app-header-date { font-size: .7rem; }
+}
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  body * { visibility: hidden !important; }
+  .comprobantes-report-print,
+  .comprobantes-report-print * { visibility: visible !important; }
+  .comprobantes-report-print {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    color: #111;
+    background: #fff;
+  }
+  .comprobantes-report-print table { width: 100%; border-collapse: collapse; }
+  .comprobantes-report-print th,
+  .comprobantes-report-print td { padding: 5px; border: 1px solid #888; font-size: 9pt; }
+  .comprobantes-report-print tr { break-inside: avoid; }
 }
 @media (max-width: 480px) {
   .app-user-details { display: none; }

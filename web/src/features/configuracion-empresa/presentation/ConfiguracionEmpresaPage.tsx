@@ -186,7 +186,7 @@ export default function ConfiguracionEmpresaPage() {
     const datos: ConfiguracionEmpresaDatos = {
       idEmpresa: empresaSeleccionada.id,
       clave,
-      valor: formulario.valor,
+      valor: formulario.valor.trim() ? formulario.valor : null,
       tipoDato,
       fechaVigenciaDesde: `${formulario.fechaVigenciaDesde}:00`,
       fechaVigenciaHasta: formulario.fechaVigenciaHasta

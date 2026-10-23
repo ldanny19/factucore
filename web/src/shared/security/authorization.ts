@@ -37,8 +37,6 @@ const PATH_ROLES: Record<string, readonly AppRole[]> = {
 interface JwtPayload {
   exp?: number;
   realm_access?: { roles?: string[] };
-  resource_access?: Record<string, { roles?: string[] } | undefined>;
-  roles?: string[];
 }
 
 export interface AccessContext {
@@ -80,12 +78,7 @@ export function getAccessContext(): AccessContext {
   }
 
   const realmRoles = payload.realm_access?.roles ?? [];
-  const candidates = [
-    ...realmRoles,
-    ...(payload.roles ?? []),
-    ...Object.values(payload.resource_access ?? {}).flatMap((resource) => resource?.roles ?? []),
-  ];
-  const assigned = new Set(candidates);
+  const assigned = new Set(realmRoles);
   const roles = ROLE_PRIORITY.filter((role) => assigned.has(role));
   const realmAssigned = new Set(realmRoles);
   const permissions = ["GENERATE_COMPROBANTE", "REPROCESS_COMPROBANTE"]
