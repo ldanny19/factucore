@@ -1,40 +1,33 @@
-
-FROM maven:3.9.11-eclipse-temurin-21 as builder
-ENV APP_WORKSPACE=/app
+FROM maven:3.9.11-eclipse-temurin-21 AS builder
+ENV APP_WORKSPACE=/app/workspace
 WORKDIR ${APP_WORKSPACE}
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-RUN mvn clean package  -DskipTests
+
+RUN --mount=type=bind,source=factucore-messaging,target=/tmp/messaging,ro \
+    --mount=type=cache,target=/tmp/messaging/target \
+    --mount=type=cache,target=/root/.m2 \
+    cd /tmp/messaging && \
+    mvn dependency:go-offline && \
+    mvn install -DskipTests
+
+COPY facturador/pom.xml .
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline
+
+COPY facturador/src ./src
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn clean package -DskipTests
 
 
-FROM eclipse-temurin:21-jre 
+FROM eclipse-temurin:21-jre-alpine
 ENV APP_HOME=/app
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget \
-    && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --system factucore \
-    && useradd --system \
-       --gid factucore \
-       --home-dir ${APP_HOME} \
-       --no-create-home \
-       --shell /usr/sbin/nologin \
-       factucore
-
-RUN mkdir -p \
-      ${APP_HOME}/config \
-      ${APP_HOME}/logs \
-      ${APP_HOME}/certificados \
-      ${APP_HOME}/jasper \
-      ${APP_HOME}/documentos \
+RUN apk add --no-cache wget \
+    && addgroup -S factucore \
+    && adduser -S -G factucore -h ${APP_HOME} -s /sbin/nologin -D factucore \
+    && mkdir -p ${APP_HOME}/config ${APP_HOME}/logs ${APP_HOME}/certificados ${APP_HOME}/jasper ${APP_HOME}/documentos \
     && chown -R factucore:factucore ${APP_HOME}
 
-# El JAR debe existir previamente en target/.
-# Docker solo empaqueta el artefacto generado por Maven.
-COPY --from=builder ${APP_WORKSPACE}/target/facturador-*.jar ${APP_HOME}/facturador.jar
-
-RUN chown factucore:factucore ${APP_HOME}/facturador.jar
+COPY --chown=factucore:factucore --from=builder /app/workspace/target/*.jar ${APP_HOME}/facturador.jar
 
 USER factucore
 
