@@ -1,15 +1,15 @@
-# ============================================================
-# RUNTIME
-# ============================================================
 
-FROM eclipse-temurin:21-jre
+FROM maven:3.9.11-eclipse-temurin-21 as builder
+ENV APP_WORKSPACE=/app
+WORKDIR ${APP_WORKSPACE}
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn clean package  -DskipTests
 
-ARG APP_VERSION
 
+FROM eclipse-temurin:21-jre 
 ENV APP_HOME=/app
-
-WORKDIR ${APP_HOME}
-
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget \
     && rm -rf /var/lib/apt/lists/*
@@ -32,7 +32,7 @@ RUN mkdir -p \
 
 # El JAR debe existir previamente en target/.
 # Docker solo empaqueta el artefacto generado por Maven.
-COPY target/facturador-${APP_VERSION}.jar ${APP_HOME}/facturador.jar
+COPY --from=builder ${APP_WORKSPACE}/target/facturador-*.jar ${APP_HOME}/facturador.jar
 
 RUN chown factucore:factucore ${APP_HOME}/facturador.jar
 
