@@ -21,3 +21,4 @@ jobs:
       execute_docker: false
       publish_artifact: true
       artifact_name: factucore-messaging
+    secrets: inherit

@@ -24,3 +24,4 @@ jobs:
       dependency_group_id: ec.dalara.factucore
       dependency_artifact_id: factucore-messaging
       dependency_version: '1.0.0'
+    secrets: inherit
