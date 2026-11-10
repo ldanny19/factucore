@@ -10,7 +10,7 @@ permissions:
 jobs:
   ci:
     name: CI JAVA Facturador
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@7630a9793972442feb49e2cb03cf13678f146bb5
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@7963c2d6109dcda478bb9d5ef0315edfb9bba6d1
     with:
       java_version: '21'
       java_distribution: temurin

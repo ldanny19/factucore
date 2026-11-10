@@ -63,6 +63,7 @@ jobs:
       needs.changes.outputs.notificacion == 'true' ||
       needs.changes.outputs.auditoria == 'true'
     uses: ./.github/workflows/ci-cd-messaging.yml
+    secrets: inherit
 
   facturador:
     name: CI/CD Facturador
@@ -86,6 +87,7 @@ jobs:
        needs.changes.outputs.messaging == 'true') &&
       (needs.messaging.result == 'success' || needs.messaging.result == 'skipped')
     uses: ./.github/workflows/ci-cd-notificacion.yml
+    secrets: inherit
 
   auditoria:
     name: CI Auditoria
@@ -97,6 +99,7 @@ jobs:
        needs.changes.outputs.messaging == 'true') &&
       (needs.messaging.result == 'success' || needs.messaging.result == 'skipped')
     uses: ./.github/workflows/ci-cd-auditoria.yml
+    secrets: inherit
 
   web:
     name: CI Web
