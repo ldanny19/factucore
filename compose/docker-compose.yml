@@ -173,7 +173,7 @@ services:
 
 
   facturador:
-    image: factucore-facturador:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
+    image: ${FACTUCORE_FACTURADOR_IMAGE:-factucore-facturador:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}}
     container_name: facturador
     user: factucore
     restart: unless-stopped
@@ -222,7 +222,7 @@ services:
       start_period: 60s
 
   notificacion:
-    image: factucore-notificacion:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}
+    image: ${FACTUCORE_NOTIFICACION_IMAGE:-factucore-notificacion:${FACTUCORE_VERSION:?FACTUCORE_VERSION es obligatoria}}
     container_name: notificacion
     user: factucore
     restart: unless-stopped
