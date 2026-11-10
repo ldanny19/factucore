@@ -56,7 +56,12 @@ jobs:
   messaging:
     name: CI/CD Messaging
     needs: changes
-    if: >-\n      github.event_name == 'workflow_dispatch' ||\n      needs.changes.outputs.messaging == 'true' ||\n      needs.changes.outputs.facturador == 'true' ||\n      needs.changes.outputs.notificacion == 'true' ||\n      needs.changes.outputs.auditoria == 'true'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.messaging == 'true' ||
+      needs.changes.outputs.facturador == 'true' ||
+      needs.changes.outputs.notificacion == 'true' ||
+      needs.changes.outputs.auditoria == 'true'
     uses: ./.github/workflows/ci-cd-messaging.yml
 
   facturador:

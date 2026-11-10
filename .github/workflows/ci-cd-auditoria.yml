@@ -9,7 +9,7 @@ permissions:
 jobs:
   ci:
     name: CI JAVA Auditoria
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@cbd54f40b17b613e1fd7ec8a0f86f579d1aac169
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@d8c17e7211e2d96f8e38f049d15b34322798b085
     with:
       java_version: '21'
       java_distribution: temurin
@@ -17,7 +17,7 @@ jobs:
       build_tool_version: '3.9.9'
       working_directory: auditoria
       execute_build: true
-      execute_docker: false
+      execute_docker: false\n      artifact_name: auditoria
       dependency_artifact_name: factucore-messaging
       dependency_group_id: ec.dalara.factucore
       dependency_artifact_id: factucore-messaging
