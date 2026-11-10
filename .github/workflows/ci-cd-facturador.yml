@@ -1,4 +1,4 @@
-name: CI/CD facturador
+name: CI/CD Facturador
 
 on:
   workflow_call:
