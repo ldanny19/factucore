@@ -9,7 +9,7 @@ permissions:
 jobs:
   ci:
     name: CI JAVA Messaging
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@d8c17e7211e2d96f8e38f049d15b34322798b085
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@4cd5aad1fdd101705502111c580c12afd1cb8126
     with:
       java_version: '21'
       java_distribution: temurin

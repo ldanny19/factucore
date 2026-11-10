@@ -44,7 +44,7 @@ El CD configurado corresponde únicamente a Facturador y se ejecuta en `main`, d
 
 Los workflows Java consumen `ldanny19/devops-pipeline-templates`. La versión utilizada incorpora soporte para descargar una dependencia Maven desde un GitHub Actions Artifact, instalarla localmente y manejar nombres de artefactos únicos para los módulos y la etapa Docker.
 
-La plantilla se encuentra en la rama `feature/maven-local-artifact-dependency` del repositorio de plantillas, commit `d8c17e7211e2d96f8e38f049d15b34322798b085`. Antes de integrar el cambio de FactuCore en `main`, debe integrarse también esa rama de plantillas y mantenerse el pin por SHA.
+La plantilla se encuentra en la rama `feature/maven-local-artifact-dependency` del repositorio de plantillas, commit `4cd5aad1fdd101705502111c580c12afd1cb8126`. Antes de integrar el cambio de FactuCore en `main`, debe integrarse también esa rama de plantillas y mantenerse el pin por SHA.
 
 ## Validación pendiente
 
