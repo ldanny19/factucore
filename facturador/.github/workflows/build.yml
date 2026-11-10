@@ -1,27 +1,40 @@
+
 name: CI/CD facturador
+
 on:
-  workflow_dispatch: 
-  push: 
-    branches: 
+  workflow_dispatch:
+  push:
+    branches:
       - develop
       - main
+
 jobs:
   ci:
     name: CI JAVA
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@d4f8834fd81ecd551571b996a1d5d398c5f04fbe
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@5e64ee7465f6e521f1a52429a490c413cd10ef99
     with:
-      java_version: ${{ inputs.java_version }}
-      java_distribution: ${{ inputs.java_distribution }}
-      build_tool: ${{ inputs.build_tool }}
-      build_tool_version: ${{ inputs.build_tool_version }}
-      working_directory: ${{ inputs.working_directory }}
-  
+      java_version: '21'
+      java_distribution: temurin
+      build_tool: maven
+      build_tool_version: '3.9.9'
+      working_directory: .
+      execute_build: true
+      execute_docker: true
+      docker_image: ghcr.io/ldanny19/facturador
+
   cd:
     name: CD JAVA
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/cd-java.yml@d4f8834fd81ecd551571b996a1d5d398c5f04fbe
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/cd-java.yml@54e6f4d0067981f782c126c37f0851975245181f
     with:
-      java_version: ${{ inputs.java_version }}
-      java_distribution: ${{ inputs.java_distribution }}
-      build_tool: ${{ inputs.build_tool }}
-      build_tool_version: ${{ inputs.build_tool_version }}
-      working_directory: ${{ inputs.working_directory }}
+      environment: production
+      docker_image: ${{ needs.ci.outputs.image }}
+      deploy_path: ${{ vars.DEPLOY_PATH }}
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
