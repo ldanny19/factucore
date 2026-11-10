@@ -31,12 +31,13 @@ jobs:
     name: CD JAVA
     needs: ci
     if: github.ref == 'refs/heads/main'
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/cd-java.yml@64e6cf8b22bebf3688daed22e1b17f7816e7a4ef
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/cd-java.yml@a76a635ce087f62c80982f8802f434323515fcd1
     with:
       environment: production
       docker_image: ${{ needs.ci.outputs.image }}
       deploy_path: ${{ vars.DEPLOY_PATH }}
       compose_service: facturador
+      compose_image_variable: FACTUCORE_FACTURADOR_IMAGE
     secrets:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
