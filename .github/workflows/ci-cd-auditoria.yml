@@ -10,7 +10,7 @@ permissions:
 jobs:
   ci:
     name: CI JAVA Auditoria
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@4cd5aad1fdd101705502111c580c12afd1cb8126
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@7630a9793972442feb49e2cb03cf13678f146bb5
     with:
       java_version: '21'
       java_distribution: temurin
