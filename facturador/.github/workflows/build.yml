@@ -1,0 +1,27 @@
+name: CI/CD facturador
+on:
+  workflow_dispatch: 
+  push: 
+    branches: 
+      - develop
+      - main
+jobs:
+  ci:
+    name: CI JAVA
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@d4f8834fd81ecd551571b996a1d5d398c5f04fbe
+    with:
+      java_version: ${{ inputs.java_version }}
+      java_distribution: ${{ inputs.java_distribution }}
+      build_tool: ${{ inputs.build_tool }}
+      build_tool_version: ${{ inputs.build_tool_version }}
+      working_directory: ${{ inputs.working_directory }}
+  
+  cd:
+    name: CD JAVA
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/cd-java.yml@d4f8834fd81ecd551571b996a1d5d398c5f04fbe
+    with:
+      java_version: ${{ inputs.java_version }}
+      java_distribution: ${{ inputs.java_distribution }}
+      build_tool: ${{ inputs.build_tool }}
+      build_tool_version: ${{ inputs.build_tool_version }}
+      working_directory: ${{ inputs.working_directory }}
