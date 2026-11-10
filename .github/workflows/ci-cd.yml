@@ -1,0 +1,100 @@
+name: CI/CD FactuCore
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'factucore-messaging/**'
+      - 'facturador/**'
+      - 'notificacion/**'
+      - 'auditoria/**'
+      - 'web/**'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  changes:
+    name: Detectar cambios
+    runs-on: ubuntu-latest
+    outputs:
+      messaging: ${{ steps.filter.outputs.messaging }}
+      facturador: ${{ steps.filter.outputs.facturador }}
+      notificacion: ${{ steps.filter.outputs.notificacion }}
+      auditoria: ${{ steps.filter.outputs.auditoria }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Detectar cambios por modulo
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            messaging:
+              - 'factucore-messaging/**'
+              - '.github/workflows/**'
+            facturador:
+              - 'facturador/**'
+              - '.github/workflows/**'
+            notificacion:
+              - 'notificacion/**'
+              - '.github/workflows/**'
+            auditoria:
+              - 'auditoria/**'
+              - '.github/workflows/**'
+            web:
+              - 'web/**'
+              - '.github/workflows/**'
+
+  messaging:
+    name: CI/CD Messaging
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.messaging == 'true'
+    uses: ./.github/workflows/ci-cd-messaging.yml
+
+  facturador:
+    name: CI/CD Facturador
+    needs: [changes, messaging]
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+       needs.changes.outputs.facturador == 'true' ||
+       needs.changes.outputs.messaging == 'true') &&
+      (needs.messaging.result == 'success' || needs.messaging.result == 'skipped')
+    uses: ./.github/workflows/ci-cd-facturador.yml
+    secrets: inherit
+
+  notificacion:
+    name: CI Notificacion
+    needs: [changes, messaging]
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+       needs.changes.outputs.notificacion == 'true' ||
+       needs.changes.outputs.messaging == 'true') &&
+      (needs.messaging.result == 'success' || needs.messaging.result == 'skipped')
+    uses: ./.github/workflows/ci-cd-notificacion.yml
+
+  auditoria:
+    name: CI Auditoria
+    needs: [changes, messaging]
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+       needs.changes.outputs.auditoria == 'true' ||
+       needs.changes.outputs.messaging == 'true') &&
+      (needs.messaging.result == 'success' || needs.messaging.result == 'skipped')
+    uses: ./.github/workflows/ci-cd-auditoria.yml
+
+  web:
+    name: CI Web
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true'
+    uses: ./.github/workflows/ci-cd-web.yml

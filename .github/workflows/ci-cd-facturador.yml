@@ -1,26 +1,30 @@
-
 name: CI/CD facturador
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - develop
-      - main
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   ci:
-    name: CI JAVA
-    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@5e64ee7465f6e521f1a52429a490c413cd10ef99
+    name: CI JAVA Facturador
+    uses: ldanny19/devops-pipeline-templates/.github/workflows/ci-java.yml@a2c593f430b3418950d81cad77e01bec0552cf93
     with:
       java_version: '21'
       java_distribution: temurin
       build_tool: maven
       build_tool_version: '3.9.9'
-      working_directory: .
+      working_directory: facturador
       execute_build: true
       execute_docker: true
       docker_image: ghcr.io/ldanny19/facturador
+      dependency_artifact_name: factucore-messaging
+      dependency_group_id: ec.dalara.factucore
+      dependency_artifact_id: factucore-messaging
+      dependency_version: '1.0.0'
+    secrets: inherit
 
   cd:
     name: CD JAVA
