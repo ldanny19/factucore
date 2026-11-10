@@ -17,7 +17,8 @@ jobs:
       build_tool_version: '3.9.9'
       working_directory: notificacion
       execute_build: true
-      execute_docker: false\n      artifact_name: notificacion
+      execute_docker: false
+      artifact_name: notificacion
       dependency_artifact_name: factucore-messaging
       dependency_group_id: ec.dalara.factucore
       dependency_artifact_id: factucore-messaging

@@ -18,7 +18,8 @@ jobs:
       build_tool_version: '3.9.9'
       working_directory: facturador
       execute_build: true
-      execute_docker: true\n      artifact_name: facturador
+      execute_docker: true
+      artifact_name: facturador
       docker_image: ghcr.io/ldanny19/facturador
       dependency_artifact_name: factucore-messaging
       dependency_group_id: ec.dalara.factucore
