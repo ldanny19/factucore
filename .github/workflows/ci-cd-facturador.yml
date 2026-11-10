@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
 
   cd:
-    name: CD JAVA
+    name: CD JAVA Facturador
     needs: ci
     if: github.ref == 'refs/heads/main'
     uses: ldanny19/devops-pipeline-templates/.github/workflows/cd-java.yml@a76a635ce087f62c80982f8802f434323515fcd1
