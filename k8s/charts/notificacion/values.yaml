@@ -1,10 +1,10 @@
-name: dp_facturador
+name: dp_notificacion
 labels: 
-  app: facturador
+  app: notificacion
 replicaCount: 1
 
 image:
-  repository: facturador
+  repository: notificacion
   tag: latest
   pullPolicy: IfNotPresent
 

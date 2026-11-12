@@ -1,0 +1,11 @@
+=============================================================================
+== COMANDOS PARA DEPLOYAR												   ==
+=============================================================================
+# Crear el namespace de desarrollo
+helm template factucore . -f env/develop.yaml --show-only templates/namespaces.yml | kubectl apply -f -
+
+
+# Deployar recurso en el conxtexto de desarrollo
+helm upgrade --install factucore . -f env/develop.yaml --namespace $env:NAMESPACE
+
+
