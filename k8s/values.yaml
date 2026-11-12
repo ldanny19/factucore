@@ -1,0 +1,8 @@
+facturador:
+  enabled: true
+
+notificacion:
+  enabled: true
+
+web:
+  enabled: false

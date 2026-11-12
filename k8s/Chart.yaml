@@ -1,0 +1,21 @@
+apiVersion: v2
+name: factucore
+description: Plataforma FactuCore
+type: application
+version: 1.0.0
+
+dependencies:
+  - name: facturador
+    version: 1.0.0
+    repository: file://charts/facturador
+    condition: facturador.enabled
+
+  - name: notificacion
+    version: 1.0.0
+    repository: file://charts/notificacion
+    condition: notificacion.enabled
+
+  - name: web
+    version: 1.0.0
+    repository: file://charts/web
+    condition: web.enabled
