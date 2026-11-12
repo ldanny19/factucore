@@ -1,10 +1,10 @@
-name: dp_facturador
+name: dp_web
 labels: 
-  app: facturador
+  app: facturador-web
 replicaCount: 1
 
 image:
-  repository: facturador
+  repository: facturador-web
   tag: latest
   pullPolicy: IfNotPresent
 
