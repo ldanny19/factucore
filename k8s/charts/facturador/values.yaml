@@ -1,0 +1,14 @@
+name: dp_facturador
+labels: 
+  app: facturador
+replicaCount: 1
+
+image:
+  repository: facturador
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080

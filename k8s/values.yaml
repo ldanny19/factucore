@@ -2,7 +2,7 @@ facturador:
   enabled: true
 
 notificacion:
-  enabled: true
+  enabled: false
 
 web:
   enabled: false

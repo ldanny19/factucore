@@ -1,12 +1,11 @@
 name: ctx-development
 label: development
 
-modules:
-  facturador:
-    enabled: true
-    replicaCount: 1
+facturador:
+  enabled: true
 
-    image:
-      repository: facturador
-      tag: development
-      pullPolicy: Always
+notificacion:
+  enabled: false
+
+web:
+  enabled: true
