@@ -1,12 +1,11 @@
 name: ctx-prod
 label: prod
 
-modules:
-  facturador:
-    enabled: true
-    replicaCount: 2
+facturador:
+  enabled: true
 
-    image:
-      repository: facturador
-      tag: stable
-      pullPolicy: IfNotPresent
+notificacion:
+  enabled: false
+
+web:
+  enabled: true
