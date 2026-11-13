@@ -124,3 +124,31 @@ web:
     startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
+
+quotas:
+  resourceQuota:
+    hard:
+      requests.cpu: "4"
+      requests.memory: 8Gi
+      limits.cpu: "8"
+      limits.memory: 16Gi
+      requests.storage: 50Gi
+      persistentvolumeclaims: "12"
+      pods: "20"
+      services: "20"
+      configmaps: "30"
+  limitRange:
+    limits:
+      - type: Container
+        min:
+          cpu: 10m
+          memory: 16Mi
+        max:
+          cpu: "2"
+          memory: 4Gi
+        defaultRequest:
+          cpu: 100m
+          memory: 128Mi
+        default:
+          cpu: 500m
+          memory: 512Mi
