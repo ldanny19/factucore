@@ -16,8 +16,10 @@ labels:
     <<: *vaultCommonLabels
     app.kubernetes.io/component: agent
 
-storage:
-  temporarySizeLimit: 64Mi
-
-agent:
-  enabled: true
+# Capacidades, probes y persistencia se definen en env/develop.yaml y env/prod.yaml.
+agent: {}
+server: {}
+initContainers:
+  resources: {}
+persistence: {}
+storage: {}
