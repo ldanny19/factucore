@@ -75,20 +75,23 @@ spec:
               readOnly: true
             - name: logs
               mountPath: /app/logs
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          startupProbe:
+            httpGet:
+              path: /facturador-api/actuator/health
+              port: http
+{{ toYaml .Values.probes.startup | indent 12 }}
           readinessProbe:
             httpGet:
               path: /facturador-api/actuator/health
               port: http
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 12
+{{ toYaml .Values.probes.readiness | indent 12 }}
           livenessProbe:
             httpGet:
               path: /facturador-api/actuator/health
               port: http
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
+{{ toYaml .Values.probes.liveness | indent 12 }}
       volumes:
         - name: runtime-secrets
           persistentVolumeClaim:
