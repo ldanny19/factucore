@@ -1,7 +1,7 @@
 name: dp-notificacion
 labels:
   app: notificacion
-replicaCount: 1
+replicaCount: null
 
 image:
   repository: factucore-notificacion
@@ -29,4 +29,7 @@ environment:
   corsAllowedOrigins: http://localhost:3000,http://api.facturador.com:3000
 
 storage:
-  logs: 2Gi
+  logs: ""
+# Recursos y probes se configuran por ambiente.
+resources: {}
+probes: {}
