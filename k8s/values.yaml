@@ -15,3 +15,7 @@ apigateway:
   enabled: false
 web:
   enabled: false
+
+quotas:
+  resourceQuota: {}
+  limitRange: {}
