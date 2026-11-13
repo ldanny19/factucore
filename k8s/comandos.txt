@@ -10,6 +10,16 @@ bash ./instalar-factucore.sh develop
 # Para producción, usa su entorno y namespace:
 # bash ./instalar-factucore.sh prod
 
+# El instalador también aplica automáticamente ResourceQuota y LimitRange
+# desde quotas/<ambiente>.yaml después de crear el namespace.
+# Verificar las cuotas de desarrollo:
+kubectl get resourcequota,limitrange --namespace ns-development
+kubectl describe resourcequota rq-development --namespace ns-development
+
+# Verificar las cuotas de producción:
+# kubectl get resourcequota,limitrange --namespace ns-prod
+# kubectl describe resourcequota rq-prod --namespace ns-prod
+
 # No ejecutes helm upgrade directamente: omitiría la sincronización de
 # ConfigMaps desde sus rutas canónicas y el despliegue ordenado de dependencias.
 # PostgreSQL no crea ni necesita un Secret de Kubernetes: espera a Vault Agent
