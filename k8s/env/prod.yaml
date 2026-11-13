@@ -57,6 +57,7 @@ auth:
     requests: { cpu: 500m, memory: 1Gi }
     limits: { cpu: 2, memory: 2Gi }
   probes:
+    startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
 
@@ -67,7 +68,9 @@ kafka:
     requests: { cpu: 1, memory: 2Gi }
     limits: { cpu: 2, memory: 4Gi }
   probes:
+    startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
+    liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
   persistence:
     size: 50Gi
     storageClassName: ""
@@ -79,6 +82,7 @@ facturador:
     requests: { cpu: 500m, memory: 1Gi }
     limits: { cpu: 2, memory: 2Gi }
   probes:
+    startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
   storage:
@@ -94,6 +98,7 @@ notificacion:
     requests: { cpu: 250m, memory: 512Mi }
     limits: { cpu: 1, memory: 1Gi }
   probes:
+    startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
   storage:
@@ -106,6 +111,7 @@ apigateway:
     requests: { cpu: 250m, memory: 256Mi }
     limits: { cpu: 1, memory: 512Mi }
   probes:
+    startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
 
@@ -116,5 +122,6 @@ web:
     requests: { cpu: 250m, memory: 256Mi }
     limits: { cpu: 1, memory: 512Mi }
   probes:
+    startup: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 30 }
     readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
