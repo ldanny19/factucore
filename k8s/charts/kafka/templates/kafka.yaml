@@ -71,15 +71,29 @@ spec:
           volumeMounts:
             - name: datos
               mountPath: {{ .Values.persistence.mountPath }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.service.clientPort }} >/dev/null 2>&1
+{{ toYaml .Values.probes.startup | indent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.service.clientPort }} >/dev/null 2>&1
+{{ toYaml .Values.probes.liveness | indent 12 }}
           readinessProbe:
             exec:
               command:
                 - /bin/sh
                 - -ec
                 - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.service.clientPort }} >/dev/null 2>&1
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 12
+{{ toYaml .Values.probes.readiness | indent 12 }}
       {{- if not .Values.persistence.enabled }}
       volumes:
         - name: datos
