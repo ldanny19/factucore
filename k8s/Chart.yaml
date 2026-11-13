@@ -1,3 +1,4 @@
+
 apiVersion: v2
 name: factucore
 description: Plataforma FactuCore
@@ -5,6 +6,26 @@ type: application
 version: 1.0.0
 
 dependencies:
+  - name: basedatos
+    version: 1.0.0
+    repository: file://charts/basedatos
+    condition: basedatos.enabled
+
+  - name: vault
+    version: 1.0.0
+    repository: file://charts/vault
+    condition: vault.enabled
+
+  - name: auth
+    version: 1.0.0
+    repository: file://charts/auth
+    condition: auth.enabled
+
+  - name: kafka
+    version: 1.0.0
+    repository: file://charts/kafka
+    condition: kafka.enabled
+
   - name: facturador
     version: 1.0.0
     repository: file://charts/facturador
@@ -14,6 +35,11 @@ dependencies:
     version: 1.0.0
     repository: file://charts/notificacion
     condition: notificacion.enabled
+
+  - name: apigateway
+    version: 1.0.0
+    repository: file://charts/apigateway
+    condition: apigateway.enabled
 
   - name: web
     version: 1.0.0

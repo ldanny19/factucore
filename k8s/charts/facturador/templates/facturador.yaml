@@ -1,0 +1,197 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.app }}
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: vault
+                  app.kubernetes.io/component: agent
+      containers:
+        - name: facturador
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: FACTUCORE_CONFIGURACION_ZONA_HORARIA
+              value: {{ .Values.environment.timezone | quote }}
+            - name: FACTUCORE_PATH_LOGS
+              value: /app/logs
+            - name: DB_URL
+              value: {{ .Values.database.url | quote }}
+            - name: DB_USERNAME
+              value: {{ .Values.database.username | quote }}
+            - name: FACTUCORE_SEGURIDAD_OAUTH2_ISSUER_URI
+              value: {{ .Values.security.issuerUri | quote }}
+            - name: FACTUCORE_SEGURIDAD_OAUTH2_JWK_SET_URI
+              value: {{ .Values.security.jwkSetUri | quote }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.kafka.bootstrapServers | quote }}
+            - name: FACTUCORE_AUDITORIA_PETICION_HABILITADA
+              value: {{ .Values.environment.auditEnabled | quote }}
+            - name: FACTUCORE_AUDITORIA_PETICION_TOPICO
+              value: auditoria
+            - name: FACTUCORE_NOTIFICACION_TOPICO
+              value: notificacion
+            - name: FACTUCORE_SRI_AMBIENTE
+              value: {{ .Values.environment.sriEnvironment | quote }}
+          volumeMounts:
+            - name: runtime-secrets
+              mountPath: /run/secrets
+              readOnly: true
+            - name: configuracion
+              mountPath: /app/config
+              readOnly: true
+            - name: mensajeria-config
+              mountPath: /app/messaging-config
+              readOnly: true
+            - name: jasper
+              mountPath: /app/jasper
+              readOnly: true
+            - name: documentos
+              mountPath: /app/documentos
+            - name: certificados
+              mountPath: /app/certificados
+              readOnly: true
+            - name: imagenes
+              mountPath: /app/imagenes
+              readOnly: true
+            - name: logs
+              mountPath: /app/logs
+          readinessProbe:
+            httpGet:
+              path: /facturador-api/actuator/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /facturador-api/actuator/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: runtime-secrets
+          persistentVolumeClaim:
+            claimName: pvc-vault-runtime-secrets
+        - name: configuracion
+          configMap:
+            name: cm-facturador-config
+            items:
+              - key: application.yml
+                path: application.yml
+              - key: log4j2-spring.xml
+                path: log4j2-spring.xml
+              - key: messages.properties
+                path: messages.properties
+              - key: messages_es_EC.properties
+                path: messages_es_EC.properties
+              - key: workflow-facturacion.xml
+                path: workflow/facturacion.xml
+        - name: mensajeria-config
+          configMap:
+            name: cm-messaging-config
+            items:
+              - key: message.properties
+                path: message.properties
+        - name: jasper
+          configMap:
+            name: cm-facturador-jasper
+        - name: documentos
+          persistentVolumeClaim:
+            claimName: pvc-facturador-documentos
+        - name: certificados
+          persistentVolumeClaim:
+            claimName: pvc-facturador-certificados
+        - name: imagenes
+          persistentVolumeClaim:
+            claimName: pvc-facturador-imagenes
+        - name: logs
+          persistentVolumeClaim:
+            claimName: pvc-facturador-logs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-facturador-documentos
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.documentos }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-facturador-certificados
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.certificados }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-facturador-imagenes
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.imagenes }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-facturador-logs
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.logs }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ .Values.labels.app }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http

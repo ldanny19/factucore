@@ -1,11 +1,2 @@
-name: ctx-development
-label: development
-
-facturador:
-  enabled: true
-
-notificacion:
-  enabled: false
-
-web:
-  enabled: true
+# Valores exclusivos de desarrollo.
+# La selección común de módulos está en ../values.yaml.

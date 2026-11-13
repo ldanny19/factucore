@@ -1,4 +1,4 @@
-name: dp_web
+name: dp-web
 labels: 
   app: facturador-web
 replicaCount: 1
@@ -9,6 +9,7 @@ image:
   pullPolicy: IfNotPresent
 
 service:
+  name: web
   type: ClusterIP
   port: 8080
   targetPort: 8080

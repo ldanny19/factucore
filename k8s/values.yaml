@@ -1,7 +1,22 @@
-facturador:
+vault:
   enabled: true
 
+basedatos:
+  enabled: true
+
+auth:
+  enabled: true
+
+kafka:
+  enabled: true
+
+facturador:
+  enabled: false
+
 notificacion:
+  enabled: false
+
+apigateway:
   enabled: false
 
 web:

@@ -1,0 +1,18 @@
+# La imagen la construye Compose y requiere FACTUCORE_VERSION.
+# Define el tag de la imagen antes de habilitar este chart.
+replicaCount: 1
+
+image:
+  repository: factucore-gateway
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  name: api-gateway
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+nginx:
+  configMountPath: /etc/nginx/conf.d/default.conf
+  webConfigMountPath: /app/config

@@ -1,11 +1,35 @@
 =============================================================================
 == COMANDOS PARA DEPLOYAR												   ==
 =============================================================================
-# Crear el namespace de desarrollo
-helm template factucore . -f env/develop.yaml --show-only templates/namespaces.yml | kubectl apply -f -
+# Ejecutar desde Git Bash, ubicado en k8s.
+# El instalador crea los ConfigMaps desde infraestructura/ y configuraciones/,
+# instala Vault, solicita y guarda los secretos, inicia Vault Agent y despliega
+# los componentes respetando el orden de dependencias de Compose.
+bash ./instalar-factucore.sh develop
+
+# Para producción, usa su entorno y namespace:
+# bash ./instalar-factucore.sh prod
+
+# No ejecutes helm upgrade directamente: omitiría la sincronización de
+# ConfigMaps desde sus rutas canónicas y el despliegue ordenado de dependencias.
+# PostgreSQL no crea ni necesita un Secret de Kubernetes: espera a Vault Agent
+# y lee POSTGRES_PASSWORD_FILE desde el volumen compartido de secretos.
 
 
-# Deployar recurso en el conxtexto de desarrollo
-helm upgrade --install factucore . -f env/develop.yaml --namespace $env:NAMESPACE
+=============================================================================
+== COMANDOS PARA ACTUALIZAR DEPENDENCIAS												   ==
+=============================================================================
+# Desde la raíz del proyecto: C:\WORKSPACE\factucore
+# Regenerar solo el paquete de PostgreSQL
+helm package .\k8s\charts\basedatos --destination .\k8s\charts
+
+# Validar solo el paquete de PostgreSQL
+helm lint .\k8s\charts\basedatos-1.0.0.tgz
+
+# Actualizar los paquetes de todas las dependencias declaradas en k8s\Chart.yaml
+helm dependency update .\k8s
+
+# Validar el chart principal y sus dependencias
+helm lint .\k8s
 
 

@@ -1,0 +1,23 @@
+# Compose-compatible settings: HTTP is unencrypted and bootstrap data (including
+# unseal keys and the root token) is persisted on a PVC. Do not expose as production.
+image:
+  repository: hashicorp/vault
+  tag: "1.20"
+  pullPolicy: IfNotPresent
+
+labels:
+  common: &vaultCommonLabels
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: factucore
+  server:
+    <<: *vaultCommonLabels
+    app.kubernetes.io/component: server
+  agent:
+    <<: *vaultCommonLabels
+    app.kubernetes.io/component: agent
+
+storage:
+  temporarySizeLimit: 64Mi
+
+agent:
+  enabled: true

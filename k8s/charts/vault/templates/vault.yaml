@@ -1,0 +1,521 @@
+{{- if .Values.agent.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dp-vault-agent
+  labels:
+{{ toYaml .Values.labels.agent | indent 4 }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+{{ toYaml .Values.labels.agent | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ toYaml .Values.labels.agent | indent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+{{ toYaml .Values.labels.server | indent 18 }}
+      initContainers:
+        - name: wait-for-vault
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - until [ -s /run/secrets/vault_agent_token.txt ] && vault status -address="$VAULT_ADDR" >/dev/null 2>&1; do sleep 2; done
+          env:
+            - name: VAULT_ADDR
+              value: http://vault:8200
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: agent-token
+              mountPath: /run/secrets
+              readOnly: true
+        - name: prepare-volumes
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - chown 100:100 /run/secrets /vault/secrets
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - FOWNER
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: agent-token
+              mountPath: /run/secrets
+            - name: runtime-secrets
+              mountPath: /vault/secrets
+      containers:
+        - name: vault-agent
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - vault
+          args:
+            - agent
+            - -config=/vault/agent/config.hcl
+          env:
+            - name: VAULT_ADDR
+              value: http://vault:8200
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - kill -0 1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - kill -0 1
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/firma_password
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: agent-config
+              mountPath: /vault/agent
+              readOnly: true
+            - name: agent-token
+              mountPath: /run/secrets
+              readOnly: true
+            - name: runtime-secrets
+              mountPath: /vault/secrets
+            - name: tmp
+              mountPath: /tmp
+            - name: vault-file
+              mountPath: /vault/file
+            - name: vault-logs
+              mountPath: /vault/logs
+      volumes:
+        - name: agent-config
+          configMap:
+            name: cm-vault-agent
+            defaultMode: 0444
+        - name: agent-token
+          persistentVolumeClaim:
+            claimName: pvc-vault-agent-token
+        - name: runtime-secrets
+          persistentVolumeClaim:
+            claimName: pvc-vault-runtime-secrets
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.storage.temporarySizeLimit }}
+        - name: vault-file
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.storage.temporarySizeLimit }}
+        - name: vault-logs
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.storage.temporarySizeLimit }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-vault
+  labels:
+{{ toYaml .Values.labels.server | indent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+{{ toYaml .Values.labels.server | indent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+      ports:
+        - protocol: TCP
+          port: 8200
+{{- if .Values.agent.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-vault-agent
+  labels:
+{{ toYaml .Values.labels.agent | indent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+{{ toYaml .Values.labels.agent | indent 6 }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+{{ toYaml .Values.labels.server | indent 14 }}
+      ports:
+        - protocol: TCP
+          port: 8200
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-vault-data
+  labels:
+{{ toYaml .Values.labels.server | indent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-vault-secrets
+  labels:
+{{ toYaml .Values.labels.server | indent 4 }}
+# Stores vault-init.json with unseal keys and the root token, as in Compose.
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-vault-agent-token
+  labels:
+{{ toYaml .Values.labels.agent | indent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-vault-runtime-secrets
+  labels:
+{{ toYaml .Values.labels.agent | indent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-vault
+  labels:
+{{ toYaml .Values.labels.server | indent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+{{ toYaml .Values.labels.server | indent 4 }}
+  ports:
+    - name: http
+      port: 8200
+      targetPort: 8200
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  labels:
+{{ toYaml .Values.labels.server | indent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+{{ toYaml .Values.labels.server | indent 4 }}
+  ports:
+    - name: http
+      port: 8200
+      targetPort: 8200
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sts-vault
+  labels:
+{{ toYaml .Values.labels.server | indent 4 }}
+spec:
+  replicas: 1
+  serviceName: svc-vault
+  selector:
+    matchLabels:
+{{ toYaml .Values.labels.server | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ toYaml .Values.labels.server | indent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: prepare-volumes
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - chown 100:100 /vault/data /vault/secrets-persist /vault/agent-token
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - FOWNER
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: vault-data
+              mountPath: /vault/data
+            - name: vault-secrets
+              mountPath: /vault/secrets-persist
+            - name: agent-token
+              mountPath: /vault/agent-token
+      containers:
+        - name: vault
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - /vault/scripts/entrypoint.sh
+          args:
+            - -config=/vault/config/vault.hcl
+          env:
+            - name: VAULT_ADDR
+              value: http://127.0.0.1:8200
+          ports:
+            - name: http
+              containerPort: 8200
+              protocol: TCP
+            - name: cluster
+              containerPort: 8201
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - IPC_LOCK
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - if vault status -address=http://127.0.0.1:8200 >/dev/null 2>&1; then exit 0; else code=$?; [ "$code" -eq 2 ]; fi
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 36
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - kill -0 1
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - vault status -address=http://127.0.0.1:8200 >/dev/null 2>&1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: server-config
+              mountPath: /vault/config
+              readOnly: true
+            - name: server-scripts
+              mountPath: /vault/scripts
+              readOnly: true
+            - name: server-policy
+              mountPath: /vault/policy
+              readOnly: true
+            - name: vault-data
+              mountPath: /vault/data
+            - name: vault-secrets
+              mountPath: /vault/secrets-persist
+            - name: agent-token
+              mountPath: /vault/agent-token
+            - name: tmp
+              mountPath: /tmp
+            - name: vault-file
+              mountPath: /vault/file
+            - name: vault-logs
+              mountPath: /vault/logs
+      volumes:
+        - name: server-config
+          configMap:
+            name: cm-vault
+            items:
+              - key: vault.hcl
+                path: vault.hcl
+              - key: secretos.yml
+                path: secretos.yml
+            defaultMode: 0444
+        - name: server-scripts
+          configMap:
+            name: cm-vault
+            items:
+              - key: entrypoint.sh
+                path: entrypoint.sh
+              - key: bootstrap-vault.sh
+                path: bootstrap-vault.sh
+            defaultMode: 0555
+        - name: server-policy
+          configMap:
+            name: cm-vault
+            items:
+              - key: factucore-agent.hcl
+                path: factucore-agent.hcl
+            defaultMode: 0444
+        - name: vault-data
+          persistentVolumeClaim:
+            claimName: pvc-vault-data
+        - name: vault-secrets
+          persistentVolumeClaim:
+            claimName: pvc-vault-secrets
+        - name: agent-token
+          persistentVolumeClaim:
+            claimName: pvc-vault-agent-token
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.storage.temporarySizeLimit }}
+        - name: vault-file
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.storage.temporarySizeLimit }}
+        - name: vault-logs
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.storage.temporarySizeLimit }}

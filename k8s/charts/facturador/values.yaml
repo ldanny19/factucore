@@ -1,14 +1,37 @@
-name: dp_facturador
-labels: 
+name: dp-facturador
+labels:
   app: facturador
 replicaCount: 1
 
 image:
-  repository: facturador
+  repository: factucore-facturador
   tag: latest
   pullPolicy: IfNotPresent
 
 service:
+  name: facturador
   type: ClusterIP
   port: 8080
   targetPort: 8080
+
+environment:
+  timezone: America/Guayaquil
+  auditEnabled: "true"
+  sriEnvironment: PRUEBAS
+
+database:
+  url: jdbc:postgresql://srv-db-factucore:5432/db_factucore
+  username: usr_factucore
+
+kafka:
+  bootstrapServers: kafka:9092
+
+security:
+  issuerUri: http://api.facturador.com:8080/auth/realms/facturador
+  jwkSetUri: http://auth-server:8080/realms/facturador/protocol/openid-connect/certs
+
+storage:
+  documentos: 10Gi
+  certificados: 1Gi
+  imagenes: 1Gi
+  logs: 2Gi

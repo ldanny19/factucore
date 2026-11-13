@@ -1,0 +1,44 @@
+name: db-factucore
+labels:
+  app: db-factucore
+replicaCount: 1
+
+image:
+  repository: postgres
+  tag: 17
+  pullPolicy: IfNotPresent
+
+service:
+  # Service headless requerido por StatefulSet para la identidad estable del Pod.
+  name: srv-db-factucore
+  clusterIP: None
+  port: 5432
+  targetPort: 5432
+
+database:
+  name: postgres
+  user: postgres
+
+# Las credenciales se renderizan desde Vault Agent en el PVC compartido.
+# La base espera esos archivos; no se crea ni se requiere un Secret de Kubernetes.
+
+storage:
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  # Vacío: el clúster usará su StorageClass por defecto.
+  storageClassName: ""
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+probes:
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6

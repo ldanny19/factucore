@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kafka
+description: Broker Kafka de FactuCore
+type: application
+version: 1.0.0
+appVersion: "4.0.2"

@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-server
+  labels:
+    app: auth-server
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: auth-server
+  template:
+    metadata:
+      labels:
+        app: auth-server
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: vault
+                  app.kubernetes.io/component: agent
+      initContainers:
+        - name: wait-for-vault-secrets
+          image: {{ .Values.database.waitImage | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - until [ -s /vault/secrets/basedatos_auth_password ] && [ -s /vault/secrets/keycloak_admin_password ]; do sleep 2; done
+          volumeMounts:
+            - name: runtime-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+        - name: wait-for-postgresql
+          image: {{ .Values.database.waitImage | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - until pg_isready -h {{ .Values.database.host }} -p {{ .Values.database.port }} -U postgres -d postgres; do sleep 2; done
+      containers:
+        - name: auth-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              export KC_DB_URL="jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+              export KC_DB_USERNAME="{{ .Values.database.username }}"
+              export KC_DB_PASSWORD="$$(cat /vault/secrets/basedatos_auth_password)"
+              exec /opt/keycloak/bin/kc.sh start \
+                --http-port=8080 \
+                --bootstrap-admin-username="{{ .Values.bootstrapAdmin.username }}" \
+                --bootstrap-admin-password="$$(cat /vault/secrets/keycloak_admin_password)"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+            - name: management
+              containerPort: {{ .Values.service.managementPort }}
+          env:
+            - name: KC_DB
+              value: postgres
+            - name: KC_HTTP_ENABLED
+              value: {{ .Values.http.enabled | quote }}
+            - name: KC_HOSTNAME
+              value: {{ .Values.hostname.url | quote }}
+            - name: KC_PROXY_HEADERS
+              value: {{ .Values.http.proxyHeaders | quote }}
+            - name: KC_HOSTNAME_STRICT
+              value: {{ .Values.hostname.strict | quote }}
+            - name: KC_HEALTH_ENABLED
+              value: {{ .Values.health.enabled | quote }}
+          volumeMounts:
+            - name: runtime-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: management
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+      volumes:
+        - name: runtime-secrets
+          persistentVolumeClaim:
+            claimName: pvc-vault-runtime-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app: auth-server
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: auth-server
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+    - name: management
+      port: {{ .Values.service.managementPort }}
+      targetPort: management

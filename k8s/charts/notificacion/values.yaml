@@ -1,14 +1,32 @@
-name: dp_notificacion
-labels: 
+name: dp-notificacion
+labels:
   app: notificacion
 replicaCount: 1
 
 image:
-  repository: notificacion
+  repository: factucore-notificacion
   tag: latest
   pullPolicy: IfNotPresent
 
 service:
+  name: notificacion
   type: ClusterIP
   port: 8080
   targetPort: 8080
+
+database:
+  url: jdbc:postgresql://srv-db-factucore:5432/db_notificaciones
+  username: usr_notificaciones
+
+kafka:
+  bootstrapServers: kafka:9092
+
+security:
+  issuerUri: http://api.facturador.com:8080/auth/realms/facturador
+  jwkSetUri: http://auth-server:8080/realms/facturador/protocol/openid-connect/certs
+
+environment:
+  corsAllowedOrigins: http://localhost:3000,http://api.facturador.com:3000
+
+storage:
+  logs: 2Gi

@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  clusterIP: {{ .Values.service.clusterIP }}
+  selector:
+    app: {{ .Values.labels.app }}
+  ports:
+    - name: postgresql
+      port: {{ .Values.service.port }}
+      targetPort: postgresql
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  serviceName: {{ .Values.service.name }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.app }}
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: vault
+                  app.kubernetes.io/component: agent
+      initContainers:
+        - name: wait-for-vault-secrets
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - /bin/sh
+            - -ec
+            - until [ -s /vault/secrets/basedatos_admin_password ] && [ -s /vault/secrets/basedatos_facturador_password ] && [ -s /vault/secrets/basedatos_auth_password ] && [ -s /vault/secrets/basedatos_notificaciones_password ]; do sleep 2; done
+          volumeMounts:
+            - name: runtime-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+      containers:
+        - name: postgres
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: postgresql
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.database.name | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.database.user | quote }}
+            - name: POSTGRES_PASSWORD_FILE
+              value: /vault/secrets/basedatos_admin_password
+          volumeMounts:
+            - name: datos
+              mountPath: /var/lib/postgresql/data
+            - name: runtime-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.failureThreshold }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.failureThreshold }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: runtime-secrets
+          persistentVolumeClaim:
+            claimName: pvc-vault-runtime-secrets
+        - name: init-scripts
+          configMap:
+            name: cm-db-factucore-init
+            defaultMode: 0444
+  volumeClaimTemplates:
+    - metadata:
+        name: datos
+      spec:
+        accessModes:
+{{ toYaml .Values.storage.accessModes | indent 10 }}
+{{- if .Values.storage.storageClassName }}
+        storageClassName: {{ .Values.storage.storageClassName | quote }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.size }}

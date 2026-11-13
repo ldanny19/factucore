@@ -1,0 +1,27 @@
+dependencies:
+- name: basedatos
+  repository: file://charts/basedatos
+  version: 1.0.0
+- name: vault
+  repository: file://charts/vault
+  version: 1.0.0
+- name: auth
+  repository: file://charts/auth
+  version: 1.0.0
+- name: kafka
+  repository: file://charts/kafka
+  version: 1.0.0
+- name: facturador
+  repository: file://charts/facturador
+  version: 1.0.0
+- name: notificacion
+  repository: file://charts/notificacion
+  version: 1.0.0
+- name: apigateway
+  repository: file://charts/apigateway
+  version: 1.0.0
+- name: web
+  repository: file://charts/web
+  version: 1.0.0
+digest: sha256:e95ac336252f0c93710e76c5a909d6b890362c431a30483377e55965320be38d
+generated: "2026-11-13T13:51:10.5930662-05:00"

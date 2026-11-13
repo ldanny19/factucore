@@ -1,11 +1,2 @@
-name: nsctx-prod
-label: prod
-
-facturador:
-  enabled: true
-
-notificacion:
-  enabled: false
-
-web:
-  enabled: true
+# Valores exclusivos de producción.
+# La selección común de módulos está en ../values.yaml.

@@ -1,0 +1,35 @@
+# Valores iniciales basados en el servicio auth-server de Compose.
+# No incluir contrasenas: se obtienen desde Vault.
+replicaCount: 1
+
+image:
+  repository: keycloak/keycloak
+  tag: "26.7.4"
+  pullPolicy: IfNotPresent
+
+service:
+  name: auth-server
+  type: ClusterIP
+  port: 8080
+  managementPort: 9000
+
+database:
+  host: srv-db-factucore
+  port: 5432
+  name: db_auth
+  username: usr_auth
+  waitImage: postgres:17
+
+bootstrapAdmin:
+  username: admin
+
+health:
+  enabled: true
+
+hostname:
+  url: http://api.facturador.com:8080/auth
+  strict: false
+
+http:
+  enabled: true
+  proxyHeaders: xforwarded

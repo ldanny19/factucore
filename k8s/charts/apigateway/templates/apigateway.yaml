@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dp-apigateway
+  labels:
+    app.kubernetes.io/name: apigateway
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: apigateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: apigateway
+    spec:
+      containers:
+        - name: apigateway
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+          volumeMounts:
+            - name: nginx-config
+              mountPath: {{ .Values.nginx.configMountPath }}
+              subPath: default.conf
+              readOnly: true
+            - name: web-config
+              mountPath: {{ .Values.nginx.webConfigMountPath }}
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: cm-nginx-config
+            items:
+              - key: default.conf
+                path: default.conf
+        - name: web-config
+          configMap:
+            name: cm-web-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app.kubernetes.io/name: apigateway
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: apigateway
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http

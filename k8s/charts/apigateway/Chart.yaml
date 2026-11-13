@@ -1,0 +1,5 @@
+apiVersion: v2
+name: apigateway
+description: Gateway Nginx de FactuCore
+type: application
+version: 1.0.0
