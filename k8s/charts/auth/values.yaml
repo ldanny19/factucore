@@ -1,6 +1,6 @@
 # Valores iniciales basados en el servicio auth-server de Compose.
 # No incluir contrasenas: se obtienen desde Vault.
-replicaCount: 1
+replicaCount: null
 
 image:
   repository: keycloak/keycloak
@@ -33,3 +33,7 @@ hostname:
 http:
   enabled: true
   proxyHeaders: xforwarded
+
+# Se definen en env/develop.yaml y env/prod.yaml.
+resources: {}
+probes: {}
