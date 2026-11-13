@@ -1,2 +1,119 @@
-# Valores exclusivos de desarrollo.
-# La selección común de módulos está en ../values.yaml.
+# Configuración de capacidades para desarrollo.
+# El namespace se crea y administra por separado en ../namespaces/develop.yaml.
+
+vault:
+  enabled: true
+  agent:
+    enabled: true
+    replicas: 1
+    resources:
+      requests: { cpu: 50m, memory: 64Mi }
+      limits: { cpu: 250m, memory: 256Mi }
+    probes:
+      startup: { periodSeconds: 5, timeoutSeconds: 3, failureThreshold: 24 }
+      liveness: { periodSeconds: 10, timeoutSeconds: 3, failureThreshold: 3 }
+      readiness: { periodSeconds: 5, timeoutSeconds: 3, failureThreshold: 3 }
+  server:
+    replicas: 1
+    resources:
+      requests: { cpu: 250m, memory: 512Mi }
+      limits: { cpu: 500m, memory: 1Gi }
+    probes:
+      startup: { periodSeconds: 5, timeoutSeconds: 3, failureThreshold: 36 }
+      liveness: { periodSeconds: 10, timeoutSeconds: 3, failureThreshold: 3 }
+      readiness: { periodSeconds: 5, timeoutSeconds: 3, failureThreshold: 3 }
+  initContainers:
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { cpu: 100m, memory: 64Mi }
+  persistence:
+    data: 5Gi
+    bootstrap: 100Mi
+    agentToken: 100Mi
+    runtimeSecrets: 1Gi
+  storage:
+    temporarySizeLimit: 64Mi
+
+basedatos:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: 500m, memory: 1Gi }
+  probes:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+  storage:
+    size: 10Gi
+    storageClassName: ""
+
+auth:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: 500m, memory: 1Gi }
+  probes:
+    readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
+    liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
+
+kafka:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: 1, memory: 1Gi }
+  probes:
+    readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
+  persistence:
+    size: 8Gi
+    storageClassName: ""
+
+facturador:
+  enabled: false
+  replicaCount: 1
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: 1, memory: 1Gi }
+  probes:
+    readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
+    liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
+  storage:
+    documentos: 10Gi
+    certificados: 1Gi
+    imagenes: 1Gi
+    logs: 2Gi
+
+notificacion:
+  enabled: false
+  replicaCount: 1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  probes:
+    readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
+    liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
+  storage:
+    logs: 2Gi
+
+apigateway:
+  enabled: false
+  replicaCount: 1
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  probes:
+    readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 12 }
+    liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
+
+web:
+  enabled: false
+  replicaCount: 1
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  probes:
+    readiness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
+    liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
