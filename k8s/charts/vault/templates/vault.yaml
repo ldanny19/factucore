@@ -6,7 +6,7 @@ metadata:
   labels:
 {{ toYaml .Values.labels.agent | indent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.agent.replicas }}
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -49,12 +49,7 @@ spec:
               drop:
                 - ALL
           resources:
-            requests:
-              cpu: 10m
-              memory: 16Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
+{{ toYaml .Values.initContainers.resources | indent 12 }}
           volumeMounts:
             - name: agent-token
               mountPath: /run/secrets
@@ -80,12 +75,7 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           resources:
-            requests:
-              cpu: 10m
-              memory: 16Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
+{{ toYaml .Values.initContainers.resources | indent 12 }}
           volumeMounts:
             - name: agent-token
               mountPath: /run/secrets
@@ -110,39 +100,13 @@ spec:
               drop:
                 - ALL
           resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 250m
-              memory: 256Mi
+{{ toYaml .Values.agent.resources | indent 12 }}
           startupProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - kill -0 1
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 24
+{{ toYaml .Values.agent.probes.startup | indent 12 }}
           livenessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - kill -0 1
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
+{{ toYaml .Values.agent.probes.liveness | indent 12 }}
           readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/firma_password
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+{{ toYaml .Values.agent.probes.readiness | indent 12 }}
           volumeMounts:
             - name: agent-config
               mountPath: /vault/agent
@@ -250,7 +214,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ .Values.persistence.data }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -264,7 +228,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 100Mi
+      storage: {{ .Values.persistence.bootstrap }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -277,7 +241,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 100Mi
+      storage: {{ .Values.persistence.agentToken }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -290,7 +254,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .Values.persistence.runtimeSecrets }}
 ---
 apiVersion: v1
 kind: Service
@@ -335,7 +299,7 @@ metadata:
   labels:
 {{ toYaml .Values.labels.server | indent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.server.replicas }}
   serviceName: svc-vault
   selector:
     matchLabels:
@@ -376,12 +340,7 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           resources:
-            requests:
-              cpu: 10m
-              memory: 16Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
+{{ toYaml .Values.initContainers.resources | indent 12 }}
           volumeMounts:
             - name: vault-data
               mountPath: /vault/data
@@ -417,39 +376,13 @@ spec:
               add:
                 - IPC_LOCK
           resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 1Gi
+{{ toYaml .Values.server.resources | indent 12 }}
           startupProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - if vault status -address=http://127.0.0.1:8200 >/dev/null 2>&1; then exit 0; else code=$?; [ "$code" -eq 2 ]; fi
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 36
+{{ toYaml .Values.server.probes.startup | indent 12 }}
           livenessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - kill -0 1
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
+{{ toYaml .Values.server.probes.liveness | indent 12 }}
           readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - vault status -address=http://127.0.0.1:8200 >/dev/null 2>&1
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+{{ toYaml .Values.server.probes.readiness | indent 12 }}
           volumeMounts:
             - name: server-config
               mountPath: /vault/config
