@@ -1,23 +1,17 @@
+# Defaults seguros: cada ambiente declara explícitamente qué módulos habilita.
 vault:
-  enabled: true
-
+  enabled: false
 basedatos:
-  enabled: true
-
+  enabled: false
 auth:
-  enabled: true
-
+  enabled: false
 kafka:
-  enabled: true
-
+  enabled: false
 facturador:
   enabled: false
-
 notificacion:
   enabled: false
-
 apigateway:
   enabled: false
-
 web:
   enabled: false
