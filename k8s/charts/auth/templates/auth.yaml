@@ -29,23 +29,6 @@ spec:
             - /bin/sh
             - -ec
             - until [ -s /vault/secrets/basedatos_auth_password ] && [ -s /vault/secrets/keycloak_admin_password ]; do sleep 2; done
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
-          startupProbe:
-            httpGet:
-              path: /health/started
-              port: management
-{{ toYaml .Values.probes.startup | indent 12 }}
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: management
-{{ toYaml .Values.probes.liveness | indent 12 }}
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: management
-{{ toYaml .Values.probes.readiness | indent 12 }}
           volumeMounts:
             - name: runtime-secrets
               mountPath: /vault/secrets
@@ -90,6 +73,23 @@ spec:
               value: {{ .Values.hostname.strict | quote }}
             - name: KC_HEALTH_ENABLED
               value: {{ .Values.health.enabled | quote }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          startupProbe:
+            httpGet:
+              path: /health/started
+              port: management
+{{ toYaml .Values.probes.startup | indent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: management
+{{ toYaml .Values.probes.liveness | indent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: management
+{{ toYaml .Values.probes.readiness | indent 12 }}
           volumeMounts:
             - name: runtime-secrets
               mountPath: /vault/secrets
