@@ -1,7 +1,7 @@
 name: dp-facturador
 labels:
   app: facturador
-replicaCount: 1
+replicaCount: null
 
 image:
   repository: factucore-facturador
@@ -31,7 +31,11 @@ security:
   jwkSetUri: http://auth-server:8080/realms/facturador/protocol/openid-connect/certs
 
 storage:
-  documentos: 10Gi
-  certificados: 1Gi
-  imagenes: 1Gi
-  logs: 2Gi
+  documentos: ""
+  certificados: ""
+  imagenes: ""
+  logs: ""
+
+# Recursos y probes se configuran por ambiente.
+resources: {}
+probes: {}
