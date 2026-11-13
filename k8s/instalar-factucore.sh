@@ -8,7 +8,6 @@ CHART_FILE="$K8S_DIR/Chart.yaml"
 ENVIRONMENT="${1:-develop}"
 ENV_FILE="$K8S_DIR/env/$ENVIRONMENT.yaml"
 NAMESPACE_FILE="$K8S_DIR/namespaces/$ENVIRONMENT.yaml"
-QUOTA_FILE="$K8S_DIR/quotas/$ENVIRONMENT.yaml"
 RELEASE_NAME="factucore"
 NAMESPACE=""
 BOOTSTRAP_HELM_ARGS=()
@@ -34,7 +33,6 @@ esac
 [ -f "$CATALOG_FILE" ] || fail "No existe el catálogo de secretos: $CATALOG_FILE."
 [ -f "$ENV_FILE" ] || fail "No existe el archivo de valores: $ENV_FILE."
 [ -f "$NAMESPACE_FILE" ] || fail "No existe el manifiesto del namespace: $NAMESPACE_FILE."
-[ -f "$QUOTA_FILE" ] || fail "No existe el manifiesto de cuotas del ambiente: $QUOTA_FILE."
 [ -f "$CHART_FILE" ] || fail "No existe el chart principal: $CHART_FILE."
 
 NAMESPACE="$(awk '$1 == "name:" { print $2; exit }' "$NAMESPACE_FILE")"
@@ -46,9 +44,6 @@ fi
 
 log "Creando o validando el namespace $NAMESPACE."
 kubectl apply -f "$NAMESPACE_FILE"
-
-log "Aplicando ResourceQuota y LimitRange para $ENVIRONMENT."
-kubectl apply -f "$QUOTA_FILE"
 
 parse_secret_catalog() {
   awk '
