@@ -1,0 +1,10 @@
+{{- with .Values.quotas.resourceQuota }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: rq-{{ .Release.Name | default "factucore" }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  hard:
+{{ toYaml .hard | indent 4 }}
+{{- end }}
