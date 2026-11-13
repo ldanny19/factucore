@@ -29,13 +29,23 @@ spec:
             - name: web-config
               mountPath: {{ .Values.nginx.webConfigMountPath }}
               readOnly: true
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          startupProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+{{ toYaml .Values.probes.startup | indent 12 }}
           readinessProbe:
             httpGet:
               path: /nginx-health
               port: http
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 12
+{{ toYaml .Values.probes.readiness | indent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+{{ toYaml .Values.probes.liveness | indent 12 }}
       volumes:
         - name: nginx-config
           configMap:
