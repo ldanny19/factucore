@@ -1,5 +1,6 @@
 # Configuración inicial de capacidades para producción.
 # Ajustar CPU, memoria y almacenamiento según métricas y capacidad real del clúster.
+# Los módulos que comparten PVC ReadWriteOnce quedan en 1 réplica hasta definir almacenamiento compartido/HA.
 # El namespace se crea y administra por separado en ../namespaces/prod.yaml.
 
 vault:
