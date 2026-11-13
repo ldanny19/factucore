@@ -1,0 +1,9 @@
+{{- with .Values.quotas.limitRange }}
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: lr-{{ $.Release.Name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+{{ toYaml . | indent 2 }}
+{{- end }}
