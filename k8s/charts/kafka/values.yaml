@@ -1,5 +1,5 @@
 # Valores iniciales basados en el broker unico KRaft de Compose.
-replicaCount: 1
+replicaCount: null
 
 image:
   repository: apache/kafka
@@ -38,7 +38,11 @@ kraft:
 persistence:
   enabled: true
   mountPath: /var/lib/kafka/data
-  size: 8Gi
+  size: ""
   accessModes:
     - ReadWriteOnce
   storageClassName: ""
+
+# Recursos y probes se configuran por ambiente.
+resources: {}
+probes: {}
