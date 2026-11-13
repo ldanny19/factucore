@@ -44,6 +44,20 @@ spec:
               value: {{ .Values.security.jwkSetUri | quote }}
             - name: FACTUCORE_CORS_ALLOWED_ORIGINS
               value: {{ .Values.environment.corsAllowedOrigins | quote }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          startupProbe:
+            tcpSocket:
+              port: http
+{{ toYaml .Values.probes.startup | indent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+{{ toYaml .Values.probes.readiness | indent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: http
+{{ toYaml .Values.probes.liveness | indent 12 }}
           volumeMounts:
             - name: runtime-secrets
               mountPath: /run/secrets
