@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: rq-{{ .Release.Name | default "factucore" }}
+  name: rq-{{ $.Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
   hard:
