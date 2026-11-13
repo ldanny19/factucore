@@ -102,10 +102,25 @@ spec:
           resources:
 {{ toYaml .Values.agent.resources | indent 12 }}
           startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - kill -0 1
 {{ toYaml .Values.agent.probes.startup | indent 12 }}
           livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - kill -0 1
 {{ toYaml .Values.agent.probes.liveness | indent 12 }}
           readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - test -s /vault/secrets/basedatos_admin_password && test -s /vault/secrets/basedatos_facturador_password && test -s /vault/secrets/basedatos_auth_password && test -s /vault/secrets/basedatos_notificaciones_password && test -s /vault/secrets/keycloak_admin_password && test -s /vault/secrets/mail_password && test -s /vault/secrets/firma_password
 {{ toYaml .Values.agent.probes.readiness | indent 12 }}
           volumeMounts:
             - name: agent-config
@@ -378,10 +393,25 @@ spec:
           resources:
 {{ toYaml .Values.server.resources | indent 12 }}
           startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - if vault status -address=http://127.0.0.1:8200 >/dev/null 2>&1; then exit 0; else code=$?; [ "$code" -eq 2 ]; fi
 {{ toYaml .Values.server.probes.startup | indent 12 }}
           livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - kill -0 1
 {{ toYaml .Values.server.probes.liveness | indent 12 }}
           readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - vault status -address=http://127.0.0.1:8200 >/dev/null 2>&1
 {{ toYaml .Values.server.probes.readiness | indent 12 }}
           volumeMounts:
             - name: server-config
