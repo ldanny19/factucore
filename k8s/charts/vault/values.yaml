@@ -17,7 +17,8 @@ labels:
     app.kubernetes.io/component: agent
 
 # Capacidades, probes y persistencia se definen en env/develop.yaml y env/prod.yaml.
-agent: {}
+agent:
+  enabled: true
 server: {}
 initContainers:
   resources: {}
