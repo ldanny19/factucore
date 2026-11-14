@@ -6,6 +6,7 @@ metadata:
     app.kubernetes.io/name: kafka
 spec:
   type: {{ .Values.service.type }}
+  publishNotReadyAddresses: true
   clusterIP: {{ .Values.service.clusterIP }}
   selector:
     app.kubernetes.io/name: kafka
@@ -43,6 +44,7 @@ spec:
               containerPort: {{ .Values.service.clientPort }}
             - name: controller
               containerPort: {{ .Values.service.controllerPort }}
+          # DEBUG: {{ .Values.kraft.listenerSecurityProtocolMap | toJson }}
           env:
             - name: KAFKA_LOG_DIRS
               value: {{ .Values.persistence.mountPath | quote }}
@@ -50,8 +52,13 @@ spec:
               value: {{ .Values.kraft.nodeId | quote }}
             - name: KAFKA_PROCESS_ROLES
               value: {{ join "," .Values.kraft.processRoles | quote }}
+
+            {{- $entries := list }}
+            {{- range $key, $value := .Values.kraft.listenerSecurityProtocolMap }}
+            {{- $entries = append $entries (printf "%s:%s" $key $value) }}
+            {{- end }}
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: {{ .Values.kraft.listenerSecurityProtocolMap | quote }}
+              value: {{ join "," $entries | quote }}
             - name: KAFKA_LISTENERS
               value: {{ join "," .Values.kraft.listeners | quote }}
             - name: KAFKA_ADVERTISED_LISTENERS
