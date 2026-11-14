@@ -1,4 +1,4 @@
-# Defaults seguros: cada ambiente declara explícitamente qué módulos habilita.
+# Habilitación de módulos para la instalación. Los ajustes de capacidad y probes van en env/<ambiente>.yaml.
 vault:
   enabled: true
 basedatos:
