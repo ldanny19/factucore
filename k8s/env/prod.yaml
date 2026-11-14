@@ -1,12 +1,11 @@
-# Configuración inicial de capacidades para producción.
+# Capacidades, probes, réplicas y persistencia del ambiente production.
 # Ajustar CPU, memoria y almacenamiento según métricas y capacidad real del clúster.
 # Los módulos que comparten PVC ReadWriteOnce quedan en 1 réplica hasta definir almacenamiento compartido/HA.
+# La habilitación de módulos se administra en k8s/values.yaml.
 # El namespace se crea y administra por separado en ../namespaces/prod.yaml.
 
 vault:
-  enabled: true
   agent:
-    enabled: true
     replicas: 1
     resources:
       requests: { cpu: 100m, memory: 128Mi }
@@ -37,7 +36,6 @@ vault:
     temporarySizeLimit: 128Mi
 
 basedatos:
-  enabled: true
   replicaCount: 1
   resources:
     requests: { cpu: 1, memory: 2Gi }
@@ -52,7 +50,6 @@ basedatos:
     storageClassName: ""
 
 auth:
-  enabled: true
   replicaCount: 1
   resources:
     requests: { cpu: 500m, memory: 1Gi }
@@ -63,7 +60,6 @@ auth:
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
 
 kafka:
-  enabled: true
   replicaCount: 1
   resources:
     requests: { cpu: 1, memory: 2Gi }
@@ -77,7 +73,6 @@ kafka:
     storageClassName: ""
 
 facturador:
-  enabled: false
   replicaCount: 1
   resources:
     requests: { cpu: 500m, memory: 1Gi }
@@ -93,7 +88,6 @@ facturador:
     logs: 10Gi
 
 notificacion:
-  enabled: false
   replicaCount: 1
   resources:
     requests: { cpu: 250m, memory: 512Mi }
@@ -106,7 +100,6 @@ notificacion:
     logs: 10Gi
 
 apigateway:
-  enabled: false
   replicaCount: 2
   resources:
     requests: { cpu: 250m, memory: 256Mi }
@@ -117,7 +110,6 @@ apigateway:
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
 
 web:
-  enabled: false
   replicaCount: 2
   resources:
     requests: { cpu: 250m, memory: 256Mi }
