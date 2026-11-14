@@ -8,6 +8,7 @@ echo "=============================================="
 MODE="${1:-}"
 VERSION="${2:-}"
 FORCE="${3:-}"
+IMAGE_REGISTRY="host.docker.internal:5000"
 
 if [[ -z "${MODE}" || -z "${VERSION}" ]]; then
   echo "ERROR: debe indicar modo y version."
@@ -47,3 +48,15 @@ docker build "${DOCKER_BUILD_ARGS[@]}" .
 echo
 echo "==> FACTURADOR compilado correctamente."
 echo "==> Imagen generada: factucore-facturador:${VERSION}"
+
+echo
+echo "==> Etiquetando imagen para el registry..."
+docker tag "factucore-facturador:${VERSION}" \
+  "${IMAGE_REGISTRY}/factucore-facturador:${VERSION}"
+
+echo
+echo "==> Publicando imagen..."
+docker push "${IMAGE_REGISTRY}/factucore-facturador:${VERSION}"
+
+echo
+echo "==> Imagen publicada: ${IMAGE_REGISTRY}/factucore-facturador:${VERSION}"
