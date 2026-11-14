@@ -1,10 +1,9 @@
-# Configuración de capacidades para desarrollo.
+# Capacidades, probes, réplicas y persistencia del ambiente development.
+# La habilitación de módulos se administra en k8s/values.yaml.
 # El namespace se crea y administra por separado en ../namespaces/develop.yaml.
 
 vault:
-  enabled: true
   agent:
-    enabled: true
     replicas: 1
     resources:
       requests: { cpu: 50m, memory: 64Mi }
@@ -35,7 +34,6 @@ vault:
     temporarySizeLimit: 64Mi
 
 basedatos:
-  enabled: true
   replicaCount: 1
   resources:
     requests: { cpu: 250m, memory: 512Mi }
@@ -50,7 +48,6 @@ basedatos:
     storageClassName: ""
 
 auth:
-  enabled: true
   replicaCount: 1
   resources:
     requests: { cpu: 250m, memory: 512Mi }
@@ -61,7 +58,6 @@ auth:
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
 
 kafka:
-  enabled: true
   replicaCount: 1
   resources:
     requests: { cpu: 250m, memory: 512Mi }
@@ -75,7 +71,6 @@ kafka:
     storageClassName: ""
 
 facturador:
-  enabled: false
   replicaCount: 1
   resources:
     requests: { cpu: 250m, memory: 512Mi }
@@ -91,7 +86,6 @@ facturador:
     logs: 2Gi
 
 notificacion:
-  enabled: false
   replicaCount: 1
   resources:
     requests: { cpu: 100m, memory: 256Mi }
@@ -104,7 +98,6 @@ notificacion:
     logs: 2Gi
 
 apigateway:
-  enabled: false
   replicaCount: 1
   resources:
     requests: { cpu: 50m, memory: 64Mi }
@@ -115,7 +108,6 @@ apigateway:
     liveness: { periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6 }
 
 web:
-  enabled: false
   replicaCount: 1
   resources:
     requests: { cpu: 50m, memory: 64Mi }
